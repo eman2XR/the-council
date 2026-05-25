@@ -1,0 +1,6 @@
+.DS_Store
+*.profraw
+DerivedData/
+node_modules/
+.build/
+.scribe/
