@@ -1,7 +1,7 @@
 const $=id=>document.getElementById(id);
 const put=(id,text)=>{const el=$(id);if(el)el.textContent=text??'';};
 const el=(tag,props={},...children)=>{const node=Object.assign(document.createElement(tag),props);node.append(...children);return node;};
-const TOPICS={'gravity-clocks':'Gravity and time','light-bending':'Gravity and light'};
+const TOPICS={'gravity-clocks':'Gravity and time','light-bending':'Gravity and light','spacetime':'Space and time','interference':'Waves','standing-waves':'Waves','two-slit-particles':'Quanta'};
 const STATUS={planning:'Choosing a question',running:'Investigating now',reviewed:'Passed review',needs_review:'Draft, not published',failed:'Attempt stopped',interrupted:'Run interrupted',idle:'Resting'};
 const STEPS=['Question','Research','Design','Render','Review','Publish'];
 const reduceMotion=matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -9,7 +9,7 @@ let current=null, entries=[], busy=false, example=null;
 const records=new Map();
 
 function safeURL(url){try{const u=new URL(url);return ['http:','https:'].includes(u.protocol)?u.href:null;}catch{return null;}}
-function topicOf(data){return TOPICS[data?.topic]||(data?.scene?.kind==='gravity-clocks'?TOPICS['gravity-clocks']:TOPICS['light-bending']);}
+function topicOf(data){return TOPICS[data?.scene?.kind]||TOPICS[data?.topic]||TOPICS['light-bending'];}
 function day(iso,opts={month:'short',day:'numeric'}){const d=new Date(iso);return isNaN(d)?'':d.toLocaleDateString(undefined,opts);}
 function isToday(iso){const d=new Date(iso);return !isNaN(d)&&d.toDateString()===new Date().toDateString();}
 
@@ -37,13 +37,12 @@ function show(data,{autoplay=false}={}){
 function renderBehind(data){
  const r=data.research, fixture=data.provider==='fixture', revisions=data.revisions||[], final=revisions.at(-1);
  const chips=[];
- if(final?.physics_review?.score!=null)chips.push(`Physics ${final.physics_review.score}/10`);
- if(final?.visual_review?.score!=null)chips.push(`Visuals ${final.visual_review.score}/10`);
- if(revisions.length)chips.push(`${revisions.length} draft${revisions.length===1?'':'s'}`);
- const checks=data.checks||[];if(checks.length)chips.push(`${checks.filter(c=>c.pass).length}/${checks.length} checks`);
+ if(final?.physics_review&&final?.visual_review)chips.push(final.accepted?'Passed physics and visual review':'Reviews requested changes');
+ if(revisions.length>1)chips.push(`${revisions.length} drafts`);
+ const checks=data.checks||[];if(checks.length)chips.push(`${checks.filter(c=>c.pass).length} of ${checks.length} checks`);
  if(fixture)chips.unshift('Scripted example');
  if(data.provenance?.sources_retrieved===false)chips.unshift('Sources not retrieved');
- $('review-summary').replaceChildren(...chips.map(c=>el('span',{textContent:c})));
+ put('review-summary',chips.join(' · '));
  if(!r)return;
  put('claim',r.claim);put('falsifier',r.falsifier);put('prediction',r.prediction);
  $('limits').replaceChildren(...[...(r.assumptions||[]),...(r.limitations||[])].map(x=>el('li',{textContent:x})));
@@ -88,7 +87,7 @@ function card(entry,record){
 function renderCards(){
  thumbs.forEach(c=>visible.unobserve(c));thumbs.clear();
  const items=entries.map(e=>card(e,records.get(e.id)));
- if(example)items.push(card({id:'example',title:example.scene.title.replace(/\n/g,' ')},example));
+ if(example&&!entries.length)items.push(card({id:'example',title:example.scene.title.replace(/\n/g,' ')},example));
  $('archive').replaceChildren(...items);
  put('past-count',entries.length?`${entries.length} published`:'');
  paintThumbs(true);
@@ -201,8 +200,8 @@ async function refreshDashboard(){
   $('lab').dataset.state=active?'active':schedule?.enabled?'idle':'paused';
   labActive=active;labQuestion=state.question&&state.question!=='Choosing the next question'?state.question:'';
   const outcome={reviewed:'Last investigation passed review',needs_review:'Last attempt stayed a draft',failed:'Last attempt stopped early',interrupted:'Last attempt was interrupted'};
-  put('now-title',active?(state.status==='planning'?'Choosing today’s question':'Investigating now'):outcome[state.status]||'Resting');
-  put('dashboard-question',state.question&&state.question!=='Choosing the next question'?state.question:'');
+  put('now-title',active?(state.status==='planning'?'Choosing today’s question':'Investigating now'):entries[0]?`Latest published: ${entries[0].title}`:outcome[state.status]||'Resting');
+  put('dashboard-question',active&&state.question&&state.question!=='Choosing the next question'?state.question:'');
   const step=stepOf(state);
   $('steps').hidden=!active;
   $('steps').replaceChildren(...STEPS.map((name,i)=>el('li',{className:i<step?'done':i===step?'active':'',textContent:name})));
@@ -254,7 +253,7 @@ function renderPath(){
   if(published){state=el('a',{className:'state pill',href:'?guide='+encodeURIComponent(published.id),textContent:'Watch'});
    state.onclick=e=>{e.preventDefault();openGuide(published.id,{autoplay:true,push:true});};}
   else if(picks.has(item.id))state=el('a',{className:'state picked',href:picks.get(item.id),target:'_blank',rel:'noopener noreferrer',textContent:'Picked'});
-  else if(item.model)state=el('a',{className:'state pill pick',target:'_blank',rel:'noopener noreferrer',textContent:'Pick next',
+  else if(item.model)state=el('a',{className:'state pill pick',target:'_blank',rel:'noopener noreferrer',textContent:'Pick for tomorrow',
    href:issueURL('council:choose',`Pick next: ${item.id} ${item.question}`.slice(0,120),`curriculum: ${item.id}\n\n${item.question}\n\nPicked on the website. The next morning's run investigates this.`)});
   else state=el('span',{className:'state wait',textContent:'Later'});
   const li=el('li',{className:item===next?'next':''},el('span',{className:'num',textContent:item.id}),el('span',{className:'q',textContent:item.question}),state);
@@ -302,6 +301,7 @@ function proposalCard(p){
 function renderProposals(){
  const list=proposals?.proposals||[], open=list.filter(p=>p.status==='open'&&!verdicts.has(p.id));
  put('proposals-count',open.length?String(open.length):'');
+ $('proposals-open').hidden=!list.length;
  $('proposals-list').replaceChildren(...(list.length?list.map(proposalCard):[el('p',{className:'empty',textContent:'The first project review runs with the next morning investigation. Its suggestions will appear here.'})]));
 }
 async function loadProposals(){
@@ -318,3 +318,12 @@ $('proposals-open').onclick=()=>{$('proposals').showModal();};
 $('proposals-close').onclick=()=>$('proposals').close();
 $('proposals').addEventListener('click',e=>{if(e.target===$('proposals'))$('proposals').close();});
 loadProposals();
+
+/* End card: what comes next, and an easy way to ask about this one. */
+CouncilScene.on(type=>{
+ if(type==='play')$('after').hidden=true;
+ if(type==='ended'){
+  const all=curriculum?.chapters.flatMap(c=>c.items)||[], next=all.find(i=>i.model&&!doneItem(i));
+  put('after-next',next?next.question:'a new question');$('after-ask').href=$('ask').href;$('after').hidden=false;
+ }
+});

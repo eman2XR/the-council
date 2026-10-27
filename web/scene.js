@@ -66,7 +66,7 @@ function drawClocks(ctx,w,h,spec,st){
  const cx=w*.5, rad=Math.min(w*.13,h*.135), horizon=h*.9;
  let lowerY=h*(.68-.09*(st.distance-1)), upperY=lowerY-Math.max(h*.34,rad*2.5);
  // Keep the top clock and its label clear of the stage notes.
- const clear=(small?58:24)-(upperY-rad-(small?13:0));
+ const clear=(small?92:24)-(upperY-rad-(small?13:0));
  if(clear>0){upperY+=clear;lowerY+=clear;}
  // Warm haze marks "deeper in gravity": schematic, not to scale.
  if(presence>0){
@@ -120,51 +120,58 @@ function drawClocks(ctx,w,h,spec,st){
  }
 }
 
+function pill(ctx,value,x,y,opts={}){
+ // A label on a soft white backing so moving labels stay legible over lines and other text.
+ const size=opts.size||11;ctx.font=`${opts.weight||600} ${size}px ${FONT}`;if('letterSpacing' in ctx)ctx.letterSpacing=opts.spacing||'0px';
+ const width=ctx.measureText(value).width, left=opts.align==='right'?x-width:x;
+ ctx.fillStyle='rgba(255,255,255,.88)';ctx.beginPath();ctx.roundRect?ctx.roundRect(left-5,y-size*.75,width+10,size*1.5,size*.75):ctx.rect(left-5,y-size*.75,width+10,size*1.5);ctx.fill();
+ if('letterSpacing' in ctx)ctx.letterSpacing='0px';text(ctx,value,x,y,opts);
+}
 function drawSpacetime(ctx,w,h,spec,st){
  const accent=ACCENT[spec.accent]||ACCENT.blue, v=Physics.speed(st.mass), g=Physics.gamma(v), T=Physics.turnaround(st.distance), H=2*T, small=w<520;
- const k=Math.min((h-64)/8.6,(w*.5)/4), x0=w*.5-1.6*k, y0=h-34, map=(x,t)=>[x0+x*k,y0-t*k];
- // Light cone from the departure event: no worldline can leave it.
+ // Scale to the whole trip, so the drawing fills the stage; the shape (and the percentage) does not depend on trip length.
+ const k=Math.min((h-(small?128:92))/(H+.1),(w*.62)/Math.max(.9,v*T+1.1)), x0=w*.5-v*T*k*.5, y0=h-28, map=(x,t)=>[x0+x*k,y0-t*k];
  const top=y0/k;
  ctx.beginPath();ctx.moveTo(...map(0,0));ctx.lineTo(...map(top,top));ctx.lineTo(...map(-top,top));ctx.closePath();ctx.fillStyle=rgba(accent,.045);ctx.fill();
- ctx.setLineDash([2,5]);ctx.strokeStyle=rgba('#d97706',.55);ctx.lineWidth=1.2;
+ ctx.setLineDash([2,5]);ctx.strokeStyle=rgba('#d97706',.6);ctx.lineWidth=1.2;
  trace(ctx,[map(-top,top),map(0,0),map(top,top)]);ctx.stroke();ctx.setLineDash([]);
- const tc=Math.min(H,((st.t*.42)%(H+1.4)+H+1.4)%(H+1.4));
+ const tc=Math.min(H,((st.t*.42*Math.max(1,H/4.8))%(H+1.4)+H+1.4)%(H+1.4));
  const xAt=t=>t<=T?v*t:v*(H-t);
- // Home worldline with a tick each half year.
  ctx.lineCap='round';
- trace(ctx,[map(0,0),map(0,H)]);ctx.strokeStyle='rgba(20,23,28,.45)';ctx.lineWidth=2;ctx.stroke();
- for(let s=.5;s<=H+1e-9;s+=.5){const [x,y]=map(0,s);trace(ctx,[[x-5,y],[x+5,y]]);ctx.strokeStyle='rgba(20,23,28,.35)';ctx.lineWidth=1;ctx.stroke();}
+ // Home: a tick every half year, a numbered mark every year.
+ trace(ctx,[map(0,0),map(0,H)]);ctx.strokeStyle='rgba(20,23,28,.5)';ctx.lineWidth=2;ctx.stroke();
+ for(let s=.5;s<=H+1e-9;s+=.5){const whole=Math.abs(s-Math.round(s))<1e-9,[x,y]=map(0,s);trace(ctx,[[x-(whole?7:4),y],[x+(whole?7:4),y]]);ctx.strokeStyle=whole?'rgba(20,23,28,.6)':'rgba(20,23,28,.3)';ctx.lineWidth=whole?1.6:1;ctx.stroke();
+  if(whole&&st.labels)text(ctx,String(s),x-12,y,{align:'right',size:9,weight:600,color:'rgba(20,23,28,.5)'});}
  if(v>.001){
-  trace(ctx,[map(0,0),map(v*T,T),map(0,H)]);ctx.strokeStyle=accent;ctx.lineWidth=Math.max(2,spec.line_width||2.5);ctx.stroke();
-  // Traveller ticks: one per half year of the traveller's own time, spaced wider by the dilation factor.
-  for(let s=.5;s*g<=H+1e-9;s+=.5){const t=s*g,[x,y]=map(xAt(t),t);ctx.beginPath();ctx.arc(x,y,2.6,0,TAU);ctx.fillStyle=accent;ctx.fill();}
-  // The traveller's line of "now" tilts with speed and swings at the turnaround.
+  trace(ctx,[map(0,0),map(v*T,T),map(0,H)]);ctx.strokeStyle=accent;ctx.lineWidth=Math.max(2.2,spec.line_width||2.5);ctx.stroke();
+  // Traveller: one mark per half year of the traveller's own time, numbered each year; dilation spaces them out.
+  for(let s=.5;s*g<=H+1e-9;s+=.5){const whole=Math.abs(s-Math.round(s))<1e-9,t=s*g,[x,y]=map(xAt(t),t);
+   ctx.beginPath();ctx.arc(x,y,whole?4.2:2.4,0,TAU);ctx.fillStyle=accent;ctx.fill();
+   if(whole){ctx.beginPath();ctx.arc(x,y,1.6,0,TAU);ctx.fillStyle='#fff';ctx.fill();if(st.labels)text(ctx,String(s),x+10,y,{size:9,weight:600,color:rgba(accent,.85)});}}
   if(st.labels||spec.show_reference){
-   const slope=tc<=T?v:-v, xc=xAt(tc), a=map(-1.4,tc+slope*(-1.4-xc)), b=map(4.2,tc+slope*(4.2-xc));
+   const slope=tc<=T?v:-v, xc=xAt(tc), left=-1.1, right=v*T+1.4, a=map(left,tc+slope*(left-xc)), b=map(right,tc+slope*(right-xc));
    ctx.setLineDash([5,5]);trace(ctx,[a,b]);ctx.strokeStyle=rgba(accent,.45);ctx.lineWidth=1.2;ctx.stroke();ctx.setLineDash([]);
-   if(st.labels)text(ctx,'traveller’s “now”',b[0]-4,b[1]-10,{align:'right',size:10,color:rgba(accent,.85)});
+   if(st.labels)pill(ctx,'traveller’s “now”',b[0],b[1],{align:'right',size:10,weight:500,color:rgba(accent,.9)});
   }
  }
  const [hx,hy]=map(0,tc),[tx,ty]=map(xAt(tc),tc);
- for(const [x,y,c] of [[hx,hy,'#14171c'],[tx,ty,accent]]){const glow=ctx.createRadialGradient(x,y,0,x,y,14);glow.addColorStop(0,rgba(c,.3));glow.addColorStop(1,rgba(c,0));ctx.fillStyle=glow;ctx.fillRect(x-14,y-14,28,28);
-  ctx.beginPath();ctx.arc(x,y,5,0,TAU);ctx.fillStyle=c;ctx.fill();ctx.beginPath();ctx.arc(x,y,2,0,TAU);ctx.fillStyle='#fff';ctx.fill();}
+ for(const [x,y,c] of [[hx,hy,'#14171c'],[tx,ty,accent]]){const glow=ctx.createRadialGradient(x,y,0,x,y,15);glow.addColorStop(0,rgba(c,.3));glow.addColorStop(1,rgba(c,0));ctx.fillStyle=glow;ctx.fillRect(x-15,y-15,30,30);
+  ctx.beginPath();ctx.arc(x,y,5.5,0,TAU);ctx.fillStyle=c;ctx.fill();ctx.beginPath();ctx.arc(x,y,2,0,TAU);ctx.fillStyle='#fff';ctx.fill();}
  if(st.labels){
-  const size=small?10:11;
-  const close=Math.abs(tx-hx)<150;
-  text(ctx,`HOME  ${tc.toFixed(1)} yr`,hx-12,hy,{align:'right',size,weight:600,color:'rgba(20,23,28,.75)',spacing:'.5px'});
-  // Near the reunion the traveller's label sits above and to the right, clear of the home label.
-  if(v>.001)text(ctx,`TRAVELLER  ${(tc/g).toFixed(1)} yr`,Math.max(tx,hx)+14,close?Math.min(ty,hy)-14:ty,{size,weight:600,color:accent,spacing:'.5px'});
-  else text(ctx,'traveller stays home',hx+12,hy,{size,color:accent});
-  text(ctx,'LIGHT',map(Math.min(top*.82,5.6),Math.min(top*.82,5.6))[0]+8,map(0,Math.min(top*.82,5.6))[1],{size:9,weight:600,spacing:'1.5px',color:'rgba(217,119,6,.75)'});
-  text(ctx,'time ↑',x0-10,y0-8,{align:'right',size:10});
-  text(ctx,'space →',x0+10,y0+18,{size:10});
+  const size=small?10:11, close=Math.abs(tx-hx)<150;
+  if(Math.abs(hy-map(0,H*.5)[1])>34&&!small)text(ctx,'time ↑',x0-34,map(0,H*.5)[1],{align:'right',size:10});
+  text(ctx,'space →',x0+12,y0+16,{size:10});
+  text(ctx,'LIGHT',map(top*.8,top*.8)[0]+8,map(0,top*.8)[1],{size:9,weight:600,spacing:'1.5px',color:'rgba(217,119,6,.8)'});
+  pill(ctx,`HOME  ${tc.toFixed(1)} yr`,hx-30,hy,{align:'right',size,weight:600,color:'rgba(20,23,28,.8)',spacing:'.5px'});
+  if(v>.001)pill(ctx,`TRAVELLER  ${(tc/g).toFixed(1)} yr`,Math.max(tx,hx)+16,close?Math.min(ty,hy)-16:ty,{size,weight:600,color:accent,spacing:'.5px'});
+  else pill(ctx,'traveller stays home',hx+16,hy,{size,weight:500,color:accent});
  }
 }
 
 let fieldBuffer=null;
 function drawInterference(ctx,w,h,spec,st){
  const accent=ACCENT[spec.accent]||ACCENT.blue, A=st.mass, lam=Math.max(22,Math.min(w,h)/9), k=TAU/lam, d=Physics.separation(st.distance)*lam;
- const cx=w/2, sy=h*.1, screen=h*.8, s1=[cx-d/2,sy], s2=[cx+d/2,sy], phase=st.t*TAU*.55;
+ const cx=w/2, sy=w<520?h*.22:h*.1, screen=h*.8, s1=[cx-d/2,sy], s2=[cx+d/2,sy], phase=st.t*TAU*.55;
  const cell=w<520?3:4, cols=Math.ceil(w/cell), rows=Math.ceil(screen/cell);
  fieldBuffer=fieldBuffer||document.createElement('canvas');
  if(fieldBuffer.width!==cols||fieldBuffer.height!==rows){fieldBuffer.width=cols;fieldBuffer.height=rows;}
@@ -203,7 +210,7 @@ function slitPattern(A,sep,bins){
 }
 function drawParticles(ctx,w,h,spec,st){
  const accent=ACCENT[spec.accent]||ACCENT.mint, A=st.mass, sep=Physics.separation(st.distance), small=w<520;
- const srcX=w*.08, wallX=w*.42, scrX=w*.8, midY=h*.5, span=h*.38, gap=span*.075*sep, slit=Math.max(6,h*.025);
+ const srcX=w*.08, wallX=w*.42, scrX=w*.8, midY=small?h*.58:h*.5, span=small?h*.32:h*.38, gap=span*.075*sep, slit=Math.max(6,h*.025);
  const bins=120, pat=slitPattern(A,sep,bins);
  // Probability ripples: possibilities spread through every open slit; no path is drawn.
  const phase=(st.t*.8)%1;
@@ -259,7 +266,7 @@ function drawRope(ctx,w,h,spec,st){
   text(ctx,'WALL',x1+6,y+h*.25,{align:'center',size,weight:600,spacing:'1.5px'});
   text(ctx,`${n} half-wave${n>1?'s':''} fit`,(x0+x1)/2,y+h*.28,{align:'center',size:small?11:12,weight:600,color:accent});
   if(A>.5&&n>1)text(ctx,'still points',x0+(x1-x0)/n,y-16,{align:'center',size:10,color:'rgba(234,88,12,.9)'});
-  if(spec.show_reference)text(ctx,A>.001?'dashed: wave going right, and its reflection going left':'dashed: the wave going right',(x0+x1)/2,h*.12,{align:'center',size:10});
+  if(spec.show_reference)text(ctx,A>.001?'dashed: wave going right, and its reflection going left':'dashed: the wave going right',(x0+x1)/2,small?h*.22:h*.12,{align:'center',size:10});
  }
 }
 
@@ -272,9 +279,9 @@ const ENGINES={
   fa:a=>a.toFixed(2),fb:b=>b.toFixed(2)+' units',
   measure:['Unmagnified slowdown',(a,b)=>((1-Physics.clockRatio(a,b))*100).toFixed(2)+'%'],scale:'Clock motion magnified 12×',demoEnd:()=>2.5,
   try:'Slide Mass to zero. Do the clocks agree? Bring it back, then move the Lower radius outward.',aria:'Two stationary clocks at different heights above a mass. The lower clock counts less time.'},
- 'spacetime':{draw:drawSpacetime,a:['Speed','as a fraction of light speed (c)'],b:['Trip length','years out before turning back',''],
-  fa:a=>Physics.speed(a).toFixed(2)+' c',fb:b=>Physics.turnaround(b).toFixed(1)+' yr',
-  measure:['Traveller ages less by',a=>(Physics.agingGap(a)*100).toFixed(1)+'%'],scale:'Light moves at 45°',demoEnd:()=>2.5,
+ 'spacetime':{draw:drawSpacetime,a:['Speed','how fast the traveller flies'],b:['Trip','time out before turning back',''],
+  fa:a=>Math.round(Physics.speed(a)*100)+'% of light',fb:b=>Physics.turnaround(b).toFixed(1)+' years out',
+  measure:['Traveller comes home younger by',a=>(Physics.agingGap(a)*100).toFixed(1)+'%'],scale:'Time runs up · light moves at 45°',demoEnd:()=>2.5,
   try:'Set Speed to zero: do the twins agree? Push it up. Then make the trip longer: does the percentage change?',aria:'A spacetime diagram: a home twin stays put while a traveller goes out and back. The traveller collects fewer ticks.'},
  'interference':{draw:drawInterference,a:['Second source','strength of the second wave'],b:['Source spacing','in wavelengths',''],
   fa:a=>a<.005?'off':Math.round(a*100)+'%',fb:b=>Physics.separation(b).toFixed(1)+' λ',
@@ -378,7 +385,7 @@ function configure(){
 }
 function load(scene){
  // The poster is a still frame a few seconds in, where the comparison is already visible.
- spec=scene;buildTimeline();mass=scene.mass;distance=scene.distance;time=scene.duration*.3;mode='live';started=false;ended=false;captionKey='';
+ spec=scene;buildTimeline();$('poster-label').textContent=`Play · ${Math.round(timeline.total)} s`;mass=scene.mass;distance=scene.distance;time=scene.duration*.3;mode='live';started=false;ended=false;captionKey='';
  configure();setStage(2);shown=target();paint();
 }
 function restore(){mass=spec.mass;distance=spec.distance;}
