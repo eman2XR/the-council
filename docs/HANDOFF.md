@@ -15,6 +15,7 @@ The user is cost-sensitive and prefers existing Claude Code/Codex CLI authentica
 - Branch: `main`; remote: `origin`.
 - GitHub Pages uses GitHub Actions. The existing deployed demo succeeded in run `40447395106`.
 - GitHub CLI personal account: `eman2XR`. This repository has a local credential helper using `gh auth git-credential` and an explicit personal username. Do not replace global work-account settings.
+- The user authorized disabling commit signing **only for this personal repository**. Local `commit.gpgsign=false` is set; global work signing remains `true` (x509). For an authorized separate personal worker checkout, apply the same local override so unattended commits do not request Touch ID. Never change global signing or work repository settings.
 - No credentials belong in Git. `.env`, `.council-runtime`, `.council-state`, `web/runs`, and `web/latest.json` are ignored.
 
 The website is static. GitHub does not run the model agents; the Mac runs them and pushes accepted public files. A deployed website remains available when the Mac is off. Research needs an awake, logged-in Mac and the managed Claude VPN connection.
