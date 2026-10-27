@@ -44,26 +44,26 @@ Verification:
 - Separate bounded live regression `20261027T041411-61589ffe` **passed on revision two**, physics score **8.5**, visual score **7.5**, all 12 renderer/model checks passed. It has been exported to `web/published/20261027T041411-61589ffe/`. Its question is “Why do clocks at different heights tick at different rates?” This did not reset the daily ledger. No live model workers remain after this check.
 - The dashboard deployment at commit `c48b69f` succeeded in GitHub Actions run `40448748038`. Check later workflows for the accepted-guide deployment.
 
-### Actual scheduler status — blocked, not running
+### Scheduler status — enabled from a worker checkout
 
-A one-attempt, 9 AM local Claude launch agent was registered and smoke-tested. The background process failed with macOS `Operation not permitted` reading the Desktop checkout. An explicit script entry point did not resolve OS folder privacy. The job was then **unloaded** with `launchctl bootout`; the plist remains at `~/Library/LaunchAgents/org.the-council.daily.plist`. `web/dashboard.json` marks the schedule blocked.
+The user chose a separate worker checkout. The launch agent `org.the-council.daily` (9 AM local, Claude, `--count 1 --rounds 3 --publish`) runs from `~/Projects/the-council-worker`, outside macOS-protected folders. The Desktop checkout remains the interactive development workspace; do not point launchd at it.
 
-The user has been asked to choose one of:
+Worker setup:
 
-1. A separate worker checkout in `~/Projects/the-council-worker` (recommended).
-2. Grant Python appropriate Desktop access in macOS Privacy & Security.
-3. Leave scheduling disabled.
+- Cloned from GitHub; repo-local `commit.gpgsign=false` and the personal `gh auth git-credential` helper/username, matching the Desktop checkout. Global work signing is untouched.
+- `.council-state/history.json` was copied from the Desktop checkout so today's used slots carry over. The worker's ledger is now authoritative for scheduled runs; manual Desktop `daily` runs keep a separate ledger and can therefore duplicate a day's work.
+- Plist generated with `/Library/Frameworks/Python.framework/Versions/3.13/bin/python3` (has Playwright) and a minimal PATH (`~/.local/bin` first for managed `claude`, then Homebrew for `gh`/`node`/`codex`).
+- The user's global `core.hooksPath` previously pointed to `~/Desktop/weekly notes/scripts`, which background jobs cannot read, so every push failed under launchd. At the user's direction those Git LFS hooks were copied to `~/Projects/weekly-notes-hooks` and the global hooksPath now points there. Desktop originals remain.
+- Registration: Claude Code's sandbox cannot `launchctl bootstrap` (error 5); the user ran it in Terminal. `launchctl kickstart` works from the agent session.
 
-**This is a required location/permission choice. Do not silently assume an answer or claim daily scheduling works.** The user has not answered at this checkpoint. Keep the website, manual loop and handoff complete while waiting.
+Smoke test 2026-10-26: kickstart exited 0, no permission errors, and the publish step pushed successfully (the day's cap was already reached, so no model calls were made). Not yet verified under launchd: a real Claude call (managed auth/VPN in the background context) and Chrome rendering. The first 9 AM run is that test; inspect `~/Projects/the-council-worker/.council-state/daily*.log` and the ledger afterwards.
 
 ## Next steps
 
-1. Verify the accepted guide and latest dashboard deployment, if the current session has not already done so; use GitHub Actions and public URL checks.
-2. Resolve the scheduler location/permission choice. If a worker checkout is authorized, keep the existing Desktop workspace intact; configure the worker's personal Git credentials locally, transfer the daily history to avoid duplicate same-day work, regenerate absolute paths, and smoke-test launchd. Its virtual environment/browser dependencies and managed CLI auth must work there. Do not copy secret files or commit local state.
-3. If the user grants Desktop access, reinstall the current generated plist and smoke-test it. The `--count 1` daily command will not start more model work on a day whose slots are already used.
-4. Only mark `schedule.enabled=true` after a real launch-agent smoke test succeeds; publish that change. If it remains blocked, keep the dashboard honest.
-5. Expand visual model families over time. The planner currently creates questions within two models, not arbitrary physics animations. Semantic novelty is model-assisted rather than guaranteed.
-6. Update this handoff after material changes so either coding agent can resume.
+1. After the next 9 AM run, check the worker logs, ledger and GitHub Actions. If Claude auth or rendering fails under launchd, set the dashboard schedule back to blocked with an honest reason.
+2. Pull source changes into the worker (`git -C ~/Projects/the-council-worker pull --ff-only`) after pushing from the Desktop checkout; regenerate the plist only if interpreter/paths change.
+3. Expand visual model families over time. The planner currently creates questions within two models, not arbitrary physics animations. Semantic novelty is model-assisted rather than guaranteed.
+4. Update this handoff after material changes so either coding agent can resume.
 
 ## Commands
 

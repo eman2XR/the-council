@@ -142,7 +142,7 @@ cp .council-state/org.the-council.daily.plist "$HOME/Library/LaunchAgents/"
 launchctl bootstrap "gui/$(id -u)" "$HOME/Library/LaunchAgents/org.the-council.daily.plist"
 ```
 
-If macOS reports “Operation not permitted” for a project on Desktop/Documents, the launch agent is blocked by privacy protection. Grant the Python interpreter appropriate folder access in System Settings, or explicitly set up a separate checkout outside those protected folders. Do not claim the schedule works until a `launchctl kickstart` smoke test exits successfully.
+If macOS reports “Operation not permitted” for a project on Desktop/Documents, the launch agent is blocked by privacy protection. Run the schedule from a separate checkout outside those folders (for example `~/Projects/the-council-worker`) and generate the plist from there. Git hooks configured via a global `core.hooksPath` inside a protected folder also break background pushes. Do not claim the schedule works until a `launchctl kickstart` smoke test exits successfully.
 
 The generated file uses absolute paths to this checkout and Python interpreter, plus your current PATH. Regenerate it if either moves. The Mac must be on and you must be logged in; managed Claude also needs its VPN connection. `caffeinate` prevents idle sleep during a run, but does not power on the Mac or defeat a closed laptop lid. A missed calendar trigger can run on wake; the daily ledger prevents duplicate work. There is no always-on cloud research worker.
 

@@ -40,14 +40,14 @@
     }
   ],
   "schedule": {
-    "enabled": false,
+    "enabled": true,
     "hour": 9,
     "count": 1,
     "timezone": "America/Los_Angeles",
     "provider": "claude",
     "requires": "Awake Mac, logged-in user, VPN, and available CLI quota",
-    "state": "blocked",
-    "reason": "macOS prevents the background worker from reading the Desktop project. Awaiting worker-location or permission setup."
+    "state": "enabled",
+    "reason": "Launch agent runs from ~/Projects/the-council-worker; smoke test passed on 2026-10-26."
   },
   "delivery": "Static status snapshot. Deployment and refresh can take several minutes.",
   "attempts": [
