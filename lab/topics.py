@@ -92,8 +92,8 @@ No new-discovery claims.'''+COMMON
 WELL_NOTES = '''FINITE SQUARE WELL (ALLOWED ENERGIES). Bound states of a particle in a one-dimensional finite well
 (units hbar = 1, 2m = 1), found by solving the standard even/odd matching conditions numerically. Drawn: the well (flat
 outside, floor of depth V inside), each allowed energy as a level line with its wave shape drawn on it (the wave leaks
-slightly into the walls), and at the bottom the probability of a mix of the two lowest levels sloshing back and forth
-(time scaled). Field mass sets depth V = 25*mass (UI "Well depth", 0 = no well); field distance sets width
+slightly into the walls and gently vibrates like a plucked string), and an energy ladder showing that only these
+rungs are allowed. Field mass sets depth V = 25*mass (UI "Well depth", 0 = no well); field distance sets width
 1 + (distance - 1) (UI "Well width"). The readout is the number of allowed levels; any well in one dimension holds at
 least one, deeper or wider wells hold more. Supported questions: why trapped particles have only certain energies
 (standing waves that fit), why a bigger well has more and closer levels, why the wave leaks into the walls. Energies are to

@@ -136,6 +136,10 @@ def daily(factory, count=1, rounds=3, push=False, root=ROOT, requests=None):
     if count not in (1,2):
         raise ValueError('Daily limit must be one or two investigations.')
     day=datetime.now().astimezone().date().isoformat()
+    # The owner can pause new investigations without unloading the schedule; no slot is used.
+    if (root/'.council-state'/'paused').exists():
+        print('Investigations are paused (.council-state/paused); nothing started.',flush=True)
+        return []
     with daily_lock(root) as folder:
         ledger_path=folder/'history.json'
         ledger=json.loads(ledger_path.read_text()) if ledger_path.exists() else []

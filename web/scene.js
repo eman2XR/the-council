@@ -76,9 +76,9 @@ function drawLight(ctx,w,h,spec,st){
   }
   if(st.labels&&main){
    const end=points[N], ref=map(7.5,b)[1], size=small?10:11, x=Math.min(w-16,end[0]);
-   text(ctx,'LIGHT',Math.max(16,map(-7.5,b)[0]),ref-16,{size:10,weight:600,spacing:'1.5px'});
+   text(ctx,'LIGHT',Math.max(16,map(-7.5,b)[0]),ref+16,{size:10,weight:600,spacing:'1.5px'});
    if(m>.001){text(ctx,'with gravity',x,end[1]+16,{align:'right',size,weight:600,color:accent});
-    if(spec.show_reference&&Math.abs(end[1]-ref)>28)text(ctx,'dashed: without the mass',x,ref-14,{align:'right',size});}
+    if(spec.show_reference)text(ctx,'dashed: without the mass',x,map(7.5,st.distance+(count-1)*.4)[1]-16,{align:'right',size});}
    else text(ctx,'straight: no mass to bend it',x,end[1]+16,{align:'right',size,weight:600,color:accent});
   }
  }
@@ -107,9 +107,10 @@ function drawClocks(ctx,w,h,spec,st){
  trace(ctx,[[gx-4,upperY],[gx+4,upperY]]);ctx.stroke();trace(ctx,[[gx-4,lowerY],[gx+4,lowerY]]);ctx.stroke();
  ctx.setLineDash([2,4]);trace(ctx,[[gx,upperY],[gx,lowerY]]);ctx.stroke();ctx.setLineDash([]);
  if(st.labels){ctx.save();ctx.translate(gx-12,(upperY+lowerY)/2);ctx.rotate(-Math.PI/2);text(ctx,'SAME GAP',0,0,{align:'center',size:9,weight:600,spacing:'1.5px'});ctx.restore();}
- const reference=st.t*.65;
+ // Both clocks start together at each chapter, so the lag shown is the lag since that start.
+ const clockT=st.since??st.t, reference=clockT*.5;
  function face(y,speed,name,lower){
-  const angle=st.t*.65*speed;
+  const angle=clockT*.5*speed;
   ctx.save();ctx.shadowColor='rgba(20,30,50,.14)';ctx.shadowBlur=26;ctx.shadowOffsetY=10;
   ctx.beginPath();ctx.arc(cx,y,rad,0,TAU);ctx.fillStyle='#fff';ctx.fill();ctx.restore();
   ctx.beginPath();ctx.arc(cx,y,rad,0,TAU);ctx.strokeStyle='rgba(20,23,28,.12)';ctx.lineWidth=1;ctx.stroke();
@@ -151,7 +152,7 @@ function pill(ctx,value,x,y,opts={}){
 function drawSpacetime(ctx,w,h,spec,st){
  const accent=ACCENT[spec.accent]||ACCENT.blue, v=Physics.speed(st.mass), g=Physics.gamma(v), T=Physics.turnaround(st.distance), H=2*T, small=w<520;
  // Scale to the whole trip, so the drawing fills the stage; the shape (and the percentage) does not depend on trip length.
- const k=Math.min((h-(st.labels?(small?128:92):36))/(H+.1),(w*.62)/Math.max(.9,v*T+1.1)), x0=w*.5-v*T*k*.5, y0=h-28, map=(x,t)=>[x0+x*k,y0-t*k];
+ const k=Math.min((h-(st.labels?(small?128:92):52))/(H+.1),(w*.62)/Math.max(.9,v*T+1.1)), x0=w*.5-v*T*k*.5, y0=h-28, map=(x,t)=>[x0+x*k,y0-t*k];
  const top=y0/k;
  ctx.beginPath();ctx.moveTo(...map(0,0));ctx.lineTo(...map(top,top));ctx.lineTo(...map(-top,top));ctx.closePath();ctx.fillStyle=rgba(accent,.045);ctx.fill();
  ctx.setLineDash([2,5]);ctx.strokeStyle=rgba('#d97706',.6);ctx.lineWidth=1.2;
@@ -210,13 +211,14 @@ function drawInterference(ctx,w,h,spec,st){
  if(st.labels){
  const pts=[];for(let i=0;i<=200;i++){const x=sx0+(sx1-sx0)*i/200, dr=Math.hypot(x-s1[0],screen-s1[1])-Math.hypot(x-s2[0],screen-s2[1]);pts.push([x,Physics.brightness(A,k*dr)]);}
  ctx.fillStyle='rgba(255,255,255,.7)';ctx.fillRect(0,screen,w,h-screen);
- for(const [x,I] of pts){ctx.fillStyle=rgba(accent,.08+.85*I);ctx.fillRect(x-1.5,screen+6,(sx1-sx0)/200+1,band);}
+ ctx.fillStyle='#1e1d1b';ctx.fillRect(sx0,screen+6,sx1-sx0,band);
+ for(const [x,I] of pts){ctx.fillStyle=`rgba(255,244,214,${Math.min(1,I*1.05)})`;ctx.fillRect(x-1.5,screen+6,(sx1-sx0)/200+1,band);}
  }
  for(const [p,on] of [[s1,1],[s2,A]]){ctx.globalAlpha=on>0.001?.4+.6*Math.min(1,on):.25;ctx.beginPath();ctx.arc(p[0],p[1],6,0,TAU);ctx.fillStyle=on>0.001?accent:'#fff';ctx.fill();ctx.strokeStyle='rgba(20,23,28,.4)';ctx.lineWidth=1;ctx.stroke();ctx.globalAlpha=1;}
  if(st.labels){
   const size=w<520?10:11;
   text(ctx,'SOURCE',s1[0]-12,s1[1],{align:'right',size,weight:600,spacing:'1.5px'});
-  text(ctx,A>0.001?'SECOND SOURCE':'second source off',s2[0]+12,s2[1],{size,weight:600,spacing:A>0.001?'1.5px':'0px',color:A>0.001?'rgba(20,23,28,.64)':'rgba(20,23,28,.5)'});
+  const far=s2[0]+130>w;text(ctx,A>0.001?'SECOND SOURCE':'second source off',far?s2[0]-12:s2[0]+12,far?s2[1]+18:s2[1],{size,weight:600,spacing:A>0.001?'1.5px':'0px',color:A>0.001?'rgba(20,23,28,.64)':'rgba(20,23,28,.5)'});
   text(ctx,'SCREEN · brightness averaged over time',sx0,screen+band+22,{size:10,weight:600,spacing:'1px'});
  }
 }
@@ -285,11 +287,12 @@ function drawRope(ctx,w,h,spec,st){
  if(A>.5){for(let m=1;m<n;m++){const x=x0+m/n*(x1-x0);ctx.beginPath();ctx.arc(x,y,4,0,TAU);ctx.fillStyle=`rgba(234,88,12,${(A-.5)*1.6})`;ctx.fill();}}
  if(st.labels){
   const size=small?10:11;
-  text(ctx,'HAND',x0,y+h*.2,{align:'center',size,weight:600,spacing:'1.5px'});
-  text(ctx,'WALL',x1+6,y+h*.25,{align:'center',size,weight:600,spacing:'1.5px'});
-  text(ctx,`${n} half-wave${n>1?'s':''} fit`,(x0+x1)/2,y+h*.28,{align:'center',size:small?11:12,weight:600,color:accent});
-  if(A>.5&&n>1)text(ctx,'still points',x0+(x1-x0)/n,y-16,{align:'center',size:10,color:'rgba(234,88,12,.9)'});
-  if(spec.show_reference)text(ctx,A>.001?'dashed: wave going right, and its reflection going left':'dashed: the wave going right',(x0+x1)/2,small?h*.22:h*.12,{align:'center',size:10});
+  const base=y+h*.22;
+  text(ctx,'HAND',x0,base,{align:'center',size,weight:600,spacing:'1.5px'});
+  text(ctx,'WALL',x1+6,base,{align:'center',size,weight:600,spacing:'1.5px'});
+  if(A>.5)text(ctx,`${n} half-wave${n>1?'s':''} fit`,(x0+x1)/2,base,{align:'center',size:small?11:12,weight:600,color:accent});
+  if(A>.5&&n>1)pill(ctx,'still points',x0+(x1-x0)/n,y+18,{align:'center',size:10,weight:600,color:'rgba(194,65,12,1)'});
+  text(ctx,A>.001?(spec.show_reference?'dashed: the wave going right and its reflection coming back':''):'the wave travels right; nothing comes back',(x0+x1)/2,h*.93,{align:'center',size:10});
  }
 }
 
@@ -346,37 +349,41 @@ function drawPacket(ctx,w,h,spec,st){
 
 function drawWell(ctx,w,h,spec,st){
  const accent=ACCENT[spec.accent]||ACCENT.gold, W=Physics.well(st.mass,st.distance), small=w<520;
- const xmin=-2.4,xmax=2.4, X=x=>w*.08+(x-xmin)/(xmax-xmin)*w*.84, Emax=4,Emin=-25.5, top=h*(st.labels&&small?.2:.12), bottom=h*.74;
- const Y=E=>top+(Emax-E)/(Emax-Emin)*(bottom-top), half=W.L/2;
- // Potential: flat outside, a floor of depth V inside.
- ctx.fillStyle='rgba(20,23,28,.04)';ctx.fillRect(X(-half),Y(0),X(half)-X(-half),Y(-W.V)-Y(0));
- trace(ctx,[[X(xmin),Y(0)],[X(-half),Y(0)],[X(-half),Y(-W.V)],[X(half),Y(-W.V)],[X(half),Y(0)],[X(xmax),Y(0)]]);
- ctx.strokeStyle='rgba(20,23,28,.55)';ctx.lineWidth=1.6;ctx.stroke();
- const scale=Math.min(h*.045,(bottom-top)/(W.levels.length+2)*.42);
+ const xmin=-2.4,xmax=2.4, X=x=>w*.06+(x-xmin)/(xmax-xmin)*w*(small?.7:.74), Emax=3,Emin=-26, top=h*(st.labels&&small?.24:.14), bottom=h*.9;
+ const Y=E=>top+(Emax-E)/(Emax-Emin)*(bottom-top), half=W.L/2, rim=Y(0), floor=Y(-W.V);
+ // Ground on both sides and a pit whose depth is the well depth.
+ if(W.V>1e-4){
+  const pit=ctx.createLinearGradient(0,rim,0,floor);pit.addColorStop(0,'rgba(255,255,255,0)');pit.addColorStop(1,rgba(accent,.08));ctx.fillStyle=pit;ctx.fillRect(X(-half),rim,X(half)-X(-half),floor-rim);}
+ trace(ctx,[[X(xmin),rim],[X(-half),rim],[X(-half),floor],[X(half),floor],[X(half),rim],[X(xmax),rim]]);
+ ctx.strokeStyle='rgba(60,40,25,.7)';ctx.lineWidth=2.2;ctx.lineJoin='round';ctx.stroke();
+ // Each allowed level: its wave fits the trap and leaks only a little into the walls.
+ const ys=W.levels.map(l=>Y(l.E));
  W.levels.forEach((l,i)=>{
-  const y=Y(l.E);ctx.setLineDash([3,4]);trace(ctx,[[X(xmin),y],[X(xmax),y]]);ctx.strokeStyle='rgba(20,23,28,.14)';ctx.lineWidth=1;ctx.stroke();ctx.setLineDash([]);
-  trace(ctx,[[X(-half),y],[X(half),y]]);ctx.strokeStyle='rgba(20,23,28,.35)';ctx.stroke();
-  const pts=Array.from({length:241},(_,j)=>{const x=xmin+(xmax-xmin)*j/240;return [X(x),y-W.psi(l,x)*scale];});
-  trace(ctx,pts);ctx.strokeStyle=i===0?accent:rgba(accent,.55);ctx.lineWidth=i===0?2.4:1.6;ctx.stroke();
-  if(st.labels)text(ctx,`level ${i+1}`,X(xmax),y-8,{align:'right',size:10,weight:600,color:'rgba(20,23,28,.6)'});
+  const y=ys[i], room=Math.min(i?ys[i-1]-y:floor-y, i<ys.length-1?y-ys[i+1]:y-rim)*.42, amp=Math.max(4,Math.min(room,h*.06));
+  const reach=half+Math.min(.55,1.4/Math.max(l.kappa,.6)), vib=Math.cos(st.t*(1.2+.55*i));
+  trace(ctx,[[X(-half),y],[X(half),y]]);ctx.strokeStyle='rgba(20,23,28,.18)';ctx.lineWidth=1;ctx.setLineDash([3,4]);ctx.stroke();ctx.setLineDash([]);
+  const pts=[];for(let j=0;j<=180;j++){const x=-reach+2*reach*j/180;pts.push([X(x),y-W.psi(l,x)*amp*vib]);}
+  // Inside the trap the wave is solid; the short leak into the walls is drawn faded.
+  const inside=pts.filter((_,j)=>Math.abs(-reach+2*reach*j/180)<=half), leftLeak=pts.filter((_,j)=>-reach+2*reach*j/180<=-half+1e-9), rightLeak=pts.filter((_,j)=>-reach+2*reach*j/180>=half-1e-9);
+  ctx.lineCap='round';
+  for(const seg of [leftLeak,rightLeak]){trace(ctx,seg);ctx.strokeStyle=rgba(accent,.35);ctx.lineWidth=1.6;ctx.setLineDash([2,3]);ctx.stroke();ctx.setLineDash([]);}
+  trace(ctx,inside);ctx.strokeStyle=rgba(accent,.18);ctx.lineWidth=7;ctx.stroke();
+  trace(ctx,inside);ctx.strokeStyle=i===0?accent:rgba(accent,.8);ctx.lineWidth=i===0?2.6:2;ctx.stroke();
  });
- // A mix of the two lowest levels is not stationary: its probability sloshes back and forth (time scaled).
- const by=h*.93, bh=h*.13;
- if(W.levels.length>=2){
-  const [a,b]=W.levels, ph=(b.E-a.E)*st.t*.18;
-  const pts=Array.from({length:241},(_,j)=>{const x=xmin+(xmax-xmin)*j/240, p=W.psi(a,x), q=W.psi(b,x);return [X(x),(p*p+q*q+2*p*q*Math.cos(ph))/2];});
-  const m=Math.max(...pts.map(p=>p[1]))||1;
-  ctx.beginPath();ctx.moveTo(pts[0][0],by);pts.forEach(([x,v])=>ctx.lineTo(x,by-v/m*bh));ctx.lineTo(pts.at(-1)[0],by);ctx.closePath();ctx.fillStyle=rgba(accent,.28);ctx.fill();
-  if(st.labels)text(ctx,'a mix of levels 1 and 2 sloshes back and forth',X(xmin),by-bh-10,{size:10,color:'rgba(20,23,28,.6)'});
- }
+ // Energy ladder: only these rungs exist; the gaps between them are not allowed.
+ const lx=w*(small?.83:.86), lw=w*(small?.1:.07);
+ ctx.fillStyle='rgba(20,23,28,.05)';ctx.fillRect(lx,W.V>1e-4?floor:rim,lw,(W.V>1e-4?rim-floor:0));
+ for(const y of ys){ctx.fillStyle=accent;ctx.fillRect(lx-2,y-1.5,lw+4,3);}
  if(st.labels){
   const size=small?10:11;
-  if(W.V>1e-4)text(ctx,'WELL',X(0),Y(-W.V)+16,{align:'center',size,weight:600,spacing:'1.5px'});
-  else text(ctx,'no well: nothing holds the particle, so any energy is possible',w/2,Y(0)+24,{align:'center',size});
-  text(ctx,'higher energy ↑',X(xmin),top-6,{size:10});
+  text(ctx,'energy ↑',lx+lw/2,top-14,{align:'center',size:10});
+  text(ctx,'ALLOWED',lx+lw/2,bottom+12>h-4?bottom-8:bottom+12,{align:'center',size:9,weight:600,spacing:'1.5px'});
+  ys.forEach((y,i)=>pill(ctx,i===0?'lowest level':`level ${i+1}`,X(half+.62)+10,y,{size:10,weight:600,color:'rgba(20,23,28,.7)'}));
+  if(W.levels.length)text(ctx,'dotted: the wave leaks a little into the walls',X(0),Math.min(h-10,bottom+4),{align:'center',size:10});
+  if(W.V>1e-4)text(ctx,'TRAP',X(-half)-10,floor-10,{align:'right',size,weight:600,spacing:'1.5px',color:'rgba(60,40,25,.75)'});
+  else text(ctx,small?'no trap: any energy is possible':'no trap: nothing holds the particle, so any energy is possible',X(0),rim-24,{align:'center',size});
  }
 }
-
 function drawFall(ctx,w,h,spec,st){
  const accent=ACCENT[spec.accent]||ACCENT.blue, F=Physics.fall(st.mass,st.distance), small=w<520;
  const x0=w*.08, x1=w*.92, ground=h*.8, topY=h*(st.labels&&small?.26:.16), Hs=Math.max(F.ref*2,1e-9);
@@ -433,8 +440,9 @@ function drawGap(ctx,w,h,spec,st){
  // Screen: time-averaged brightness from the single-gap pattern.
  if(!st.labels)return;
  const band=h*.08;ctx.fillStyle='rgba(255,255,255,.7)';ctx.fillRect(0,screen,w,h-screen);
+ ctx.fillStyle='#1e1d1b';ctx.fillRect(w*.04,screen+6,w*.92,band);
  for(let i=0;i<=200;i++){const x=w*.04+w*.92*i/200, dx=x-cx, s=dx/Math.hypot(dx,screen-yb), I=open?Physics.singleSlit(st.mass,st.distance,s):1;
-  ctx.fillStyle=rgba(accent,.08+.85*I);ctx.fillRect(x-1.5,screen+6,w*.92/200+1,band);}
+  ctx.fillStyle=`rgba(255,244,214,${Math.min(1,I)})`;ctx.fillRect(x-1.5,screen+6,w*.92/200+1,band);}
  if(open&&G.sinMin<1&&(spec.show_reference||st.labels)){
   const L=screen-yb, tan=G.sinMin/Math.sqrt(1-G.sinMin*G.sinMin);
   ctx.setLineDash([4,5]);ctx.strokeStyle='rgba(20,23,28,.4)';ctx.lineWidth=1.2;
@@ -477,12 +485,13 @@ function drawRocket(ctx,x,y,size,dir,thrust,t){
 }
 function drawTwinTrip(ctx,w,h,spec,st){
  const accent=ACCENT[spec.accent]||ACCENT.blue, v=Physics.speed(st.mass), g=Physics.gamma(v), T=Physics.turnaround(st.distance), H=2*T, small=w<520;
- const tc=Math.min(H,((st.t*.42*Math.max(1,H/4.8))%(H+1.6)+H+1.6)%(H+1.6)), leg=tc<=T?tc/T:(H-tc)/T, moving=v>.001&&tc>0&&tc<H;
+ // The trip runs once per chapter and then waits at the reunion.
+ const tc=Math.min(H,(st.since??st.t)*.42*Math.max(1,H/4.8)), leg=tc<=T?tc/T:(H-tc)/T, moving=v>.001&&tc>0&&tc<H;
  const xE=w*(small?.16:.14), xS=w*(small?.86:.84), yTrip=h*(st.labels&&small?.33:.24), r=Math.min(w,h)*.055;
  // The route, Earth and the destination star.
  ctx.setLineDash([3,6]);trace(ctx,[[xE+r*1.3,yTrip],[xS-r*1.1,yTrip]]);ctx.strokeStyle='rgba(20,23,28,.2)';ctx.lineWidth=1.2;ctx.stroke();ctx.setLineDash([]);
  drawEarth(ctx,xE,yTrip,r);drawStar(ctx,xS,yTrip,r*.75,v>.001?1:.35);
- const rx=v>.001?xE+r*1.5+(xS-xE-r*2.6)*leg:xE+r*1.6, ry=yTrip-(v>.001?0:r*1.1);
+ const rx=v>.001?xE+r*1.9+(xS-xE-r*3.7)*leg:xE+r*1.9, ry=yTrip-(v>.001?0:r*1.2);
  drawRocket(ctx,rx,ry,r*.75,tc<=T?1:-1,moving,st.t);
  // Each twin carries a clock: one turn per year of that twin's own time.
  const cr=Math.min(w*.07,h*.1), cy=h*(small?.56:.52), homeX=small?w*.27:w*.3, travX=small?w*.73:w*.7;
@@ -490,7 +499,7 @@ function drawTwinTrip(ctx,w,h,spec,st){
  // Birthdays so far: one dot per year each twin has lived.
  const rows=[[tc,'#14171c',h*.8,'HOME'],[tc/g,accent,h*.9,'TRAVELLER']], gap=Math.min(30,(w*.62)/8), x0=small?w*.36:w*.32;
  for(const [years,color,y,name] of rows){
-  for(let i=1;i<=Math.floor(H+1e-9);i++){const done=i<=years+1e-9, x=x0+(i-1)*gap;ctx.beginPath();ctx.arc(x,y,done?6:4,0,TAU);ctx.fillStyle=done?color:'rgba(20,23,28,.08)';ctx.fill();
+  for(let i=1;i<=Math.floor(H+1e-9);i++){const done=i<=years+1e-9, x=x0+(i-1)*gap;ctx.beginPath();ctx.arc(x,y,done?6:4,0,TAU);ctx.fillStyle=done?color:'rgba(20,23,28,.16)';ctx.fill();
    if(done&&years-i<.25){ctx.beginPath();ctx.arc(x,y,10+16*(years-i),0,TAU);ctx.strokeStyle=rgba(color==='#14171c'?'#14171c':accent,.35*(1-(years-i)*4));ctx.lineWidth=2;ctx.stroke();}}
   if(st.labels)text(ctx,name,x0-16,y,{align:'right',size:small?9:10,weight:600,spacing:'1px',color:color==='#14171c'?'rgba(20,23,28,.7)':accent});
  }
@@ -498,13 +507,13 @@ function drawTwinTrip(ctx,w,h,spec,st){
   const size=small?11:12;
   text(ctx,'EARTH',xE,yTrip+r*1.9,{align:'center',size:10,weight:600,spacing:'1.5px'});
   text(ctx,'STAR',xS,yTrip+r*1.9,{align:'center',size:10,weight:600,spacing:'1.5px'});
-  if(v>.001)text(ctx,`${(v*T).toFixed(1)} light-years away`,xS,yTrip+r*1.9+14,{align:'center',size:10});
-  pill(ctx,v>.001?`${Math.round(v*100)}% of light speed`:'rocket stays on Earth',rx,ry-r*1.05,{align:'center',size:10,weight:600,color:accent});
+  if(v>.001)text(ctx,`${(v*T).toFixed(1)} light-years away`,Math.min(xS,w-70),yTrip+r*1.9+14,{align:'center',size:10});
+  pill(ctx,v>.001?`${Math.round(v*100)}% of light speed`:'rocket stays on Earth',Math.max(rx,xE+r*3.4),ry-r*1.7,{align:'center',size:10,weight:600,color:accent});
   text(ctx,`Home twin  ${tc.toFixed(1)} years`,homeX,cy+cr+20,{align:'center',size,weight:600,color:'rgba(20,23,28,.8)'});
   text(ctx,`Traveller  ${(tc/g).toFixed(1)} years`,travX,cy+cr+20,{align:'center',size,weight:600,color:accent});
   text(ctx,'BIRTHDAYS',x0-16,h*.8-22,{align:'right',size:9,weight:600,spacing:'1.5px',color:'rgba(20,23,28,.5)'});
   if(tc>=H-1e-6&&v>.001){const fewer=Math.floor(H+1e-9)-Math.floor(H/g+1e-9), msg=`Together again: ${fewer} fewer birthday${fewer===1?'':'s'} for the traveller`;
-   if(small)pill(ctx,msg,w/2,h*.71,{align:'center',size:10,weight:600});else pill(ctx,msg,w*.79,h*.85,{align:'center',size,weight:600});}
+   if(small)pill(ctx,msg,w/2,h*.97,{align:'center',size:10,weight:600});else pill(ctx,msg,w*.79,h*.85,{align:'center',size,weight:600});}
  }
 }
 
@@ -543,7 +552,7 @@ const ENGINES={
   try:'Set the mix to one wave: where is the particle? Blend more wavelengths and watch the packet narrow.',aria:'A wave packet made by blending wavelengths, with a bar chart of the momenta mixed in.'},
  'quantum-well':{draw:drawWell,a:['Well depth','how strongly the particle is held'],b:['Well width','how much room it has',''],
   fa:a=>a<.005?'no well':Math.round(a*100)+'%',fb:b=>(1+(b-1)).toFixed(2)+'×',
-  measure:['Allowed energy levels',(a,b)=>String(Physics.levelCount(a,b))],scale:'',disclosure:'Energy levels are to scale; wave heights are not.',demoEnd:()=>2.5,
+  measure:['Allowed energy levels',(a,b)=>String(Physics.levelCount(a,b))],scale:'',disclosure:'Energy levels are to scale. Each level’s wave is drawn vibrating like a plucked string; its probability pattern does not change over time, and wave heights are not to scale.',demoEnd:()=>2.5,
   try:'Remove the well: are there any levels? Deepen it, then widen it. When does a new level appear?',aria:'A particle trapped in a well can only have certain energies, drawn as levels with their wave shapes.'},
  'falling-time':{draw:drawFall,a:['Gravity','how strong gravity is'],b:['Time in the air','between leaving and meeting again',''],
   fa:a=>a<.005?'none':Math.round(a*100)+'%',fb:b=>(2+2*(b-1)).toFixed(1)+' units',
@@ -596,16 +605,18 @@ function paint(){
  if(canvas.width!==Math.round(w*dpr)||canvas.height!==Math.round(h*dpr)){canvas.width=Math.round(w*dpr);canvas.height=Math.round(h*dpr);}
  // Reset drawing state as well as pixels so seeking never inherits a prior frame.
  if(ctx.reset)ctx.reset();ctx.setTransform(dpr,0,0,dpr,0,0);ctx.clearRect(0,0,w,h);
- draw(ctx,w,h,spec,{t:time,stage,mass:shown,distance,labels:spec.show_labels});
+ const since=started&&timeline?Math.max(0,time-timeline.chapters[stage].start):time;
+ draw(ctx,w,h,spec,{t:time,since,stage,mass:shown,distance,labels:spec.show_labels});
  const value=target();
  $('bend-value').textContent=engineOf(spec).measure[1](value,distance);
  captions();transport();
 }
 function sentences(body){return body.match(/[^.!?]+[.!?]*["”’)]*\s*/g)?.map(s=>s.trim()).filter(Boolean)||[body];}
 function captions(){
- let chapter, line, reveal=1;
- if(!started){chapter=`${spec.beats.length} short chapters · about ${Math.round(timeline.total/5)*5||Math.round(timeline.total)} seconds`;line=(spec.controls||'both')==='none'?'Press play to watch the explanation.':'Press play, or move the sliders to explore on your own.';}
- else if(ended&&mode!=='playing'){const c=spec.controls||'both';chapter=c==='none'?'The end':'Your turn';line=c==='none'?(spec.takeaway||'Press play to watch again.'):engineOf(spec).try;}
+ let chapter, line, reveal=1, hint='';
+ if(!started){chapter=`${spec.beats.length} chapters · ${fmt(timeline.total)}`;line=(spec.controls||'both')==='none'?'Press play to watch the explanation.':'Press play, or move the sliders to explore on your own.';}
+ else if(ended&&mode!=='playing'){const c=spec.controls||'both', e=engineOf(spec);chapter='The idea';line=spec.takeaway||'';
+  hint=c==='none'?'':c==='both'?'Now try it: '+e.try:`Now try it: move ${(c==='first'?e.a:e.b)[0]} and watch “${e.measure[0]}”.`;}
  else{
   const beat=spec.beats[stage];chapter=`${stage+1} of ${spec.beats.length} · ${beat.title}`;line=beat.body;
   {
@@ -614,6 +625,7 @@ function captions(){
   }
  }
  $('beat-title').textContent=chapter;
+ $('try-hint').textContent=hint;
  const body=$('beat-body'), key=chapter+'|'+line;
  if(key!==captionKey){captionKey=key;body.textContent=line;body.classList.remove('enter');if(mode==='playing'){void body.offsetWidth;body.classList.add('enter');}}
 }
@@ -626,6 +638,9 @@ function transport(){
  play.classList.toggle('is-playing',playing);play.setAttribute('aria-label',playing?'Pause':ended?'Replay':'Play');
  $('poster').hidden=started;
  document.querySelector('.workspace')?.classList.toggle('is-playing',playing);
+ document.querySelector('.workspace')?.classList.toggle('started',started);
+ document.querySelector('.workspace')?.classList.toggle('ended',ended&&!playing);
+ document.body.classList.toggle('idea-shown',ended&&!playing);
 }
 function syncControls(){
  const control=$('mass');control.disabled=stage===0;control.value=stage===0?0:mass;
@@ -649,10 +664,10 @@ function configure(){
  canvas.setAttribute('aria-label',e.aria);
 }
 function load(scene){
- // The poster is a still frame a few seconds in, where the comparison is already visible.
+ // Before playback the stage shows the opening frame of chapter 1.
  spec=scene;buildTimeline();
- $('ticks').replaceChildren(...timeline.chapters.slice(1).map((c,i)=>{const tick=document.createElement('button');tick.type='button';tick.dataset.beat=String(i+1);tick.style.left=`${c.start/timeline.total*100}%`;tick.title=`Chapter ${i+2}: ${spec.beats[i+1].title}`;tick.setAttribute('aria-label',tick.title);tick.onclick=e=>{e.stopPropagation();chapter(i+1);};return tick;}));$('poster-label').textContent=`Play · ${Math.round(timeline.total)} s`;mass=scene.mass;distance=scene.distance;time=scene.duration*.3;mode='live';started=false;ended=false;captionKey='';
- configure();setStage(2);shown=target();paint();
+ $('ticks').replaceChildren(...timeline.chapters.slice(1).map((c,i)=>{const tick=document.createElement('button');tick.type='button';tick.dataset.beat=String(i+1);tick.style.left=`calc(12px + (100% - 24px) * ${c.start/timeline.total})`;tick.title=`Chapter ${i+2}: ${spec.beats[i+1].title}`;tick.setAttribute('aria-label',tick.title);tick.onclick=e=>{e.stopPropagation();chapter(i+1);};return tick;}));mass=scene.mass;distance=scene.distance;time=0;mode='live';started=false;ended=false;captionKey='';
+ configure();setStage(0);shown=target();paint();
 }
 function restore(){mass=spec.mass;distance=spec.distance;}
 function play(){
@@ -671,9 +686,9 @@ function chapter(n){
 }
 function demo(p){
  // The last chapter moves the controls themselves so the viewer sees what each one does.
- const end=engineOf(spec).demoEnd(spec);
- mass=p<.5?spec.mass*(1-.55*Math.sin(Math.PI*p/.5)):spec.mass;
- distance=spec.distance+(end-spec.distance)*smooth((p-.5)/.42);
+ const end=engineOf(spec).demoEnd(spec), c=spec.controls||'both', moveA=c!=='second', moveB=c!=='first';
+ mass=moveA&&p<.5?spec.mass*(1-.55*Math.sin(Math.PI*p/.5)):spec.mass;
+ distance=moveB?spec.distance+(end-spec.distance)*smooth((moveA?p-.5:p)/(moveA?.42:.9)):spec.distance;
  syncControls();
 }
 function tick(stamp){
@@ -708,7 +723,7 @@ $('play').onclick=toggle;$('poster').onclick=play;
 $('reset').onclick=()=>{started=false;play();};
 // Scrubbing: click or drag anywhere on the bar; playback continues if it was playing.
 function scrubTo(clientX){
- const box=$('scrub').getBoundingClientRect(), t=clamp((clientX-box.left)/box.width)*timeline.total, n=chapterAt(t);
+ const box=$('scrub').getBoundingClientRect(), t=clamp((clientX-box.left-12)/(box.width-24))*timeline.total, n=chapterAt(t);
  started=true;ended=false;restore();time=t;setStage(n);shown=target();if(mode!=='playing')mode='paused';last=0;paint();
 }
 $('scrub').addEventListener('pointerdown',e=>{if(!spec||e.target.closest('[data-beat]'))return;$('scrub').setPointerCapture(e.pointerId);scrubTo(e.clientX);});

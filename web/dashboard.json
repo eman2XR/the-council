@@ -40,14 +40,14 @@
     }
   ],
   "schedule": {
-    "enabled": true,
+    "enabled": false,
     "hour": 9,
     "count": 1,
     "timezone": "America/Los_Angeles",
     "provider": "claude",
     "requires": "Awake Mac, logged-in user, VPN, and available CLI quota",
-    "state": "enabled",
-    "reason": "Launch agent runs from ~/Projects/the-council-worker; smoke test passed on 2026-10-26."
+    "state": "paused",
+    "reason": "Paused by the owner while the investigation format is improved."
   },
   "delivery": "Static status snapshot. Deployment and refresh can take several minutes.",
   "attempts": [

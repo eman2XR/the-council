@@ -42,6 +42,7 @@
   </header>
 
   <figure class="workspace">
+   <div class="viewer">
    <div class="stage">
     <canvas id="universe" role="img" aria-label="Interactive physics model"></canvas>
     <span id="scale-label" class="stage-note"></span>
@@ -51,14 +52,14 @@
     </button>
    </div>
 
-   <div id="scrub" class="scrub" role="slider" tabindex="0" aria-label="Playback position" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><i class="fill"></i><span id="ticks"></span></div>
-
    <div class="captions" aria-live="polite">
     <p id="beat-title" class="chapter-label"></p>
     <p id="beat-body" class="caption-line"></p>
+    <p id="try-hint" class="try-hint"></p>
+   </div>
+   <div id="scrub" class="scrub" role="slider" tabindex="0" aria-label="Playback position" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><i class="fill"></i><span id="ticks"></span></div>
    </div>
 
-   <div id="after" class="after" hidden><span>Tomorrow’s investigation: <strong id="after-next">a new question</strong></span><a id="after-ask" class="pill" target="_blank" rel="noopener noreferrer">Ask a question</a></div>
    <div class="transport">
     <button id="play" class="round" type="button" aria-label="Play"><span class="icon" aria-hidden="true"></span></button>
     <span id="clock-time" class="time">0:00 / 0:00</span>

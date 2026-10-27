@@ -82,7 +82,7 @@ function card(entry,record){
  const media=el('div',{className:'card-media'},canvas,el('span',{className:'mini-play',ariaHidden:'true'}));
  const badge=el('span',{className:'badge'});
  if(current&&(current.id===id||(isExample&&current.provider==='fixture'))){badge.textContent='Now showing';badge.dataset.kind='now';}
- else if(!isExample&&!watched.has(id)){badge.textContent='New';badge.dataset.kind='new';}
+ else if(!isExample&&!watched.has(id)&&Date.now()-new Date(entry.created).getTime()<36*3600*1000){badge.textContent='New';badge.dataset.kind='new';}
  else if(watched.has(id)){badge.textContent='Watched';badge.dataset.kind='seen';}
  const meta=el('p',{className:'card-meta'},el('em',{textContent:'By'}),' The Council',el('span',{className:'sep'}),isExample?'Hand-written example':day(entry.created,{month:'long',day:'numeric'}),badge);
  const excerpt=el('p',{className:'card-excerpt',textContent:record?.scene?.subtitle||entry.question||''});
@@ -109,7 +109,7 @@ function renderCards(){
   put('past-count',rest.length?`${rest.length} earlier`:'');
   $('past-title').closest('.section-head').hidden=!rest.length;
  }else{
-  const others=entries.filter(e=>e.id!==current?.id).slice(0,6);
+  const others=entries.filter(e=>e.id!==current?.id).slice(0,4);
   $('more-list').replaceChildren(...others.map(e=>thumbCard(e,records.get(e.id))));
   $('more').hidden=!others.length;
  }
@@ -203,8 +203,8 @@ function renderNext(){
   put('next-title',labActive?'':`${label} · in ${hours?hours+' h ':''}${minutes} min`);
   put('dashboard-schedule','One new investigation each morning. Only investigations that pass physics and visual review are published.');
  }else{
-  put('next-title',schedule?.state==='blocked'?'Schedule paused':'No schedule confirmed');
-  put('dashboard-schedule',schedule?.state==='blocked'?'The background worker needs setup before daily runs resume.':'Investigations are started by hand for now.');
+  put('next-title',schedule?.state==='paused'?'New investigations paused':schedule?.state==='blocked'?'Schedule paused':'No schedule confirmed');
+  put('dashboard-schedule',schedule?.state==='paused'?'The Council is improving how investigations are made. Published ones stay available.':schedule?.state==='blocked'?'The background worker needs setup before daily runs resume.':'Investigations are started by hand for now.');
  }
 }
 async function refreshDashboard(){
@@ -212,7 +212,7 @@ async function refreshDashboard(){
   const response=await fetch('dashboard.json',{cache:'no-store'});if(!response.ok)throw Error('No status');
   const state=await response.json();schedule=state.schedule;
   const active=['running','planning'].includes(state.status), age=Date.now()-new Date(state.updated).getTime();
-  put('dashboard-status',active?'Investigating now':schedule?.enabled?'Lab resting':'Lab paused');
+  put('dashboard-status',active?'Investigating now':schedule?.enabled?'Lab resting':schedule?.state==='paused'?'New investigations paused':'Lab paused');
   $('lab').dataset.state=active?'active':schedule?.enabled?'idle':'paused';
   labActive=active;labQuestion=state.question&&state.question!=='Choosing the next question'?state.question:'';
   const outcome={reviewed:'Last investigation passed review',needs_review:'Last attempt stayed a draft',failed:'Last attempt stopped early',interrupted:'Last attempt was interrupted'};
@@ -258,7 +258,7 @@ function renderPath(){
   const done=c.items.filter(doneItem).length;
   const tile=el('button',{type:'button',className:'chapter-tile',role:'tab'},
    el('span',{className:'tile-top',textContent:`Chapter ${c.number}`}),el('strong',{textContent:c.title}),
-   el('span',{className:'tile-status',textContent:done===c.items.length?'Complete':`${c.items.some(i=>i.model)?'Ready':'Later'} · ${done}/${c.items.length}`}),el('i'));
+   el('span',{className:'tile-status',textContent:done===c.items.length?`Complete · ${done}/${c.items.length}`:`${c.items.some(i=>i.model)?'Ready':'Later'} · ${done}/${c.items.length}`}),el('i'));
   tile.dataset.status=c.items.some(i=>i.model)?'ready':'later';tile.style.setProperty('--done',done/c.items.length);
   tile.setAttribute('aria-selected',String(c===chapter));
   tile.onclick=()=>{selectedChapter=c.number;renderPath();};
@@ -335,14 +335,6 @@ $('proposals-close').onclick=()=>$('proposals').close();
 $('proposals').addEventListener('click',e=>{if(e.target===$('proposals'))$('proposals').close();});
 loadProposals();
 
-/* End card: what comes next, and an easy way to ask about this one. */
-CouncilScene.on(type=>{
- if(type==='play')$('after').hidden=true;
- if(type==='ended'){
-  const all=curriculum?.chapters.flatMap(c=>c.items)||[], next=all.find(i=>i.model&&!doneItem(i));
-  put('after-next',next?next.question:'a new question');$('after-ask').href=$('ask').href;$('after').hidden=false;
- }
-});
 
 /* Sticky reading bar: appears once the headline scrolls away, with reading progress. */
 const readbar=$('readbar');

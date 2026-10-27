@@ -94,3 +94,13 @@ class DailyTests(unittest.TestCase):
                 result=daily(FixtureProvider,root=root)
             runner.assert_not_called()
             self.assertEqual(result[0]['status'],'interrupted')
+
+
+class PauseTests(unittest.TestCase):
+    def test_pause_flag_starts_nothing_and_uses_no_slot(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root=Path(tmp);(root/'.council-state').mkdir();(root/'.council-state'/'paused').write_text('owner')
+            with patch('lab.daily.run') as runner:
+                self.assertEqual(daily(FixtureProvider,root=root),[])
+            runner.assert_not_called()
+            self.assertFalse((root/'.council-state'/'history.json').exists())
