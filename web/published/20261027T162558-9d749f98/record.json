@@ -1,0 +1,284 @@
+{
+  "id": "20261027T162558-9d749f98",
+  "status": "reviewed",
+  "question": "Why can a trapped particle only have certain energies?",
+  "topic": "quantum-well",
+  "created": "2026-10-27T16:25:58.551402+00:00",
+  "research": {
+    "claim": "A trapped particle can only have certain energies because its quantum wave has to meet two conditions at once. It must solve the Schr\u00f6dinger equation inside the trap, and it must die away outside the trap. Only certain wavelengths can do both, and in quantum mechanics wavelength sets energy. So the energies come out discrete. A free particle has no \"fade away on both sides\" condition, so any energy is allowed. This is the same reason a guitar string or drumhead has only certain frequencies. The quantum part is the link between a wave's frequency and the particle's energy (E = \u0127\u03c9). This is textbook physics, not a new discovery.",
+    "explanation": "The trap in the picture is a one-dimensional finite square well. It is flat outside and has a floor of depth V inside.\n\nInside the well, the particle has kinetic energy, so its wave wiggles like a sine or cosine. In the wall regions its energy is below the wall height, so the wave cannot wiggle there. It can only grow or shrink exponentially. A real, normalizable state has to shrink on both sides.\n\nThe wave and its slope must join smoothly at each wall. For most energies, a wiggle that decays on the left reaches the right wall at the wrong phase and then blows up. Only at particular energies does it join a decaying tail on both sides. Those are the allowed levels.\n\nYou can find them by \"shooting\": try an energy, integrate across the well, and watch the far tail. It flips from +\u221e to \u2212\u221e each time the energy passes an allowed level. This is standard physics. It matches the topic titles of the MIT 8.04 notes, but those notes were not read.\n\n**The ideal box with rigid walls (OpenStax \u00a77.4).** The wave must be zero at both walls, so a whole number of half-wavelengths must fit: kL = n\u03c0. That gives E_n = n\u00b2\u03c0\u00b2\u0127\u00b2/(2mL\u00b2), and the lowest level is above zero. OpenStax calls this a standing-wave condition.\n\n**The finite well (OpenStax \u00a77.6).** Its lower levels are quantized, but there are only finitely many of them, and the particle can tunnel. The wave leaks a short way into the walls. That gives it a slightly longer effective wavelength, so each level sits a little lower than in a rigid box of the same width. That last point is standard physics, not checked against a source here.\n\n**What changes the spacing.** A wider or deeper well fits more half-wavelengths below the rim, so it holds more levels and packs them closer together. In a rigid box the spacing scales as 1/(mL\u00b2).\n\n**At least one level.** Any attractive well in one dimension holds at least one level. In 3D that is not guaranteed. This is standard physics, not checked here.\n\n**The model's own formula.** In the model's units (\u0127 = 1, 2m = 1), write z\u2080 = (L/2)\u00b7\u221aV. The number of bound levels is N = floor(2z\u2080/\u03c0) + 1 = floor(L\u221aV/\u03c0) + 1 whenever V > 0.\n\n**The bottom strip.** It shows a mix of the two lowest levels. Each level on its own is stationary: its probability does not move. The sloshing comes from the two levels interfering, at a frequency set by their energy difference.\n\n**How the picture can mislead.** The waves are drawn on their level lines only by convention. Their height and vertical position have no physical meaning, and each level is a stationary wave, not a ball bouncing along a path.\n\n**Sliders.** Playback already zeroes the depth, restores it, dips it and sweeps the width, so it shows each idea. A suggested field-controls choice is \"none\". If a slider is offered, the \"Well depth\" slider adds the most: dragging it down shows levels disappearing one by one until only the last one remains just above zero depth.",
+    "assumptions": [
+      "One particle, non-relativistic, moving in one dimension in a potential that doesn't change with time. No spin, no interactions with other particles, no surroundings.",
+      "The well is an idealized square well with sharp edges and a flat floor (V = 25\u00b7mass, width L = distance), in units \u0127 = 1, 2m = 1.",
+      "Each level is treated as a perfectly sharp stationary state. Real levels have a small width from their lifetime and from coupling to the environment.",
+      "The plotted energies are to scale. The wave heights and the vertical positions of the waves on their level lines are a drawing convention, not physical quantities.",
+      "The scene's default mass and distance values were not given in the notes. The numbers in the prediction assume mass = 1 (V = 25)."
+    ],
+    "prediction": "The level-count readout should follow N = floor(L\u221aV/\u03c0) + 1 when V > 0, and N = 0 when V = 0.\n\n**Example, assuming mass = 1 (V = 25):**\n- At width L = 1 the readout shows 2 levels.\n- As the chapter-3 sweep widens the well to L = 2.5, the count rises to 3 when L passes 2\u03c0/5 \u2248 1.26, and to 4 when L passes 3\u03c0/5 \u2248 1.88.\n- It stays at 4 at L = 2.5, because the next new level would need L \u2265 4\u03c0/5 \u2248 2.51.\n\n**General behavior:**\n- During the sweep the levels move down and crowd closer together.\n- During the depth dip the upper levels disappear first. At least one level stays as long as the depth is above zero.\n- In chapter 1, with depth set to 0, the readout is 0.\n- Each finite-well level sits below the matching rigid-box value n\u00b2\u03c0\u00b2/L\u00b2 for the same width.\n\n**Measurable real-world signs of the same physics:**\n- Discrete gamma-ray or spectral lines at the energy differences between levels. For example, the OpenStax proton-in-a-10\u207b\u00b9\u2074 m-box example gives 2.05 \u2192 8.20 MeV, which is a 6.15 MeV gamma ray.\n- Resonant-tunneling current that flows only at specific voltages, as in OpenStax's GaAs/AlAs quantum dot.",
+    "falsifier": "**In the model**, any of these would show the computation or the explanation is wrong:\n- A finite well with V > 0 shows zero bound levels.\n- The level count goes down as the width or depth increases.\n- A level appears at or above the well's rim.\n- Two bound levels share the same energy.\n- The count misses the floor(L\u221aV/\u03c0) + 1 crossings, for example not reaching 3 levels just past L \u2248 1.26 at V = 25.\n- The nth level's wave does not have n \u2212 1 nodes.\n- A finite-well level lies above the matching rigid-box energy.\n\n**In nature**, the explanation would fail if trapped particles in confined systems showed:\n- a continuous energy spectrum, with no discrete emission lines and no voltage-selective resonant tunneling, or\n- level spacing that did not shrink as the trap gets larger, such as quantum-dot emission that did not shift with dot size.",
+    "limitations": [
+      "The model is a 1D toy, not an atom. Atoms are 3D and have spin, so their levels can be degenerate. A shallow 3D well can hold no bound state at all, while every 1D well holds at least one.",
+      "Several statements here are standard physics that was not checked against a source in this run: the shooting method, the node theorem, at least one level in 1D, levels sitting lower in finite wells, quantum-dot color, the quantum corral, and liquid helium.",
+      "The MIT 8.04 lecture notes and the PhET Bound States page were seen by title only. Their contents were not read. HyperPhysics, LibreTexts, Feynman, Nobel and Science pages failed to load and are not cited.",
+      "The time scale of the sloshing two-level mix is altered for display. Only its qualitative behavior is meaningful: a beat at a frequency set by the energy difference.",
+      "Wave heights and their positions on level lines are a drawing convention. |\u03c8|\u00b2 is the probability, and \u03c8 itself can be negative.",
+      "The model treats states as perfectly sharp and isolated. It does not show level widths, tunneling escape rates, or what happens to unbound states above the rim."
+    ],
+    "sources": [
+      {
+        "title": "OpenStax University Physics Vol. 3, \u00a77.4 The Quantum Particle in a Box",
+        "url": "https://openstax.org/books/university-physics-volume-3/pages/7-4-the-quantum-particle-in-a-box",
+        "supports": "Read on the page: the boundary conditions \u03c8(0)=\u03c8(L)=0 plus normalizability force kL = n\u03c0 (n \u2265 1). This gives E_n = n\u00b2\u03c0\u00b2\u0127\u00b2/(2mL\u00b2) and \u03c8_n = \u221a(2/L) sin(n\u03c0x/L), described as a standing-wave condition. The lowest energy is above zero, the classical picture returns at large n, and the proton example gives 2.05/8.20 MeV levels and a 6.15 MeV gamma ray."
+      },
+      {
+        "title": "OpenStax University Physics Vol. 3, \u00a77.5 The Quantum Harmonic Oscillator",
+        "url": "https://openstax.org/books/university-physics-volume-3/pages/7-5-the-quantum-harmonic-oscillator",
+        "supports": "Read on the page: requiring a normalizable wave gives evenly spaced levels E_n = (n + \u00bd)\u0127\u03c9 with the lowest above zero. The ground state has about a 16% chance of being found outside the classical turning points, which is leakage into the walls."
+      },
+      {
+        "title": "OpenStax University Physics Vol. 3, \u00a77.6 Quantum Tunneling of Particles through Potential Barriers",
+        "url": "https://openstax.org/books/university-physics-volume-3/pages/7-6-the-quantum-tunneling-of-particles-through-potential-barriers",
+        "supports": "Read on the page: the lower energies in a finite-height well are quantized. A finite well has finitely many levels and allows tunneling, while an infinite well has infinitely many. Resonant tunneling through a GaAs quantum dot in AlAs carries current only when the voltage lines up with a dot level."
+      },
+      {
+        "title": "MIT OCW 8.04 Quantum Physics I (Spring 2016), Lecture 11: The Infinite Square Well, The Finite Square Well",
+        "url": "https://ocw.mit.edu/courses/8-04-quantum-physics-i-spring-2016/a565b327f85c7721b18f1074dbd69ede_MIT8_04S16_LecNotes11.pdf",
+        "supports": "Title only, PDF text not read. It shows that the infinite and finite square wells are standard course topics."
+      },
+      {
+        "title": "MIT OCW 8.04 Quantum Physics I (Spring 2016), Lecture 12: General Properties, Bound States in Slowly Varying Potentials, Shooting Method",
+        "url": "https://ocw.mit.edu/courses/8-04-quantum-physics-i-spring-2016/0c7802ea5bca26fac48e5fb6d8b607e8_MIT8_04S16_LecNotes12.pdf",
+        "supports": "Title only, PDF text not read. The topic list matches the general shooting-method argument, which was not verified here."
+      },
+      {
+        "title": "MIT OCW 8.04 Lecture Notes index (includes Lecture 13: Delta Function Potential, The Node Theorem, Simple Harmonic Oscillator)",
+        "url": "https://ocw.mit.edu/courses/8-04-quantum-physics-i-spring-2016/pages/lecture-notes/",
+        "supports": "Index listing only. It shows the node theorem is a course topic. The theorem's content (n\u22121 nodes, no degeneracy in 1D) was not verified here."
+      },
+      {
+        "title": "PhET Quantum Bound States (University of Colorado)",
+        "url": "https://phet.colorado.edu/en/simulations/bound-states",
+        "supports": "Title only. It is an existing interactive simulation on the same topic, useful for comparison. Its contents were not inspected."
+      }
+    ]
+  },
+  "scene": {
+    "title": "Why a Trapped Particle Can Only Have Certain Energies",
+    "subtitle": "A particle in a trap acts like a wave. Only waves that fit the trap and fade away into its walls can last, so only certain energies are allowed.",
+    "beats": [
+      {
+        "title": "No trap, no special energies",
+        "body": "With the trap flattened away, nothing holds the particle in. Its wave can have any energy at all. The counter reads zero allowed levels."
+      },
+      {
+        "title": "A trap lets only fitting waves survive",
+        "body": "Bring the trap back and only a few energy lines appear. On each one, the wave fits the trap and fades out into both walls. Watch the edges: the wave leaks a little way into the walls before dying away."
+      },
+      {
+        "title": "Shallower traps hold fewer levels, wider traps hold more",
+        "body": "As the trap gets shallower, the top levels slip out, but one always stays. As the trap gets wider, more waves fit inside. The levels drop lower and crowd closer together."
+      }
+    ],
+    "mass": 1,
+    "distance": 1,
+    "ray_count": 1,
+    "show_reference": true,
+    "show_labels": true,
+    "accent": "blue",
+    "line_width": 2.5,
+    "duration": 32,
+    "takeaway": "A trapped particle is a wave that has to fit its trap, and only a few waves fit, so only a few energies are allowed.",
+    "controls": "none",
+    "kind": "quantum-well"
+  },
+  "checks": [
+    {
+      "name": "No well holds no levels",
+      "pass": true
+    },
+    {
+      "name": "Any well in one dimension holds at least one level",
+      "pass": true
+    },
+    {
+      "name": "Deeper and wider wells hold more levels",
+      "pass": true
+    },
+    {
+      "name": "Levels sit between the well floor and zero",
+      "pass": true
+    },
+    {
+      "name": "Levels alternate even and odd shapes",
+      "pass": true
+    },
+    {
+      "name": "Lowest level lies below the infinite-well value",
+      "pass": true
+    },
+    {
+      "name": "Subtitles read at most 14.0 characters per second (limit 15)",
+      "pass": true
+    },
+    {
+      "name": "Each subtitle stays up at least 2.8 s (minimum 2.5)",
+      "pass": true
+    },
+    {
+      "name": "Zero-mass control removes the modeled effect",
+      "pass": true
+    },
+    {
+      "name": "Mass control updates the rendered model",
+      "pass": true
+    },
+    {
+      "name": "No-mass step shows zero and restores the chosen mass afterward",
+      "pass": true
+    },
+    {
+      "name": "Seeking reproduces identical canvas pixels",
+      "pass": true
+    },
+    {
+      "name": "Mobile page fits viewport",
+      "pass": true
+    },
+    {
+      "name": "Renderer has no JavaScript errors",
+      "pass": true
+    }
+  ],
+  "provider": "reviewed-agents",
+  "provenance": {
+    "sources_retrieved": true,
+    "retrieved_by": "agent"
+  },
+  "revisions": [
+    {
+      "number": 1,
+      "scene": {
+        "title": "Why a Trapped Particle Can Only Have Certain Energies",
+        "subtitle": "A particle in a trap acts like a wave. Only waves that fit the trap and fade away into its walls can last, so only certain energies are allowed.",
+        "beats": [
+          {
+            "title": "No trap, no special energies",
+            "body": "With the trap flattened away, nothing holds the particle in. Its wave can have any energy at all. The counter reads zero allowed levels."
+          },
+          {
+            "title": "A trap lets only fitting waves survive",
+            "body": "Bring the trap back and only a few energy lines appear. On each one, the wave fits the trap and fades out into both walls. Watch the edges: the wave leaks a little way into the walls before dying away."
+          },
+          {
+            "title": "Shallower traps hold fewer levels, wider traps hold more",
+            "body": "As the trap gets shallower, the top levels slip out, but one always stays. As the trap gets wider, more waves fit inside. The levels drop lower and crowd closer together."
+          }
+        ],
+        "mass": 1,
+        "distance": 1,
+        "ray_count": 1,
+        "show_reference": true,
+        "show_labels": true,
+        "accent": "blue",
+        "line_width": 2.5,
+        "duration": 32,
+        "takeaway": "A trapped particle is a wave that has to fit its trap, and only a few waves fit, so only a few energies are allowed.",
+        "controls": "none",
+        "kind": "quantum-well"
+      },
+      "checks": [
+        {
+          "name": "No well holds no levels",
+          "pass": true
+        },
+        {
+          "name": "Any well in one dimension holds at least one level",
+          "pass": true
+        },
+        {
+          "name": "Deeper and wider wells hold more levels",
+          "pass": true
+        },
+        {
+          "name": "Levels sit between the well floor and zero",
+          "pass": true
+        },
+        {
+          "name": "Levels alternate even and odd shapes",
+          "pass": true
+        },
+        {
+          "name": "Lowest level lies below the infinite-well value",
+          "pass": true
+        },
+        {
+          "name": "Subtitles read at most 14.0 characters per second (limit 15)",
+          "pass": true
+        },
+        {
+          "name": "Each subtitle stays up at least 2.8 s (minimum 2.5)",
+          "pass": true
+        },
+        {
+          "name": "Zero-mass control removes the modeled effect",
+          "pass": true
+        },
+        {
+          "name": "Mass control updates the rendered model",
+          "pass": true
+        },
+        {
+          "name": "No-mass step shows zero and restores the chosen mass afterward",
+          "pass": true
+        },
+        {
+          "name": "Seeking reproduces identical canvas pixels",
+          "pass": true
+        },
+        {
+          "name": "Mobile page fits viewport",
+          "pass": true
+        },
+        {
+          "name": "Renderer has no JavaScript errors",
+          "pass": true
+        }
+      ],
+      "accepted": true,
+      "physics_review": {
+        "pass": true,
+        "score": 8.5,
+        "summary": "The physics is correct and the frames match the model. I checked the energy levels in the frames against the even/odd matching conditions. At L = 1, V = 25 (z0 = 2.5), I get levels at about E \u2248 -20.1 and -7.0. The frame puts them at about -20.0 and -6.9 (from pixel positions: rim at y = 112, floor at y = 399), and the readout says 2, which matches N = floor(L\u221aV/\u03c0) + 1. At L = 2.5 (the drawn well is 2.5 times wider and the floor is unchanged), z0 = 6.25. I get about -23.8, -20.3, -14.6 and -7.2. The frame shows about -23.8, -20.4, -14.7 and -7.1, and the readout says 4, again matching. In the frames, the waves alternate even and odd shapes and level n has n-1 nodes. The tails die away outside the well, and higher levels reach farther into the walls, as they should. In the wide well, the strip at the bottom shows two humps of different sizes, which fits a mix of levels 1 and 2. The no-well frame shows a flat line, a readout of 0, and a correct note that any energy is possible. The claims stay within textbook physics and are honest about which sources were only seen by title. My remaining concerns are about wording and timing. None of them is a physics error.",
+        "changes": [
+          "Narration may be out of sync with the picture. In the 0:18 frame the subtitle says 'As the trap gets shallower, the top levels slip out', but the well on screen is at full depth and maximum width (L = 2.5) with 4 levels. Check that the depth-dip sentence is shown while the dip is happening and the widening sentence during the width sweep. Alternatively, reorder the beat-3 sentences to follow the playback order.",
+          "Beat 3 says 'but one always stays'. That is only true if the chapter-3 depth dip stays above zero. Either confirm the dip never reaches depth 0, or reword to 'as long as there is any well at all, one level always stays'.",
+          "Claim wording: change 'It must solve the Schr\u00f6dinger equation inside the trap, and it must die away outside the trap' to 'It must solve the Schr\u00f6dinger equation everywhere, join smoothly at the walls, and die away far outside'. Smooth joining is the condition that actually selects the energies, and the explanation already says so.",
+          "Claim wording: for a standing wave in a box, the useful link between wavelength and energy is the de Broglie relation (p = h/\u03bb, so the kinetic energy is set by the wavelength), not E = \u0127\u03c9 alone. Mention the de Broglie relation, or say both, so the guitar-string analogy doesn't suggest the frequency is set the way a string's frequency is.",
+          "Optional: beat 1 could say 'any energy above the flat floor' rather than 'any energy at all'. This is a minor precision point."
+        ],
+        "blocking_issues": []
+      },
+      "visual_review": {
+        "pass": true,
+        "score": 8,
+        "summary": "This is a clear, honest sequence that a beginner can follow. At t=1 the stage shows only a flat line, the \"no well: nothing holds the particle, so any energy is possible\" caption and a readout of 0, so the zero-depth case is unambiguous. At t=9 and t=11 the well comes back with exactly 2 levels. Level 1 is a single hump and level 2 has one node. Both waves visibly continue past the walls before fading. The bottom strip moves from a left-heavy peak at t=9 to a right-heavy peak at t=11, which shows the sloshing as cause and effect without needing words. At t=18, with the width at its maximum of 2.5, the readout is 4. That matches the research prediction for V = 25 (4 levels, with the 5th needing L of about 2.51). The levels are lower and closer together, the waves have 0, 1, 2 and 3 nodes in order, and even and odd shapes alternate. Labels sit at the right edge and don't collide on desktop. Each subtitle is a single short sentence in plain words, read at a measured 14 characters per second or slower, so none are too dense. Setting controls to \"none\" is reasonable: playback already shows the depth going to zero, coming back and dipping, and the width sweep. Minor weaknesses: (1) In the mobile frames, the floor line and the level-1 wave run close to the \"WELL\" label under the floor, and the label looks crowded or partly struck through. At full width, levels 1 and 2 also nearly touch the floor. (2) Frame t=1 is mostly empty space, and nothing on screen marks where the trap will appear. (3) The beat 3 sentence \"one always stays\" is slightly too absolute, because at zero depth no level stays. These are polish issues, not blockers. Frame sampling does not show whether motion is smooth, and I did not watch video.",
+        "changes": [
+          "beats[2].body: change \"but one always stays\" to \"but as long as there is any trap at all, one level stays\" so it doesn't contradict chapter 1's zero-level case.",
+          "beats[0].body: refer to what is on screen, for example: \"With the trap flattened to a flat line, nothing holds the particle in. Its wave can have any energy at all. The counter reads zero allowed levels.\"",
+          "beats[1].body: tie the leak sentence to the drawn tails, for example: \"Watch the edges: each wave spills a little past the walls before fading to flat.\" Optionally add a short sentence pointing to the bottom strip, for example: \"Below, a mix of the two lowest levels sloshes side to side.\" This cue currently appears only as an on-stage label.",
+          "Keep controls \"none\". If a slider is wanted later, use \"first\" (Well depth) only, because dragging the depth down shows levels dropping out one by one more directly than the dip during playback does.",
+          "Optional: raise mass slightly (for example to 1.2) so the default well is deeper. This gives the floor label more room on mobile, though it changes the predicted counts. Recompute the readout prediction if you do this. Otherwise leave mass = 1 so the prediction stays at 2 to 4 levels."
+        ],
+        "blocking_issues": []
+      },
+      "frames": [
+        "published/20261027T162558-9d749f98/revision-1-0.png",
+        "published/20261027T162558-9d749f98/revision-1-1.png",
+        "published/20261027T162558-9d749f98/revision-1-2.png",
+        "published/20261027T162558-9d749f98/revision-1-3.png",
+        "published/20261027T162558-9d749f98/revision-1-4.png",
+        "published/20261027T162558-9d749f98/revision-1-5.png"
+      ]
+    }
+  ]
+}

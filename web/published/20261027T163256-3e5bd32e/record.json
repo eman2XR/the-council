@@ -1,0 +1,399 @@
+{
+  "id": "20261027T163256-3e5bd32e",
+  "status": "reviewed",
+  "question": "Why do waves spread out after passing a narrow gap?",
+  "topic": "diffraction",
+  "created": "2026-10-27T16:32:56.404366+00:00",
+  "research": {
+    "claim": "Waves spread out after a narrow gap because of superposition. Every point across the gap acts as a source of wavelets (Huygens' principle). Straight ahead, all the wavelets arrive in step and add up. At an angle they arrive with different path lengths and partly cancel. The first fully dark direction is where sin \u03b8 = \u03bb/a, with \u03bb the wavelength and a the gap width. So the spread depends on the ratio of wavelength to gap: narrower gaps and longer waves spread more. This is why sound (wavelength about 0.33 m) spreads through a doorway, while light (wavelength well under a micrometre) casts a sharp shadow. This is textbook physics, not a new result.",
+    "explanation": "1) What happens at the gap. A flat wave reaches a barrier and only the part inside the gap gets through. OpenStax College Physics 2e (\u00a727.2) states Huygens' principle like this: every point on a wavefront is a source of wavelets that spread forward, and the new wavefront is the line touching all of them. Away from the edges of a wide gap, the wavelets rebuild a flat wave that keeps going straight. Near the edges there are no neighbouring wavelets on one side to complete the flat front, so the wave curves outward.\n\n2) Why some directions are dark. Look at a direction at angle \u03b8 on a distant screen. Light from the far edge of the gap travels a sin \u03b8 further than light from the near edge. When that extra distance is exactly one wavelength, split the gap into two halves. Each point in the top half pairs with a point in the bottom half whose path differs by half a wavelength, so one arrives as a crest when the other is a trough, and every pair cancels. That gives the first dark direction at a sin \u03b8 = \u03bb. Further dark directions are at a sin \u03b8 = m\u03bb (OpenStax University Physics Vol. 3 \u00a74.1; UNSW Physclips). If you add up all the slices of the gap (UNSW does this with phasors), the far-field brightness is I(\u03b8) = I\u2080 (sin \u03b1/\u03b1)\u00b2 with \u03b1 = \u03c0 a sin \u03b8 / \u03bb. This is the profile on the stage's screen strip.\n\n3) Why narrow gaps and long waves spread more. The dark direction depends only on the ratio \u03bb/a. Halving the gap or doubling the wavelength roughly doubles the spreading angle when the angle is small. If the gap is much wider than the wavelength, the spread is tiny and you get ordinary straight-line shadows. If the gap is about the wavelength in size, the spread is large. If the gap is narrower than the wavelength, a sin \u03b8 can never reach \u03bb, so there is no dark direction at all. The gap then acts almost like a single point source sending out roughly semicircular waves (the stage readout shows 90\u00b0 for this case). OpenStax: wave behaviour is most noticeable for objects about the same size as the wavelength.\n\n4) Sound versus light at a doorway. OpenStax College Physics 2e uses this example. Sound with a wavelength of about 0.33 m is comparable to a doorway, so it spreads into the room. Light's wavelength is hundreds of thousands of times smaller than the doorway, so the spread is negligible and the shadow looks sharp.\n\n5) What the scene shows. With the barrier removed (mass = 0) there is no spreading. Making the gap narrower or the wavelength longer widens the central bright fan, and the dashed dark directions open outward. A narrower gap spreads the wave more but lets less power through. It does not make the spread wave brighter.\n\n6) Misleading pictures to avoid. Nothing pulls or bends the wave sideways at the edges like a current around a post. The spread comes from the whole gap's contributions adding together. It is not refraction: the wave speed does not change. The Huygens wavelets are a calculation tool, not physical emitters. Taken literally they would also send waves backward, and College Physics simply states the forward-only rule. Photos with saturated peaks make the side fringes look brighter than they really are compared with the centre (UNSW warning). In reality the first side lobe is far dimmer than the central peak.",
+    "assumptions": [
+      "Linear waves that obey superposition, with one wavelength and coherent (in-step) illumination.",
+      "The field is uniform and in phase across the gap and zero on the barrier (Kirchhoff-type approximation). This gets less accurate when the gap is comparable to or smaller than the wavelength.",
+      "The barrier is thin and does not absorb or re-radiate in any special way.",
+      "Far-field (Fraunhofer) regime: the screen distance L is much larger than a\u00b2/\u03bb (Fresnel number a\u00b2/(L\u03bb) much less than 1), so rays to a given screen point are nearly parallel. The sinc\u00b2 profile does not apply in the near field.",
+      "The stage is an illustration in arbitrary units (gap 0.7 to 4.2, wavelength 0.7 to 1.15). Ripple-tank complications such as water-wave dispersion, depth dependence and large-amplitude nonlinearity are ignored.",
+      "No single-photon or particle-trajectory interpretation is claimed."
+    ],
+    "prediction": "From sin \u03b8\u2081 = \u03bb/a, the stage readout should show: gap 4.2, wavelength 0.7 gives \u03b8\u2081 \u2248 9.6\u00b0. Gap 4.2, wavelength 1.15 gives \u03b8\u2081 \u2248 15.9\u00b0. Gap 2.1, wavelength 0.7 gives \u03b8\u2081 \u2248 19.5\u00b0. Gap 1.4, wavelength 0.7 gives \u03b8\u2081 = 30\u00b0. For any gap at or below the wavelength (for example gap 0.7, wavelength 0.7 or above), the readout is 90\u00b0 and there is no dark direction. The screen-strip profile should follow (sin \u03b1/\u03b1)\u00b2. The first side maxima should sit slightly inside the midpoints between minima (OpenStax). They should be much dimmer than the centre: about 4.7%, a standard result that does not come from the fetched pages. When the barrier is removed (mass = 0), the wave should pass with no spreading.",
+    "falsifier": "The explanation would be wrong, or the simulation faulty, if under far-field conditions any of these held. (1) The measured first-minimum angle departs from sin \u03b8\u2081 = \u03bb/a, for example halving the gap does not roughly double a small spreading angle, or a longer wavelength at fixed gap does not widen the spread. (2) The intensity profile clearly departs from (sin \u03b1/\u03b1)\u00b2, such as side lobes as bright as the centre in a properly calibrated, unsaturated measurement. (3) Narrowing the gap increases total transmitted power. (4) Dark minima persist with incoherent or broadband sources. In the near field (Fresnel number about 1 or more), a non-sinc\u00b2 pattern is expected and does not count as a falsification.",
+    "limitations": [
+      "The quotes come from model-written fetch summaries and were not checked against the raw pages.",
+      "The Feynman Lectures (Caltech, HTTP 403) and HyperPhysics (GSU, certificate/proxy errors) could not be retrieved and are not cited.",
+      "The UNSW page reportedly calls a half-wavelength path difference '\u03c0/2 out of phase'. The correct value is \u03c0. This wording is unverified and is not relied on.",
+      "None of the fetched university pages state the Fourier-transform 'confinement' wording, the first side lobe at about 4.7%, or the Fresnel-Kirchhoff obliquity factor that justifies forward-only wavelets. These are standard results stated without a fetched primary source. Wikipedia is used only as a secondary pointer for the Fourier-transform, Fresnel/Fraunhofer and coherence ideas.",
+      "The uniform-gap Kirchhoff approximation is weakest when the gap is at or below the wavelength, which is the case where the readout shows 90\u00b0. Real edge effects and barrier material matter there.",
+      "The stage drawing is an illustration with arbitrary units. Drawn crest brightness does not represent true intensity ratios.",
+      "The doorway comparison is order-of-magnitude only. Real rooms add reflections, and real light sources are broadband and partly incoherent."
+    ],
+    "sources": [
+      {
+        "title": "OpenStax, University Physics Volume 3, \u00a74.1 Single-Slit Diffraction",
+        "url": "https://openstax.org/books/university-physics-volume-3/pages/4-1-single-slit-diffraction",
+        "supports": "Minima at a sin \u03b8 = m\u03bb. Assumptions of uniform in-phase illumination and a distant screen. Side maxima slightly less than halfway between minima. Central peak much brighter than drawn."
+      },
+      {
+        "title": "OpenStax, College Physics 2e, \u00a727.2 Huygens's Principle: Diffraction",
+        "url": "https://openstax.org/books/college-physics-2e/pages/27-2-huygenss-principle-diffraction",
+        "supports": "Huygens' principle with forward-spreading wavelets. Wave effects are most noticeable for objects about the wavelength in size. Doorway example: sound at about 0.33 m spreads, while light casts a sharp shadow."
+      },
+      {
+        "title": "UNSW Physclips, Single-slit diffraction",
+        "url": "https://www.animations.physics.unsw.edu.au/jw/light/single-slit-diffraction.html",
+        "supports": "Huygens pairing argument for a sin \u03b8 = \u03bb. Phasor derivation of I = I\u2080(sin \u03b1/\u03b1)\u00b2 with \u03b1 = \u03c0a sin \u03b8/\u03bb. Assumes a distant screen. Warns that saturated photos misstate intensity ratios."
+      },
+      {
+        "title": "Wikipedia, Diffraction (secondary pointer only)",
+        "url": "https://en.wikipedia.org/wiki/Diffraction",
+        "supports": "Pointer only: the far-field pattern as the Fourier transform of the aperture, the Fresnel versus Fraunhofer regimes, and the coherence requirement."
+      }
+    ]
+  },
+  "scene": {
+    "title": "Why Waves Fan Out After a Narrow Gap",
+    "subtitle": "A flat wave squeezes through an opening. Watch how the size of the gap compared with the wave decides how widely it spreads.",
+    "beats": [
+      {
+        "title": "No wall, no spreading",
+        "body": "With the wall gone, the flat wave rolls straight ahead. Nothing blocks any part of it, so nothing fans out. Keep this straight wave in mind for what comes next."
+      },
+      {
+        "title": "A gap turns the wave into a fan",
+        "body": "Now only the part of the wave inside the gap gets through. Every point across the gap sends out its own ripple, and the ripples overlap. Straight ahead they line up and add, but along the dashed lines they cancel."
+      },
+      {
+        "title": "Longer waves spread wider",
+        "body": "Watch the gap open wide for a moment, then come back. Next the waves get longer while the gap stays the same. The fan widens and the dashed lines swing out, because each wave is now longer compared with the gap."
+      }
+    ],
+    "mass": 0.6,
+    "distance": 1.2,
+    "ray_count": 1,
+    "show_reference": true,
+    "show_labels": true,
+    "accent": "blue",
+    "line_width": 2,
+    "duration": 32,
+    "takeaway": "The longer the wave compared with the gap, the wider it spreads: sound spreads through doorways, but light barely does.",
+    "controls": "first",
+    "kind": "diffraction"
+  },
+  "checks": [
+    {
+      "name": "No barrier means no spreading",
+      "pass": true
+    },
+    {
+      "name": "First dark direction sits where sin(angle) = wavelength / gap",
+      "pass": true
+    },
+    {
+      "name": "A narrower gap spreads the wave wider",
+      "pass": true
+    },
+    {
+      "name": "A longer wavelength spreads wider",
+      "pass": true
+    },
+    {
+      "name": "Straight ahead is the brightest direction",
+      "pass": true
+    },
+    {
+      "name": "A gap narrower than the wavelength spreads to every side",
+      "pass": true
+    },
+    {
+      "name": "Subtitles read at most 14.0 characters per second (limit 15)",
+      "pass": true
+    },
+    {
+      "name": "Each subtitle stays up at least 3.6 s (minimum 2.5)",
+      "pass": true
+    },
+    {
+      "name": "Zero-mass control removes the modeled effect",
+      "pass": true
+    },
+    {
+      "name": "Mass control updates the rendered model",
+      "pass": true
+    },
+    {
+      "name": "No-mass step shows zero and restores the chosen mass afterward",
+      "pass": true
+    },
+    {
+      "name": "Seeking reproduces identical canvas pixels",
+      "pass": true
+    },
+    {
+      "name": "Mobile page fits viewport",
+      "pass": true
+    },
+    {
+      "name": "Renderer has no JavaScript errors",
+      "pass": true
+    }
+  ],
+  "provider": "reviewed-agents",
+  "provenance": {
+    "sources_retrieved": true,
+    "retrieved_by": "agent"
+  },
+  "revisions": [
+    {
+      "number": 1,
+      "scene": {
+        "title": "Why Waves Fan Out After a Narrow Gap",
+        "subtitle": "A flat wave squeezes through an opening. Watch how the size of the gap compared with the wave decides how widely it spreads.",
+        "beats": [
+          {
+            "title": "No wall, no spreading",
+            "body": "With the wall gone, the flat wave rolls straight ahead. Nothing blocks any part of it, so nothing fans out. Keep this straight wave in mind for the next scene."
+          },
+          {
+            "title": "A gap turns the wave into a fan",
+            "body": "Now only the part of the wave inside the gap gets through. Every point across the gap sends out its own ripple, and they overlap. Straight ahead they line up and add, but off to the sides they cancel, leaving dark lanes."
+          },
+          {
+            "title": "Longer waves spread wider",
+            "body": "Watch the gap close briefly, then open again. Next the waves get longer while the gap stays the same. The bright fan widens and the dark lanes swing outward, because the gap is now small next to the wave."
+          }
+        ],
+        "mass": 0.6,
+        "distance": 1.2,
+        "ray_count": 1,
+        "show_reference": true,
+        "show_labels": true,
+        "accent": "blue",
+        "line_width": 2,
+        "duration": 32,
+        "takeaway": "The narrower the gap compared with the wave, the wider it spreads: sound bends through doorways, but light barely does.",
+        "controls": "first",
+        "kind": "diffraction"
+      },
+      "checks": [
+        {
+          "name": "No barrier means no spreading",
+          "pass": true
+        },
+        {
+          "name": "First dark direction sits where sin(angle) = wavelength / gap",
+          "pass": true
+        },
+        {
+          "name": "A narrower gap spreads the wave wider",
+          "pass": true
+        },
+        {
+          "name": "A longer wavelength spreads wider",
+          "pass": true
+        },
+        {
+          "name": "Straight ahead is the brightest direction",
+          "pass": true
+        },
+        {
+          "name": "A gap narrower than the wavelength spreads to every side",
+          "pass": true
+        },
+        {
+          "name": "Subtitles read at most 14.0 characters per second (limit 15)",
+          "pass": true
+        },
+        {
+          "name": "Each subtitle stays up at least 3.2 s (minimum 2.5)",
+          "pass": true
+        },
+        {
+          "name": "Zero-mass control removes the modeled effect",
+          "pass": true
+        },
+        {
+          "name": "Mass control updates the rendered model",
+          "pass": true
+        },
+        {
+          "name": "No-mass step shows zero and restores the chosen mass afterward",
+          "pass": true
+        },
+        {
+          "name": "Seeking reproduces identical canvas pixels",
+          "pass": true
+        },
+        {
+          "name": "Mobile page fits viewport",
+          "pass": true
+        },
+        {
+          "name": "Renderer has no JavaScript errors",
+          "pass": true
+        }
+      ],
+      "accepted": false,
+      "physics_review": {
+        "pass": false,
+        "score": 6.5,
+        "summary": "The physics and the rendering hold up. Two lines of chapter 3 narration are wrong, and both are quick text fixes.\n\nWhat I checked in the frames:\n- Frame 2: the gap is 2.1 units and 2.8 wavelengths wide, so the wavelength is about 0.75. That gives sin \u03b8 = 0.357, so \u03b8 \u2248 20.9\u00b0, which matches the \"Spreads by 21\u00b0\" readout.\n- Frame 4: the gap is 1.8 wavelengths wide, so sin \u03b8 \u2248 0.55 and \u03b8 \u2248 33\u00b0, which matches the readout.\n- The dashed lines measured in the frames come out at about 21\u00b0 and 33\u00b0, starting from the centre of the gap.\n- The screen strip shows a bright centre with faint side lobes, which is the right sinc\u00b2 shape.\n- With no barrier (frame 1), the wave stays straight, the strip is evenly lit, and the readout is 0\u00b0.\n\nThe research is careful. It cites its sources, flags unverified material, lists its far-field and Kirchhoff assumptions, and avoids treating Huygens wavelets as real emitters. Offering a Gap slider is the right choice: playback never narrows the gap steadily, so the slider is the only way to explore \"narrower gaps spread more\".\n\nThe two narration problems:\n1. \"Watch the gap close briefly, then open again.\" In the player, the first control dips. Lowering mass widens the gap, or removes the barrier entirely at 0, so the gap never closes. The sentence describes the opposite of what the viewer sees.\n2. \"because the gap is now small next to the wave\" is wrong too. Frame 4 still labels the gap 1.8 wavelengths wide, so the gap is bigger than the wave. What changed is the ratio of wavelength to gap.\n\nOne smaller wording point: \"bends\" in the takeaway is common usage, but the research says the effect is spreading, not bending.\n\nI based this only on the four frames and the text provided. I did not fetch any sources. This review is not scientific proof.",
+        "changes": [
+          "Beat 3: replace \"Watch the gap close briefly, then open again.\" with wording that matches what happens when the first control dips. For example: \"Watch the wall vanish for a moment, then come back.\" or \"Watch the gap widen briefly, then return.\" Base the choice on how far the dip actually goes.",
+          "Beat 3: replace \"because the gap is now small next to the wave\" with \"because the gap now holds fewer wavelengths\" or \"because each wave is now longer compared with the gap\". The gap is still about 1.8 wavelengths wide at that point.",
+          "Optional: in the takeaway, change \"sound bends through doorways\" to \"sound spreads through doorways\". This avoids suggesting refraction or a sideways pull, which the research explicitly rules out."
+        ],
+        "blocking_issues": [
+          "Beat 3 narration says the gap closes briefly, but lowering the first control (mass) widens the gap or removes the barrier. The subtitle describes the opposite of what the viewer sees.",
+          "Beat 3 narration says the gap is 'small next to the wave', but the stage shows it is still about 1.8 wavelengths wide. The correct reason is the smaller ratio of gap to wavelength."
+        ]
+      },
+      "visual_review": {
+        "pass": false,
+        "score": 6.5,
+        "summary": "The frames read well, and every readout matches sin(angle) = wavelength/gap: 0\u00b0 with no barrier, 21\u00b0 at gap 2.1 with wavelength about 0.75, and 33\u00b0 at gap 2.1 with wavelength 1.15. The t=9 to t=18 comparison clearly shows the fan and the dashed dark directions widening. Offering only the Gap slider is a good choice, because playback only sweeps the wavelength and the gap gives the larger effect. The screen strip, labels and mobile layout are legible. Blocker: the first chapter-3 subtitle says \"Watch the gap close briefly\". During the dip the first control drops toward 0, which widens the gap and at 0 removes the wall, so the narration contradicts the stage. The last chapter-3 sentence also states the gap-to-wave ratio clumsily. Assessment is based on sampled frames only, not motion.",
+        "changes": [
+          "beats[2].body: replace the first sentence with one that matches the dip, e.g. \"Watch the wall vanish for a moment, then come back.\"",
+          "beats[2].body: rewrite the last sentence as \"The bright fan widens and the dashed dark lines swing outward, because the wave is now long compared with the gap.\"",
+          "beats[1].body: point to what is drawn, e.g. \"Straight ahead they line up and add, but at the dashed lines they cancel.\"",
+          "Keep controls = \"first\" (Gap). It shows the narrower-gap effect that playback does not.",
+          "Optionally raise mass slightly, e.g. 0.65, so the chapter-2 fan is a little wider and the chapter-3 widening still reads clearly."
+        ],
+        "blocking_issues": [
+          "The first chapter-3 subtitle says the gap closes. During the scripted dip the first control falls toward 0, which widens the gap and removes the barrier, so the narration contradicts the stage."
+        ]
+      },
+      "frames": [
+        "published/20261027T163256-3e5bd32e/revision-1-0.png",
+        "published/20261027T163256-3e5bd32e/revision-1-1.png",
+        "published/20261027T163256-3e5bd32e/revision-1-2.png",
+        "published/20261027T163256-3e5bd32e/revision-1-3.png",
+        "published/20261027T163256-3e5bd32e/revision-1-4.png",
+        "published/20261027T163256-3e5bd32e/revision-1-5.png"
+      ]
+    },
+    {
+      "number": 2,
+      "scene": {
+        "title": "Why Waves Fan Out After a Narrow Gap",
+        "subtitle": "A flat wave squeezes through an opening. Watch how the size of the gap compared with the wave decides how widely it spreads.",
+        "beats": [
+          {
+            "title": "No wall, no spreading",
+            "body": "With the wall gone, the flat wave rolls straight ahead. Nothing blocks any part of it, so nothing fans out. Keep this straight wave in mind for what comes next."
+          },
+          {
+            "title": "A gap turns the wave into a fan",
+            "body": "Now only the part of the wave inside the gap gets through. Every point across the gap sends out its own ripple, and the ripples overlap. Straight ahead they line up and add, but along the dashed lines they cancel."
+          },
+          {
+            "title": "Longer waves spread wider",
+            "body": "Watch the gap open wide for a moment, then come back. Next the waves get longer while the gap stays the same. The fan widens and the dashed lines swing out, because each wave is now longer compared with the gap."
+          }
+        ],
+        "mass": 0.6,
+        "distance": 1.2,
+        "ray_count": 1,
+        "show_reference": true,
+        "show_labels": true,
+        "accent": "blue",
+        "line_width": 2,
+        "duration": 32,
+        "takeaway": "The longer the wave compared with the gap, the wider it spreads: sound spreads through doorways, but light barely does.",
+        "controls": "first",
+        "kind": "diffraction"
+      },
+      "checks": [
+        {
+          "name": "No barrier means no spreading",
+          "pass": true
+        },
+        {
+          "name": "First dark direction sits where sin(angle) = wavelength / gap",
+          "pass": true
+        },
+        {
+          "name": "A narrower gap spreads the wave wider",
+          "pass": true
+        },
+        {
+          "name": "A longer wavelength spreads wider",
+          "pass": true
+        },
+        {
+          "name": "Straight ahead is the brightest direction",
+          "pass": true
+        },
+        {
+          "name": "A gap narrower than the wavelength spreads to every side",
+          "pass": true
+        },
+        {
+          "name": "Subtitles read at most 14.0 characters per second (limit 15)",
+          "pass": true
+        },
+        {
+          "name": "Each subtitle stays up at least 3.6 s (minimum 2.5)",
+          "pass": true
+        },
+        {
+          "name": "Zero-mass control removes the modeled effect",
+          "pass": true
+        },
+        {
+          "name": "Mass control updates the rendered model",
+          "pass": true
+        },
+        {
+          "name": "No-mass step shows zero and restores the chosen mass afterward",
+          "pass": true
+        },
+        {
+          "name": "Seeking reproduces identical canvas pixels",
+          "pass": true
+        },
+        {
+          "name": "Mobile page fits viewport",
+          "pass": true
+        },
+        {
+          "name": "Renderer has no JavaScript errors",
+          "pass": true
+        }
+      ],
+      "accepted": true,
+      "physics_review": {
+        "pass": true,
+        "score": 8,
+        "summary": "This is sound textbook physics for a teaching approximation. The first-dark-direction readouts agree with sin(angle) = wavelength / gap in the frames I checked. In frame 2, the gap is 2.1 units and 2.8 wavelengths wide, so the wavelength is about 0.75 and the angle should be asin(0.357) \u2248 20.9\u00b0. The readout shows 21\u00b0. In frame 4, the gap is still 2.1 and the wavelength has reached its maximum of 1.15, so the angle should be asin(0.548) \u2248 33.2\u00b0. The readout shows 33\u00b0. With no barrier (frame 1), the screen strip is uniform and the readout is 0\u00b0, which is correct. The narration describes Huygens superposition, the role of the wavelength-to-gap ratio, and why the gap edges are not pulling the wave sideways, all without overclaiming. The takeaway correctly frames spreading as wavelength compared with gap size. The research separates fetched sources from standard results that were not sourced, such as the 4.7% side lobe, and it states the far-field and Kirchhoff assumptions. Choosing controls = \"first\" is justified because playback never narrows the gap below the wavelength. The slider lets viewers find the 90\u00b0 no-dark-direction case and see that narrower gaps spread more, which playback only shows indirectly by briefly widening the gap. The remaining issues are minor: (1) Beat 2 says each point \"sends out its own ripple\", which treats Huygens wavelets as physical emitters, something the research itself warns against. (2) The screen strip has a light tint everywhere, so the dark minima where the dashed lines meet the strip are hard to see. (3) The drawn screen is close to the gap: the Fresnel number is about 1 at gap 2.1, so it is not clearly in the far field. Strictly, the sinc\u00b2 strip shows the far-field profile, not the pattern at that distance. (4) In frame 4 (0:18) the subtitle says \"Watch the gap open wide for a moment\", but the wavelength already seems to be at its maximum. The subtitle and the control motion may be out of sync.",
+        "changes": [
+          "Beat 2: change \"Every point across the gap sends out its own ripple\" to \"Treat every point across the gap as the source of its own ripple\". This keeps Huygens wavelets as a way of calculating, not as physical emitters.",
+          "Screen strip: remove or greatly reduce the uniform background tint, so the strip goes visibly dark where the dashed lines meet it and the side lobes look clearly dimmer than the centre (about 5% of the peak).",
+          "Check that the subtitles in chapter 3 are in sync. In frame 4 (0:18) the subtitle says \"Watch the gap open wide...\" but the wavelength already appears to be at its maximum of 1.15, which gives the 33\u00b0 readout. The gap-dip sentence should be on screen while the gap dips, and the wavelength sentence while the wavelength sweeps.",
+          "Optional: in the investigation details, note that the screen strip shows the distant-screen (far-field) pattern, and that the wave drawing near the gap is not fully in that regime."
+        ],
+        "blocking_issues": []
+      },
+      "visual_review": {
+        "pass": true,
+        "score": 8,
+        "summary": "The scene works and passes. In the t=1 frame, a beginner sees the barrier gone, a flat wave, an evenly lit screen and \"Spreads by 0\u00b0\". At t=9 and t=11 the barrier and gap appear, curved wavelets fan out, dashed dark directions show, the screen strip has a bright centre, and the readout is 21\u00b0. That matches sin \u03b8 = \u03bb/a for a gap of 2.1 units and a wavelength of about 0.75 (2.8 wavelengths). The t=18 comparison frame shows visibly longer incoming wavefronts, a wider fan, dashed lines swung outward, a broader central band on the screen and a 33\u00b0 readout. That matches a wavelength of 1.15 with the gap held at 2.1 (1.8 wavelengths). So cause and effect are clear and the frames progress well. Labels are legible on desktop and mobile. The gap label and \"WAVE COMING IN\" sit close to the opening but don't hide the key features. On mobile the readout pill stacks neatly under \"Seen from above\", and the stage fits the screen. Subtitle pace is within limits (14.0 characters per second, at least 3.6 s each), and no sentence is too dense. The weakest sentence is the last one in beat 3, which is a bit long at about 98 characters. The main gap in the teaching: beat 3 makes the gap open wider for a moment but never says what that does (the fan narrows). So \"narrower gaps spread more\" is shown but never put into words, and the subtitle reads as a stage direction. The doorway comparison appears only in the takeaway. The \"first\" control setting is a good choice. Playback already sweeps the wavelength, but it never narrows the gap below one wavelength, so the Gap slider lets viewers find the 90\u00b0 case on their own. These frames are still samples, so they don't show whether the motion is smooth.",
+        "changes": [
+          "Beat 3 body: replace the stage direction with the effect. For example: \"When the gap opens wider, the fan gets narrower. Back at the old gap, the waves now get longer. The fan widens and the dashed lines swing out, because each wave is longer compared with the gap.\" Both causes are then named out loud.",
+          "Beat 3 title: change it to cover both causes, for example \"Wider gaps spread less, longer waves spread more\", or keep it short as \"Gap versus wavelength\".",
+          "Beat 3 last sentence: shorten it so it's easier to read while watching, for example \"The fan widens because each wave is longer compared with the gap.\"",
+          "Beat 2 body: optionally add a short final pointer to the slider, for example \"Try narrowing the gap below one wave.\" This points viewers to the 90\u00b0 case, which they can only find with the slider.",
+          "Takeaway: this is the only place the doorway idea appears, which is fine. Optionally tie it to the stage: \"Sound waves are about as wide as a doorway, so they fan out. Light waves are far smaller, so light barely spreads.\"",
+          "Keep controls set to \"first\", and keep mass 0.6 and distance 1.2. The starting gap of 2.8 wavelengths gives a clear 21\u00b0 fan, and the max-wavelength comparison stays readable."
+        ],
+        "blocking_issues": []
+      },
+      "frames": [
+        "published/20261027T163256-3e5bd32e/revision-2-0.png",
+        "published/20261027T163256-3e5bd32e/revision-2-1.png",
+        "published/20261027T163256-3e5bd32e/revision-2-2.png",
+        "published/20261027T163256-3e5bd32e/revision-2-3.png",
+        "published/20261027T163256-3e5bd32e/revision-2-4.png",
+        "published/20261027T163256-3e5bd32e/revision-2-5.png"
+      ]
+    }
+  ]
+}

@@ -1,5 +1,37 @@
 [
   {
+    "id": "20261027T163733-b49c8bee",
+    "question": "Why is the travelling twin younger?",
+    "topic": "twin-trip",
+    "created": "2026-10-27T16:37:33.809368+00:00",
+    "curriculum": "2.3",
+    "title": "Why the travelling twin comes home younger"
+  },
+  {
+    "id": "20261027T163256-3e5bd32e",
+    "question": "Why do waves spread out after passing a narrow gap?",
+    "topic": "diffraction",
+    "created": "2026-10-27T16:32:56.404366+00:00",
+    "curriculum": "3.4",
+    "title": "Why Waves Fan Out After a Narrow Gap"
+  },
+  {
+    "id": "20261027T163007-b6176074",
+    "question": "Why can't you pin down both where a particle is and how it moves?",
+    "topic": "wave-packet",
+    "created": "2026-10-27T16:30:07.534725+00:00",
+    "curriculum": "4.3",
+    "title": "Why a particle can't have both a sharp place and a sharp motion"
+  },
+  {
+    "id": "20261027T162558-9d749f98",
+    "question": "Why can a trapped particle only have certain energies?",
+    "topic": "quantum-well",
+    "created": "2026-10-27T16:25:58.551402+00:00",
+    "curriculum": "4.2",
+    "title": "Why a Trapped Particle Can Only Have Certain Energies"
+  },
+  {
     "id": "20261027T160931-173edbbc",
     "question": "Why does a guitar string only play certain notes?",
     "topic": "standing-waves",

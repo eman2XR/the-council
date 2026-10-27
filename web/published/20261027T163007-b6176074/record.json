@@ -1,0 +1,273 @@
+{
+  "id": "20261027T163007-b6176074",
+  "status": "reviewed",
+  "question": "Why can't you pin down both where a particle is and how it moves?",
+  "topic": "wave-packet",
+  "created": "2026-10-27T16:30:07.534725+00:00",
+  "research": {
+    "claim": "A quantum particle's state is a wave, and its position spread and momentum spread are linked by a Fourier transform. A wave that is narrow in space has to be built from many wavelengths, so its momentum is spread out. A wave with a single wavelength is spread over all space. No state can have both a sharp position and a sharp momentum. The Kennard-Robertson bound gives the exact limit: \u03c3x\u00b7\u03c3p \u2265 \u0127/2. This limit belongs to the state itself, not to clumsy instruments. Single-slit diffraction of C70 molecules agrees with it quantitatively. How much a measurement must disturb a particle is a separate question that researchers still dispute.",
+    "explanation": "In quantum mechanics, a wavelength corresponds to a momentum (de Broglie: p = \u0127k). To make a wave bunch up in one place, you have to add together many waves with different wavelengths. Near the center they line up and reinforce each other. Farther out they get out of step and cancel. The narrower the bunch, the wider the range of wavelengths you need, and so the wider the range of momenta. Going the other way, if you use only one wavelength (exact momentum), the wave repeats forever and has no location at all.\n\nKennard (1927) and Robertson (1929) made this precise for standard deviations measured over many identically prepared copies: \u03c3x\u00b7\u03c3p \u2265 \u0127/2. A Gaussian packet reaches exactly \u0127/2 at its narrowest moment. The bound follows from x and p not commuting, [x, p] = i\u0127. No probe appears anywhere in the argument. Heisenberg's 1927 gamma-ray microscope story, where a photon kicks the electron, is described by the SEP as incomplete. Bohr's point was that the two quantities cannot both be defined in one experimental setup. It was not about the kick.\n\nWhy packets spread: different momenta travel at different speeds. Over time the fast parts pull ahead and the slow parts fall behind, so the packet widens. Meanwhile the momentum mix (the bars in the bottom panel) stays the same for a free particle.\n\nExperimental evidence: Nairz, Arndt and Zeilinger sent C70 fullerenes at 900 K through a single slit. Narrowing the slit (smaller \u0394x) widened the diffraction pattern (larger \u0394p), in \"good quantitative agreement\" with \u0394x\u00b7\u0394p \u2248 h.\n\nA separate question is how much measuring position must disturb momentum. Rozema et al. (photons) and Erhart et al. (neutrons) found results that violate a naive Heisenberg error-disturbance product and agree with Ozawa's relation. Busch, Lahti and Werner define error and disturbance as worst cases over all states for a given device. Under that definition they prove a Heisenberg-type bound for position and momentum. The SEP calls this dispute unresolved. None of these experiments challenge \u03c3x\u00b7\u03c3p \u2265 \u0127/2.\n\nScene mapping (\u0127 = 1): the \"Momentum mix\" control sets \u03c3p = 1.1 \u00d7 mass. Raising it makes the packet narrower. Setting it to 0 gives a single pure wave spread over all space. \"Average momentum\" moves the center of the momentum bars, which changes how fast the packet travels and how tightly its ripples are packed. It does not change the spread. Recommended field controls: first (Momentum mix). Dragging it yourself to watch the top band narrow while the bottom bars widen shows the trade-off directly, which goes beyond the scripted dip. The average-momentum sweep in playback already shows what the second control does.",
+    "assumptions": [
+      "The particle is free and nonrelativistic, with a wavefunction \u03c8(x). The momentum distribution comes from its Fourier transform, with p = \u0127k.",
+      "Uncertainty means the standard deviation over many identically prepared copies, not the error of a single measurement shot.",
+      "The scene uses \u0127 = 1 and 2m = 1, with a Gaussian momentum distribution. A Gaussian reaches \u03c3x\u00b7\u03c3p = 1/2 only at its narrowest moment.",
+      "Error-disturbance statements depend on how error and disturbance are defined. Ozawa's definitions depend on the state, while Busch-Lahti-Werner use worst-case definitions for the device."
+    ],
+    "prediction": "Halving the slit width should roughly double the angular spread of single-slit diffraction, which is consistent with Nairz et al. In the scene, raising Momentum mix by some factor makes the packet's narrowest width shrink by the same factor, so the product stays at 1/2 at that instant. As the packet travels freely, its width grows while the momentum bars stay fixed, so \u03c3x\u00b7\u03c3p rises above 1/2 and never falls below it. Wider momentum mixes spread faster.",
+    "falsifier": "Any of these would count against the claim: a reproducible preparation whose ensemble \u03c3x\u00b7\u03c3p is reliably below \u0127/2; a single-slit diffraction width that fails to grow as the slit narrows; or, for a free particle, a momentum distribution that changes over time with no force acting.",
+    "limitations": [
+      "The readout statement that position spread times momentum spread equals one half holds exactly only at the Gaussian's narrowest moment. While the packet spreads, the product is larger than 1/2.",
+      "With Momentum mix set to 0, the scene shows an idealized pure plane wave. Such a state cannot be normalized, so it is a limiting case rather than a physical state you could actually prepare.",
+      "Standard deviations are sensitive to the tails of a distribution. The SEP notes alternatives, such as Landau-Pollak bulk widths and entropic relations, which this record does not cover.",
+      "The error-disturbance question is still contested (Ozawa vs. Busch-Lahti-Werner), and this record does not settle it.",
+      "The retrieval notes say four sources loaded but list five, and the SEP article was only about 93% read. HyperPhysics, the Feynman Lectures and the NASA NTRS translation of Heisenberg's paper did not load, so they are not cited.",
+      "The illustration is one-dimensional and in natural units. It shows the statistical spread, not individual detection events."
+    ],
+    "sources": [
+      {
+        "title": "Stanford Encyclopedia of Philosophy: The Uncertainty Principle",
+        "url": "https://plato.stanford.edu/entries/qt-uncertainty/",
+        "supports": "Kennard/Robertson preparation bound as distinct from error-disturbance; Heisenberg's microscope argument called incomplete; Bohr's definability point; sensitivity of standard deviations to tails; Ozawa vs. BLW described as unresolved."
+      },
+      {
+        "title": "Nairz, Arndt, Zeilinger: Experimental verification of the Heisenberg uncertainty principle for fullerene molecules (Phys. Rev. A 65, 032109)",
+        "url": "https://arxiv.org/abs/quant-ph/0105061",
+        "supports": "Narrowing the slit widened the diffraction pattern for C70 at 900 K, in good quantitative agreement with \u0394x\u00b7\u0394p \u2248 h."
+      },
+      {
+        "title": "Rozema et al.: Violation of Heisenberg's measurement-disturbance relationship by weak measurements (Phys. Rev. Lett. 109, 100404)",
+        "url": "https://arxiv.org/abs/1208.0034",
+        "supports": "Weak measurements with photons violated the naive measurement-disturbance relation and agreed with Ozawa's relation."
+      },
+      {
+        "title": "Erhart et al.: Experimental demonstration of a universally valid error-disturbance uncertainty relation in spin measurements (Nature Physics)",
+        "url": "https://arxiv.org/abs/1201.1833",
+        "supports": "In neutron spin measurements, Ozawa's relation held and Heisenberg's original error-disturbance form was violated."
+      },
+      {
+        "title": "Busch, Lahti, Werner: Proof of Heisenberg's error-disturbance relation (Phys. Rev. Lett. 111, 160405)",
+        "url": "https://arxiv.org/abs/1306.1565",
+        "supports": "With worst-case error and disturbance defined for the device, a Heisenberg-type bound for position and momentum holds; the 2012 violations use different definitions."
+      }
+    ]
+  },
+  "scene": {
+    "title": "Why a particle can't have both a sharp place and a sharp motion",
+    "subtitle": "A quantum particle behaves like a wave. Watch the trade-off: the more tightly the wave is bunched in space, the more motions it has to blend together.",
+    "beats": [
+      {
+        "title": "One pure wave: exact motion, no location",
+        "body": "The bottom shows a single bar, so the motion is exact. Up top, the wave repeats evenly and never fades. A particle with one exact motion has no particular place to be."
+      },
+      {
+        "title": "Blend many waves and a bunch appears",
+        "body": "Now many bars light up below, each one a different wavelength. Up top they line up in the middle and cancel farther out. That is how a located particle gets made, by mixing many motions together."
+      },
+      {
+        "title": "Narrower in place means wider in motion",
+        "body": "Watch the bunch spread out as the mix below narrows, then tighten again as it widens. Shifting the bars to faster motion packs the ripples closer, but the trade-off stays the same. Over time the bunch spreads, because its fast parts pull ahead of its slow parts."
+      }
+    ],
+    "mass": 0.6,
+    "distance": 1.4,
+    "ray_count": 1,
+    "show_reference": true,
+    "show_labels": true,
+    "accent": "blue",
+    "line_width": 2.5,
+    "duration": 32,
+    "takeaway": "Making a wave sit in one place takes many wavelengths, so a sharp place always comes with a blurry motion.",
+    "controls": "first",
+    "kind": "wave-packet"
+  },
+  "checks": [
+    {
+      "name": "A single momentum is one pure wave",
+      "pass": true
+    },
+    {
+      "name": "Narrower momentum mix gives a wider packet",
+      "pass": true
+    },
+    {
+      "name": "Position spread times momentum spread is the minimum, one half",
+      "pass": true
+    },
+    {
+      "name": "A packet spreads out as it moves",
+      "pass": true
+    },
+    {
+      "name": "Momentum spread readout is zero for one wave",
+      "pass": true
+    },
+    {
+      "name": "Total probability is the same for any mix",
+      "pass": true
+    },
+    {
+      "name": "Subtitles read at most 14.0 characters per second (limit 15)",
+      "pass": true
+    },
+    {
+      "name": "Each subtitle stays up at least 3.4 s (minimum 2.5)",
+      "pass": true
+    },
+    {
+      "name": "Zero-mass control removes the modeled effect",
+      "pass": true
+    },
+    {
+      "name": "Mass control updates the rendered model",
+      "pass": true
+    },
+    {
+      "name": "No-mass step shows zero and restores the chosen mass afterward",
+      "pass": true
+    },
+    {
+      "name": "Seeking reproduces identical canvas pixels",
+      "pass": true
+    },
+    {
+      "name": "Mobile page fits viewport",
+      "pass": true
+    },
+    {
+      "name": "Renderer has no JavaScript errors",
+      "pass": true
+    }
+  ],
+  "provider": "reviewed-agents",
+  "provenance": {
+    "sources_retrieved": true,
+    "retrieved_by": "agent"
+  },
+  "revisions": [
+    {
+      "number": 1,
+      "scene": {
+        "title": "Why a particle can't have both a sharp place and a sharp motion",
+        "subtitle": "A quantum particle behaves like a wave. Watch the trade-off: the more tightly the wave is bunched in space, the more motions it has to blend together.",
+        "beats": [
+          {
+            "title": "One pure wave: exact motion, no location",
+            "body": "The bottom shows a single bar, so the motion is exact. Up top, the wave repeats evenly and never fades. A particle with one exact motion has no particular place to be."
+          },
+          {
+            "title": "Blend many waves and a bunch appears",
+            "body": "Now many bars light up below, each one a different wavelength. Up top they line up in the middle and cancel farther out. That is how a located particle gets made, by mixing many motions together."
+          },
+          {
+            "title": "Narrower in place means wider in motion",
+            "body": "Watch the bunch spread out as the mix below narrows, then tighten again as it widens. Shifting the bars to faster motion packs the ripples closer, but the trade-off stays the same. Over time the bunch spreads, because its fast parts pull ahead of its slow parts."
+          }
+        ],
+        "mass": 0.6,
+        "distance": 1.4,
+        "ray_count": 1,
+        "show_reference": true,
+        "show_labels": true,
+        "accent": "blue",
+        "line_width": 2.5,
+        "duration": 32,
+        "takeaway": "Making a wave sit in one place takes many wavelengths, so a sharp place always comes with a blurry motion.",
+        "controls": "first",
+        "kind": "wave-packet"
+      },
+      "checks": [
+        {
+          "name": "A single momentum is one pure wave",
+          "pass": true
+        },
+        {
+          "name": "Narrower momentum mix gives a wider packet",
+          "pass": true
+        },
+        {
+          "name": "Position spread times momentum spread is the minimum, one half",
+          "pass": true
+        },
+        {
+          "name": "A packet spreads out as it moves",
+          "pass": true
+        },
+        {
+          "name": "Momentum spread readout is zero for one wave",
+          "pass": true
+        },
+        {
+          "name": "Total probability is the same for any mix",
+          "pass": true
+        },
+        {
+          "name": "Subtitles read at most 14.0 characters per second (limit 15)",
+          "pass": true
+        },
+        {
+          "name": "Each subtitle stays up at least 3.4 s (minimum 2.5)",
+          "pass": true
+        },
+        {
+          "name": "Zero-mass control removes the modeled effect",
+          "pass": true
+        },
+        {
+          "name": "Mass control updates the rendered model",
+          "pass": true
+        },
+        {
+          "name": "No-mass step shows zero and restores the chosen mass afterward",
+          "pass": true
+        },
+        {
+          "name": "Seeking reproduces identical canvas pixels",
+          "pass": true
+        },
+        {
+          "name": "Mobile page fits viewport",
+          "pass": true
+        },
+        {
+          "name": "Renderer has no JavaScript errors",
+          "pass": true
+        }
+      ],
+      "accepted": true,
+      "physics_review": {
+        "pass": true,
+        "score": 8.5,
+        "summary": "I reviewed the four attached frames and the text. This review is not scientific proof. The physics holds up as a teaching approximation.\n\n- **Frame 1 (mix 0):** one momentum bar, readout 0.00, and a real-part wave that never decays inside a flat magnitude band. That is the correct plane-wave limit, and the research record notes that such a state cannot be normalized.\n- **Frames 2\u20133 (mix 0.6):** the readout shows 0.66, which matches the spread formula (1.1 \u00d7 0.6). The bars form a Gaussian and the packet is localized. Its oscillations sit inside a smooth envelope, and it drifts right between t = 9 s and t = 11 s.\n- **Frame 4 (chapter 3, t = 18 s):** the bars have not changed, but the packet has moved further and is wider with a slightly lower peak. This is correct free-particle spreading: the momentum mix is unchanged while the position spread grows.\n\n**Text:**\n- Uncertainty is never described as disturbance or measurement clumsiness. It is presented as a property of waves, as required.\n- The research separates the Kennard-Robertson state bound from the disputed error-disturbance question, and names that dispute as unresolved.\n- No new-discovery claims are made, and the sources support the claims.\n- The research record states that the product equals 1/2 only at the narrowest moment.\n- Choosing controls \"first\" is justified: dragging the slider shows the trade-off between the top and bottom panels directly. The sweep of the second control during playback already covers what that slider would show.\n\n**Remaining issues (minor, not blocking):**\n- The top-panel label \"where it might be\" sits over the real part, which can go negative.\n- The word \"motion\" for momentum is a loose stand-in.\n- Beat 3's sentence about widening and tightening holds near the narrowest moment, but not in general.",
+        "changes": [
+          "Make it clear that the shaded band, not the signed oscillating line, shows where the particle is likely to be. For example, change the label to \"where it might be (shaded)\", or say in beat 2 that the shaded band shows the likely positions. The line can go negative, so it is not a probability.",
+          "Beat 3: \"Watch the bunch spread out as the mix below narrows\" is strictly true near the packet's narrowest moment. A narrower mix also spreads more slowly over time. Consider \"Watch the bunch get wider as the mix below narrows, then tighter as it widens\" and keep the spreading sentence separate, as it is now.",
+          "Beat 2: \"That is how a located particle gets made\" could become \"That is how a more localized particle gets made\". No real state is perfectly located.",
+          "Consider \"momentum\" or \"speed of travel\" in at least one beat instead of \"motion\", so viewers don't picture several trajectories.",
+          "Optional addition to the research limitations: Nairz et al. saw deviations from the simple scaling at the narrowest slits, caused by interactions with the slit walls. Saying that halving the slit width \"roughly doubles\" the spread applies to the clean diffraction regime."
+        ],
+        "blocking_issues": []
+      },
+      "visual_review": {
+        "pass": true,
+        "score": 7.2,
+        "summary": "The progression is clear and accurate. In chapter 1 (t=1) a single bar sits under an endless uniform wave with a full-height band, and the readout shows 0.00. In chapter 2 (t=9 and t=11) a Gaussian set of 43 bars builds a localized packet that moves to the right. In chapter 3 (t=18) the ripples are packed tighter at the higher average momentum. Subtitles read comfortably and wrap cleanly on desktop and mobile. Mobile fits the viewport and the labels are legible. The single 'Momentum mix' slider is a good choice: dragging it shows the band narrow while the bars widen, which goes beyond the scripted dip. The main weakness is in chapter 3. With the second control at its maximum, the bar chart looks the same as at t=9: its centre doesn't move and there are no axis ticks. The sentence 'Shifting the bars to faster motion' therefore describes something the viewer can't see. Minor issues: the narration says 'motion' while the on-stage labels say 'momentum', and chapter 3 packs three ideas into three sentences, one with an ambiguous 'it'. This is fixable through beat text, so it is not a blocker.",
+        "changes": [
+          "beats[2].body: replace 'Shifting the bars to faster motion packs the ripples closer, but the trade-off stays the same.' with 'Faster average motion packs the ripples closer, but the bars keep the same width.' The bar chart does not visibly shift at t=18, so the narration should describe the change that is visible.",
+          "beats[2].body first sentence: change to 'Watch the bunch spread out as the bars below narrow, then tighten as the bars widen.' This removes the ambiguous 'it' and points at the visible element.",
+          "beats[0].body: change 'so the motion is exact' to 'so the momentum (the motion) is exact' so beginners connect the narration to the 'Momentum spread' readout and the 'WHICH MOMENTA ARE MIXED IN' label.",
+          "beats[2].title: change to 'Narrower in place means wider in momentum' to match the on-stage terms.",
+          "Keep controls='first', mass=0.6 and distance=1.4. These give a well-proportioned packet and a useful interactive slider."
+        ],
+        "blocking_issues": []
+      },
+      "frames": [
+        "published/20261027T163007-b6176074/revision-1-0.png",
+        "published/20261027T163007-b6176074/revision-1-1.png",
+        "published/20261027T163007-b6176074/revision-1-2.png",
+        "published/20261027T163007-b6176074/revision-1-3.png",
+        "published/20261027T163007-b6176074/revision-1-4.png",
+        "published/20261027T163007-b6176074/revision-1-5.png"
+      ]
+    }
+  ]
+}
