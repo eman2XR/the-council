@@ -42,7 +42,8 @@ class FixtureProvider:
         if role == 'scientist':
             return deepcopy(CLOCK_RESEARCH if 'CLOCK MODEL' in prompt else RESEARCH)
         if role == 'director':
-            scene = deepcopy(CLOCK_SCENE if 'CLOCK MODEL' in prompt else SCENE)
+            match = next((s for key, s in ENGINE_SCENES.items() if key in prompt), None)
+            scene = deepcopy(match or (CLOCK_SCENE if 'CLOCK MODEL' in prompt else SCENE))
             if 'Previous scene' not in prompt:
                 scene.update(show_reference=False, show_labels=False, line_width=1)
             return scene
@@ -68,3 +69,28 @@ CLOCK_SCENE = {**deepcopy(SCENE),
         {'title':'Move both clocks farther out.', 'body':'Increase the lower clock radius: both clocks move outward, keeping the same separation. The rate difference shrinks. The hand-speed difference is exaggerated to make it visible.'},
     ],
     'takeaway':'Gravity changes how much time stationary clocks accumulate between comparisons.'}
+
+def _engine_scene(title, beats, accent, mass=1, distance=1.25, duration=27):
+    return {**deepcopy(SCENE), 'title': title, 'subtitle': 'Offline example scene for checking this renderer.',
+            'beats': [{'title': t, 'body': b} for t, b in beats], 'mass': mass, 'distance': distance,
+            'accent': accent, 'ray_count': 1, 'duration': duration, 'takeaway': 'Offline fixture scene; not an agent investigation.'}
+
+# Keyed by a phrase that appears only in the matching model notes.
+ENGINE_SCENES = {
+    'SPACETIME DIAGRAM': _engine_scene('Two twins, two paths through spacetime', [
+        ('Nobody moves: the twins age together.', 'With zero speed the traveller never leaves. Both columns of ticks line up.'),
+        ('Now the traveller flies out and back.', 'The traveller’s dots are spaced farther apart. Fewer of them fit before the twins meet again.'),
+        ('Change the speed and the trip.', 'Faster trips widen the gap. A longer trip adds years, but the percentage stays the same.')], 'blue', .8),
+    'TWO-SOURCE RIPPLE TANK': _engine_scene('When two waves meet', [
+        ('One source: smooth rings.', 'A single source sends out rings. The screen is evenly lit.'),
+        ('Add a second source.', 'Where crests meet crests the water swings harder. Where crests meet troughs it stays calm.'),
+        ('Move the sources apart.', 'Wider spacing packs the bright and dark stripes closer together.')], 'blue'),
+    'ONE-AT-A-TIME TWO-SLIT': _engine_scene('Stripes from single particles', [
+        ('One slit open.', 'Particles land one at a time in a single broad patch.'),
+        ('Open the second slit.', 'Each particle still lands at one spot, but the arrivals slowly build stripes.'),
+        ('Change the slit spacing.', 'Closer slits give wider stripes. The pattern belongs to the possibilities, not to any single path.')], 'mint'),
+    'STANDING WAVES ON A ROPE': _engine_scene('Why a rope only shakes in certain patterns', [
+        ('No reflection: the wave just travels.', 'Every point on the rope swings in turn. Nothing stays still.'),
+        ('Let the wall reflect the wave.', 'The returning wave overlaps the outgoing one. Some points now stay perfectly still.'),
+        ('Step through the patterns.', 'Only whole numbers of half-waves fit between the hand and the wall.')], 'gold'),
+}

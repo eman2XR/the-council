@@ -1,45 +1,60 @@
 """Render the actual webpage at deterministic times for agent image review."""
 from pathlib import Path
-from functools import partial
-from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
-import threading
-from contextlib import contextmanager
+from urllib.parse import unquote, urlparse
+import mimetypes
 
 ROOT = Path(__file__).resolve().parents[1]
+ORIGIN = 'http://council.local'
 
 
-class QuietHandler(SimpleHTTPRequestHandler):
-    def log_message(self, *args):
-        pass
+def route_files(page, folder, prefix='/'):
+    """Serve a folder through request interception, so no local socket or server is needed."""
+    folder = folder.resolve()
+    page.route('**/*', lambda route: route.abort())  # Captures never depend on outside network.
+    def handle(route):
+        path = unquote(urlparse(route.request.url).path)
+        if not path.startswith(prefix) or '\0' in path:
+            return route.fulfill(status=404, body='')
+        target = (folder / path[len(prefix):]).resolve()
+        if target.is_dir():
+            target = target / 'index.html'
+        if not target.is_relative_to(folder) or not target.is_file():
+            return route.fulfill(status=404, body='')
+        route.fulfill(status=200, body=target.read_bytes(), headers={'Cache-Control': 'no-store'},
+                      content_type=mimetypes.guess_type(target.name)[0] or 'application/octet-stream')
+    page.route(ORIGIN + '/**', handle)
 
 
-@contextmanager
-def preview_server():
-    server = ThreadingHTTPServer(('127.0.0.1', 0), partial(QuietHandler, directory=str(ROOT / 'web')))
-    thread = threading.Thread(target=server.serve_forever, daemon=True)
-    thread.start()
-    try:
-        yield f'http://127.0.0.1:{server.server_port}'
-    finally:
-        server.shutdown()
-        server.server_close()
+def launch(p):
+    """Prefer Chromium (bundled, then installed Chrome); fall back to WebKit where Chromium cannot start.
+    Every launch uses a temporary profile, never the user's browser session."""
+    options = []
+    if Path(p.chromium.executable_path).exists():
+        options.append(('chromium', None))
+    if Path('/Applications/Google Chrome.app').exists():
+        options.append(('chromium', 'chrome'))
+    options.append(('webkit', None))
+    errors = []
+    for name, channel in options:
+        try:
+            kind = getattr(p, name)
+            return kind.launch(headless=True, channel=channel) if channel else kind.launch(headless=True)
+        except Exception as error:
+            errors.append(f'{name}: {str(error).splitlines()[0]}')
+    raise RuntimeError('No browser could start: ' + '; '.join(errors))
 
 
 def capture(scene, directory, research=None, provider='fixture'):
     from playwright.sync_api import sync_playwright
     directory.mkdir(parents=True, exist_ok=True)
-    with preview_server() as url, sync_playwright() as p:
-        # Reuse an installed Chrome when Playwright's bundled browser is absent.
-        # This uses a separate temporary profile, never the user's browser session.
-        channel = None
-        if not Path(p.chromium.executable_path).exists() and Path('/Applications/Google Chrome.app').exists():
-            channel = 'chrome'
-        browser = p.chromium.launch(headless=True, channel=channel)
+    with sync_playwright() as p:
+        browser = launch(p)
         try:
             page = browser.new_page(viewport={'width': 1440, 'height': 1050}, device_scale_factor=1)
+            route_files(page, ROOT / 'web')
             errors = []
             page.on('pageerror', lambda error: errors.append(str(error)))
-            page.goto(url, wait_until='networkidle')
+            page.goto(ORIGIN + '/', wait_until='networkidle')
             page.add_style_tag(content='html {scroll-behavior:auto!important}')
             page.wait_for_function('window.CouncilScene && document.getElementById("beat-title").textContent.length > 0')
             if research:
@@ -69,7 +84,7 @@ def capture(scene, directory, research=None, provider='fixture'):
             # Ordered samples include within-beat motion and a mobile frame.
             samples = [(1,0),(9,1),(11,1),(18,2)]
             for i,(time,beat) in enumerate(samples):
-                if i==3 and scene.get('kind')=='gravity-clocks':
+                if i==3 and scene.get('kind','light-bending')!='light-bending':
                     page.evaluate("() => {const s=document.getElementById('distance');s.value='2.5';s.dispatchEvent(new Event('input'));}")
                 page.evaluate('([t,b])=>CouncilScene.seek(t,b)', [time,beat])
                 path = directory/f'frame-{i+1}.png'

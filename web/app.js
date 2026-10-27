@@ -219,7 +219,6 @@ refreshDashboard();setInterval(refreshDashboard,60000);setInterval(()=>{renderNe
 /* The path: the curriculum, with requests sent as GitHub issues the morning worker reads. */
 const REPO='https://github.com/eman2XR/the-council';
 const OWNER='eman2XR';
-const READY_MODELS=new Set(['gravity-clocks','light-bending']);
 let curriculum=null, picks=new Map();
 const norm=s=>(s||'').toLowerCase().replace(/\W+/g,'');
 function issueURL(label,title,body){return `${REPO}/issues/new?${new URLSearchParams({title,body,labels:label})}`;}
@@ -229,39 +228,44 @@ function updateTalk(){
  $('feedback').href=issueURL('council:feedback',`Feedback: ${title}`.slice(0,120),`guide: ${guide}\n\nWhat worked:\n\nWhat was confusing:\n\n`);
 }
 function doneItem(item){return entries.find(e=>e.curriculum===item.id||norm(e.question)===norm(item.question));}
+let selectedChapter=null;
 function renderPath(){
  if(!curriculum)return;
- const all=curriculum.stages.flatMap(s=>s.items);
- const next=all.find(i=>READY_MODELS.has(i.model)&&!doneItem(i)&&!picks.has(i.id));
- const done=all.filter(doneItem).length;
- put('path-progress',`${done} of ${all.length} explored`);
- $('stages').replaceChildren(...curriculum.stages.map(stage=>{
-  const states=stage.items.map(i=>doneItem(i)?'done':READY_MODELS.has(i.model)?'ready':'wait');
-  const here=stage.items.includes(next)||stage.items.some(i=>picks.has(i.id));
-  const details=el('details',{open:here});
-  const dots=el('span',{className:'dots',ariaHidden:'true'},...states.map(s=>el('i',{className:s==='wait'?'':s})));
-  details.append(el('summary',{},el('span',{className:'stage-num',textContent:stage.number}),
-   el('span',{className:'stage-title',textContent:stage.title},el('small',{textContent:stage.subtitle})),dots));
-  details.append(el('ul',{className:'items'},...stage.items.map((item,i)=>{
-   const published=doneItem(item), family=curriculum.families[item.family]||item.family;
-   let state;
-   if(published){state=el('a',{className:'state pill',href:'?guide='+encodeURIComponent(published.id),textContent:'Watch'});
-    state.onclick=e=>{e.preventDefault();openGuide(published.id,{autoplay:true,push:true});};}
-   else if(picks.has(item.id))state=el('a',{className:'state picked',href:picks.get(item.id),target:'_blank',rel:'noopener noreferrer',textContent:READY_MODELS.has(item.model)?'Picked for next run':'Voted'});
-   else if(READY_MODELS.has(item.model))state=el('a',{className:'state pill pick',target:'_blank',rel:'noopener noreferrer',textContent:'Pick next',
-    href:issueURL('council:choose',`Pick next: ${item.id} ${item.question}`.slice(0,120),`curriculum: ${item.id}\n\n${item.question}\n\nPicked on the website. The next morning's run investigates this.`)});
-   else state=el('a',{className:'state wait',target:'_blank',rel:'noopener noreferrer',title:`Needs a ${family} visual before the Council can investigate it`,textContent:`Needs ${family} · vote`,
-    href:issueURL('council:choose',`Vote: ${item.id} ${item.question}`.slice(0,120),`curriculum: ${item.id}\n\n${item.question}\n\nThis needs a ${family} visual model first. Votes help decide which model to build next.`)});
-   const li=el('li',{className:item===next?'next':''},el('span',{className:'num',textContent:item.id}),
-    el('span',{},el('span',{className:'q',textContent:item.question}),el('span',{className:'idea',textContent:item.idea})),state);
-   li.dataset.state=states[i];return li;
-  })));
-  const li=el('li',{className:'stage'},details);
-  li.dataset.state=states.every(s=>s==='done')?'done':here?'here':'';
-  return li;
+ const chapters=curriculum.chapters, all=chapters.flatMap(c=>c.items);
+ const next=all.find(i=>i.model&&!doneItem(i)&&!picks.has(i.id));
+ put('path-progress',`${all.filter(doneItem).length} of ${all.length} explored`);
+ put('path-horizon',curriculum.horizon);
+ const current=chapters.find(c=>c.items.includes(next))||chapters.find(c=>c.items.some(i=>!doneItem(i)))||chapters[0];
+ const chapter=chapters.find(c=>c.number===selectedChapter)||current;
+ $('chapter-row').replaceChildren(...chapters.map(c=>{
+  const done=c.items.filter(doneItem).length;
+  const tile=el('button',{type:'button',className:'chapter-tile',role:'tab'},
+   el('span',{className:'tile-top',textContent:`Chapter ${c.number}`}),el('strong',{textContent:c.title}),
+   el('span',{className:'tile-status',textContent:done===c.items.length?'Complete':`${c.items.some(i=>i.model)?'Ready':'Later'} · ${done}/${c.items.length}`}),el('i'));
+  tile.dataset.status=c.items.some(i=>i.model)?'ready':'later';tile.style.setProperty('--done',done/c.items.length);
+  tile.setAttribute('aria-selected',String(c===chapter));
+  tile.onclick=()=>{selectedChapter=c.number;renderPath();};
+  return tile;
  }));
+ const rows=chapter.items.map(item=>{
+  const published=doneItem(item);let state;
+  if(published){state=el('a',{className:'state pill',href:'?guide='+encodeURIComponent(published.id),textContent:'Watch'});
+   state.onclick=e=>{e.preventDefault();openGuide(published.id,{autoplay:true,push:true});};}
+  else if(picks.has(item.id))state=el('a',{className:'state picked',href:picks.get(item.id),target:'_blank',rel:'noopener noreferrer',textContent:'Picked'});
+  else if(item.model)state=el('a',{className:'state pill pick',target:'_blank',rel:'noopener noreferrer',textContent:'Pick next',
+   href:issueURL('council:choose',`Pick next: ${item.id} ${item.question}`.slice(0,120),`curriculum: ${item.id}\n\n${item.question}\n\nPicked on the website. The next morning's run investigates this.`)});
+  else state=el('span',{className:'state wait',textContent:'Later'});
+  const li=el('li',{className:item===next?'next':''},el('span',{className:'num',textContent:item.id}),el('span',{className:'q',textContent:item.question}),state);
+  li.dataset.state=published?'done':'';return li;
+ });
+ if(chapter.items.some(i=>!i.model)){
+  const vote=el('a',{target:'_blank',rel:'noopener noreferrer',textContent:'Vote for it',
+   href:issueURL('council:choose',`Vote: ${chapter.engine} visual`,`chapter: ${chapter.number}\n\nI'd like the ${chapter.engine} visual built so the rest of this chapter can run.`)});
+  rows.push(el('li',{className:'note'},`Items marked Later need a ${chapter.engine} visual. `,vote));
+ }
+ $('chapter-items').replaceChildren(...rows);
  if(schedule?.enabled){
-  const pick=[...picks.keys()].map(id=>all.find(i=>i.id===id)).find(i=>i&&READY_MODELS.has(i.model)&&!doneItem(i));
+  const pick=[...picks.keys()].map(id=>all.find(i=>i.id===id)).find(i=>i&&i.model&&!doneItem(i));
   const upcoming=pick||next;
   put('next-pick',upcoming?`${pick?'Your pick':'Next on the path'}: ${upcoming.question}`:'');
  }else put('next-pick','');

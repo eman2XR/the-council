@@ -50,8 +50,8 @@
    </div>
 
    <div class="controls">
-    <label class="control"><span class="control-head"><span>Mass</span><output id="mass-value">0.70</output></span>
-     <input id="mass" type="range" min="0" max="1" step="0.01" value="0.7"><small>how much mass sits nearby</small></label>
+    <label class="control"><span class="control-head"><span id="mass-label">Mass</span><output id="mass-value">0.70</output></span>
+     <input id="mass" type="range" min="0" max="1" step="0.01" value="0.7"><small id="mass-hint">how much mass sits nearby</small></label>
     <label class="control"><span class="control-head"><span id="distance-label">Passing distance</span><output id="distance-value">1.25×</output></span>
      <input id="distance" type="range" min="1" max="2.5" step="0.01" value="1.25"><small id="distance-hint"></small></label>
    </div>
@@ -79,15 +79,16 @@
   </article>
  </section>
 
- <section id="path" class="path" aria-labelledby="path-title">
-  <div class="section-head"><h2 id="path-title">The path</h2><span id="path-progress" class="muted"></span></div>
-  <p class="muted path-intro">From relativity to quantum field theory, one idea at a time. Pick what comes next, or vote for lessons that need a new kind of visual.</p>
-  <ol id="stages" class="stages"></ol>
- </section>
-
  <section class="past" aria-labelledby="past-title">
   <div class="section-head"><h2 id="past-title">Past investigations</h2><span id="past-count" class="muted"></span></div>
   <nav id="archive" class="cards" aria-label="Investigations"></nav>
+ </section>
+
+ <section id="path" class="path" aria-labelledby="path-title">
+  <div class="section-head"><h2 id="path-title">The path</h2><span id="path-progress" class="muted"></span></div>
+  <div id="chapter-row" class="chapter-row" role="tablist" aria-label="Chapters"></div>
+  <ul id="chapter-items" class="items"></ul>
+  <p id="path-horizon" class="fine horizon"></p>
  </section>
 
  <details id="investigation" class="behind">

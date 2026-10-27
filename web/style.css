@@ -102,32 +102,29 @@ input[type=range]:disabled{opacity:.4;cursor:default}
 
 /* The path */
 .path{margin:64px 0 0}
-.path-intro{font-size:14px;margin:-8px 0 18px;max-width:70ch}
-.stages{list-style:none;margin:0;padding:0;background:var(--surface);border:1px solid var(--line);border-radius:18px;overflow:hidden}
-.stage+.stage{border-top:1px solid var(--line)}
-.stage summary{list-style:none;display:grid;grid-template-columns:34px 1fr auto;align-items:center;gap:14px;padding:16px 22px;cursor:pointer}
-.stage summary::-webkit-details-marker{display:none}
-.stage summary:hover{background:#fbfbfa}
-.stage-num{width:28px;height:28px;border-radius:50%;display:grid;place-items:center;font-size:12px;font-weight:600;background:#f1f2f4;color:var(--muted)}
-.stage[data-state=done] .stage-num{background:var(--ink);color:#fff}
-.stage[data-state=here] .stage-num{background:var(--accent);color:#fff}
-.stage-title{font-weight:600;letter-spacing:-.01em}
-.stage-title small{display:block;font-weight:400;font-size:12px;color:var(--faint)}
-.dots{display:flex;gap:4px;flex-wrap:wrap;justify-content:flex-end;max-width:180px}
-.dots i{width:7px;height:7px;border-radius:50%;background:var(--track)}
-.dots i.done{background:var(--ink)}
-.dots i.ready{background:transparent;box-shadow:inset 0 0 0 1.5px var(--accent)}
-.items{list-style:none;margin:0;padding:0 22px 14px 70px}
-.items li{display:grid;grid-template-columns:38px 1fr auto;gap:12px;align-items:center;padding:10px 0;border-top:1px solid #f0f0ec;font-size:14px}
+.chapter-row{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+.chapter-tile{text-align:left;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:12px 14px 13px;display:flex;flex-direction:column;gap:2px;transition:border-color .2s,box-shadow .2s}
+.chapter-tile:hover{border-color:#d6d7d2}
+.chapter-tile[aria-selected=true]{border-color:var(--ink);box-shadow:0 0 0 1px var(--ink)}
+.chapter-tile .tile-top{font-size:11px;color:var(--faint);font-weight:600;letter-spacing:.06em;text-transform:uppercase}
+.chapter-tile strong{font-size:15px;letter-spacing:-.01em}
+.chapter-tile .tile-status{font-size:12px;color:var(--muted)}
+.chapter-tile[data-status=ready] .tile-status{color:var(--accent)}
+.chapter-tile i{display:block;height:3px;border-radius:3px;margin-top:8px;background:linear-gradient(90deg,var(--ink) calc(var(--done,0)*100%),var(--track) 0)}
+.items{list-style:none;margin:10px 0 0;padding:4px 18px;background:var(--surface);border:1px solid var(--line);border-radius:14px}
+.items li{display:grid;grid-template-columns:30px 1fr auto;gap:10px;align-items:center;padding:9px 0;font-size:14px}
+.items li+li{border-top:1px solid #f0f0ec}
 .items .num{font-size:12px;color:var(--faint);font-variant-numeric:tabular-nums}
-.items .idea{display:block;font-size:12px;color:var(--faint)}
 .items li[data-state=done] .q{color:var(--muted)}
 .items li.next .q{font-weight:600}
+.items li.note{display:block;font-size:12px;color:var(--faint)}
+.items li.note a{color:var(--accent);font-weight:600}
 .state{font-size:12px;white-space:nowrap}
 .state.pill{padding:4px 11px}
 .state.pick{border-color:var(--accent);color:var(--accent)}
 .state.picked{color:var(--accent);font-weight:600}
 .state.wait{color:var(--faint)}
+.horizon{margin-top:10px}
 
 /* Lab status */
 .lab{display:grid;grid-template-columns:1.4fr 1fr;gap:18px;margin:56px 0 0}
@@ -224,11 +221,10 @@ footer{max-width:1180px;margin:40px auto 0;padding:26px 24px 40px;display:flex;j
  .controls{grid-template-columns:1fr;padding:18px 18px 20px}
  .takeaway{flex-direction:column;gap:6px;font-size:16px}
  .steps li{font-size:0}
- .items{padding:0 16px 12px}
- .items li{grid-template-columns:32px 1fr;}
+ .chapter-row{grid-template-columns:none;grid-auto-flow:column;grid-auto-columns:46%;overflow-x:auto;scrollbar-width:none;padding-bottom:2px}
+ .items{padding:2px 14px}
+ .items li{grid-template-columns:28px 1fr}
  .items li .state{grid-column:2;justify-self:start}
- .stage summary{padding:14px 16px;grid-template-columns:30px 1fr}
- .dots{display:none}
  .steps li.active{font-size:11px}
  .history{grid-template-columns:1fr}
  .revision{grid-template-columns:90px 1fr}.revision img{width:90px;height:70px}

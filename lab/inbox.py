@@ -17,7 +17,7 @@ def curriculum(root=ROOT):
     path = root / 'web' / 'curriculum.json'
     if not path.exists():
         return []
-    return [item for stage in json.loads(path.read_text())['stages'] for item in stage['items']]
+    return [item for chapter in json.loads(path.read_text())['chapters'] for item in chapter['items']]
 
 
 def fetch(runner=subprocess.run):

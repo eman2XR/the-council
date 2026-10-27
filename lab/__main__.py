@@ -13,6 +13,8 @@ from .cli_providers import CLIProvider
 from .contracts import obj, STR
 
 
+from .topics import TOPICS
+
 def main():
     parser=argparse.ArgumentParser(description='The Council visual research lab')
     parser.add_argument('command',choices=['serve','run','check','daily','schedule'])
@@ -24,7 +26,8 @@ def main():
     parser.add_argument('--hour',type=int,default=9,help='Local hour for generated macOS schedule.')
     parser.add_argument('--count',type=int,choices=[1,2],default=1,help='Maximum investigations per local calendar day.')
     parser.add_argument('--publish',action='store_true',help='Commit accepted public guides and push to origin/main.')
-    parser.add_argument('--topic',choices=['light-bending','gravity-clocks'],default='light-bending')
+    parser.add_argument('--topic',choices=list(TOPICS),default='light-bending')
+    parser.add_argument('--question',help='Optional question for a single run; defaults to the topic question.')
     parser.add_argument('--port',type=int,default=8765)
     args=parser.parse_args()
     if not 1<=args.rounds<=4:
@@ -69,7 +72,7 @@ def main():
         from .daily import export_accepted, publish
         dashboard=Dashboard(ROOT,publish if args.publish else None)
         callback=dashboard.update if args.provider!='fixture' else None
-        state=run(adapter,args.rounds,on_update=callback,topic=args.topic)
+        state=run(adapter,args.rounds,on_update=callback,topic=args.topic,question=args.question)
         if args.publish and state['status']=='reviewed':
             export_accepted(state)
         if callback:

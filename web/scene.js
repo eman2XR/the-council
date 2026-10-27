@@ -119,8 +119,171 @@ function drawClocks(ctx,w,h,spec,st){
  }
 }
 
-function draw(ctx,w,h,spec,state){(spec.kind==='gravity-clocks'?drawClocks:drawLight)(ctx,w,h,spec,state);}
-window.CouncilDraw={draw,accent:spec=>ACCENT[spec.accent]||(spec.kind==='gravity-clocks'?ACCENT.blue:ACCENT.mint)};
+function drawSpacetime(ctx,w,h,spec,st){
+ const accent=ACCENT[spec.accent]||ACCENT.blue, v=Physics.speed(st.mass), g=Physics.gamma(v), T=Physics.turnaround(st.distance), H=2*T, small=w<520;
+ const k=Math.min((h-64)/8.6,(w*.5)/4), x0=w*.5-1.6*k, y0=h-34, map=(x,t)=>[x0+x*k,y0-t*k];
+ // Light cone from the departure event: no worldline can leave it.
+ const top=y0/k;
+ ctx.beginPath();ctx.moveTo(...map(0,0));ctx.lineTo(...map(top,top));ctx.lineTo(...map(-top,top));ctx.closePath();ctx.fillStyle=rgba(accent,.045);ctx.fill();
+ ctx.setLineDash([2,5]);ctx.strokeStyle=rgba('#d97706',.55);ctx.lineWidth=1.2;
+ trace(ctx,[map(-top,top),map(0,0),map(top,top)]);ctx.stroke();ctx.setLineDash([]);
+ const tc=Math.min(H,((st.t*.42)%(H+1.4)+H+1.4)%(H+1.4));
+ const xAt=t=>t<=T?v*t:v*(H-t);
+ // Home worldline with a tick each half year.
+ ctx.lineCap='round';
+ trace(ctx,[map(0,0),map(0,H)]);ctx.strokeStyle='rgba(20,23,28,.45)';ctx.lineWidth=2;ctx.stroke();
+ for(let s=.5;s<=H+1e-9;s+=.5){const [x,y]=map(0,s);trace(ctx,[[x-5,y],[x+5,y]]);ctx.strokeStyle='rgba(20,23,28,.35)';ctx.lineWidth=1;ctx.stroke();}
+ if(v>.001){
+  trace(ctx,[map(0,0),map(v*T,T),map(0,H)]);ctx.strokeStyle=accent;ctx.lineWidth=Math.max(2,spec.line_width||2.5);ctx.stroke();
+  // Traveller ticks: one per half year of the traveller's own time, spaced wider by the dilation factor.
+  for(let s=.5;s*g<=H+1e-9;s+=.5){const t=s*g,[x,y]=map(xAt(t),t);ctx.beginPath();ctx.arc(x,y,2.6,0,TAU);ctx.fillStyle=accent;ctx.fill();}
+  // The traveller's line of "now" tilts with speed and swings at the turnaround.
+  if(st.labels||spec.show_reference){
+   const slope=tc<=T?v:-v, xc=xAt(tc), a=map(-1.4,tc+slope*(-1.4-xc)), b=map(4.2,tc+slope*(4.2-xc));
+   ctx.setLineDash([5,5]);trace(ctx,[a,b]);ctx.strokeStyle=rgba(accent,.45);ctx.lineWidth=1.2;ctx.stroke();ctx.setLineDash([]);
+   if(st.labels)text(ctx,'traveller’s “now”',b[0]-4,b[1]-10,{align:'right',size:10,color:rgba(accent,.85)});
+  }
+ }
+ const [hx,hy]=map(0,tc),[tx,ty]=map(xAt(tc),tc);
+ for(const [x,y,c] of [[hx,hy,'#14171c'],[tx,ty,accent]]){const glow=ctx.createRadialGradient(x,y,0,x,y,14);glow.addColorStop(0,rgba(c,.3));glow.addColorStop(1,rgba(c,0));ctx.fillStyle=glow;ctx.fillRect(x-14,y-14,28,28);
+  ctx.beginPath();ctx.arc(x,y,5,0,TAU);ctx.fillStyle=c;ctx.fill();ctx.beginPath();ctx.arc(x,y,2,0,TAU);ctx.fillStyle='#fff';ctx.fill();}
+ if(st.labels){
+  const size=small?10:11;
+  text(ctx,`HOME  ${tc.toFixed(1)} yr`,hx-12,hy,{align:'right',size,weight:600,color:'rgba(20,23,28,.7)',spacing:'.5px'});
+  if(v>.001)text(ctx,`TRAVELLER  ${(tc/g).toFixed(1)} yr`,tx+12,ty,{size,weight:600,color:accent,spacing:'.5px'});
+  else text(ctx,'traveller stays home',hx+12,hy,{size,color:accent});
+  text(ctx,'LIGHT',map(Math.min(top*.82,5.6),Math.min(top*.82,5.6))[0]+8,map(0,Math.min(top*.82,5.6))[1],{size:9,weight:600,spacing:'1.5px',color:'rgba(217,119,6,.75)'});
+  text(ctx,'time ↑',map(0,H)[0]-10,Math.max(16,map(0,H)[1]-14),{align:'right',size:10});
+  text(ctx,'space →',map(.6,0)[0],y0+18,{size:10});
+ }
+}
+
+let fieldBuffer=null;
+function drawInterference(ctx,w,h,spec,st){
+ const accent=ACCENT[spec.accent]||ACCENT.blue, A=st.mass, lam=Math.max(22,Math.min(w,h)/9), k=TAU/lam, d=Physics.separation(st.distance)*lam;
+ const cx=w/2, sy=h*.1, screen=h*.8, s1=[cx-d/2,sy], s2=[cx+d/2,sy], phase=st.t*TAU*.55;
+ const cell=w<520?3:4, cols=Math.ceil(w/cell), rows=Math.ceil(screen/cell);
+ fieldBuffer=fieldBuffer||document.createElement('canvas');
+ if(fieldBuffer.width!==cols||fieldBuffer.height!==rows){fieldBuffer.width=cols;fieldBuffer.height=rows;}
+ const fctx=fieldBuffer.getContext('2d'), image=fctx.createImageData(cols,rows), data=image.data;
+ const n=parseInt(accent.slice(1),16), ar=n>>16, ag=n>>8&255, ab=n&255;
+ for(let j=0;j<rows;j++)for(let i=0;i<cols;i++){
+  const x=i*cell, y=j*cell, r1=Math.hypot(x-s1[0],y-s1[1]), r2=Math.hypot(x-s2[0],y-s2[1]);
+  const f=(Math.cos(k*r1-phase)/Math.sqrt(1+r1/lam)+A*Math.cos(k*r2-phase)/Math.sqrt(1+r2/lam))/(1+A);
+  const o=4*(j*cols+i), a=Math.min(1,Math.abs(f)*1.15);
+  if(f>0){data[o]=ar;data[o+1]=ag;data[o+2]=ab;data[o+3]=a*150;}else{data[o]=20;data[o+1]=30;data[o+2]=50;data[o+3]=a*55;}
+ }
+ fctx.putImageData(image,0,0);ctx.imageSmoothingEnabled=true;ctx.drawImage(fieldBuffer,0,0,cols*cell,rows*cell);
+ // Time-averaged brightness on the screen: crests meeting crests stay bright.
+ const band=h*.08, sx0=w*.04, sx1=w*.96;
+ const pts=[];for(let i=0;i<=200;i++){const x=sx0+(sx1-sx0)*i/200, dr=Math.hypot(x-s1[0],screen-s1[1])-Math.hypot(x-s2[0],screen-s2[1]);pts.push([x,Physics.intensity(A,k*dr)]);}
+ ctx.fillStyle='#fff';ctx.fillRect(0,screen,w,h-screen);
+ for(const [x,I] of pts){ctx.fillStyle=rgba(accent,.08+.85*I);ctx.fillRect(x-1.5,screen+6,(sx1-sx0)/200+1,band);}
+ for(const [p,on] of [[s1,1],[s2,A]]){ctx.globalAlpha=on>0.001?.4+.6*Math.min(1,on):.25;ctx.beginPath();ctx.arc(p[0],p[1],6,0,TAU);ctx.fillStyle=on>0.001?accent:'#fff';ctx.fill();ctx.strokeStyle='rgba(20,23,28,.4)';ctx.lineWidth=1;ctx.stroke();ctx.globalAlpha=1;}
+ if(st.labels){
+  const size=w<520?10:11;
+  text(ctx,'SOURCE',s1[0]-12,s1[1],{align:'right',size,weight:600,spacing:'1.5px'});
+  text(ctx,A>0.001?'SECOND SOURCE':'second source off',s2[0]+12,s2[1],{size,weight:600,spacing:A>0.001?'1.5px':'0px',color:A>0.001?'rgba(20,23,28,.5)':'rgba(20,23,28,.35)'});
+  text(ctx,'SCREEN · brightness averaged over time',sx0,screen+band+22,{size:10,weight:600,spacing:'1px'});
+ }
+}
+
+const hash=i=>{let x=Math.sin(i*127.1+311.7)*43758.5453;return x-Math.floor(x);};
+let patternCache={key:'',cdf:null};
+function slitPattern(A,sep,bins){
+ const key=A.toFixed(3)+'|'+sep.toFixed(3)+'|'+bins;
+ if(patternCache.key===key)return patternCache;
+ const p=[];let total=0;
+ for(let i=0;i<bins;i++){const y=(i+.5)/bins*2-1, env=Math.pow(Math.cos(y*Math.PI/2.15),2), I=env*Physics.intensity(A,TAU*sep*y*.9);p.push(I);total+=I;}
+ const cdf=[];let run=0;for(const v of p){run+=v/total;cdf.push(run);}
+ patternCache={key,p:p.map(v=>v/Math.max(...p)),cdf};return patternCache;
+}
+function drawParticles(ctx,w,h,spec,st){
+ const accent=ACCENT[spec.accent]||ACCENT.mint, A=st.mass, sep=Physics.separation(st.distance), small=w<520;
+ const srcX=w*.08, wallX=w*.42, scrX=w*.8, midY=h*.5, span=h*.38, gap=span*.075*sep, slit=Math.max(6,h*.025);
+ const bins=120, pat=slitPattern(A,sep,bins);
+ // Probability ripples: possibilities spread through every open slit; no path is drawn.
+ const phase=(st.t*.8)%1;
+ for(let r=0;r<5;r++){const rad=((r+phase)/5)*(wallX-srcX);ctx.beginPath();ctx.arc(srcX,midY,rad,-.6,.6);ctx.strokeStyle=rgba(accent,.18*(1-r/5));ctx.lineWidth=1.2;ctx.stroke();}
+ for(const [y,on] of [[midY-gap/2,1],[midY+gap/2,A]]){if(on<.001)continue;for(let r=0;r<6;r++){const rad=((r+phase)/6)*(scrX-wallX);ctx.beginPath();ctx.arc(wallX,y,rad,-.9,.9);ctx.strokeStyle=rgba(accent,.14*on*(1-r/6));ctx.lineWidth=1.1;ctx.stroke();}}
+ ctx.beginPath();ctx.arc(srcX,midY,6,0,TAU);ctx.fillStyle=accent;ctx.fill();
+ // Barrier with two slits; the second opens with the first slider.
+ ctx.fillStyle='rgba(20,23,28,.78)';
+ const y1=midY-gap/2, y2=midY+gap/2;
+ ctx.fillRect(wallX-3,midY-span,6,y1-slit-(midY-span));ctx.fillRect(wallX-3,y1+slit,6,y2-slit-(y1+slit));ctx.fillRect(wallX-3,y2+slit,6,midY+span-(y2+slit));
+ if(A<1){ctx.fillStyle=`rgba(20,23,28,${.78*(1-A)})`;ctx.fillRect(wallX-3,y2-slit,6,2*slit);}
+ // Screen and arrivals, accumulated one at a time.
+ const sw=small?14:18;ctx.fillStyle='#fff';ctx.fillRect(scrX,midY-span,sw,2*span);ctx.strokeStyle='rgba(20,23,28,.15)';ctx.strokeRect(scrX,midY-span,sw,2*span);
+ const count=Math.min(2400,Math.floor(st.t*55)), counts=new Array(bins).fill(0);
+ for(let i=0;i<count;i++){
+  const u=hash(i+1);let lo=0,hi=bins-1;while(lo<hi){const m=(lo+hi)>>1;if(pat.cdf[m]<u)lo=m+1;else hi=m;}
+  counts[lo]++;const y=midY-span+(lo+hash(i+7.3))/bins*2*span, x=scrX+2+hash(i+3.1)*(sw-4), fresh=i>=count-3;
+  ctx.beginPath();ctx.arc(x,y,fresh?2.6:1.1,0,TAU);ctx.fillStyle=fresh?accent:rgba(accent,.55);ctx.fill();
+ }
+ const hx=scrX+sw+8, hw=w-hx-16, peak=Math.max(1,...counts);
+ for(let i=0;i<bins;i++){if(!counts[i])continue;const y=midY-span+i/bins*2*span;ctx.fillStyle=rgba(accent,.35);ctx.fillRect(hx,y,counts[i]/peak*hw*.9,2*span/bins+.5);}
+ if(spec.show_reference){trace(ctx,pat.p.map((v,i)=>[hx+v*hw*.9,midY-span+(i+.5)/bins*2*span]));ctx.setLineDash([3,4]);ctx.strokeStyle='rgba(20,23,28,.4)';ctx.lineWidth=1;ctx.stroke();ctx.setLineDash([]);}
+ if(st.labels){
+  const size=small?9:11;
+  text(ctx,'ONE AT A TIME',srcX,midY-24,{size,weight:600,spacing:'1px'});
+  text(ctx,A>0.001?'TWO SLITS':'ONE SLIT OPEN',wallX,midY-span-12,{align:'center',size,weight:600,spacing:'1px'});
+  text(ctx,`${count} arrivals`,scrX,midY+span+16,{size,weight:600,color:accent});
+  if(!small)text(ctx,'each lands at one random spot; the pattern is not random',scrX+sw,midY-span-12,{align:'right',size:10});
+ }
+}
+
+function drawRope(ctx,w,h,spec,st){
+ const accent=ACCENT[spec.accent]||ACCENT.gold, A=st.mass, n=Physics.harmonic(st.distance), small=w<520;
+ const x0=w*.1, x1=w*.9, y=h*.48, amp=Math.min(h*.13,(x1-x0)/(n*3.2)+h*.04), phase=st.t*TAU*.5, N=320;
+ const pts=f=>Array.from({length:N+1},(_,i)=>{const u=i/N;return [x0+u*(x1-x0),y-f(u)*amp];});
+ trace(ctx,[[x0,y],[x1,y]]);ctx.strokeStyle='rgba(20,23,28,.1)';ctx.lineWidth=1;ctx.stroke();
+ if(spec.show_reference){
+  trace(ctx,pts(u=>Math.sin(phase-n*Math.PI*u)));ctx.setLineDash([4,5]);ctx.strokeStyle=rgba(accent,.45);ctx.lineWidth=1.2;ctx.stroke();
+  if(A>.001){trace(ctx,pts(u=>-A*Math.sin(phase+n*Math.PI*u)));ctx.strokeStyle='rgba(37,99,235,.4)';ctx.stroke();}
+  ctx.setLineDash([]);
+ }
+ const rope=pts(u=>Physics.rope(u,phase,A,n));
+ ctx.lineCap='round';ctx.lineJoin='round';
+ trace(ctx,rope);ctx.strokeStyle=rgba(accent,.16);ctx.lineWidth=(spec.line_width||2.5)*4;ctx.stroke();
+ trace(ctx,rope);ctx.strokeStyle=accent;ctx.lineWidth=spec.line_width||2.5;ctx.stroke();
+ // Hand at the left, wall at the right.
+ ctx.fillStyle='rgba(20,23,28,.75)';ctx.fillRect(x1+2,y-h*.2,8,h*.4);
+ ctx.beginPath();ctx.arc(x0,rope[0][1],6,0,TAU);ctx.fillStyle='#14171c';ctx.fill();
+ if(A>.5){for(let m=1;m<n;m++){const x=x0+m/n*(x1-x0);ctx.beginPath();ctx.arc(x,y,4,0,TAU);ctx.fillStyle=`rgba(234,88,12,${(A-.5)*1.6})`;ctx.fill();}}
+ if(st.labels){
+  const size=small?10:11;
+  text(ctx,'HAND',x0,y+h*.2,{align:'center',size,weight:600,spacing:'1.5px'});
+  text(ctx,'WALL',x1+6,y+h*.25,{align:'center',size,weight:600,spacing:'1.5px'});
+  text(ctx,`${n} half-wave${n>1?'s':''} fit`,(x0+x1)/2,y+h*.28,{align:'center',size:small?11:12,weight:600,color:accent});
+  if(A>.5&&n>1)text(ctx,'still points',x0+(x1-x0)/n,y-16,{align:'center',size:10,color:'rgba(234,88,12,.9)'});
+  if(spec.show_reference)text(ctx,A>.001?'dashed: wave going right, and its reflection going left':'dashed: the wave going right',(x0+x1)/2,h*.12,{align:'center',size:10});
+ }
+}
+
+const ENGINES={
+ 'light-bending':{draw:drawLight,a:['Mass','how much mass sits nearby'],b:['Passing distance','how close the light passes','×'],
+  measure:['Real bend',(a,b)=>(Physics.deflection(a,b)*180/Math.PI).toFixed(2)+'°'],scale:'Bending magnified 6×',demoEnd:s=>Math.min(2.5,s.distance+1),
+  try:'Slide Mass to zero, then back up. Now move the beam farther away. When does it bend most?',aria:'Light passing a massive object, compared with a straight path without the mass.'},
+ 'gravity-clocks':{draw:drawClocks,a:['Mass','how much mass sits nearby'],b:['Lower radius','gap stays 2 units',' units'],
+  measure:['Real slowdown',(a,b)=>((1-Physics.clockRatio(a,b))*100).toFixed(2)+'%'],scale:'Clock motion magnified 12×',demoEnd:()=>2.5,
+  try:'Slide Mass to zero. Do the clocks agree? Bring it back, then move the Lower radius outward.',aria:'Two stationary clocks at different heights above a mass. The lower clock counts less time.'},
+ 'spacetime':{draw:drawSpacetime,a:['Speed','fraction of light speed, up to 0.9'],b:['Trip length','years before turning back',' ×'],
+  measure:['Traveller ages less by',a=>(Physics.agingGap(a)*100).toFixed(1)+'%'],scale:'Time runs up the page · light moves at 45°',demoEnd:()=>2.5,
+  try:'Set Speed to zero: do the twins agree? Push it up. Then make the trip longer: does the percentage change?',aria:'A spacetime diagram: a home twin stays put while a traveller goes out and back. The traveller collects fewer ticks.'},
+ 'interference':{draw:drawInterference,a:['Second source','strength of the second wave'],b:['Source spacing','distance between the sources',' ×'],
+  measure:['Stripe contrast',a=>(Physics.visibility(a)*100).toFixed(0)+'%'],scale:'Seen from above · waves not to scale',demoEnd:()=>2.5,
+  try:'Turn the second source off: what happens to the stripes? Bring it back, then spread the sources apart.',aria:'Two circular wave sources overlapping, making bright and dark stripes on a screen.'},
+ 'two-slit-particles':{draw:drawParticles,a:['Second slit','0 is closed, 1 is fully open'],b:['Slit spacing','distance between the slits',' ×'],
+  measure:['Stripe contrast',a=>(Physics.visibility(a)*100).toFixed(0)+'%'],scale:'Arrivals are sampled from the predicted pattern',demoEnd:()=>2.5,
+  try:'Close the second slit: do the stripes survive? Open it again, then move the slits apart.',aria:'Particles arrive one at a time on a screen behind two slits and slowly build up stripes.'},
+ 'standing-waves':{draw:drawRope,a:['Reflection','how much of the wave bounces back'],b:['Pattern','steps through whole-number fits',''],
+  measure:['Still points',a=>(Physics.stillness(a)*100).toFixed(0)+'% still'],scale:'Wave height exaggerated',demoEnd:()=>2.5,
+  try:'Turn Reflection to zero: are there still points? Turn it up, then step the Pattern slider.',aria:'A rope shaken at one end and tied to a wall at the other, forming a standing wave.'},
+};
+const engineOf=spec=>ENGINES[spec?.kind]||ENGINES['light-bending'];
+
+function draw(ctx,w,h,spec,state){engineOf(spec).draw(ctx,w,h,spec,state);}
+window.CouncilDraw={draw,accent:spec=>ACCENT[spec.accent]||ACCENT.mint};
 
 const $=id=>document.getElementById(id);
 const canvas=$('universe');
@@ -128,12 +291,9 @@ if(!canvas)return;
 const ctx=canvas.getContext('2d');
 let spec=null, time=0, mass=.7, distance=1.25, stage=2, mode='live', last=0, shown=0, started=false, ended=false, captionKey='';
 const listeners=new Set(), emit=type=>listeners.forEach(fn=>fn(type));
-const clocks=()=>spec?.kind==='gravity-clocks';
 const beatLength=()=>spec.duration/3;
 const target=()=>stage===0?0:mass;
 const fmt=s=>`${Math.floor(s/60)}:${String(Math.floor(s%60)).padStart(2,'0')}`;
-const TRY={clocks:'Slide Mass to zero. Do the clocks agree? Bring it back, then move the Lower radius outward.',
- light:'Slide Mass to zero, then back up. Now move the beam farther away. When does it bend most?'};
 
 function paint(){
  if(!spec)return;
@@ -144,14 +304,14 @@ function paint(){
  if(ctx.reset)ctx.reset();ctx.setTransform(dpr,0,0,dpr,0,0);ctx.clearRect(0,0,w,h);
  draw(ctx,w,h,spec,{t:time,stage,mass:shown,distance,labels:spec.show_labels});
  const value=target();
- $('bend-value').textContent=clocks()?((1-Physics.clockRatio(value,distance))*100).toFixed(2)+'%':(Physics.deflection(value,distance)*180/Math.PI).toFixed(2)+'°';
+ $('bend-value').textContent=engineOf(spec).measure[1](value,distance);
  captions();transport();
 }
 function sentences(body){return body.match(/[^.!?]+[.!?]*["”’)]*\s*/g)?.map(s=>s.trim()).filter(Boolean)||[body];}
 function captions(){
  let chapter, line, reveal=1;
  if(!started){chapter=`${spec.beats.length} short chapters · ${Math.round(spec.duration)} seconds`;line='Press play, or move the sliders to explore on your own.';}
- else if(ended&&mode!=='playing'){chapter='Your turn';line=TRY[clocks()?'clocks':'light'];}
+ else if(ended&&mode!=='playing'){chapter='Your turn';line=engineOf(spec).try;}
  else{
   const beat=spec.beats[stage];chapter=`${stage+1} of ${spec.beats.length} · ${beat.title}`;line=beat.body;
   if(mode==='playing'){
@@ -181,18 +341,18 @@ function syncControls(){
  const control=$('mass');control.disabled=stage===0;control.value=stage===0?0:mass;
  $('distance').value=distance;
  $('mass-value').textContent=(stage===0?0:mass).toFixed(2);
- $('distance-value').textContent=distance.toFixed(2)+(clocks()?' units':'×');
+ const e=engineOf(spec);
+ $('distance-value').textContent=spec.kind==='standing-waves'?String(Physics.harmonic(distance)):distance.toFixed(2)+e.b[2];
 }
 function setStage(n){stage=n;syncControls();}
 function configure(){
- const c=clocks(), accent=CouncilDraw.accent(spec);
- document.documentElement.style.setProperty('--accent',accent);
- document.querySelector('.workspace')?.setAttribute('data-kind',c?'gravity-clocks':'light-bending');
- $('distance-label').textContent=c?'Lower radius':'Passing distance';
- $('distance-hint').textContent=c?'gap stays 2 units':'how close the light passes';
- $('measure-label').textContent=c?'Real slowdown':'Real bend';
- $('scale-label').textContent=c?'Clock motion magnified 12×':'Bending magnified 6×';
- canvas.setAttribute('aria-label',c?'Two stationary clocks at different heights above a mass. The lower clock counts less time.':'Light passing a massive object, compared with a straight path without the mass.');
+ const e=engineOf(spec);
+ document.documentElement.style.setProperty('--accent',CouncilDraw.accent(spec));
+ document.querySelector('.workspace')?.setAttribute('data-kind',spec.kind||'light-bending');
+ $('mass-label').textContent=e.a[0];$('mass-hint').textContent=e.a[1];
+ $('distance-label').textContent=e.b[0];$('distance-hint').textContent=e.b[1];
+ $('measure-label').textContent=e.measure[0];$('scale-label').textContent=e.scale;
+ canvas.setAttribute('aria-label',e.aria);
 }
 function load(scene){
  // The poster is a still frame a few seconds in, where the comparison is already visible.
@@ -216,7 +376,7 @@ function chapter(n){
 }
 function demo(p){
  // The last chapter moves the controls themselves so the viewer sees what each one does.
- const end=clocks()?2.5:Math.min(2.5,spec.distance+1);
+ const end=engineOf(spec).demoEnd(spec);
  mass=p<.5?spec.mass*(1-.55*Math.sin(Math.PI*p/.5)):spec.mass;
  distance=spec.distance+(end-spec.distance)*smooth((p-.5)/.42);
  syncControls();
@@ -247,7 +407,7 @@ function input(id,value){
 
 window.CouncilScene={load,seek,play,pause,toggle,chapter,render:t=>{time=t;paint();},
  getState:()=>({time,mass,distance,stage,mode,ended}),on:fn=>listeners.add(fn),
- checks:()=>clocks()?Physics.clockChecks():Physics.checks()};
+ checks:()=>Physics.checksFor(spec?.kind)};
 $('play').onclick=toggle;$('poster').onclick=play;
 $('reset').onclick=()=>{started=false;play();};
 document.querySelectorAll('[data-beat]').forEach(b=>b.onclick=()=>chapter(Number(b.dataset.beat)));
