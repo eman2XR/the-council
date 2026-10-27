@@ -53,8 +53,9 @@ function drawLight(ctx,w,h,spec,st){
   if(st.labels&&main){
    const end=points[N], ref=map(7.5,b)[1], size=small?10:11, x=Math.min(w-16,end[0]);
    text(ctx,'LIGHT',Math.max(16,map(-7.5,b)[0]),ref-16,{size:10,weight:600,spacing:'1.5px'});
-   text(ctx,'with gravity',x,end[1]+16,{align:'right',size,weight:600,color:accent});
-   if(spec.show_reference&&Math.abs(end[1]-ref)>28)text(ctx,'without the mass',x,ref-14,{align:'right',size});
+   if(m>.001){text(ctx,'with gravity',x,end[1]+16,{align:'right',size,weight:600,color:accent});
+    if(spec.show_reference&&Math.abs(end[1]-ref)>28)text(ctx,'dashed: without the mass',x,ref-14,{align:'right',size});}
+   else text(ctx,'straight: no mass to bend it',x,end[1]+16,{align:'right',size,weight:600,color:accent});
   }
  }
 }
@@ -149,12 +150,14 @@ function drawSpacetime(ctx,w,h,spec,st){
   ctx.beginPath();ctx.arc(x,y,5,0,TAU);ctx.fillStyle=c;ctx.fill();ctx.beginPath();ctx.arc(x,y,2,0,TAU);ctx.fillStyle='#fff';ctx.fill();}
  if(st.labels){
   const size=small?10:11;
-  text(ctx,`HOME  ${tc.toFixed(1)} yr`,hx-12,hy,{align:'right',size,weight:600,color:'rgba(20,23,28,.7)',spacing:'.5px'});
-  if(v>.001)text(ctx,`TRAVELLER  ${(tc/g).toFixed(1)} yr`,tx+12,ty,{size,weight:600,color:accent,spacing:'.5px'});
+  const close=Math.abs(tx-hx)<150;
+  text(ctx,`HOME  ${tc.toFixed(1)} yr`,hx-12,hy,{align:'right',size,weight:600,color:'rgba(20,23,28,.75)',spacing:'.5px'});
+  // Near the reunion the traveller's label sits above and to the right, clear of the home label.
+  if(v>.001)text(ctx,`TRAVELLER  ${(tc/g).toFixed(1)} yr`,Math.max(tx,hx)+14,close?Math.min(ty,hy)-14:ty,{size,weight:600,color:accent,spacing:'.5px'});
   else text(ctx,'traveller stays home',hx+12,hy,{size,color:accent});
   text(ctx,'LIGHT',map(Math.min(top*.82,5.6),Math.min(top*.82,5.6))[0]+8,map(0,Math.min(top*.82,5.6))[1],{size:9,weight:600,spacing:'1.5px',color:'rgba(217,119,6,.75)'});
-  text(ctx,'time ↑',map(0,H)[0]-10,Math.max(16,map(0,H)[1]-14),{align:'right',size:10});
-  text(ctx,'space →',map(.6,0)[0],y0+18,{size:10});
+  text(ctx,'time ↑',x0-10,y0-8,{align:'right',size:10});
+  text(ctx,'space →',x0+10,y0+18,{size:10});
  }
 }
 
@@ -262,21 +265,27 @@ function drawRope(ctx,w,h,spec,st){
 
 const ENGINES={
  'light-bending':{draw:drawLight,a:['Mass','how much mass sits nearby'],b:['Passing distance','how close the light passes','×'],
-  measure:['Real bend',(a,b)=>(Physics.deflection(a,b)*180/Math.PI).toFixed(2)+'°'],scale:'Bending magnified 6×',demoEnd:s=>Math.min(2.5,s.distance+1),
+  fa:a=>a.toFixed(2),fb:b=>b.toFixed(2)+'×',
+  measure:['Unmagnified bend, nearest ray',(a,b)=>(Physics.deflection(a,b)*180/Math.PI).toFixed(2)+'°'],scale:'Bending magnified 6×',demoEnd:s=>Math.min(2.5,s.distance+1),
   try:'Slide Mass to zero, then back up. Now move the beam farther away. When does it bend most?',aria:'Light passing a massive object, compared with a straight path without the mass.'},
  'gravity-clocks':{draw:drawClocks,a:['Mass','how much mass sits nearby'],b:['Lower radius','gap stays 2 units',' units'],
-  measure:['Real slowdown',(a,b)=>((1-Physics.clockRatio(a,b))*100).toFixed(2)+'%'],scale:'Clock motion magnified 12×',demoEnd:()=>2.5,
+  fa:a=>a.toFixed(2),fb:b=>b.toFixed(2)+' units',
+  measure:['Unmagnified slowdown',(a,b)=>((1-Physics.clockRatio(a,b))*100).toFixed(2)+'%'],scale:'Clock motion magnified 12×',demoEnd:()=>2.5,
   try:'Slide Mass to zero. Do the clocks agree? Bring it back, then move the Lower radius outward.',aria:'Two stationary clocks at different heights above a mass. The lower clock counts less time.'},
- 'spacetime':{draw:drawSpacetime,a:['Speed','fraction of light speed, up to 0.9'],b:['Trip length','years before turning back',' ×'],
-  measure:['Traveller ages less by',a=>(Physics.agingGap(a)*100).toFixed(1)+'%'],scale:'Time runs up the page · light moves at 45°',demoEnd:()=>2.5,
+ 'spacetime':{draw:drawSpacetime,a:['Speed','as a fraction of light speed (c)'],b:['Trip length','years out before turning back',''],
+  fa:a=>Physics.speed(a).toFixed(2)+' c',fb:b=>Physics.turnaround(b).toFixed(1)+' yr',
+  measure:['Traveller ages less by',a=>(Physics.agingGap(a)*100).toFixed(1)+'%'],scale:'Light moves at 45°',demoEnd:()=>2.5,
   try:'Set Speed to zero: do the twins agree? Push it up. Then make the trip longer: does the percentage change?',aria:'A spacetime diagram: a home twin stays put while a traveller goes out and back. The traveller collects fewer ticks.'},
- 'interference':{draw:drawInterference,a:['Second source','strength of the second wave'],b:['Source spacing','distance between the sources',' ×'],
+ 'interference':{draw:drawInterference,a:['Second source','strength of the second wave'],b:['Source spacing','in wavelengths',''],
+  fa:a=>a<.005?'off':Math.round(a*100)+'%',fb:b=>Physics.separation(b).toFixed(1)+' λ',
   measure:['Stripe contrast',a=>(Physics.visibility(a)*100).toFixed(0)+'%'],scale:'Seen from above · waves not to scale',demoEnd:()=>2.5,
   try:'Turn the second source off: what happens to the stripes? Bring it back, then spread the sources apart.',aria:'Two circular wave sources overlapping, making bright and dark stripes on a screen.'},
- 'two-slit-particles':{draw:drawParticles,a:['Second slit','0 is closed, 1 is fully open'],b:['Slit spacing','distance between the slits',' ×'],
+ 'two-slit-particles':{draw:drawParticles,a:['Second slit','how open the second slit is'],b:['Slit spacing','relative distance between the slits',''],
+  fa:a=>a<.005?'closed':Math.round(a*100)+'% open',fb:b=>b.toFixed(2)+'×',
   measure:['Stripe contrast',a=>(Physics.visibility(a)*100).toFixed(0)+'%'],scale:'Arrivals are sampled from the predicted pattern',demoEnd:()=>2.5,
   try:'Close the second slit: do the stripes survive? Open it again, then move the slits apart.',aria:'Particles arrive one at a time on a screen behind two slits and slowly build up stripes.'},
- 'standing-waves':{draw:drawRope,a:['Reflection','how much of the wave bounces back'],b:['Pattern','steps through whole-number fits',''],
+ 'standing-waves':{draw:drawRope,a:['Reflection','how much of the wave bounces back'],b:['Pattern','whole half-waves between hand and wall',''],
+  fa:a=>Math.round(a*100)+'%',fb:b=>{const n=Physics.harmonic(b);return n+' half-wave'+(n>1?'s':'');},
   measure:['Still points',a=>(Physics.stillness(a)*100).toFixed(0)+'% still'],scale:'Wave height exaggerated',demoEnd:()=>2.5,
   try:'Turn Reflection to zero: are there still points? Turn it up, then step the Pattern slider.',aria:'A rope shaken at one end and tied to a wall at the other, forming a standing wave.'},
 };
@@ -353,9 +362,9 @@ function transport(){
 function syncControls(){
  const control=$('mass');control.disabled=stage===0;control.value=stage===0?0:mass;
  $('distance').value=distance;
- $('mass-value').textContent=(stage===0?0:mass).toFixed(2);
- const e=engineOf(spec);
- $('distance-value').textContent=spec.kind==='standing-waves'?String(Physics.harmonic(distance)):distance.toFixed(2)+e.b[2];
+ const shownA=stage===0?0:mass;
+ $('mass-value').textContent=engineOf(spec).fa(shownA);$('mass-value').dataset.value=String(shownA);
+ $('distance-value').textContent=engineOf(spec).fb(distance);
 }
 function setStage(n){stage=n;syncControls();}
 function configure(){

@@ -75,7 +75,7 @@ def capture(scene, directory, research=None, provider='fixture'):
                 slider.value='1'; slider.dispatchEvent(new Event('input'));
                 const full=CouncilScene.getState().mass===1 && parseFloat(document.getElementById('bend-value').textContent)>0;
                 CouncilScene.seek(1,0);
-                const noMass=slider.disabled && slider.value==='0' && document.getElementById('mass-value').textContent==='0.00';
+                const noMass=slider.disabled && slider.value==='0' && document.getElementById('mass-value').dataset.value==='0';
                 CouncilScene.seek(11,1); const first=document.getElementById('universe').toDataURL();
                 CouncilScene.seek(2,0); CouncilScene.seek(11,1);
                 return {zero,full,noMass:noMass && !slider.disabled && slider.value==='1',deterministic:first===document.getElementById('universe').toDataURL()};
