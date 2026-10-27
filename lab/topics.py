@@ -7,7 +7,7 @@ upper radius R=r+2 (arbitrary units). Rate ratio lower/upper=sqrt((1-2m/r)/(1-2m
 Mass 0..1, r 1..2.5. These are supported stationary observers, not freely falling clocks.
 Each clock ticks normally locally; the ratio compares proper times over the same Schwarzschild
 coordinate-time interval. Do not conflate this with a distant camera's raw view or Doppler effects.
-The animated deficit is magnified 12 times: displayed lower rate=1-12*(1-ratio).
+The animated deficit is magnified 12 times (disclosed in the investigation details): displayed lower rate=1-12*(1-ratio).
 The percentage readout is physical and UNMAGNIFIED. The sketch is not to spatial scale.
 Three beats: 1 zero mass/equal rates; 2 add mass/two clocks; 3 adjust mass and lower radius.
 Increasing mass increases the deficit; moving the pair outward with fixed separation reduces it.
@@ -19,7 +19,11 @@ The lag is determined by the gravitational potential difference, not by the grad
 COMMON = '''
 Shared player behavior: chapter 1 automatically sets the first control (field "mass") to zero; chapter 2 restores
 the scene value; during chapter 3 playback the first control dips and returns, then the second control (field "distance")
-sweeps to its maximum 2.5. The viewer reads one subtitle sentence at a time below the stage. ray_count is unused.'''
+sweeps to its maximum 2.5. The viewer reads one subtitle sentence at a time below the stage. ray_count is unused.
+The stage carries no scale or magnification disclaimers: drawings are illustrations, and each model's caveats are
+shown once in the investigation details. Do not ask for on-stage "not to scale" or "magnified" labels.
+Field controls chooses which sliders the viewer gets: none, first, second or both. Offer a slider only when moving
+it builds intuition beyond what playback already shows; otherwise choose none.'''
 
 SPACETIME_NOTES = '''SPACETIME DIAGRAM. Special relativity in flat spacetime, units of years and light-years (light speed 1).
 Time runs up the page, space runs right; light moves at 45 degrees, and a shaded light cone from the departure event marks
@@ -116,9 +120,21 @@ narrower than the wavelength). Supported questions: why waves spread after a nar
 waves spread more, why sound bends around doorways more than light. Not to scale; no single-photon claims.
 No new-discovery claims.'''+COMMON
 
+TWIN_NOTES = '''TWIN TRIP. Special relativity, exact, in years and light-years (light speed 1), drawn as a concrete scene:
+Earth on the left, a destination star on the right, and a rocket that flies out at constant speed v, turns around
+instantly, and flies back. Below, each twin has a clock (one turn per year of that twin's own time) and a row of birthday
+dots that fill in as their own years pass; at the reunion a banner states how many fewer birthdays the traveller had.
+Field mass sets v = 0.9*mass (UI "Speed", shown as a percentage of light speed; 0 keeps the rocket on Earth); field
+distance sets the turnaround at T = 1.6*distance home years (UI "Trip"). The star's distance v*T light-years is labelled.
+The readout is the real ageing gap 1 - 1/gamma, independent of trip length. Supported questions: why a moving clock
+ticks slowly, why the travelling twin is younger, why nothing can be pushed past light speed (gamma grows without
+limit as v approaches 1). Each clock ticks normally for its owner; do not say the traveller feels time slow. The instant
+turnaround is an idealization; no acceleration physics, gravity or Doppler views. No new-discovery claims.'''+COMMON
+
 TOPICS = {
     'light-bending': {'label':'Light bending', 'question':'Why does gravity bend light?', 'notes':MODEL_NOTES},
     'gravity-clocks': {'label':'Gravity and clocks', 'question':'Why do clocks at different heights tick at different rates?', 'notes':CLOCK_NOTES},
+    'twin-trip': {'label':'Twin trip', 'question':'Why is the travelling twin younger?', 'notes':TWIN_NOTES},
     'spacetime': {'label':'Spacetime diagram', 'question':'Why is the travelling twin younger?', 'notes':SPACETIME_NOTES},
     'interference': {'label':'Wave interference', 'question':'What happens when two waves meet?', 'notes':INTERFERENCE_NOTES},
     'two-slit-particles': {'label':'Particles through two slits', 'question':'Why do particles fired one at a time still make stripes?', 'notes':PARTICLE_NOTES},

@@ -1,7 +1,7 @@
 const $=id=>document.getElementById(id);
 const put=(id,text)=>{const el=$(id);if(el)el.textContent=text??'';};
 const el=(tag,props={},...children)=>{const node=Object.assign(document.createElement(tag),props);node.append(...children);return node;};
-const TOPICS={'gravity-clocks':'Gravity and time','light-bending':'Gravity and light','spacetime':'Space and time','interference':'Waves','standing-waves':'Waves','two-slit-particles':'Quanta','tunneling':'Quanta','wave-packet':'Quanta','quantum-well':'Quanta','falling-time':'Gravity and time','diffraction':'Waves'};
+const TOPICS={'gravity-clocks':'Gravity and time','light-bending':'Gravity and light','spacetime':'Space and time','twin-trip':'Space and time','interference':'Waves','standing-waves':'Waves','two-slit-particles':'Quanta','tunneling':'Quanta','wave-packet':'Quanta','quantum-well':'Quanta','falling-time':'Gravity and time','diffraction':'Waves'};
 const STATUS={planning:'Choosing a question',running:'Investigating now',reviewed:'Passed review',needs_review:'Draft, not published',failed:'Attempt stopped',interrupted:'Run interrupted',idle:'Resting'};
 const STEPS=['Question','Research','Design','Render','Review','Publish'];
 const reduceMotion=matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -60,6 +60,7 @@ function renderBehind(data){
   return card;
  }));
  put('sources-note',data.provenance?.sources_retrieved===false?data.provenance.note:'');
+ put('illustration-note',data.scene?CouncilDraw.disclosure(data.scene):'');
  $('sources').replaceChildren(...(r.sources||[]).map(s=>{const url=safeURL(s.url), item=el('div');
   item.append(url?el('a',{href:url,target:'_blank',rel:'noopener noreferrer',textContent:s.title}):el('span',{textContent:s.title}),el('small',{textContent:s.supports}));return item;}));
  put('record',JSON.stringify(data,null,2));

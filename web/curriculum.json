@@ -27,7 +27,7 @@
     {
      "id": "2.1",
      "question": "Why does a moving clock tick slowly?",
-     "model": "spacetime"
+     "model": "twin-trip"
     },
     {
      "id": "2.2",
@@ -37,12 +37,12 @@
     {
      "id": "2.3",
      "question": "Why is the travelling twin younger?",
-     "model": "spacetime"
+     "model": "twin-trip"
     },
     {
      "id": "2.4",
      "question": "Why can nothing travel faster than light?",
-     "model": "spacetime"
+     "model": "twin-trip"
     },
     {
      "id": "2.5",

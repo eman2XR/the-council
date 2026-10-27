@@ -11,6 +11,36 @@ function text(ctx,value,x,y,{align='left',color='rgba(20,23,28,.64)',size=11,wei
  if('letterSpacing' in ctx)ctx.letterSpacing=spacing;ctx.fillText(value,x,y);if('letterSpacing' in ctx)ctx.letterSpacing='0px';
 }
 
+function drawStar(ctx,cx,cy,R,presence){
+ // A star with a soft corona and a darker limb; it grows in with the mass.
+ const r=R*(.35+.65*presence);ctx.globalAlpha=presence;
+ const corona=ctx.createRadialGradient(cx,cy,r*.8,cx,cy,r*4.5);corona.addColorStop(0,'rgba(255,214,140,.35)');corona.addColorStop(.35,'rgba(255,190,110,.12)');corona.addColorStop(1,'rgba(255,190,110,0)');
+ ctx.fillStyle=corona;ctx.fillRect(cx-r*4.5,cy-r*4.5,r*9,r*9);
+ const body=ctx.createRadialGradient(cx-r*.15,cy-r*.15,r*.05,cx,cy,r);
+ body.addColorStop(0,'#fffaf0');body.addColorStop(.45,'#ffe2a3');body.addColorStop(.82,'#f7a644');body.addColorStop(1,'#d9701c');
+ ctx.beginPath();ctx.arc(cx,cy,r,0,TAU);ctx.fillStyle=body;ctx.fill();
+ ctx.save();ctx.beginPath();ctx.arc(cx,cy,r,0,TAU);ctx.clip();
+ for(let i=0;i<26;i++){const a=hash(i*3.1)*TAU, d=Math.sqrt(hash(i*7.7))*r*.85, sr=r*(.06+.08*hash(i*1.3));
+  ctx.beginPath();ctx.arc(cx+Math.cos(a)*d,cy+Math.sin(a)*d,sr,0,TAU);ctx.fillStyle=`rgba(${hash(i)>.5?'255,255,255':'200,110,30'},${.06+.05*hash(i*2.2)})`;ctx.fill();}
+ ctx.restore();ctx.globalAlpha=1;return r;
+}
+function drawPlanet(ctx,w,h,horizon,presence){
+ // A rocky planet rises into view with its thin atmosphere; texture is deterministic.
+ const cx=w/2, rise=horizon+(1-presence)*(h-horizon+h*.06), PR=Math.max(w*w/(8*(h-horizon)*.7),h), cy=rise+PR;
+ ctx.globalAlpha=Math.min(1,presence*1.4);
+ const air=ctx.createRadialGradient(cx,cy,PR,cx,cy,PR+h*.05);air.addColorStop(0,'rgba(160,200,255,.45)');air.addColorStop(1,'rgba(160,200,255,0)');
+ ctx.beginPath();ctx.arc(cx,cy,PR+h*.05,0,TAU);ctx.fillStyle=air;ctx.fill();
+ const body=ctx.createLinearGradient(0,rise,0,h);body.addColorStop(0,'#d9925a');body.addColorStop(.35,'#b8693a');body.addColorStop(1,'#7a3e1f');
+ ctx.beginPath();ctx.arc(cx,cy,PR,0,TAU);ctx.fillStyle=body;ctx.fill();
+ ctx.save();ctx.beginPath();ctx.arc(cx,cy,PR,0,TAU);ctx.clip();
+ for(let i=0;i<40;i++){const x=hash(i*5.3)*w, y=rise+hash(i*2.9)*(h-rise)*1.2, rx=w*(.06+.1*hash(i*1.7)), ry=rx*.12;
+  ctx.beginPath();ctx.ellipse(x,y,rx,ry,0,0,TAU);ctx.fillStyle=`rgba(${hash(i*4.1)>.5?'255,230,200':'90,40,20'},${.03+.04*hash(i*6.3)})`;ctx.fill();}
+ const shade=ctx.createLinearGradient(0,0,w,0);shade.addColorStop(0,'rgba(60,25,10,.28)');shade.addColorStop(.5,'rgba(60,25,10,0)');shade.addColorStop(1,'rgba(60,25,10,.28)');
+ ctx.fillStyle=shade;ctx.fillRect(0,rise-2,w,h-rise+2);ctx.restore();
+ ctx.beginPath();ctx.arc(cx,cy,PR,Math.PI*1.08,Math.PI*1.92);ctx.strokeStyle='rgba(255,255,255,.55)';ctx.lineWidth=1.2;ctx.stroke();
+ ctx.globalAlpha=1;
+}
+
 function drawLight(ctx,w,h,spec,st){
  const accent=ACCENT[spec.accent]||ACCENT.mint, s=Math.min(w/15,h/9), cx=w*.5, cy=h*.56, map=(x,y)=>[cx+x*s,cy-y*s];
  const m=st.mass, small=w<520;
@@ -19,14 +49,8 @@ function drawLight(ctx,w,h,spec,st){
  for(let x=(w%step)/2;x<w;x+=step)for(let y=(h%step)/2;y<h;y+=step)ctx.fillRect(x-.75,y-.75,1.5,1.5);
  const R=(14+m*14)*clamp(s/40,.6,1.4);
  if(m>.001){
-  ctx.globalAlpha=clamp(m/.12);
-  const halo=ctx.createRadialGradient(cx,cy,R*.6,cx,cy,R*4.2);halo.addColorStop(0,'rgba(245,158,66,.24)');halo.addColorStop(1,'rgba(245,158,66,0)');
-  ctx.fillStyle=halo;ctx.fillRect(cx-R*4.2,cy-R*4.2,R*8.4,R*8.4);
-  const body=ctx.createRadialGradient(cx-R*.35,cy-R*.4,R*.1,cx,cy,R);body.addColorStop(0,'#ffe4bf');body.addColorStop(.45,'#f59e42');body.addColorStop(1,'#b4530f');
-  ctx.save();ctx.shadowColor='rgba(180,83,15,.35)';ctx.shadowBlur=R*.9;ctx.shadowOffsetY=R*.25;
-  ctx.beginPath();ctx.arc(cx,cy,R,0,TAU);ctx.fillStyle=body;ctx.fill();ctx.restore();
-  ctx.globalAlpha=1;
-  if(st.labels){text(ctx,'MASS',cx,cy+R+18,{align:'center',size:10,weight:600,spacing:'1.5px'});text(ctx,'size not to scale',cx,cy+R+32,{align:'center',size:10,color:'rgba(20,23,28,.55)'});}
+  const r=drawStar(ctx,cx,cy,R,clamp(m/.25));
+  if(st.labels)text(ctx,'MASS',cx,cy+r+18,{align:'center',size:10,weight:600,spacing:'1.5px'});
  }else{
   ctx.setLineDash([3,5]);ctx.beginPath();ctx.arc(cx,cy,R,0,TAU);ctx.strokeStyle='rgba(20,23,28,.22)';ctx.lineWidth=1;ctx.stroke();ctx.setLineDash([]);
   if(st.labels)text(ctx,'no mass',cx,cy+R+18,{align:'center',size:10,weight:600,spacing:'1px'});
@@ -61,21 +85,18 @@ function drawLight(ctx,w,h,spec,st){
 }
 
 function drawClocks(ctx,w,h,spec,st){
- const accent=ACCENT[spec.accent]||ACCENT.blue, m=st.mass, presence=clamp(m/.12);
+ const accent=ACCENT[spec.accent]||ACCENT.blue, m=st.mass, presence=clamp(m/.3);
  const ratio=Physics.clockRatio(m,st.distance), rate=1-12*(1-ratio), small=w<520;
  const cx=w*.5, rad=Math.min(w*.13,h*.135), horizon=h*.9;
  let lowerY=h*(.68-.09*(st.distance-1)), upperY=lowerY-Math.max(h*.34,rad*2.5);
  // Keep the top clock and its label clear of the stage notes.
  const clear=(st.labels?(small?92:24):6)-(upperY-rad-(st.labels&&small?13:0));
  if(clear>0){upperY+=clear;lowerY+=clear;}
- // Warm haze marks "deeper in gravity": schematic, not to scale.
+ // Warm haze marks "deeper in gravity".
  if(presence>0){
   const haze=ctx.createLinearGradient(0,h,0,h*.4);haze.addColorStop(0,`rgba(245,158,66,${.2*presence})`);haze.addColorStop(1,'rgba(245,158,66,0)');
   ctx.fillStyle=haze;ctx.fillRect(0,h*.4,w,h*.6);
-  const PR=Math.max(w*w/(8*(h-horizon)*.7),h), body=ctx.createLinearGradient(0,horizon,0,h);
-  body.addColorStop(0,`rgba(245,158,66,${presence})`);body.addColorStop(1,`rgba(180,83,15,${presence})`);
-  ctx.beginPath();ctx.arc(cx,horizon+PR,PR,0,TAU);ctx.fillStyle=body;ctx.fill();
-  if(st.labels)text(ctx,'MASS · not to scale',cx,horizon+(h-horizon)*.55,{align:'center',size:10,weight:600,spacing:'1.5px',color:`rgba(255,255,255,${.9*presence})`});
+  drawPlanet(ctx,w,h,horizon,presence);
  }else{
   ctx.setLineDash([3,5]);trace(ctx,[[w*.08,horizon],[w*.92,horizon]]);ctx.strokeStyle='rgba(20,23,28,.2)';ctx.lineWidth=1;ctx.stroke();ctx.setLineDash([]);
   if(st.labels)text(ctx,'no mass',cx,horizon+(h-horizon)*.5,{align:'center',size:10,weight:600,spacing:'1px'});
@@ -179,14 +200,14 @@ function drawInterference(ctx,w,h,spec,st){
  const n=parseInt(accent.slice(1),16), ar=n>>16, ag=n>>8&255, ab=n&255;
  for(let j=0;j<rows;j++)for(let i=0;i<cols;i++){
   const x=i*cell, y=j*cell, r1=Math.hypot(x-s1[0],y-s1[1]), r2=Math.hypot(x-s2[0],y-s2[1]);
-  const f=(Math.cos(k*r1-phase)/Math.sqrt(1+r1/lam)+A*Math.cos(k*r2-phase)/Math.sqrt(1+r2/lam))/(1+A);
+  const f=(Math.cos(k*r1-phase)/Math.sqrt(1+r1/lam)+A*Math.cos(k*r2-phase)/Math.sqrt(1+r2/lam))/2;
   const o=4*(j*cols+i), a=Math.min(1,Math.abs(f)*1.15);
   if(f>0){data[o]=ar;data[o+1]=ag;data[o+2]=ab;data[o+3]=a*150;}else{data[o]=20;data[o+1]=30;data[o+2]=50;data[o+3]=a*55;}
  }
  fctx.putImageData(image,0,0);ctx.imageSmoothingEnabled=true;ctx.drawImage(fieldBuffer,0,0,cols*cell,rows*cell);
  // Time-averaged brightness on the screen: crests meeting crests stay bright.
  const band=h*.08, sx0=w*.04, sx1=w*.96;
- const pts=[];for(let i=0;i<=200;i++){const x=sx0+(sx1-sx0)*i/200, dr=Math.hypot(x-s1[0],screen-s1[1])-Math.hypot(x-s2[0],screen-s2[1]);pts.push([x,Physics.intensity(A,k*dr)]);}
+ const pts=[];for(let i=0;i<=200;i++){const x=sx0+(sx1-sx0)*i/200, dr=Math.hypot(x-s1[0],screen-s1[1])-Math.hypot(x-s2[0],screen-s2[1]);pts.push([x,Physics.brightness(A,k*dr)]);}
  ctx.fillStyle='#fff';ctx.fillRect(0,screen,w,h-screen);
  for(const [x,I] of pts){ctx.fillStyle=rgba(accent,.08+.85*I);ctx.fillRect(x-1.5,screen+6,(sx1-sx0)/200+1,band);}
  for(const [p,on] of [[s1,1],[s2,A]]){ctx.globalAlpha=on>0.001?.4+.6*Math.min(1,on):.25;ctx.beginPath();ctx.arc(p[0],p[1],6,0,TAU);ctx.fillStyle=on>0.001?accent:'#fff';ctx.fill();ctx.strokeStyle='rgba(20,23,28,.4)';ctx.lineWidth=1;ctx.stroke();ctx.globalAlpha=1;}
@@ -425,56 +446,120 @@ function drawGap(ctx,w,h,spec,st){
  }
 }
 
+function clockDial(ctx,cx,cy,r,angle,accent){
+ ctx.save();ctx.shadowColor='rgba(20,30,50,.14)';ctx.shadowBlur=18;ctx.shadowOffsetY=6;ctx.beginPath();ctx.arc(cx,cy,r,0,TAU);ctx.fillStyle='#fff';ctx.fill();ctx.restore();
+ ctx.beginPath();ctx.arc(cx,cy,r,0,TAU);ctx.strokeStyle='rgba(20,23,28,.14)';ctx.lineWidth=1;ctx.stroke();
+ for(let i=0;i<12;i++){const a=i*TAU/12;trace(ctx,[[cx+Math.sin(a)*r*.78,cy-Math.cos(a)*r*.78],[cx+Math.sin(a)*r*.9,cy-Math.cos(a)*r*.9]]);ctx.strokeStyle='rgba(20,23,28,.45)';ctx.lineWidth=1.3;ctx.stroke();}
+ ctx.lineCap='round';trace(ctx,[[cx,cy],[cx+Math.sin(angle)*r*.72,cy-Math.cos(angle)*r*.72]]);ctx.strokeStyle=accent;ctx.lineWidth=Math.max(2,r*.07);ctx.stroke();
+ ctx.beginPath();ctx.arc(cx,cy,Math.max(2.5,r*.08),0,TAU);ctx.fillStyle=accent;ctx.fill();
+}
+function drawEarth(ctx,x,y,r){
+ const air=ctx.createRadialGradient(x,y,r*.9,x,y,r*1.5);air.addColorStop(0,'rgba(120,180,255,.35)');air.addColorStop(1,'rgba(120,180,255,0)');ctx.fillStyle=air;ctx.beginPath();ctx.arc(x,y,r*1.5,0,TAU);ctx.fill();
+ const sea=ctx.createRadialGradient(x-r*.35,y-r*.35,r*.1,x,y,r);sea.addColorStop(0,'#7fc4ff');sea.addColorStop(.6,'#2f78d6');sea.addColorStop(1,'#163f86');
+ ctx.beginPath();ctx.arc(x,y,r,0,TAU);ctx.fillStyle=sea;ctx.fill();
+ ctx.save();ctx.beginPath();ctx.arc(x,y,r,0,TAU);ctx.clip();
+ for(let i=0;i<7;i++){ctx.beginPath();ctx.ellipse(x+(hash(i*3.3)-.5)*r*1.6,y+(hash(i*5.1)-.5)*r*1.6,r*(.18+.22*hash(i)),r*(.1+.14*hash(i*2)),hash(i*9)*3,0,TAU);ctx.fillStyle='rgba(92,170,96,.85)';ctx.fill();}
+ const night=ctx.createLinearGradient(x-r,0,x+r,0);night.addColorStop(.55,'rgba(10,20,40,0)');night.addColorStop(1,'rgba(10,20,40,.35)');ctx.fillStyle=night;ctx.fillRect(x-r,y-r,2*r,2*r);ctx.restore();
+}
+function drawRocket(ctx,x,y,size,dir,thrust,t){
+ ctx.save();ctx.translate(x,y);ctx.scale(dir,1);
+ if(thrust){const f=.7+.3*Math.sin(t*40)*Math.sin(t*23);const flame=ctx.createLinearGradient(-size*1.9,0,-size*.9,0);flame.addColorStop(0,'rgba(255,170,60,0)');flame.addColorStop(1,'rgba(255,140,40,.9)');
+  ctx.beginPath();ctx.moveTo(-size*.9,-size*.22);ctx.quadraticCurveTo(-size*(1.3+.6*f),0,-size*.9,size*.22);ctx.closePath();ctx.fillStyle=flame;ctx.fill();}
+ ctx.beginPath();ctx.moveTo(size,0);ctx.quadraticCurveTo(size*.55,-size*.36,-size*.9,-size*.3);ctx.lineTo(-size*.9,size*.3);ctx.quadraticCurveTo(size*.55,size*.36,size,0);ctx.closePath();
+ const hull=ctx.createLinearGradient(0,-size*.35,0,size*.35);hull.addColorStop(0,'#ffffff');hull.addColorStop(1,'#cfd6e0');ctx.fillStyle=hull;ctx.fill();ctx.strokeStyle='rgba(20,23,28,.35)';ctx.lineWidth=1;ctx.stroke();
+ ctx.beginPath();ctx.moveTo(-size*.55,-size*.3);ctx.lineTo(-size*.95,-size*.62);ctx.lineTo(-size*.9,-size*.3);ctx.closePath();ctx.fillStyle='#e04f2c';ctx.fill();
+ ctx.beginPath();ctx.moveTo(-size*.55,size*.3);ctx.lineTo(-size*.95,size*.62);ctx.lineTo(-size*.9,size*.3);ctx.closePath();ctx.fill();
+ ctx.beginPath();ctx.arc(size*.35,0,size*.13,0,TAU);ctx.fillStyle='#5aa9ff';ctx.fill();ctx.strokeStyle='rgba(20,23,28,.4)';ctx.stroke();
+ ctx.restore();
+}
+function drawTwinTrip(ctx,w,h,spec,st){
+ const accent=ACCENT[spec.accent]||ACCENT.blue, v=Physics.speed(st.mass), g=Physics.gamma(v), T=Physics.turnaround(st.distance), H=2*T, small=w<520;
+ const tc=Math.min(H,((st.t*.42*Math.max(1,H/4.8))%(H+1.6)+H+1.6)%(H+1.6)), leg=tc<=T?tc/T:(H-tc)/T, moving=v>.001&&tc>0&&tc<H;
+ const xE=w*(small?.16:.14), xS=w*(small?.86:.84), yTrip=h*(st.labels&&small?.3:.24), r=Math.min(w,h)*.055;
+ // The route, Earth and the destination star.
+ ctx.setLineDash([3,6]);trace(ctx,[[xE+r*1.3,yTrip],[xS-r*1.1,yTrip]]);ctx.strokeStyle='rgba(20,23,28,.2)';ctx.lineWidth=1.2;ctx.stroke();ctx.setLineDash([]);
+ drawEarth(ctx,xE,yTrip,r);drawStar(ctx,xS,yTrip,r*.75,v>.001?1:.35);
+ const rx=v>.001?xE+r*1.5+(xS-xE-r*2.6)*leg:xE+r*1.6, ry=yTrip-(v>.001?0:r*1.1);
+ drawRocket(ctx,rx,ry,r*.75,tc<=T?1:-1,moving,st.t);
+ // Each twin carries a clock: one turn per year of that twin's own time.
+ const cr=Math.min(w*.07,h*.1), cy=h*(small?.56:.52), homeX=small?w*.27:w*.3, travX=small?w*.73:w*.7;
+ clockDial(ctx,homeX,cy,cr,tc*TAU,'#14171c');clockDial(ctx,travX,cy,cr,(tc/g)*TAU,accent);
+ // Birthdays so far: one dot per year each twin has lived.
+ const rows=[[tc,'#14171c',h*.8,'HOME'],[tc/g,accent,h*.9,'TRAVELLER']], gap=Math.min(30,(w*.62)/8), x0=small?w*.36:w*.32;
+ for(const [years,color,y,name] of rows){
+  for(let i=1;i<=Math.floor(H+1e-9);i++){const done=i<=years+1e-9, x=x0+(i-1)*gap;ctx.beginPath();ctx.arc(x,y,done?6:4,0,TAU);ctx.fillStyle=done?color:'rgba(20,23,28,.08)';ctx.fill();
+   if(done&&years-i<.25){ctx.beginPath();ctx.arc(x,y,10+16*(years-i),0,TAU);ctx.strokeStyle=rgba(color==='#14171c'?'#14171c':accent,.35*(1-(years-i)*4));ctx.lineWidth=2;ctx.stroke();}}
+  if(st.labels)text(ctx,name,x0-16,y,{align:'right',size:small?9:10,weight:600,spacing:'1px',color:color==='#14171c'?'rgba(20,23,28,.7)':accent});
+ }
+ if(st.labels){
+  const size=small?11:12;
+  text(ctx,'EARTH',xE,yTrip+r*1.9,{align:'center',size:10,weight:600,spacing:'1.5px'});
+  text(ctx,'STAR',xS,yTrip+r*1.9,{align:'center',size:10,weight:600,spacing:'1.5px'});
+  if(v>.001)text(ctx,`${(v*T).toFixed(1)} light-years away`,xS,yTrip+r*1.9+14,{align:'center',size:10});
+  pill(ctx,v>.001?`${Math.round(v*100)}% of light speed`:'rocket stays on Earth',rx,ry-r*1.05,{align:'center',size:10,weight:600,color:accent});
+  text(ctx,`Home twin  ${tc.toFixed(1)} years`,homeX,cy+cr+20,{align:'center',size,weight:600,color:'rgba(20,23,28,.8)'});
+  text(ctx,`Traveller  ${(tc/g).toFixed(1)} years`,travX,cy+cr+20,{align:'center',size,weight:600,color:accent});
+  text(ctx,'BIRTHDAYS',x0-16,h*.8-22,{align:'right',size:9,weight:600,spacing:'1.5px',color:'rgba(20,23,28,.5)'});
+  if(tc>=H-1e-6&&v>.001){const fewer=Math.floor(H+1e-9)-Math.floor(H/g+1e-9), msg=`Together again: ${fewer} fewer birthday${fewer===1?'':'s'} for the traveller`;
+   if(small)pill(ctx,msg,w/2,h*.71,{align:'center',size:10,weight:600});else pill(ctx,msg,w*.79,h*.85,{align:'center',size,weight:600});}
+ }
+}
+
 const ENGINES={
  'light-bending':{draw:drawLight,a:['Mass','how much mass sits nearby'],b:['Passing distance','how close the light passes','×'],
   fa:a=>a.toFixed(2),fb:b=>b.toFixed(2)+'×',
-  measure:['Unmagnified bend, nearest ray',(a,b)=>(Physics.deflection(a,b)*180/Math.PI).toFixed(2)+'°'],scale:'Bending magnified 6×',demoEnd:s=>Math.min(2.5,s.distance+1),
+  measure:['Bend',(a,b)=>(Physics.deflection(a,b)*180/Math.PI).toFixed(2)+'°'],scale:'',disclosure:'The bending is drawn six times larger than the model value; the readout is the model value for the nearest ray, in the model’s own units. The star is an illustration.',demoEnd:s=>Math.min(2.5,s.distance+1),
   try:'Slide Mass to zero, then back up. Now move the beam farther away. When does it bend most?',aria:'Light passing a massive object, compared with a straight path without the mass.'},
  'gravity-clocks':{draw:drawClocks,a:['Mass','how much mass sits nearby'],b:['Lower radius','gap stays 2 units',' units'],
   fa:a=>a.toFixed(2),fb:b=>b.toFixed(2)+' units',
-  measure:['Unmagnified slowdown',(a,b)=>((1-Physics.clockRatio(a,b))*100).toFixed(2)+'%'],scale:'Clock motion magnified 12×',demoEnd:()=>2.5,
+  measure:['Slowdown',(a,b)=>((1-Physics.clockRatio(a,b))*100).toFixed(2)+'%'],scale:'',disclosure:'The difference between the clock hands is drawn twelve times larger; the slowdown readout is the model value in arbitrary units, not an Earth figure. The planet and distances are illustrations.',demoEnd:()=>2.5,
   try:'Slide Mass to zero. Do the clocks agree? Bring it back, then move the Lower radius outward.',aria:'Two stationary clocks at different heights above a mass. The lower clock counts less time.'},
  'spacetime':{draw:drawSpacetime,a:['Speed','how fast the traveller flies'],b:['Trip','time out before turning back',''],
   fa:a=>Math.round(Physics.speed(a)*100)+'% of light',fb:b=>Physics.turnaround(b).toFixed(1)+' years out',
-  measure:['Traveller comes home younger by',a=>(Physics.agingGap(a)*100).toFixed(1)+'%'],scale:'Time runs up · light moves at 45°',demoEnd:()=>2.5,
+  measure:['Traveller comes home younger by',a=>(Physics.agingGap(a)*100).toFixed(1)+'%'],scale:'Time runs up · light moves at 45°',disclosure:'Speeds and times are exact for the model; the turnaround is treated as instant.',demoEnd:()=>2.5,
   try:'Set Speed to zero: do the twins agree? Push it up. Then make the trip longer: does the percentage change?',aria:'A spacetime diagram: a home twin stays put while a traveller goes out and back. The traveller collects fewer ticks.'},
  'interference':{draw:drawInterference,a:['Second source','strength of the second wave'],b:['Source spacing','in wavelengths',''],
   fa:a=>a<.005?'off':Math.round(a*100)+'%',fb:b=>Physics.separation(b).toFixed(1)+' λ',
-  measure:['Stripe contrast',a=>(Physics.visibility(a)*100).toFixed(0)+'%'],scale:'Seen from above · waves not to scale',demoEnd:()=>2.5,
+  measure:['Stripe contrast',a=>(Physics.visibility(a)*100).toFixed(0)+'%'],scale:'Seen from above',disclosure:'Wave sizes are illustrative; the stripe contrast is computed exactly for two point sources.',demoEnd:()=>2.5,
   try:'Turn the second source off: what happens to the stripes? Bring it back, then spread the sources apart.',aria:'Two circular wave sources overlapping, making bright and dark stripes on a screen.'},
  'two-slit-particles':{draw:drawParticles,a:['Second slit','how open the second slit is'],b:['Slit spacing','relative distance between the slits',''],
   fa:a=>a<.005?'closed':Math.round(a*100)+'% open',fb:b=>b.toFixed(2)+'×',
-  measure:['Stripe contrast',a=>(Physics.visibility(a)*100).toFixed(0)+'%'],scale:'Arrivals are sampled from the predicted pattern',demoEnd:()=>2.5,
+  measure:['Stripe contrast',a=>(Physics.visibility(a)*100).toFixed(0)+'%'],scale:'',disclosure:'Arrivals are pseudo-random samples from the predicted pattern; the ripples show possibilities, not paths.',demoEnd:()=>2.5,
   try:'Close the second slit: do the stripes survive? Open it again, then move the slits apart.',aria:'Particles arrive one at a time on a screen behind two slits and slowly build up stripes.'},
  'standing-waves':{draw:drawRope,a:['Reflection','how much of the wave bounces back'],b:['Pattern','whole half-waves between hand and wall',''],
   fa:a=>Math.round(a*100)+'%',fb:b=>{const n=Physics.harmonic(b);return n+' half-wave'+(n>1?'s':'');},
-  measure:['Still points',a=>(Physics.stillness(a)*100).toFixed(0)+'% still'],scale:'Wave height exaggerated',demoEnd:()=>2.5,
+  measure:['Still points',a=>(Physics.stillness(a)*100).toFixed(0)+'% still'],scale:'',disclosure:'Wave height is exaggerated for visibility.',demoEnd:()=>2.5,
   try:'Turn Reflection to zero: are there still points? Turn it up, then step the Pattern slider.',aria:'A rope shaken at one end and tied to a wall at the other, forming a standing wave.'},
  'tunneling':{draw:drawTunnel,a:['Barrier height','compared with the particle’s energy'],b:['Barrier width','how thick the barrier is',''],
   fa:a=>a<.005?'none':(2*a).toFixed(1)+'× energy',fb:b=>(.6*b/(2*Math.PI)).toFixed(2)+' wavelengths',
-  measure:['Bounces back',(a,b)=>(Physics.reflected(a,b)*100).toFixed(0)+'%'],scale:'A steady stream, shown at one instant',demoEnd:()=>2.5,
+  measure:['Bounces back',(a,b)=>(Physics.reflected(a,b)*100).toFixed(0)+'%'],scale:'A steady stream, shown at one instant',disclosure:'Exact steady-state solution in units where ħ = 1 and 2m = 1.',demoEnd:()=>2.5,
   try:'Remove the barrier: does anything bounce back? Raise it above the energy, then make it thicker.',aria:'A quantum wave meets a barrier: part bounces back, part leaks through.'},
  'wave-packet':{draw:drawPacket,a:['Momentum mix','how many wavelengths are blended'],b:['Average momentum','sets the main wavelength',''],
   fa:a=>a<.005?'one wave':(1.1*a).toFixed(2),fb:b=>(2+2*(b-1)).toFixed(1),
-  measure:['Momentum spread',a=>(1.1*a).toFixed(2)],scale:'Time slowed down · units where ħ = 1',demoEnd:()=>2.5,
+  measure:['Momentum spread',a=>(1.1*a).toFixed(2)],scale:'',disclosure:'Time is slowed down; units where ħ = 1 and 2m = 1.',demoEnd:()=>2.5,
   try:'Set the mix to one wave: where is the particle? Blend more wavelengths and watch the packet narrow.',aria:'A wave packet made by blending wavelengths, with a bar chart of the momenta mixed in.'},
  'quantum-well':{draw:drawWell,a:['Well depth','how strongly the particle is held'],b:['Well width','how much room it has',''],
   fa:a=>a<.005?'no well':Math.round(a*100)+'%',fb:b=>(1+(b-1)).toFixed(2)+'×',
-  measure:['Allowed energy levels',(a,b)=>String(Physics.levelCount(a,b))],scale:'Energies to scale · wave heights not',demoEnd:()=>2.5,
+  measure:['Allowed energy levels',(a,b)=>String(Physics.levelCount(a,b))],scale:'',disclosure:'Energy levels are to scale; wave heights are not.',demoEnd:()=>2.5,
   try:'Remove the well: are there any levels? Deepen it, then widen it. When does a new level appear?',aria:'A particle trapped in a well can only have certain energies, drawn as levels with their wave shapes.'},
  'falling-time':{draw:drawFall,a:['Gravity','how strong gravity is'],b:['Time in the air','between leaving and meeting again',''],
   fa:a=>a<.005?'none':Math.round(a*100)+'%',fb:b=>(2+2*(b-1)).toFixed(1)+' units',
-  measure:['Thrown clock gains',(a,b)=>(Physics.fallGain(a,b)*100).toFixed(1)+'%'],scale:'Time effects hugely exaggerated',demoEnd:()=>2.5,
+  measure:['Thrown clock gains',(a,b)=>(Physics.fallGain(a,b)*100).toFixed(1)+'%'],scale:'',disclosure:'Time effects are enormously exaggerated so they can be seen; the shape of the result is exact for weak gravity.',demoEnd:()=>2.5,
   try:'Turn gravity off: which path keeps the most time? Turn it on and give the ball longer in the air.',aria:'Clocks held at the ground and thrown upward; the path a thrown ball takes is the one that keeps the most time.'},
  'diffraction':{draw:drawGap,a:['Gap','narrower to the right; 0 removes the barrier'],b:['Wavelength','length of one wave',''],
   fa:a=>a<.005?'no barrier':Physics.gap(a,1).width.toFixed(1)+' units',fb:b=>Physics.gap(1,b).lambda.toFixed(2)+' units',
-  measure:['Spreads by',(a,b)=>Physics.spreadAngle(a,b).toFixed(0)+'°'],scale:'Seen from above · not to scale',demoEnd:()=>2.5,
+  measure:['Spreads by',(a,b)=>Physics.spreadAngle(a,b).toFixed(0)+'°'],scale:'Seen from above',disclosure:'Sizes are illustrative; the spreading angle is the exact single-gap value.',demoEnd:()=>2.5,
   try:'Remove the barrier: does the wave spread? Narrow the gap, then lengthen the waves.',aria:'A wave passes through a gap and spreads out, with bright and dark bands on a screen.'},
+ 'twin-trip':{draw:drawTwinTrip,a:['Speed','how fast the rocket flies'],b:['Trip','time out before turning back',''],
+  fa:a=>Math.round(Physics.speed(a)*100)+'% of light',fb:b=>Physics.turnaround(b).toFixed(1)+' years out',
+  measure:['Traveller comes home younger by',a=>(Physics.agingGap(a)*100).toFixed(1)+'%'],scale:'',demoEnd:()=>2.5,
+  disclosure:'Ages and speeds are exact special relativity; the rocket turns around instantly, and the drawing is not to scale.',
+  try:'Set Speed to zero: do the twins still agree? Speed up, then make the trip longer and count the birthdays.',aria:'Twins: one stays on Earth while the other flies to a star and back. Each has a clock and a row of birthdays.'},
 };
 const engineOf=spec=>ENGINES[spec?.kind]||ENGINES['light-bending'];
 
 function draw(ctx,w,h,spec,state){engineOf(spec).draw(ctx,w,h,spec,state);}
-window.CouncilDraw={draw,accent:spec=>ACCENT[spec.accent]||ACCENT.mint};
+window.CouncilDraw={draw,accent:spec=>ACCENT[spec.accent]||ACCENT.mint,disclosure:spec=>engineOf(spec).disclosure||''};
 
 const $=id=>document.getElementById(id);
 const canvas=$('universe');
@@ -516,11 +601,11 @@ function paint(){
 function sentences(body){return body.match(/[^.!?]+[.!?]*["”’)]*\s*/g)?.map(s=>s.trim()).filter(Boolean)||[body];}
 function captions(){
  let chapter, line, reveal=1;
- if(!started){chapter=`${spec.beats.length} short chapters · about ${Math.round(timeline.total/5)*5||Math.round(timeline.total)} seconds`;line='Press play, or move the sliders to explore on your own.';}
- else if(ended&&mode!=='playing'){chapter='Your turn';line=engineOf(spec).try;}
+ if(!started){chapter=`${spec.beats.length} short chapters · about ${Math.round(timeline.total/5)*5||Math.round(timeline.total)} seconds`;line=(spec.controls||'both')==='none'?'Press play to watch the explanation.':'Press play, or move the sliders to explore on your own.';}
+ else if(ended&&mode!=='playing'){const c=spec.controls||'both';chapter=c==='none'?'The end':'Your turn';line=c==='none'?(spec.takeaway||'Press play to watch again.'):engineOf(spec).try;}
  else{
   const beat=spec.beats[stage];chapter=`${stage+1} of ${spec.beats.length} · ${beat.title}`;line=beat.body;
-  if(mode==='playing'){
+  {
    // Show the latest sentence that has started; it stays up through the pause that follows.
    const lines=timeline.chapters[stage].lines;line=(lines.filter(l=>l.start<=time).at(-1)||lines[0]).text;
   }
@@ -550,7 +635,11 @@ function syncControls(){
 }
 function setStage(n){stage=n;syncControls();}
 function configure(){
- const e=engineOf(spec);
+ const e=engineOf(spec), controls=spec.controls||'both';
+ const ws=document.querySelector('.workspace');
+ ws?.setAttribute('data-controls',controls);
+ $('mass').closest('.control').hidden=!['both','first'].includes(controls);
+ $('distance').closest('.control').hidden=!['both','second'].includes(controls);
  document.documentElement.style.setProperty('--accent',CouncilDraw.accent(spec));
  document.querySelector('.workspace')?.setAttribute('data-kind',spec.kind||'light-bending');
  $('mass-label').textContent=e.a[0];$('mass-hint').textContent=e.a[1];
@@ -596,7 +685,7 @@ function tick(stamp){
    if(stage===2)demo(clamp((time-c.start)/(c.end-c.start)));
    if(time>=timeline.total){time=timeline.total;mode='live';ended=true;emit('ended');}
   }
-  shown+=(target()-shown)*(1-Math.exp(-dt*(mode==='playing'?5:9)));
+  shown+=(target()-shown)*(1-Math.exp(-dt*(mode==='playing'?1.6:7)));
   paint();
  }
  requestAnimationFrame(tick);

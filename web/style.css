@@ -52,6 +52,7 @@ h1{font:600 clamp(28px,3.6vw,44px)/1.1 var(--display);letter-spacing:-.035em;mar
 #universe{position:absolute;inset:0;width:100%;height:100%;display:block}
 .stage-note{position:absolute;left:18px;top:16px;font-size:11px;color:var(--faint);background:rgba(255,255,255,.8);padding:3px 9px;border-radius:999px;backdrop-filter:blur(6px)}
 .stage-note.right{left:auto;right:18px;color:var(--muted)}
+.stage-note:empty{display:none}
 .stage-note strong{color:var(--ink);font-weight:600;font-variant-numeric:tabular-nums}
 .poster{position:absolute;inset:0;display:flex;align-items:flex-end;justify-content:flex-start;gap:12px;padding:22px;background:linear-gradient(to top,rgba(255,255,255,.55),rgba(255,255,255,0) 35%)}
 .big-play{width:64px;height:64px;border-radius:50%;background:var(--ink);box-shadow:0 16px 40px -10px rgba(20,23,28,.45);position:relative;transition:transform .25s cubic-bezier(.2,.8,.2,1),background .25s}
@@ -79,6 +80,8 @@ h1{font:600 clamp(28px,3.6vw,44px)/1.1 var(--display);letter-spacing:-.035em;mar
 .chapters button:hover i{height:6px}
 .time{font-size:12px;color:var(--faint);font-variant-numeric:tabular-nums;min-width:74px;text-align:right}
 
+.workspace[data-controls=first] .controls,.workspace[data-controls=second] .controls{grid-template-columns:1fr}
+.workspace[data-controls=none] .controls{display:none}
 .controls{display:grid;grid-template-columns:1fr 1fr;gap:40px;padding:20px 28px 24px;border-top:1px solid var(--line);background:#fbfbfa}
 .control{display:block;font-size:13px;font-weight:500}
 .control-head{display:flex;justify-content:space-between}

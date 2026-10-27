@@ -1,13 +1,13 @@
 # topic|question  (investigations that did not pass on 2026-10-26; at most 12 lines run)
 light-bending|Why does gravity bend light?
-spacetime|Why does a moving clock tick slowly?
+twin-trip|Why does a moving clock tick slowly?
 spacetime|Can two events be simultaneous for one person but not another?
 interference|What happens when two waves meet?
 interference|How do two slits turn waves into stripes?
 standing-waves|Why does a guitar string only play certain notes?
 two-slit-particles|Why do particles fired one at a time still make stripes?
-interference|How can two waves cancel each other out completely?
 falling-time|If gravity slows time, why do things fall?
 quantum-well|Why can a trapped particle only have certain energies?
 wave-packet|Why can't you pin down both where a particle is and how it moves?
 diffraction|Why do waves spread out after passing a narrow gap?
+twin-trip|Why is the travelling twin younger?

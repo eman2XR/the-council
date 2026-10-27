@@ -1,42 +1,42 @@
 {
-  "status": "reviewed",
-  "question": "Why do clocks at different heights tick at different rates?",
-  "topic": "gravity-clocks",
-  "id": "20261027T041411-61589ffe",
-  "revision": 2,
-  "updated": "2026-10-27T04:17:39.038858+00:00",
+  "status": "needs_review",
+  "question": "What happens when two waves meet?",
+  "topic": "interference",
+  "id": "20261027T153907-f98e72d3",
+  "revision": 3,
+  "updated": "2026-10-27T15:44:48.733650+00:00",
   "events": [
     {
-      "at": "2026-10-27T04:16:27.599388+00:00",
-      "message": "Revision 1: physics_review saved."
-    },
-    {
-      "at": "2026-10-27T04:16:27.600752+00:00",
-      "message": "Revision 1: changes requested; feedback saved."
-    },
-    {
-      "at": "2026-10-27T04:16:43.303786+00:00",
-      "message": "Revision 2: rendering desktop and mobile frames."
-    },
-    {
-      "at": "2026-10-27T04:16:45.922811+00:00",
-      "message": "Revision 2: reviewers are inspecting the rendered frames."
-    },
-    {
-      "at": "2026-10-27T04:17:18.268568+00:00",
+      "at": "2026-10-27T15:43:38.936865+00:00",
       "message": "Revision 2: physics_review saved."
     },
     {
-      "at": "2026-10-27T04:17:28.891057+00:00",
-      "message": "Revision 2: visual_review saved."
+      "at": "2026-10-27T15:43:38.939485+00:00",
+      "message": "Revision 2: changes requested; feedback saved."
     },
     {
-      "at": "2026-10-27T04:17:28.892195+00:00",
-      "message": "Revision 2: review gates passed."
+      "at": "2026-10-27T15:43:57.484659+00:00",
+      "message": "Revision 3: rendering desktop and mobile frames."
     },
     {
-      "at": "2026-10-27T04:17:28.892655+00:00",
-      "message": "Investigation reviewed. Artifact is ready for human inspection; no new-discovery claim."
+      "at": "2026-10-27T15:44:00.813333+00:00",
+      "message": "Revision 3: reviewers are inspecting the rendered frames."
+    },
+    {
+      "at": "2026-10-27T15:44:46.852509+00:00",
+      "message": "Revision 3: visual_review saved."
+    },
+    {
+      "at": "2026-10-27T15:44:48.727305+00:00",
+      "message": "Revision 3: physics_review saved."
+    },
+    {
+      "at": "2026-10-27T15:44:48.730208+00:00",
+      "message": "Revision 3: changes requested; feedback saved."
+    },
+    {
+      "at": "2026-10-27T15:44:48.731828+00:00",
+      "message": "Revision limit reached. Artifact retained as a draft, not promoted."
     }
   ],
   "schedule": {

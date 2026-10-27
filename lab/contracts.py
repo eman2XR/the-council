@@ -17,6 +17,7 @@ SCENE_SCHEMA = obj({
     'show_reference': BOOL, 'show_labels': BOOL,
     'accent': {'type': 'string', 'enum': ['mint', 'gold', 'blue']},
     'line_width': NUM, 'duration': NUM, 'takeaway': STR,
+    'controls': {'type': 'string', 'enum': ['none', 'first', 'second', 'both']},
 })
 RESEARCH_SCHEMA = obj({
     'claim': STR, 'explanation': STR, 'assumptions': STRINGS,
@@ -76,7 +77,7 @@ MODEL_NOTES = '''Renderer is fixed: a 2D weak-field light-deflection diagram, no
 Coordinates use an arbitrary length unit, m=GM/c^2=0.025*mass, impact parameter b=distance.
 y(x)=b-2*m/b*(sqrt(x*x+b*b)+x), -7<=x<=7, to first order in m/b.
 Asymptotic deflection 4*m/b radians; m/b <=0.025. Vertical DEVIATION is magnified 6x
-for visibility and labeled. No black hole, horizon, orbit, rubber sheet, or numerical
+for visibility; the site states this in the investigation details, not on the stage. No black hole, horizon, orbit, rubber sheet, or numerical
 Einstein solver. A central sphere is a schematic compact mass (radius not to scale).
 Grid is a coordinate reference, NOT a drawing of spacetime curvature. The light pulse
 is a moving marker, not a measurement of coordinate speed. The three beats are:

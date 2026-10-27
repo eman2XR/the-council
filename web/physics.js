@@ -14,6 +14,8 @@
     // Two coherent sources or slits with amplitudes 1 and a.
     visibility: a => 2 * a / (1 + a * a),
     separation: b => 1.6 * b,
+    // Absolute brightness relative to two equal in-phase sources at a bright stripe (maximum 1).
+    brightness(a, phase) { return (1 + a * a + 2 * a * Math.cos(phase)) / 4; },
     intensity(a, phase) { return (1 + a * a + 2 * a * Math.cos(phase)) / ((1 + a) * (1 + a) || 1); },
     // A wave travelling right plus a reflection of strength a travelling left.
     harmonic: b => 1 + Math.round((b - 1) / 1.5 * 4),
@@ -155,7 +157,7 @@
     },
     checksFor(kind) {
       return {'gravity-clocks':this.clockChecks,'spacetime':this.spacetimeChecks,'interference':this.waveChecks,
-        'two-slit-particles':this.waveChecks,'standing-waves':this.ropeChecks,'tunneling':this.tunnelChecks,'wave-packet':this.packetChecks,'quantum-well':this.wellChecks,'falling-time':this.fallChecks,'diffraction':this.gapChecks}[kind]?.call(this) || this.checks();
+        'two-slit-particles':this.waveChecks,'standing-waves':this.ropeChecks,'tunneling':this.tunnelChecks,'wave-packet':this.packetChecks,'quantum-well':this.wellChecks,'falling-time':this.fallChecks,'diffraction':this.gapChecks,'twin-trip':this.spacetimeChecks}[kind]?.call(this) || this.checks();
     },
     spacetimeChecks() {
       const near=(a,b)=>Math.abs(a-b)<1e-12, g=this.gamma(this.speed(1));
@@ -176,6 +178,7 @@
         'Equal path lengths give a bright stripe':near(this.intensity(1,0),1),
         'Half-wavelength path difference cancels equal waves':near(this.intensity(1,Math.PI),0),
         'Unequal sources leave dark stripes partly lit':this.intensity(.5,Math.PI)>0,
+        'Two equal sources make bright stripes four times one source':near(this.brightness(1,0),4*this.brightness(0,0)),
         'Wider separation packs stripes closer':this.separation(2.5)>this.separation(1),
       }).map(([name,pass])=>({name,pass}));
     },

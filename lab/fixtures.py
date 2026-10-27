@@ -23,7 +23,7 @@ SCENE = {
     ],
     'mass': 0.7, 'distance': 1.25, 'ray_count': 3,
     'show_reference': True, 'show_labels': True, 'accent': 'mint',
-    'line_width': 2.5, 'duration': 24,
+    'line_width': 2.5, 'duration': 24, 'controls': 'both',
     'takeaway': 'Gravity does not need to give light a rest mass. It changes the spacetime geometry that light travels through.',
 }
 
@@ -115,6 +115,10 @@ ENGINE_SCENES = {
         ('No barrier: straight on.', 'The wave keeps going in a straight band. Nothing spreads.'),
         ('Add a gap.', 'Past the gap the wave fans out. The screen shows bright and dark bands.'),
         ('Narrow the gap, lengthen the waves.', 'A narrower gap or longer waves make the spreading wider.')], 'blue', .6, 1.4),
+    'TWIN TRIP.': _engine_scene('Two twins, one trip', [
+        ('Nobody leaves.', 'With the rocket on Earth, both clocks and both rows of birthdays keep pace.'),
+        ('The traveller flies to a star and back.', 'The traveller’s clock turns more slowly. Fewer birthdays pile up.'),
+        ('Change the speed and the trip.', 'Faster trips widen the gap. A longer trip adds years, but not a bigger percentage.')], 'blue', .8),
     'STANDING WAVES ON A ROPE': _engine_scene('Why a rope only shakes in certain patterns', [
         ('No reflection: the wave just travels.', 'Every point on the rope swings in turn. Nothing stays still.'),
         ('Let the wall reflect the wave.', 'The returning wave overlaps the outgoing one. Some points now stay perfectly still.'),
