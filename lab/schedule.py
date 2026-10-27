@@ -15,7 +15,7 @@ def write_schedule(hour=9, count=1, provider='claude', root=ROOT):
     path=folder/f'{LABEL}.plist'
     config={
         'Label':LABEL,
-        'ProgramArguments':['/usr/bin/caffeinate','-i',sys.executable,'-m','lab','daily',
+        'ProgramArguments':['/usr/bin/caffeinate','-i',sys.executable,str(root/'scripts'/'run_daily.py'),
                             '--provider',provider,'--count',str(count),'--rounds','3','--publish'],
         'WorkingDirectory':str(root),
         'StartCalendarInterval':{'Hour':hour,'Minute':0},

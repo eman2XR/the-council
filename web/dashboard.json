@@ -1,27 +1,53 @@
 {
-  "status": "running",
+  "status": "reviewed",
   "question": "Why do clocks at different heights tick at different rates?",
   "topic": "gravity-clocks",
   "id": "20261027T041411-61589ffe",
-  "revision": 0,
-  "updated": "2026-10-27T04:15:05.280138+00:00",
+  "revision": 2,
+  "updated": "2026-10-27T04:17:39.038858+00:00",
   "events": [
     {
-      "at": "2026-10-27T04:14:11.455141+00:00",
-      "message": "Researcher is gathering sources and constraints."
+      "at": "2026-10-27T04:16:27.599388+00:00",
+      "message": "Revision 1: physics_review saved."
     },
     {
-      "at": "2026-10-27T04:14:48.501532+00:00",
-      "message": "Sources retrieved. Scientist is preparing the research record."
+      "at": "2026-10-27T04:16:27.600752+00:00",
+      "message": "Revision 1: changes requested; feedback saved."
+    },
+    {
+      "at": "2026-10-27T04:16:43.303786+00:00",
+      "message": "Revision 2: rendering desktop and mobile frames."
+    },
+    {
+      "at": "2026-10-27T04:16:45.922811+00:00",
+      "message": "Revision 2: reviewers are inspecting the rendered frames."
+    },
+    {
+      "at": "2026-10-27T04:17:18.268568+00:00",
+      "message": "Revision 2: physics_review saved."
+    },
+    {
+      "at": "2026-10-27T04:17:28.891057+00:00",
+      "message": "Revision 2: visual_review saved."
+    },
+    {
+      "at": "2026-10-27T04:17:28.892195+00:00",
+      "message": "Revision 2: review gates passed."
+    },
+    {
+      "at": "2026-10-27T04:17:28.892655+00:00",
+      "message": "Investigation reviewed. Artifact is ready for human inspection; no new-discovery claim."
     }
   ],
   "schedule": {
-    "enabled": true,
+    "enabled": false,
     "hour": 9,
     "count": 1,
     "timezone": "America/Los_Angeles",
     "provider": "claude",
-    "requires": "Awake Mac, logged-in user, VPN, and available CLI quota"
+    "requires": "Awake Mac, logged-in user, VPN, and available CLI quota",
+    "state": "blocked",
+    "reason": "macOS prevents the background worker from reading the Desktop project. Awaiting worker-location or permission setup."
   },
   "delivery": "Static status snapshot. Deployment and refresh can take several minutes.",
   "attempts": [

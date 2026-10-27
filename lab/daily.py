@@ -96,6 +96,11 @@ def daily(factory, count=1, rounds=3, push=False, root=ROOT):
     with daily_lock(root) as folder:
         ledger_path=folder/'history.json'
         ledger=json.loads(ledger_path.read_text()) if ledger_path.exists() else []
+        # Holding the lock proves no prior daily coordinator is still active.
+        for item in ledger:
+            if item['status'] in ('planning','running'):
+                item['status']='interrupted'
+        write_json(ledger_path,ledger)
         dashboard=Dashboard(root,publish if push else None)
         used=sum(item['day']==day for item in ledger)
         for _ in range(max(0,count-used)):
@@ -127,7 +132,11 @@ def daily(factory, count=1, rounds=3, push=False, root=ROOT):
                 attempt.update(plan,status='running')
                 write_json(ledger_path,ledger)
                 dashboard.update(attempt)
-                state=run(provider,rounds,on_update=dashboard.update,topic=plan['topic'],question=plan['question'])
+                def progress(state):
+                    attempt.update(status=state['status'],run_id=state['id'])
+                    write_json(ledger_path,ledger)
+                    dashboard.update(state)
+                state=run(provider,rounds,on_update=progress,topic=plan['topic'],question=plan['question'])
                 attempt.update(status=state['status'],run_id=state['id'])
                 if state['status']=='reviewed':
                     export_accepted(state,root)

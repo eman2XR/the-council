@@ -38,15 +38,16 @@ async function refreshDashboard(){
  try{
   const response=await fetch('dashboard.json',{cache:'no-store'});if(!response.ok)throw Error('No status');
   const state=await response.json();
-  const labels={planning:'Choosing a question',running:'Investigation in progress',reviewed:'Review passed',needs_review:'Draft retained',failed:'Attempt stopped',idle:'Waiting for next run'};
+  const labels={planning:'Choosing a question',running:'Investigation in progress',reviewed:'Review passed',needs_review:'Draft retained',failed:'Attempt stopped',interrupted:'Run interrupted',idle:'Waiting for next run'};
   put('dashboard-status',labels[state.status]||state.status);
   put('dashboard-question',state.question||'Waiting for the next investigation.');
   put('dashboard-revision',state.revision?'Revision '+state.revision:'');
   const updated=new Date(state.updated),age=Date.now()-updated.getTime();
   put('dashboard-updated','Last update: '+updated.toLocaleString());
   const schedule=state.schedule;
-  put('dashboard-schedule',schedule?.enabled?`${schedule.count} daily attempt${schedule.count===1?'':'s'} at ${schedule.hour}:00 (${schedule.timezone})`:'Automatic schedule not confirmed');
+  put('dashboard-schedule',schedule?.enabled?`${schedule.count} daily attempt${schedule.count===1?'':'s'} at ${schedule.hour}:00 (${schedule.timezone})`:schedule?.state==='blocked'?'Schedule paused: background worker access needs setup':'Automatic schedule not confirmed');
   put('dashboard-freshness',['running','planning'].includes(state.status)&&age>15*60*1000?'No recent update. The worker may be offline, interrupted, or unable to publish. This snapshot is not a live heartbeat.':age>36*60*60*1000?'No update in more than a day. The Mac may be asleep or a scheduled run may have been missed.':'');
+  put('dashboard-phase',state.events?.at(-1)?.message||'');
   $('dashboard-events').replaceChildren(...(state.events||[]).map(event=>{const li=document.createElement('li');li.textContent=new Date(event.at).toLocaleTimeString()+' — '+event.message;return li;}));
   $('dashboard-attempts').replaceChildren(...(state.attempts||[]).slice().reverse().map(attempt=>{const li=document.createElement('li');li.textContent=attempt.day+' · '+(labels[attempt.status]||attempt.status)+' · '+(attempt.question||'Planning attempt');return li;}));
  }catch{put('dashboard-status','No published status');put('dashboard-question','The daily worker has not published a status snapshot yet.');}

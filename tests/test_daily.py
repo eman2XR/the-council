@@ -83,3 +83,14 @@ class DailyTests(unittest.TestCase):
                 git.return_value.stdout='main'
                 with self.assertRaises(RuntimeError):publish(root)
                 self.assertEqual(git.call_count,2)
+
+    def test_crashed_attempt_consumes_slot_and_is_marked_interrupted(self):
+        from datetime import datetime
+        with tempfile.TemporaryDirectory() as tmp:
+            root=Path(tmp);folder=root/'.council-state';folder.mkdir()
+            ledger=[{'day':datetime.now().astimezone().date().isoformat(),'status':'running'}]
+            (folder/'history.json').write_text(json.dumps(ledger))
+            with patch('lab.daily.run') as runner:
+                result=daily(FixtureProvider,root=root)
+            runner.assert_not_called()
+            self.assertEqual(result[0]['status'],'interrupted')

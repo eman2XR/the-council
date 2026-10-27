@@ -1,0 +1,395 @@
+{
+  "id": "20261027T041411-61589ffe",
+  "status": "reviewed",
+  "question": "Why do clocks at different heights tick at different rates?",
+  "topic": "gravity-clocks",
+  "created": "2026-10-27T04:14:11.455135+00:00",
+  "research": {
+    "claim": "Two clocks held at rest at different heights outside a mass tick at different rates when you compare them. The lower clock, which sits deeper in the gravitational potential, builds up less proper time than the upper clock over the same Schwarzschild coordinate-time interval. Neither clock is malfunctioning: each one ticks normally where it is, and the difference only appears when the two are compared. This is standard general relativity (gravitational time dilation), not a new discovery. In the model, adding mass increases the lower clock's lag. Moving the pair outward while keeping the 2-unit gap fixed reduces it.",
+    "explanation": "Picture: two clocks sit on supports outside a round, non-spinning mass. One is at the lower radius r and the other is 2 units higher, at R = r + 2. Each clock is a perfectly good clock. Someone standing next to either one would see it tick normally, and every kind of clock (pendulum, quartz, atomic) would behave the same way there. The difference only shows up when the two clocks are compared over the same coordinate-time interval. The lower clock has then recorded slightly less time.\n\nWhy: in general relativity, the rate of time for a clock held at rest depends on where it sits in the gravitational potential. A clock deeper in the potential (closer to the mass) runs slow compared with one higher up. The equivalence principle gives one way to see this. Holding a clock at rest in a gravitational field is like being in a steadily accelerating rocket. In that rocket, light sent from the bottom arrives at the top shifted to a lower frequency. The setup never changes over time, so this shift can't come from signals piling up along the way. It has to mean the two clocks' rates really differ.\n\nModel formula: m = GM/c^2 = 0.025 x mass (arbitrary units). Rate ratio (lower/upper) = sqrt((1 - 2m/r) / (1 - 2m/R)), with R = r + 2.\n- Mass = 0: m = 0, so the ratio is exactly 1 and the two clocks agree.\n- More mass makes the potential difference between the clocks larger, so the lower clock lags more.\n- Moving the pair outward (larger Lower radius, same 2-unit gap) puts both clocks where the potential changes more gently, so the lag shrinks.\n\nWhat sets the size of the lag: the difference in gravitational potential between the two clocks. It is not set by the change of gravity across the gap (tidal effects). For a small fixed gap, that potential difference is about (local gravitational acceleration) x (gap), so the lag does grow with local gravity strength. The model's 2-unit gap is not small next to r, so the exact formula above is used rather than this approximation.\n\nVisual conventions: the animation magnifies the deficit 12 times (displayed lower rate = 1 - 12 x (1 - ratio)), so the difference is easy to see. The percentage readout is the real, unmagnified value. The sketch is not drawn to spatial scale. This is not what a distant camera would see directly, and it includes no Doppler (motion) effects.\n\nThree beats:\n1. Mass = 0: the clocks tick at equal rates.\n2. Add mass: the lower clock falls behind the upper one.\n3. Adjust Mass and Lower radius: more mass increases the lag, and a larger Lower radius reduces it. Start with Lower radius = 1 so the change when it reaches 2.5 is clear.\n\nRetrieval status: the notes say no sources could be retrieved. Every URL attempt was refused by the network proxy. The listed references are therefore unconfirmed pointers, not verified evidence.\n\nCorrection to the retrieved notes: misleading metaphor #5 in the notes calls \"depends on the strength of g\" misleading. Taken alone, that is too strong, and it should not be used as written. The accurate statement is that the lag depends on the potential difference. For a small gap that difference is about g x gap, so the lag does depend on gravity strength. The notes' point about Earth's centre concerns a clock's absolute rate compared with far away, not the lag between two nearby clocks.",
+    "assumptions": [
+      "The clocks are held at rest outside a spherical, non-rotating mass (Schwarzschild exterior). They are not falling freely or orbiting.",
+      "Proper times are compared over the same Schwarzschild coordinate-time interval. Signal-path delays, Doppler shifts and a distant camera's raw view are left out.",
+      "Einstein equivalence principle and local position invariance: every type of clock shifts by the same fraction, and each clock ticks normally where it is.",
+      "Arbitrary units: m = 0.025 x mass, Mass ranges over 0..1, Lower radius r ranges over 1..2.5, and the upper clock is at R = r + 2. The ray_count and line_width fields are unused.",
+      "The animation magnifies the deficit 12 times. The percentage readout is unmagnified. The sketch is not to spatial scale."
+    ],
+    "prediction": "From the model formula (values computed here):\n- Mass = 0: ratio = 1.000000, deficit 0%, displayed lower rate 1.000.\n- Mass = 1, Lower radius = 1 (R = 3): 2m/r = 0.05 and 2m/R = 0.016667, so ratio = sqrt(0.95/0.983333) \u2248 0.98290. Unmagnified deficit \u2248 1.71%. Displayed lower rate \u2248 1 - 12 x 0.0171 \u2248 0.795.\n- Mass = 1, Lower radius = 2.5 (R = 4.5): 2m/r = 0.02 and 2m/R = 0.011111, so ratio = sqrt(0.98/0.988889) \u2248 0.99550. Unmagnified deficit \u2248 0.45%. Displayed lower rate \u2248 0.946.\n- At any fixed Lower radius, the deficit rises steadily from 0 as Mass increases.\n- At any fixed Mass > 0, the deficit falls steadily as Lower radius goes from 1 to 2.5.\n- The weak-field estimate m(1/r - 1/R) gives about 1.67% at Mass = 1, r = 1, close to the exact 1.71%. That confirms the lag follows the potential difference.",
+    "falsifier": "The implementation is wrong if any of the following happens:\n- the deficit is nonzero at Mass = 0;\n- the deficit goes down when Mass goes up;\n- the deficit goes up when Lower radius goes up with the gap fixed;\n- the percentage readout shows the 12x-magnified value instead of the physical one;\n- the readouts differ from the values above (about 1.71% at Mass 1, r 1; about 0.45% at Mass 1, r 2.5) by more than rounding.\n\nPhysically, the account would be contradicted by a precise clock comparison showing that clocks held at rest at different potentials agree, or that different clock types shift by different amounts. The notes list redshift experiments that reportedly confirm the effect, but they were not retrieved or verified here. These checks only validate the implementation and are not new science.",
+    "limitations": [
+      "No sources were actually retrieved. Every fetch was refused by the proxy, so all listed references and their figures are unverified and must be confirmed before this record is accepted or published.",
+      "This is a toy model in arbitrary units. It has no Earth-specific numbers, black holes, satellite velocities or GPS simulation, and the notes' Earth-scale figures (for example ~1e-16 per metre and the GPS microseconds per day) are deliberately excluded as unverified and out of scope.",
+      "Only static, supported observers are modelled. Motion (special-relativistic) time dilation, rotation and Doppler effects are not included.",
+      "The 12x magnification and the not-to-scale sketch are teaching exaggerations. Only the percentage readout is physical.",
+      "The 2-unit gap is not small compared with the Lower radius, so the 'acceleration x gap' approximation is only qualitative here, and the exact formula sets the numbers.",
+      "The retrieved notes contain a misleading metaphor item (#5) that understates how the lag depends on gravity strength. It was corrected here and should not be copied into the visual."
+    ],
+    "sources": [
+      {
+        "title": "Pound & Rebka, Apparent Weight of Photons, Phys. Rev. Lett. 4, 337 (1960)",
+        "url": "https://link.aps.org/doi/10.1103/PhysRevLett.4.337",
+        "supports": "NOT RETRIEVED (proxy refused). Recalled from memory: a tower gravitational redshift measurement. Needs verification."
+      },
+      {
+        "title": "Chou et al., Optical Clocks and Relativity, Science (2010)",
+        "url": "https://www.science.org/doi/10.1126/science.1192720",
+        "supports": "NOT RETRIEVED (proxy refused). Recalled from memory: optical clocks resolving a height difference of about 33 cm. Needs verification."
+      },
+      {
+        "title": "NIST news: Pair of aluminum atomic clocks reveal Einstein's relativity at a personal scale (2010)",
+        "url": "https://www.nist.gov/news-events/news/2010/09/nist-pair-aluminum-atomic-clocks-reveal-einsteins-relativity-personal-scale",
+        "supports": "NOT RETRIEVED (proxy refused). A plain-language summary of the Chou et al. result. Needs verification."
+      },
+      {
+        "title": "Bothwell et al., Resolving the gravitational redshift across a millimetre-scale atomic sample, Nature (2022)",
+        "url": "https://www.nature.com/articles/s41586-021-04349-7",
+        "supports": "NOT RETRIEVED (proxy refused). Recalled from memory: a redshift measured across a millimetre-scale sample. Needs verification."
+      },
+      {
+        "title": "Will, The Confrontation between General Relativity and Experiment, Living Rev. Relativ. (2014)",
+        "url": "https://link.springer.com/article/10.12942/lrr-2014-4",
+        "supports": "NOT RETRIEVED (proxy refused). Recalled from memory: a review of redshift and local position invariance tests. Needs verification."
+      },
+      {
+        "title": "Will (2014), arXiv version",
+        "url": "https://arxiv.org/abs/1403.7377",
+        "supports": "NOT RETRIEVED (proxy refused). The arXiv copy of the review above. Needs verification."
+      }
+    ]
+  },
+  "scene": {
+    "title": "Why clocks at different heights tick at different rates",
+    "subtitle": "Two good clocks are held still, one above the other, near a round mass. Each ticks normally where it is, but when you compare them, the lower one has counted less time.",
+    "beats": [
+      {
+        "title": "No mass: the two clocks agree",
+        "body": "With no mass nearby, the lower and upper clocks tick together and their hands stay in step. Notice that being higher or lower makes no difference yet. Height only matters once there is gravity."
+      },
+      {
+        "title": "Add mass: the lower clock falls behind",
+        "body": "Now the mass is switched on, with the clocks close to it. Each clock still ticks normally to someone standing beside it, so neither is broken. Notice the lower clock's hand trailing the upper one: sitting deeper in the mass's gravity, it has counted less time. The motion is exaggerated so you can see it. The percentage shows the real size of the lag."
+      },
+      {
+        "title": "Change the mass and the Lower radius",
+        "body": "More mass makes the lower clock sit even deeper in gravity compared with the upper one, so the lag grows. Now slide the Lower radius outward. The gap between the clocks stays the same. Notice the lag shrink: farther out, gravity is gentler, so the two heights differ less."
+      }
+    ],
+    "mass": 1,
+    "distance": 1,
+    "ray_count": 1,
+    "show_reference": true,
+    "show_labels": true,
+    "accent": "blue",
+    "line_width": 2,
+    "duration": 30,
+    "takeaway": "Time passes more slowly deeper in gravity than for a clock higher up. Both clocks work perfectly, but the lower one counts less time. The lag grows with more mass and shrinks as the pair moves farther from the mass.",
+    "kind": "gravity-clocks"
+  },
+  "checks": [
+    {
+      "name": "Zero mass gives equal clock rates",
+      "pass": true
+    },
+    {
+      "name": "Lower stationary clock accumulates less time",
+      "pass": true
+    },
+    {
+      "name": "More mass increases the clock difference",
+      "pass": true
+    },
+    {
+      "name": "Moving both clocks outward reduces the difference",
+      "pass": true
+    },
+    {
+      "name": "Ratio matches analytic Schwarzschild value",
+      "pass": true
+    },
+    {
+      "name": "Magnified clock motion stays positive",
+      "pass": true
+    },
+    {
+      "name": "Zero-mass control removes the modeled effect",
+      "pass": true
+    },
+    {
+      "name": "Mass control updates the rendered model",
+      "pass": true
+    },
+    {
+      "name": "No-mass step shows zero and restores the chosen mass afterward",
+      "pass": true
+    },
+    {
+      "name": "Seeking reproduces identical canvas pixels",
+      "pass": true
+    },
+    {
+      "name": "Mobile page fits viewport",
+      "pass": true
+    },
+    {
+      "name": "Renderer has no JavaScript errors",
+      "pass": true
+    }
+  ],
+  "provider": "reviewed-agents",
+  "revisions": [
+    {
+      "number": 1,
+      "scene": {
+        "title": "Why clocks at different heights tick at different rates",
+        "subtitle": "Two good clocks are held still, one above the other, near a round mass. Each ticks normally where it is, but when you compare them, the lower one has counted less time.",
+        "beats": [
+          {
+            "title": "No mass: the two clocks agree",
+            "body": "With no mass nearby, the lower clock and the upper clock tick together, so their hands stay in step. Notice that nothing separates them yet. The difference in height only matters once there is gravity."
+          },
+          {
+            "title": "Add mass: the lower clock falls behind",
+            "body": "Turn the mass up. Each clock still ticks normally to someone standing right next to it, so neither one is broken. Compare them, though, and the lower clock, sitting deeper in the mass's gravity, has built up less time. The motion is exaggerated so you can see it, while the percentage readout gives the real size of the lag."
+          },
+          {
+            "title": "Change the mass and the Lower radius",
+            "body": "Start with the pair close to the mass. More mass makes the lag bigger, because stronger gravity makes a bigger difference between the two heights. Then slide the Lower radius outward while the gap between the clocks stays the same. Out where gravity is gentler, the lag shrinks."
+          }
+        ],
+        "mass": 0,
+        "distance": 1,
+        "ray_count": 1,
+        "show_reference": true,
+        "show_labels": true,
+        "accent": "blue",
+        "line_width": 2,
+        "duration": 30,
+        "takeaway": "Time passes more slowly deeper in gravity. Both clocks work perfectly, but the lower one counts less time than the upper one. The lag grows with stronger gravity and shrinks as the pair moves farther from the mass.",
+        "kind": "gravity-clocks"
+      },
+      "checks": [
+        {
+          "name": "Zero mass gives equal clock rates",
+          "pass": true
+        },
+        {
+          "name": "Lower stationary clock accumulates less time",
+          "pass": true
+        },
+        {
+          "name": "More mass increases the clock difference",
+          "pass": true
+        },
+        {
+          "name": "Moving both clocks outward reduces the difference",
+          "pass": true
+        },
+        {
+          "name": "Ratio matches analytic Schwarzschild value",
+          "pass": true
+        },
+        {
+          "name": "Magnified clock motion stays positive",
+          "pass": true
+        },
+        {
+          "name": "Zero-mass control removes the modeled effect",
+          "pass": true
+        },
+        {
+          "name": "Mass control updates the rendered model",
+          "pass": true
+        },
+        {
+          "name": "No-mass step shows zero and restores the chosen mass afterward",
+          "pass": true
+        },
+        {
+          "name": "Seeking reproduces identical canvas pixels",
+          "pass": true
+        },
+        {
+          "name": "Mobile page fits viewport",
+          "pass": true
+        },
+        {
+          "name": "Renderer has no JavaScript errors",
+          "pass": true
+        }
+      ],
+      "accepted": false,
+      "physics_review": {
+        "pass": false,
+        "score": 4,
+        "summary": "The physics in the claim, explanation and predictions is correct and stated with appropriate care. I recomputed the numbers from the given formula and they check out: ratio \u2248 0.98290 (1.71% deficit) at Mass 1, r 1; ratio \u2248 0.99550 (0.45%) at Mass 1, r 2.5; weak-field estimate \u2248 1.67%. The explanation correctly ties the lag to the potential difference (\u2248 g \u00d7 gap for a small gap), uses the equivalence-principle argument properly, says plainly that no clock is malfunctioning, and is honest that no sources were retrieved. The attached frames do not support the claims, though. In all four captures Mass is 0.00, the readout is 0.00%, the canvas status says 'No mass \u00b7 matching rates', and the upper and lower clock hands are identical. Beat 2 ('Add mass: the lower clock falls behind') and beat 3 ('More mass makes the lag bigger... slide the Lower radius outward') describe effects the visuals never show. Only the Lower radius changes (1.00 to 2.50) in beat 3, and with zero mass that shows nothing. No central mass is drawn, so 'lower' and 'outward' have nothing to be measured from. As captured, the visual reads as 'height makes no difference', the opposite of the intended lesson. The passing checks ('Mass control updates the rendered model', 'No-mass step ... restores the chosen mass') don't match these captures. Either the beats don't apply mass or the frames were captured before the state was set. This review is not scientific proof, and the cited experiments remain unverified.",
+        "changes": [
+          "Make beat 2 set a nonzero mass (for example Mass = 1 at Lower radius = 1), or animate the mass from 0 up to 1. Re-capture so the frame shows a readout of about 1.71% and visibly different hand angles (displayed lower rate \u2248 0.795).",
+          "Make beat 3 use Mass > 0 throughout. Capture one frame at Lower radius 1 (\u22481.71%) and one at 2.5 (\u22480.45%) so the shrinking lag is visible, and optionally a frame where only the mass changes.",
+          "Tie the canvas status label to the current state. It must not read 'No mass \u00b7 matching rates' when the mass is nonzero. Use something like 'Lower clock lags by X% (shown 12\u00d7 larger)'.",
+          "Draw a schematic central mass below the clocks, labeled not to scale. Its size or shading should follow the Mass value, and the clock pair should visibly move away from it as Lower radius increases, so that 'lower' and 'outward' have a reference point.",
+          "Consider adding a cumulative comparison, such as an elapsed-time counter or tick count under each clock, so the build-up of less proper time can be seen, not just a phase difference at one instant.",
+          "Fix the readout caption. 'Lower clock runs slower by 0.00%' sits above 'unmagnified relative rate', but the number is a deficit, not a rate. Use 'unmagnified rate difference'.",
+          "Tighten the beat-3 wording 'stronger gravity makes a bigger difference between the two heights' to something like 'more mass makes a bigger potential difference between the two heights'. This keeps it consistent with the potential-difference framing while still implying the lag grows with gravity strength.",
+          "Make the takeaway 'Time passes more slowly deeper in gravity' explicitly relative: '...compared with a clock higher up'.",
+          "Reconcile the checks with the captures. The mass-control and beat-state checks pass, yet every frame shows Mass 0. Add a capture-level assertion that beats 2 and 3 render a nonzero readout.",
+          "Before publication, verify the cited sources (Pound\u2013Rebka, Chou et al. 2010, Bothwell et al. 2022, Will 2014). They are currently unretrieved."
+        ],
+        "blocking_issues": [
+          "All captured frames for beats 2 and 3 show Mass = 0.00, a 0.00% readout and identical clock hands, so the visuals contradict the beat text ('the lower clock falls behind', 'the lag shrinks').",
+          "The canvas status stays at 'No mass \u00b7 matching rates' in every beat, which misrepresents the state the beats describe.",
+          "No mass is depicted, so the intended spatial idea (lower = deeper, outward = farther from the mass) is not visually grounded.",
+          "The passing checks for mass-control rendering and beat-state restoration do not match the captured frames, so the implementation is not validated by the evidence provided."
+        ]
+      },
+      "visual_review": {
+        "pass": false,
+        "score": 3,
+        "summary": "I looked at the six frames provided. Each one is a single still, so none of this says anything about smooth motion. The zero-mass frame (t=1) looks right: the hands are in step, the readout shows 0.00%, the caption says \"No mass \u00b7 matching rates\", the labels are readable, and the \"Rate difference magnified 12\u00d7\" and \"schematic distances\" notes are visible. But every frame after it is still at Mass 0.00 with a 0.00% readout and the same \"No mass \u00b7 matching rates\" caption. That includes the 'mass added' frames at t=9 and t=11 and the comparison frame at t=18 with Lower radius 2.50. In every frame the two clocks have identical hand angles. So the cause and effect the guide is meant to teach never appears on screen: no lower clock falling behind, no lag to compare between r=1 and r=2.5, and no nonzero percentage. The beat 2 and beat 3 text describes a lag the visual never shows, which will confuse a beginner. The likely cause is that the scene's chosen mass is 0. The no-mass step then 'restores' the chosen mass of 0, so mass never goes up. The passing checks 'Mass control updates the rendered model' and 'No-mass step ... restores the chosen mass' do not match these frames. No central mass is drawn either, so beat 3's 'close to the mass' and the outward move have nothing to refer to. On mobile, the workspace layout fits and is readable. The top-of-page overview frame shows the site header ('THE COUNCIL') a second time partway down, overlapping the page title 'Why clocks at different heights tick at different rates', which is cut off. The overview also shows 'Investigation in progress', which is acceptable as a status display.",
+        "changes": [
+          "Set scene field mass from 0 to 1. Beat 1 still forces zero mass, and beats 2 and 3 then show the full-mass lag: about 1.71% at Lower radius 1 and about 0.45% at 2.5. The displayed lower rate is about 0.795 vs 1.0, which is easy to see.",
+          "Keep distance=1 so beat 2 shows the largest lag, and beat 3 can then move the Lower radius to 2.5 for a visible comparison.",
+          "Re-capture the frames at t=9, t=11 and t=18 and confirm that the Mass slider is above 0, the readout is nonzero, the caption no longer says 'No mass \u00b7 matching rates', and the lower clock's hand clearly trails the upper clock's.",
+          "Renderer, not a scene field: draw the central mass, even schematically, whenever mass > 0, so that 'deeper in the mass's gravity' and 'slide the Lower radius outward' refer to something visible.",
+          "Renderer, not a scene field: add a visible accumulated-time or lag indicator, such as a tick count or a shaded angle between the two hands, so the comparison can be read from a single frame.",
+          "Fix the mobile top-of-page overlap where the site header shows up again over the page title and cuts it off.",
+          "Leave ray_count and line_width unchanged, since they are unused. The beat text can stay as it is once the visuals match it."
+        ],
+        "blocking_issues": [
+          "In the 'mass added' frames (t=9, t=11) and the interactive comparison frame (t=18), Mass is still 0.00 and the readout is 0.00%. The lower clock never visibly falls behind, so the guide's central cause and effect is missing.",
+          "Beat 3 cannot show that moving outward reduces the lag, because the lag is zero at both Lower radius values captured.",
+          "The beat 2 and beat 3 text describes a lag that contradicts the on-screen caption 'No mass \u00b7 matching rates'.",
+          "The passing checks for the mass control and for restoring the mass after the no-mass step contradict the captured frames, so those checks are not testing the published configuration.",
+          "In the mobile top-of-page overview, the site header shows up again over the page title and cuts it off."
+        ]
+      },
+      "frames": [
+        "published/20261027T041411-61589ffe/revision-1-0.png",
+        "published/20261027T041411-61589ffe/revision-1-1.png",
+        "published/20261027T041411-61589ffe/revision-1-2.png",
+        "published/20261027T041411-61589ffe/revision-1-3.png",
+        "published/20261027T041411-61589ffe/revision-1-4.png",
+        "published/20261027T041411-61589ffe/revision-1-5.png"
+      ]
+    },
+    {
+      "number": 2,
+      "scene": {
+        "title": "Why clocks at different heights tick at different rates",
+        "subtitle": "Two good clocks are held still, one above the other, near a round mass. Each ticks normally where it is, but when you compare them, the lower one has counted less time.",
+        "beats": [
+          {
+            "title": "No mass: the two clocks agree",
+            "body": "With no mass nearby, the lower and upper clocks tick together and their hands stay in step. Notice that being higher or lower makes no difference yet. Height only matters once there is gravity."
+          },
+          {
+            "title": "Add mass: the lower clock falls behind",
+            "body": "Now the mass is switched on, with the clocks close to it. Each clock still ticks normally to someone standing beside it, so neither is broken. Notice the lower clock's hand trailing the upper one: sitting deeper in the mass's gravity, it has counted less time. The motion is exaggerated so you can see it. The percentage shows the real size of the lag."
+          },
+          {
+            "title": "Change the mass and the Lower radius",
+            "body": "More mass makes the lower clock sit even deeper in gravity compared with the upper one, so the lag grows. Now slide the Lower radius outward. The gap between the clocks stays the same. Notice the lag shrink: farther out, gravity is gentler, so the two heights differ less."
+          }
+        ],
+        "mass": 1,
+        "distance": 1,
+        "ray_count": 1,
+        "show_reference": true,
+        "show_labels": true,
+        "accent": "blue",
+        "line_width": 2,
+        "duration": 30,
+        "takeaway": "Time passes more slowly deeper in gravity than for a clock higher up. Both clocks work perfectly, but the lower one counts less time. The lag grows with more mass and shrinks as the pair moves farther from the mass.",
+        "kind": "gravity-clocks"
+      },
+      "checks": [
+        {
+          "name": "Zero mass gives equal clock rates",
+          "pass": true
+        },
+        {
+          "name": "Lower stationary clock accumulates less time",
+          "pass": true
+        },
+        {
+          "name": "More mass increases the clock difference",
+          "pass": true
+        },
+        {
+          "name": "Moving both clocks outward reduces the difference",
+          "pass": true
+        },
+        {
+          "name": "Ratio matches analytic Schwarzschild value",
+          "pass": true
+        },
+        {
+          "name": "Magnified clock motion stays positive",
+          "pass": true
+        },
+        {
+          "name": "Zero-mass control removes the modeled effect",
+          "pass": true
+        },
+        {
+          "name": "Mass control updates the rendered model",
+          "pass": true
+        },
+        {
+          "name": "No-mass step shows zero and restores the chosen mass afterward",
+          "pass": true
+        },
+        {
+          "name": "Seeking reproduces identical canvas pixels",
+          "pass": true
+        },
+        {
+          "name": "Mobile page fits viewport",
+          "pass": true
+        },
+        {
+          "name": "Renderer has no JavaScript errors",
+          "pass": true
+        }
+      ],
+      "accepted": true,
+      "physics_review": {
+        "pass": true,
+        "score": 8.5,
+        "summary": "The physics works as a teaching approximation. I recomputed the model values: with m = 0.025 x mass, Mass 1 and Lower radius 1 (R = 3) give ratio sqrt(0.95/0.98333) \u2248 0.98290. That is a 1.71% deficit and a displayed rate of about 0.795. Mass 1 and Lower radius 2.5 (R = 4.5) give ratio sqrt(0.98/0.98889) \u2248 0.99550, a 0.45% deficit. The weak-field estimate of 1.67% is close to the exact value.\n\nThe four frames agree with these numbers:\n- Beat 1 shows 0.00% with the hands in step and no mass drawn.\n- Beat 2 shows 1.71%, with the lower hand trailing the dashed upper-rate reference in both captures.\n- Beat 3 shows 0.45%, with the pair moved outward, the gap label fixed at 2 units and a smaller visible lag.\n\nThe magnification (12x) and the not-to-scale distances are labelled. The percentage readout is marked as unmagnified. No clock is called broken. The claim says the lag comes from the potential difference, not from tidal effects, and it says correctly that for a small gap the lag grows with g x gap. It also corrects misleading item #5 in the notes, and it makes no claim of a new discovery.\n\nThe research record says plainly that no sources were retrieved. That limits verification before publication, but it is not a physics error: these are textbook results. The changes below are small wording and display fixes, not reasons to block it.",
+        "changes": [
+          "Beat 3 body: replace 'farther out, gravity is gentler, so the two heights differ less' with something like 'farther out, the gravitational potential changes more gently, so across the same 2-unit gap the two clocks differ less in potential.' The current wording suggests the heights change, but the gap is fixed.",
+          "Takeaway and beat 2: replace 'deeper in gravity' at least once with 'deeper in the gravitational potential (closer to the mass)'. This ties the visual to the claim that the potential difference sets the lag.",
+          "Clock hands: the lag between the hands keeps growing, so once it passes 180 degrees the lower hand can look as if it is ahead. Add a small elapsed-time or lap readout for each clock, or reset the comparison phase periodically, so viewers can't read the lag the wrong way round.",
+          "Readout label: think about rewording 'Lower clock runs slower by' as 'Lower clock accumulates less time by (vs upper)'. This avoids any hint that the clock is faulty and keeps the comparison explicit.",
+          "Optionally add a one-line caption in beat 2 or 3, such as 'Compared over the same coordinate time; not a distant camera view, no Doppler'. That puts the omitted assumption on screen, not only in the research record.",
+          "Before publishing, verify the cited references (Pound-Rebka 1960, Chou et al. 2010, Bothwell et al. 2022, Will 2014). They are currently marked as not retrieved."
+        ],
+        "blocking_issues": []
+      },
+      "visual_review": {
+        "pass": true,
+        "score": 7.5,
+        "summary": "The frames show a clear three-beat progression. At t=1 (zero mass) the hands match and the readout is 0.00%. At t=9 and t=11 the mass arc appears, the lower solid hand trails the dashed reference hand, and the readout is 1.71%. At t=18 the clock pair moves visibly away from the mass with the gap marker fixed, and the readout is 0.45%. The magnification, unmagnified-percentage and not-to-scale labels are all visible. The slider label matches the spec and the mobile layout fits. Remaining issues: (1) beat 3 says the two heights 'differ less', which a beginner could read as the 2-unit gap shrinking; (2) beat 3 asks viewers to watch the lag shrink, but the hand angle is built-up lag and won't drop right away; (3) the dashed reference hand is faint and its label says 'rate' when it shows elapsed time; (4) on mobile the gap label overlaps the dashed line. The top-of-page dashboard says 'Sources retrieved', which contradicts the research record (all fetches refused). This is a status-honesty problem outside the scene, not a visual blocker. I reviewed still frames only; smooth motion is not verified.",
+        "changes": [
+          "beats[2].body: change to 'More mass deepens the lower clock's position in gravity compared with the upper one, so the lag grows. Now slide the Lower radius outward. The 2-unit gap stays the same. Watch the percentage drop and the hands drift apart more slowly: farther out, gravity is gentler, so the same 2-unit gap spans a smaller difference in gravitational potential.'",
+          "beats[1].body: add a sentence explaining the dashed hand, e.g. 'The dashed hand shows where the lower clock's hand would be if it kept pace with the upper clock.' Keep the existing note that neither clock is broken and that only the percentage is unmagnified.",
+          "beats[0].body: optionally add 'Watch the percentage: it reads 0.00%.' so viewers are anchored on the physical readout before mass appears.",
+          "takeaway: keep as is. Optionally add 'Only the percentage shows the real size; the hand motion is exaggerated 12 times.'",
+          "Renderer (not a scene field): change the label 'Dashed hand: upper-clock rate for comparison' to 'Dashed hand: where the upper clock's time would put it'. Make the dashed hand brighter and as long as the solid hand, and add a little more space between this label and the mass arc on desktop.",
+          "Renderer (not a scene field): on mobile, offset the 'Fixed gap / 2 units' label to the side of the dashed gap line so it doesn't cross it.",
+          "Dashboard (not a scene field): the progress entry 'Sources retrieved' contradicts the research record, which says every fetch was refused. Report the retrieval failure before this investigation is considered for publication.",
+          "Keep mass=1 and distance=1. distance=1 makes the comparison at 2.5 clear. ray_count and line_width are unused and can stay."
+        ],
+        "blocking_issues": []
+      },
+      "frames": [
+        "published/20261027T041411-61589ffe/revision-2-0.png",
+        "published/20261027T041411-61589ffe/revision-2-1.png",
+        "published/20261027T041411-61589ffe/revision-2-2.png",
+        "published/20261027T041411-61589ffe/revision-2-3.png",
+        "published/20261027T041411-61589ffe/revision-2-4.png",
+        "published/20261027T041411-61589ffe/revision-2-5.png"
+      ]
+    }
+  ]
+}
