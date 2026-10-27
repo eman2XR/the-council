@@ -1,0 +1,295 @@
+{
+  "id": "20261027T154449-550db489",
+  "status": "reviewed",
+  "question": "Why does gravity bend light?",
+  "topic": "light-bending",
+  "created": "2026-10-27T15:44:49.411576+00:00",
+  "research": {
+    "claim": "In general relativity, light passing a mass follows a null geodesic, which is the straightest possible path through curved spacetime for something with no rest mass. Near a mass, that path turns by a small angle. In the weak field, the angle is about \u03b1 \u2248 (1+\u03b3)/2 \u00b7 4GM/(c\u00b2b), and general relativity sets \u03b3 = 1. That gives about 1.75\u2033 for light grazing the Sun, twice the 0.87\u2033 you get by treating light as a fast Newtonian particle. Radio interferometry measures \u03b3 = 0.9998 \u00b1 0.0003, which agrees with GR. The diagram that goes with this record draws only the first-order weak-field approximation. It illustrates that prediction but cannot independently confirm it.",
+    "explanation": "PLAIN-LANGUAGE ANSWER\nLight has no rest mass. Any local observer, anywhere, measures its speed as exactly c. Light still has to travel through spacetime, though, and it follows the null geodesics of that spacetime: the paths that are as straight as the geometry allows. Mass and energy curve spacetime, so near a mass those paths are no longer straight lines in ordinary coordinates. A ray that passes the mass ends up heading in a slightly different direction.\n\nThe mass does not pull on the light as if it were a ball. The light is not sliding into a dent in a sheet. And it does not bend because it slows down locally, since local measurements always give c.\n\nIn the weak field of the Sun, two parts of the curvature add roughly equally:\n- **Time part:** clocks run slower deeper in the gravitational potential. This gives the \"1\" in (1+\u03b3).\n- **Space part:** distances near the mass are stretched. This gives the \"\u03b3\" in (1+\u03b3).\n\nEufrasio, Mecholsky and Resca (abstract) say these two parts are essentially equal for light grazing the Sun and add up to 1.75\u2033. Either part alone, or the Newtonian ball-like picture (Soldner 1801), gives about half.\n\nThe bending gets larger with more mass and with a closer pass. It scales as M/b, where b is the impact parameter, the distance of closest approach. Einstein Online describes this 1/d scaling.\n\nHOW BIG IS IT REALLY?\n1.75\u2033 is about 1/2000 of a degree. Any picture where the bend is visible by eye is exaggerated. Einstein Online explicitly says its own images are not to scale.\n\nWHAT THE DIAGRAM SHOWS (three beats)\n1. **No mass:** a straight reference ray at height y = b.\n2. **Add mass:** the ray follows y(x) = b \u2212 (2m/b)(\u221a(x\u00b2+b\u00b2) + x) for \u22127 \u2264 x \u2264 7, where m = GM/c\u00b2 = 0.025 \u00d7 mass in arbitrary length units. This is first-order in m/b.\n   - Far upstream (x \u2192 \u2212\u221e), y \u2192 b.\n   - Far downstream, the slope approaches \u22124m/b. That is the asymptotic deflection 4m/b radians, the GR value with \u03b3 = 1.\n3. **Compare and experiment:**\n   - Raising the mass, or lowering b, increases the bend.\n   - The real-world tests are listed below.\n\nThe controls keep m/b \u2264 0.025, so the deflection is at most 0.1 rad. The Sun's m/b is about 2\u00d710\u207b\u2076. The diagram therefore uses a much stronger field than the Sun's, and on top of that it magnifies the vertical deviation 6\u00d7 (labeled on screen).\n\nOther things the diagram is not:\n- The central sphere is a schematic compact mass, not drawn to scale.\n- The grid is a coordinate reference, not a picture of spacetime curvature.\n- The moving pulse is a marker. It does not show the coordinate speed of light.\n- It is not a black hole, horizon, orbit, rubber sheet or numerical solution of Einstein's equations.\n\nEVIDENCE\n- **1919 eclipse** (Dyson, Eddington, Davidson 1920; I did not retrieve the paper). Kennefick (2007, abstract) argues the data choices were sound and not biased toward Einstein. He cites a modern re-analysis of the plates; the abstract gives no figures.\n- **VLBA radio bending** (Fomalont et al. 2009): \u03b3 = 0.9998 \u00b1 0.0003 at 68% confidence. They used 4 sources at 43, 23 and 15 GHz. Solar-corona refraction was negligible beyond 3\u00b0 from the Sun.\n- **Geodetic VLBI:**\n  - Lambert & Le Poncin-Lafitte (2009): precision about 2\u00d710\u207b\u2074, limited mainly by radio-source positions. I saw this only in a search-result summary.\n  - Titov (2017): \u03b3 consistent with 1 at about 0.06%. Also from a search-result summary only.\n- **Shapiro delay:** the related slowing of signals passing near the Sun. I did not retrieve Shapiro (1964) or the Cassini paper (2003). Cassini's widely quoted \u03b3 \u2212 1 = (2.1 \u00b1 2.3)\u00d710\u207b\u2075 has not been checked against the paper here. Kopeikin et al. discuss a correction to it of about one part in 10\u2074.\n- **Will's Living Reviews article (2014, abstract):** says light deflection and Shapiro delay have reached high precision. The abstract gives no numbers.\n\nMISLEADING VISUALS TO AVOID\n1. **Rubber sheet:** it uses downward gravity to explain gravity, which is circular. It also shows only spatial curvature. Resca (2018, abstract) shows that purely spatial geodesics give unphysical repulsion in the Newtonian limit and calls the rubber-sheet picture of orbits mistaken and misleading.\n2. **\"Light attracted like a ball\":** gives only half the value.\n3. **Unlabeled exaggerated bends.**\n4. **\"Light slows in a medium\":** the effective refractive index n \u2248 1 \u2212 (1+\u03b3)\u03a6/c\u00b2 is a weak-field calculation shortcut, not a physical medium. Any coordinate \"slowing\" depends on the choice of coordinates.\n5. **Embedding or funnel diagrams used as photon tracks.**\n\nA flat 2D curve, including this one, hides the separate time and space contributions. The caption should say so.",
+    "assumptions": [
+      "Weak, static field with a slowly moving lens: |\u03a6|/c\u00b2 \u226a 1 (about 2\u00d710\u207b\u2076 at the Sun's surface).",
+      "PPN metric ds\u00b2 \u2248 \u2212(1+2\u03a6/c\u00b2)c\u00b2dt\u00b2 + (1\u22122\u03b3\u03a6/c\u00b2)dx\u00b2, with \u03b3 = 1 in general relativity. This is standard textbook material, not quoted from the retrieved sources.",
+      "Geometric optics: wavelength \u226a b, so light is treated as rays. Gravitational deflection does not depend on frequency; observed frequency dependence comes from plasma such as the solar corona.",
+      "The renderer uses first order in m/b only, with m = GM/c\u00b2 = 0.025 \u00d7 mass in arbitrary units, b = distance, and m/b \u2264 0.025.",
+      "The renderer's vertical deviation is magnified 6\u00d7 and labeled. The sphere radius, grid and pulse marker are schematic.",
+      "The equivalence principle alone gives only the Newtonian-like half of the deflection."
+    ],
+    "prediction": "For any experiment: the deflection \u03b1 \u2248 (1+\u03b3)/2 \u00b7 4GM/(c\u00b2b) is about 1.75\u2033 at the solar limb. It falls off as 1/b, so it doubles if b is halved or M is doubled. After plasma refraction is removed, it is the same at every frequency. Measured \u03b3 should agree with 1, consistent with the VLBA result \u03b3 = 0.9998 \u00b1 0.0003.\n\nFor the renderer (numeric checks only; these verify the implementation, not GR):\n- The formula's slope is dy/dx = \u2212(2m/b)(x/\u221a(x\u00b2+b\u00b2) + 1). It tends to 0 as x \u2192 \u2212\u221e and to \u22124m/b as x \u2192 +\u221e.\n- Because the window is finite (\u22127 \u2264 x \u2264 7), the turning between x = \u22127 and x = 7 is somewhat less than the full asymptotic 4m/b. The gap is larger when b is not small compared with 7.\n- At m/b = 0.025, the asymptotic deflection is 0.1 rad.\n- Before the 6\u00d7 display magnification, the deviation from y = b is linear in mass at fixed b.",
+    "falsifier": "Each of the following would contradict the GR weak-field prediction:\n- After corona and plasma refraction are corrected, a measured solar deflection inconsistent with 1.75\u2033 \u00d7 (b_limb/b).\n- A \u03b3 significantly different from 1 beyond the quoted uncertainties, for example outside 0.9998 \u00b1 0.0003 at high confidence in independent VLBI analyses.\n- Deflection that does not scale as M/b.\n- A residual gravitational frequency dependence.\n- Measured bending matching the Newtonian half-value (about 0.87\u2033).\n\nFor the renderer, any of the following means the drawing does not match its stated formula, which is a code error and not a test of physics:\n- The far-field slope differs from \u22124m/b.\n- The deviation fails to scale with m/b.\n- The displayed deviation is not exactly 6\u00d7 the computed one.",
+    "limitations": [
+      "I read arXiv and Einstein Online abstracts and summaries only. I did not obtain full texts: Will's PDF was unreadable, and the Springer, Royal Society, Nature and APS publisher pages refused the connection.",
+      "I did not retrieve the 1919 Dyson\u2013Eddington\u2013Davidson paper, Shapiro's 1964 paper or the Cassini paper. The Cassini value \u03b3 \u2212 1 = (2.1 \u00b1 2.3)\u00d710\u207b\u2075 is a widely quoted figure that has not been checked against the paper here.",
+      "The Lambert & Le Poncin-Lafitte and Titov results come from arXiv search-result summaries, not abstract pages I opened.",
+      "The diagram is a first-order weak-field approximation in 2D coordinates. It does not show the separate time and space contributions, strong-field effects, or spacetime itself.",
+      "The renderer's m/b (up to 0.025) is about 10\u2074 times the Sun's, and the vertical deviation is magnified a further 6\u00d7. Visible bend sizes are not realistic.",
+      "The animation and its numeric checks verify only the implemented formula. They cannot independently confirm general relativity.",
+      "Hipparcos/Gaia astrometry and strong lensing are relevant evidence but were not researched here.",
+      "This record makes no claim of a new discovery. It summarizes established physics and published tests.",
+      "6 reference(s) the researcher could not retrieve were removed from the sources."
+    ],
+    "sources": [
+      {
+        "title": "Einstein Online (Max Planck Institute for Gravitational Physics), Light deflection",
+        "url": "https://www.einstein-online.info/en/spotlight/light_deflection/",
+        "supports": "Soldner's Newtonian value of about 0.9\u2033 versus twice that in GR; 1/d scaling with closest approach; its own images are not to scale."
+      },
+      {
+        "title": "Fomalont, Kopeikin, Lanyi, Benson, ApJ 699:1395 (2009)",
+        "url": "https://arxiv.org/abs/0904.3992",
+        "supports": "VLBA radio deflection gives \u03b3 = 0.9998 \u00b1 0.0003 (68%); 4 sources at 43, 23 and 15 GHz; corona refraction negligible beyond 3\u00b0."
+      },
+      {
+        "title": "Lambert & Le Poncin-Lafitte (2009)",
+        "url": "https://arxiv.org/abs/0903.1615",
+        "supports": "Geodetic VLBI estimate of \u03b3 with precision about 2\u00d710\u207b\u2074, limited by radio-source positions. From a search-result summary only."
+      },
+      {
+        "title": "Titov (2017), Testing of General Relativity with Geodetic VLBI",
+        "url": "https://arxiv.org/abs/1702.06647",
+        "supports": "\u03b3 consistent with 1 at about 0.06%. From a search-result summary only."
+      },
+      {
+        "title": "Eufrasio, Mecholsky, Resca (2018)",
+        "url": "https://arxiv.org/abs/1812.03259",
+        "supports": "For light grazing the Sun, the spatial and time bending are essentially equal and sum to 1.75\u2033."
+      },
+      {
+        "title": "Resca, Eur. J. Phys. 39, 035602 (2018)",
+        "url": "https://arxiv.org/abs/1803.08346",
+        "supports": "Purely spatial Schwarzschild geodesics give unphysical repulsion in the Newtonian limit; the rubber-sheet picture of orbits is mistaken and misleading."
+      },
+      {
+        "title": "Kennefick (2007), Not Only Because of Theory",
+        "url": "https://arxiv.org/abs/0709.0685",
+        "supports": "The 1919 eclipse analysis was not biased toward Einstein; cites a modern plate re-analysis (no figures in the abstract)."
+      },
+      {
+        "title": "Postiglione & De Angelis (2021)",
+        "url": "https://arxiv.org/abs/2102.04156",
+        "supports": "Classroom study of the rubber-sheet analogy with more than 150 high-school students; context on its teaching use and limits."
+      }
+    ]
+  },
+  "scene": {
+    "title": "Why Does Gravity Bend Light?",
+    "subtitle": "A side-by-side view of light passing empty space and passing a heavy mass. The bend is greatly exaggerated so you can see it.",
+    "beats": [
+      {
+        "title": "With no mass, light goes straight",
+        "body": "Watch the pale ray: with nothing nearby, light travels in a perfectly straight line. Keep it in view, because every bent path gets compared with it. The grid is only a ruler for the eye, not a picture of space."
+      },
+      {
+        "title": "Add a mass, and the path turns",
+        "body": "Now a heavy mass sits in the middle, and the ray leaves heading in a new direction. Nothing grabs the light, and it never slows down; it follows the straightest path that warped space and time allow. The bend is enlarged a lot here so you can see it."
+      },
+      {
+        "title": "More mass or a closer pass means more bending",
+        "body": "Rays that pass closer to the mass turn more than rays farther out. A heavier mass would bend all of them more. Telescopes see this near the Sun, where the real bend is tiny but agrees closely with Einstein's prediction."
+      }
+    ],
+    "mass": 0.8,
+    "distance": 1.2,
+    "ray_count": 3,
+    "show_reference": true,
+    "show_labels": true,
+    "accent": "gold",
+    "line_width": 2.5,
+    "duration": 32,
+    "takeaway": "Light isn't pulled off course. Mass warps space and time, and light's straightest path through them curves.",
+    "kind": "light-bending"
+  },
+  "checks": [
+    {
+      "name": "No mass gives a straight ray",
+      "pass": true
+    },
+    {
+      "name": "Doubling mass doubles weak-field deflection",
+      "pass": true
+    },
+    {
+      "name": "Doubling passing distance halves deflection",
+      "pass": true
+    },
+    {
+      "name": "Far-field slope agrees with 4m/b",
+      "pass": true
+    },
+    {
+      "name": "Bending points toward the mass",
+      "pass": true
+    },
+    {
+      "name": "Controls remain in the weak-field regime",
+      "pass": true
+    },
+    {
+      "name": "Subtitles read at most 14.0 characters per second (limit 15)",
+      "pass": true
+    },
+    {
+      "name": "Each subtitle stays up at least 3.1 s (minimum 2.5)",
+      "pass": true
+    },
+    {
+      "name": "Zero-mass control removes the modeled effect",
+      "pass": true
+    },
+    {
+      "name": "Mass control updates the rendered model",
+      "pass": true
+    },
+    {
+      "name": "No-mass step shows zero and restores the chosen mass afterward",
+      "pass": true
+    },
+    {
+      "name": "Seeking reproduces identical canvas pixels",
+      "pass": true
+    },
+    {
+      "name": "Mobile page fits viewport",
+      "pass": true
+    },
+    {
+      "name": "Renderer has no JavaScript errors",
+      "pass": true
+    }
+  ],
+  "provider": "reviewed-agents",
+  "provenance": {
+    "sources_retrieved": true,
+    "retrieved_by": "agent"
+  },
+  "revisions": [
+    {
+      "number": 1,
+      "scene": {
+        "title": "Why Does Gravity Bend Light?",
+        "subtitle": "A side-by-side view of light passing empty space and passing a heavy mass. The bend is greatly exaggerated so you can see it.",
+        "beats": [
+          {
+            "title": "With no mass, light goes straight",
+            "body": "Watch the pale ray: with nothing nearby, light travels in a perfectly straight line. Keep it in view, because every bent path gets compared with it. The grid is only a ruler for the eye, not a picture of space."
+          },
+          {
+            "title": "Add a mass, and the path turns",
+            "body": "Now a heavy mass sits in the middle, and the ray leaves heading in a new direction. Nothing grabs the light, and it never slows down; it follows the straightest path that warped space and time allow. The bend is enlarged a lot here so you can see it."
+          },
+          {
+            "title": "More mass or a closer pass means more bending",
+            "body": "Rays that pass closer to the mass turn more than rays farther out. A heavier mass would bend all of them more. Telescopes see this near the Sun, where the real bend is tiny but agrees closely with Einstein's prediction."
+          }
+        ],
+        "mass": 0.8,
+        "distance": 1.2,
+        "ray_count": 3,
+        "show_reference": true,
+        "show_labels": true,
+        "accent": "gold",
+        "line_width": 2.5,
+        "duration": 32,
+        "takeaway": "Light isn't pulled off course. Mass warps space and time, and light's straightest path through them curves.",
+        "kind": "light-bending"
+      },
+      "checks": [
+        {
+          "name": "No mass gives a straight ray",
+          "pass": true
+        },
+        {
+          "name": "Doubling mass doubles weak-field deflection",
+          "pass": true
+        },
+        {
+          "name": "Doubling passing distance halves deflection",
+          "pass": true
+        },
+        {
+          "name": "Far-field slope agrees with 4m/b",
+          "pass": true
+        },
+        {
+          "name": "Bending points toward the mass",
+          "pass": true
+        },
+        {
+          "name": "Controls remain in the weak-field regime",
+          "pass": true
+        },
+        {
+          "name": "Subtitles read at most 14.0 characters per second (limit 15)",
+          "pass": true
+        },
+        {
+          "name": "Each subtitle stays up at least 3.1 s (minimum 2.5)",
+          "pass": true
+        },
+        {
+          "name": "Zero-mass control removes the modeled effect",
+          "pass": true
+        },
+        {
+          "name": "Mass control updates the rendered model",
+          "pass": true
+        },
+        {
+          "name": "No-mass step shows zero and restores the chosen mass afterward",
+          "pass": true
+        },
+        {
+          "name": "Seeking reproduces identical canvas pixels",
+          "pass": true
+        },
+        {
+          "name": "Mobile page fits viewport",
+          "pass": true
+        },
+        {
+          "name": "Renderer has no JavaScript errors",
+          "pass": true
+        }
+      ],
+      "accepted": true,
+      "physics_review": {
+        "pass": true,
+        "score": 8,
+        "summary": "This works as a teaching approximation of first-order weak-field light bending. I compared the four frames against the stated formula, and the drawing matches it.\n\n**Numbers check out**\n- With mass 0.8, m = 0.02. With b = 1.2, m/b \u2248 0.0167, which is inside the m/b \u2264 0.025 limit.\n- The far-field deflection is 4m/b \u2248 0.0667 rad = 3.82\u00b0. This matches the 'Unmagnified bend, nearest ray 3.82\u00b0' readout.\n- At x = 7 the computed deviation is about 0.47 units. Magnified 6\u00d7, that is about 180 px. The nearest ray's end on screen is about 180 px below where it starts, so the 6\u00d7 magnification looks applied correctly.\n- The three rays end about 180, 137 and 111 px below where they start, a ratio of roughly 1 : 0.76 : 0.62. The rays sit at about b = 1.2, 1.6 and 2.0, so 1/b predicts 1 : 0.75 : 0.6. The 1/b scaling is visible.\n- All rays bend toward the mass.\n\n**Labels and framing are honest**\n- The screen labels the 6\u00d7 magnification and shows the unmagnified angle.\n- Frame 1 shows a 'no mass' placeholder. The sphere is marked 'size not to scale'. The grid is called a ruler, not a picture of space.\n- There are dashed 'without the mass' reference lines.\n- There is no rubber sheet, black hole or horizon.\n\n**Text is accurate and appropriately scoped**\n- Phrases like 'straightest path', 'warped space and time' and 'Nothing grabs the light' are correct and avoid the dent and pull metaphors.\n- The research record sources its quantitative claims and says clearly what was not retrieved.\n- It states that the animation does not independently confirm general relativity.\n\n**Remaining issues, all minor**\n- Beat 2 says the light 'never slows down' with no qualifier. That conflicts with coordinate-speed effects like the Shapiro delay, which the record itself mentions.\n- Beat 1 says to watch 'the pale ray', but the highlighted ray in that frame is the bold one.\n- The angle readout is the far-field value; the bend inside the \u00b17 window is slightly smaller (about 3.79\u00b0).\n- The player shows a 1:00 timeline while the scene duration is 32 s, and the progress segments don't line up with the beat labels.\n\nNone of these is wrong enough to block a pass.",
+        "changes": [
+          "Beat 2: change 'it never slows down' to something like 'anyone measuring it nearby still gets the speed c'. This avoids conflicting with coordinate-speed effects such as the Shapiro delay.",
+          "Beat 1: replace 'Watch the pale ray' with wording that matches the frame, for example 'Watch the bright ray'. Or style the reference ray so it really is the pale one.",
+          "Relabel the readout as 'Far-field bend (unmagnified)'. It shows the asymptotic 4m/b, and the bend inside the \u00b17 window is slightly smaller (3.79\u00b0 here).",
+          "Optionally add a caption note in beat 3 that a flat 2D curve cannot show the separate time and space contributions, which each give about half. The research record recommends this.",
+          "Optionally give the real solar value in beat 3 (about 1.75 arcseconds, roughly 1/2000 of a degree) so viewers can see how much the diagram is exaggerated.",
+          "Make the player timeline (shows 1:00) match the scene duration (32 s), and line up the progress-bar segments with the beat labels. At 0:18 the label already says '3 of 3' but the first segment is not yet full."
+        ],
+        "blocking_issues": []
+      },
+      "visual_review": {
+        "pass": true,
+        "score": 7.2,
+        "summary": "I reviewed six still frames: t=1, t=9, t=11, t=18, the mobile workspace and the mobile overview. I did not watch the animation, so I can't confirm the motion is smooth.\n\n**What works.** The three steps build clearly. At t=1 the rays are straight and there is a dashed \"no mass\" placeholder. At t=9 and t=11 the mass is restored and the rays bend, with dashed straight lines left behind for comparison. At t=18 the nearest ray visibly turns the most. The \"Bending magnified 6\u00d7\" badge, the \"size not to scale\" note and the unmagnified-angle readout are all visible and accurate: 4m/b with m=0.02 and b=1.2 gives 0.0667 rad, which is 3.82\u00b0. The wording avoids the rubber-sheet idea, the pulling-ball idea and the idea that light slows down. The claims stay modest. The cause-and-effect for \"a closer pass bends more\" is easy to see.\n\n**Problems.**\n1. Every captured frame shows the whole beat body at once (3\u20134 lines on desktop, about 6 on mobile), not one sentence at a time. That is too much to read while also watching the rays.\n2. Beat 1 tells the viewer to \"watch the pale ray\", but the ray that stands out is the bold one closest to the mass. The pale rays are the faint outer ones, so the instruction points at the wrong thing.\n3. Beat 3 says \"A heavier mass would bend all of them more\", but the t=18 frame still has mass at 0.8, so the viewer only reads this and never sees it. It should tell the viewer to drag the Mass slider.\n4. The subtitle calls the view \"side-by-side\", but the comparison is actually drawn on top of itself: dashed and solid lines in the same panel.\n5. On mobile the stage is squashed. The LIGHT label and the \"dashed: without the mass\" label overlap the rays, and the three rays crowd together.\n6. On desktop the rays and mass sit in the upper half of the stage, leaving the lower half mostly empty.\n7. The \"with gravity\" end label slightly contradicts \"Nothing grabs the light\".\n\nNone of these blocks the scene, but the subtitle density and the mobile label collisions should be fixed before publication.",
+        "changes": [
+          "beats[0].body: replace with short sentences that point at the bold ray, e.g. \"With no mass nearby, light goes straight. Watch the bold ray closest to the center. We will compare every bent path to it. The dots are just a ruler.\"",
+          "beats[1].body: break the second sentence into separate short sentences and keep the 'not slowing' claim local, e.g. \"Now add a heavy mass. The ray leaves in a new direction. Nothing grabs it. Light always moves at the same local speed. It follows the straightest path warped space and time allow. The bend here is enlarged a lot.\"",
+          "beats[2].body: make it something the viewer does, e.g. \"The closest ray turns the most. Drag Mass higher and every ray bends more. Near the Sun the real bend is tiny, about 1/2000 of a degree. Telescopes measure it, and it matches Einstein.\"",
+          "subtitle: replace 'A side-by-side view' with 'Light with and without a heavy mass, drawn on top of each other. The bend is greatly exaggerated so you can see it.'",
+          "takeaway: keep it, but rename the 'with gravity' end label to 'with the mass' if label text can be changed, so it doesn't suggest a pulling force.",
+          "show_labels / ray_count: on narrow viewports, reduce ray_count to 2 or move the LIGHT and 'dashed: without the mass' labels off the ray bundle so they stop overlapping on mobile.",
+          "distance: think about raising it slightly (e.g. 1.4\u20131.5) so the three rays spread farther apart on mobile while the nearest-ray bend stays clearly visible.",
+          "duration: the scene sets 32 but the player shows 1:00. Make these match so the subtitle timing check refers to the timeline viewers actually see."
+        ],
+        "blocking_issues": []
+      },
+      "frames": [
+        "published/20261027T154449-550db489/revision-1-0.png",
+        "published/20261027T154449-550db489/revision-1-1.png",
+        "published/20261027T154449-550db489/revision-1-2.png",
+        "published/20261027T154449-550db489/revision-1-3.png",
+        "published/20261027T154449-550db489/revision-1-4.png",
+        "published/20261027T154449-550db489/revision-1-5.png"
+      ]
+    }
+  ]
+}
