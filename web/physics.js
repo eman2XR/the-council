@@ -84,7 +84,10 @@
       const g=.8*a, T=2+2*(b-1), ref=.8*T*T/8, best=g*T*T/8;
       const gain=apex=>(2/3)*g*apex*T-8*apex*apex/(3*T);
       const height=(apex,t)=>4*apex*t*(T-t)/(T*T);
-      return {g,T,ref,best,gain,height};
+      // The two parts of gain up to time t: height bonus g*integral(h), speed cost integral(v^2/2).
+      const bonusUntil=(apex,t)=>g*4*apex/(T*T)*(T*t*t/2-t*t*t/3);
+      const costUntil=(apex,t)=>8*apex*apex/Math.pow(T,4)*(T**3-Math.pow(T-2*t,3))/6;
+      return {g,T,ref,best,gain,height,bonusUntil,costUntil};
     },
     fallGain(a,b){const f=this.fall(a,b);return f.gain(f.best)/f.T;},
     fallChecks() {
@@ -96,6 +99,8 @@
         'Going higher or lower than free fall gains less':f.gain(f.best)>f.gain(f.best*.7)&&f.gain(f.best)>f.gain(f.best*1.3),
         'Time gained equals g²T²/24':near(this.fallGain(1,1.6),f.g*f.g*f.T*f.T/24,1e-12),
         'Stronger gravity throws the best path higher':this.fall(1,1.6).best>this.fall(.5,1.6).best,
+        'Height bonus minus speed cost over the flight equals the gain':near(f.bonusUntil(f.best*1.3,f.T)-f.costUntil(f.best*1.3,f.T),f.gain(f.best*1.3),1e-12),
+        'Throwing twice as high as free fall gains nothing':near(f.gain(2*f.best),0,1e-12),
         'Both paths start and end at the same events':near(f.height(f.best,0),0)&&near(f.height(f.best,f.T),0),
       }).map(([name,pass])=>({name,pass}));
     },

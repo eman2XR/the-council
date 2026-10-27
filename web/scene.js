@@ -385,34 +385,45 @@ function drawWell(ctx,w,h,spec,st){
  }
 }
 function drawFall(ctx,w,h,spec,st){
- const accent=ACCENT[spec.accent]||ACCENT.blue, F=Physics.fall(st.mass,st.distance), small=w<520;
- const x0=w*.08, x1=w*.92, ground=h*.8, topY=h*(st.labels&&small?.26:.16), Hs=Math.max(F.ref*2,1e-9);
- const X=t=>x0+t/F.T*(x1-x0), Y=hh=>ground-hh/Hs*(ground-topY);
- // Clocks run slower lower down: warmer shading near the ground (schematic, exaggerated).
- const shade=ctx.createLinearGradient(0,ground,0,topY);shade.addColorStop(0,`rgba(245,158,66,${.22*Math.min(1,F.g/.8)})`);shade.addColorStop(1,'rgba(245,158,66,0)');
- ctx.fillStyle=shade;ctx.fillRect(x0,topY,x1-x0,ground-topY);
- trace(ctx,[[x0,ground],[x1,ground]]);ctx.strokeStyle='rgba(20,23,28,.5)';ctx.lineWidth=1.6;ctx.stroke();
- const path=apex=>Array.from({length:121},(_,i)=>{const t=F.T*i/120;return [X(t),Y(F.height(apex,t))];});
- const candidates=[.5,1.5,2].map(m=>m*F.ref);
- for(const apex of candidates){trace(ctx,path(apex));ctx.setLineDash([4,5]);ctx.strokeStyle='rgba(20,23,28,.3)';ctx.lineWidth=1.2;ctx.stroke();ctx.setLineDash([]);
-  if(st.labels){const g=F.gain(apex);text(ctx,`${g>=0?'+':''}${g.toFixed(2)}`,X(F.T/2),Y(apex)-10,{align:'center',size:10,color:'rgba(20,23,28,.55)'});}}
- if(F.best>1e-9){trace(ctx,path(F.best));ctx.strokeStyle=accent;ctx.lineWidth=spec.line_width||2.6;ctx.lineCap='round';ctx.stroke();}
- // Two clocks leave together and meet again: one held at the ground, one on the best path.
- const u=((st.t*.16)%1.15+1.15)%1.15, t=Math.min(1,u)*F.T;
- const held=[X(t),ground], ball=[X(t),Y(F.height(F.best,t))];
- for(const [p,c] of [[held,'#14171c'],[ball,accent]]){const glow=ctx.createRadialGradient(p[0],p[1],0,p[0],p[1],15);glow.addColorStop(0,rgba(c,.3));glow.addColorStop(1,rgba(c,0));ctx.fillStyle=glow;ctx.fillRect(p[0]-15,p[1]-15,30,30);
-  ctx.beginPath();ctx.arc(p[0],p[1],5.5,0,TAU);ctx.fillStyle=c;ctx.fill();}
- if(st.labels){
-  const size=small?10:11, frac=t/F.T, gained=(2/3)*F.g*F.best*F.T*(frac*frac*(3-2*frac))-8*F.best*F.best/(3*F.T)*(1-Math.pow(1-2*frac,3))/2;
-  text(ctx,'height ↑',x0,topY-14,{size:10});text(ctx,'time →',x1,ground+18,{align:'right',size:10});
-  text(ctx,'clocks run slower lower down',x0,ground+18,{size:10,color:'rgba(180,83,15,.9)'});
-  pill(ctx,'HELD',held[0],ground+18,{align:'center',size,weight:600,spacing:'1px'});
-  if(F.best>1e-9){
-   pill(ctx,`THROWN  ${gained>=0?'+':''}${gained.toFixed(2)}`,ball[0]+14,ball[1]-16,{size,weight:600,color:accent,spacing:'.5px'});
-   text(ctx,`+${F.gain(F.best).toFixed(2)} most time: the path a ball really takes`,X(F.T*.22)-8,Y(F.height(F.best,F.T*.22))-6,{align:'right',size:small?10:11,weight:600,color:accent});
-  }else text(ctx,'no gravity: staying put keeps the most time',X(F.T/2),ground-30,{align:'center',size});
-  text(ctx,'dashed: other paths between the same two moments, with their extra time',x0,h-12,{size:small?9:10});
- }
+ const accent=ACCENT[spec.accent]||ACCENT.blue, F=Physics.fall(st.mass,st.distance), small=w<520, warm='#c2410c';
+ // Height against time, with a side view of the same throw at the left edge of the diagram.
+ const col=small?w*.1:w*.07, x0=small?w*.2:w*.13, x1=small?w*.94:w*.5, ground=h*(small?.5:.76), topY=small?96:70, scaleA=Math.max(F.best,F.ref)*2;
+ const X=t=>x0+t/F.T*(x1-x0), Y=hh=>ground-hh/scaleA*(ground-topY);
+ const shade=ctx.createLinearGradient(0,ground,0,topY);shade.addColorStop(0,`rgba(245,158,66,${.24*Math.min(1,F.g/.8)})`);shade.addColorStop(1,'rgba(245,158,66,0)');
+ ctx.fillStyle=shade;ctx.fillRect(col-18,topY,x1-col+18,ground-topY);
+ trace(ctx,[[col-18,ground],[x1,ground]]);ctx.strokeStyle='rgba(20,23,28,.5)';ctx.lineWidth=1.6;ctx.stroke();
+ // Candidate paths between the same two moments: stay put, a low throw, the real throw, a high throw.
+ const unit=F.best>1e-9?F.best:F.ref, paths=[['Held at the ground',0,'#14171c'],['A low throw',.45*unit,'rgba(20,23,28,.4)'],[F.best>1e-9?'The real throw':'A throw',unit,accent],['A high throw',1.75*unit,'rgba(20,23,28,.4)']];
+ const best=F.best>1e-9?2:0, u=Math.min(1,(st.since??st.t)*.18), t=u*F.T;
+ const curve=apex=>Array.from({length:121},(_,i)=>{const s=F.T*i/120;return [X(s),Y(F.height(apex,s))];});
+ paths.forEach(([,apex,c],i)=>{if(!apex)return;trace(ctx,curve(apex));if(i!==2)ctx.setLineDash([4,5]);ctx.strokeStyle=c;ctx.lineWidth=i===2?2.6:1.3;ctx.lineCap='round';ctx.stroke();ctx.setLineDash([]);});
+ for(const [i,c] of [[0,'#14171c'],[2,accent]]){const p=[X(t),Y(F.height(paths[i][1],t))];ctx.beginPath();ctx.arc(p[0],p[1],5.5,0,TAU);ctx.fillStyle=c;ctx.fill();ctx.beginPath();ctx.arc(p[0],p[1],2,0,TAU);ctx.fillStyle='#fff';ctx.fill();}
+ // The side view: the ball goes straight up and comes back to the hand.
+ trace(ctx,[[col,ground],[col,topY]]);ctx.setLineDash([2,4]);ctx.strokeStyle='rgba(20,23,28,.15)';ctx.lineWidth=1;ctx.stroke();ctx.setLineDash([]);
+ const by=Y(F.height(paths[2][1],t));ctx.beginPath();ctx.arc(col,by,7,0,TAU);ctx.fillStyle=accent;ctx.fill();
+ ctx.beginPath();ctx.ellipse(col,ground+5,11,5,0,0,TAU);ctx.fillStyle='rgba(122,84,52,.55)';ctx.fill();
+ if(!st.labels)return;
+ const size=small?10:11;
+ text(ctx,'height ↑',x0,topY-16,{size:10});text(ctx,'time →',x1,ground+32,{align:'right',size:10});
+ text(ctx,'leave',X(0),ground+16,{align:'center',size,weight:600,color:'rgba(20,23,28,.75)'});text(ctx,'meet again',X(F.T),ground+16,{align:'right',size,weight:600,color:'rgba(20,23,28,.75)'});
+ text(ctx,'side view',col,ground+28,{align:'center',size:9,color:'rgba(20,23,28,.55)'});
+ if(F.g>1e-4)text(ctx,'clocks run slower down here',X(F.T*.5),ground-12,{align:'center',size:10,color:'rgba(180,83,15,.9)'});
+ // Scoreboard: each path's clock compared with the held one, built up as the clocks travel.
+ const px=small?w*.06:w*.56, pr=small?w*.94:w*.94, py=small?h*.6:h*.18, lh=small?17:24, mid=small?w*.58:w*.8, half=Math.min((pr-mid)*.9,mid-px-(small?88:120));
+ text(ctx,small?'Each clock measures its path':'Each clock measures its path. With gravity, two effects:',px,py,{size:small?12:16,weight:700,color:'#14171c'});
+ text(ctx,'higher up: clocks run faster (gain)',px,py+lh,{size:small?10:13,weight:600,color:warm});
+ text(ctx,'moving: clocks run slower (loss)',px,py+lh*(small?1.9:1.8),{size:small?10:13,weight:600,color:accent});
+ const parts=paths.map(([,apex])=>[F.bonusUntil(apex,t),F.costUntil(apex,t)]), full=Math.max(1e-9,...paths.map(([,a])=>Math.max(F.bonusUntil(a,F.T),F.costUntil(a,F.T))));
+ const y0=py+lh*(small?3.1:3.2), rh=small?22:34;
+ trace(ctx,[[mid,y0-rh*.5],[mid,y0+rh*(paths.length-.5)]]);ctx.strokeStyle='rgba(20,23,28,.25)';ctx.lineWidth=1;ctx.stroke();
+ paths.forEach(([name],i)=>{const y=y0+i*rh,[gain,loss]=parts[i],net=gain-loss,isBest=i===best&&u>=1;
+  if(isBest){ctx.fillStyle=rgba(accent,.08);ctx.beginPath();ctx.roundRect(px-8,y-rh*.45,pr-px+16,rh*.9,8);ctx.fill();}
+  text(ctx,name,px,y,{size:small?10:12,weight:isBest?700:500,color:i===2?accent:'rgba(20,23,28,.75)'});
+  const bh=small?6:8;ctx.fillStyle=rgba(warm,.75);ctx.fillRect(mid,y-bh-1,gain/full*half,bh);ctx.fillStyle=rgba(accent,.6);ctx.fillRect(mid-loss/full*half,y+1,loss/full*half,bh);
+  const nx=mid+net/full*half;trace(ctx,[[nx,y-bh-4],[nx,y+bh+4]]);ctx.strokeStyle='#14171c';ctx.lineWidth=2.2;ctx.stroke();});
+ const ny=y0+rh*(paths.length-.2)+6;
+ text(ctx,'loss ←',mid-6,ny,{align:'right',size:9,color:'rgba(20,23,28,.5)'});text(ctx,'→ gain   | = total',mid+6,ny,{size:9,color:'rgba(20,23,28,.5)'});
+ if(u>=1)pill(ctx,F.g>1e-4?'The path that keeps the most time is the arc a real ball follows':'No gravity: staying put keeps the most time, as for the twins',small?w/2:(px+pr)/2,small?h*.965:ny+lh*1.4,{align:'center',size:small?10:12,weight:600});
 }
 
 let gapBuffer=null;
