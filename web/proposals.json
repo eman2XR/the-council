@@ -1,0 +1,40 @@
+{
+  "updated": "2026-10-27T16:08:46.326998+00:00",
+  "goal": "The Council is an autonomous visual physics research lab with humans in the loop. Its goal is to build intuitive understanding of physics through honest, interactive, beautiful visuals, publishing one reviewed investigation a day, and over time to work toward clearly scoped investigations of open problems in physics. Agents propose, research, render, review and revise; the owner steers through picks, questions, feedback and approvals. Scientific honesty, beginner clarity and low cost matter more than volume.",
+  "proposals": [
+    {
+      "id": "P-20261027-3",
+      "status": "open",
+      "created": "2026-10-27T16:08:46.326900+00:00",
+      "title": "Predict-first beat built from standard wrong answers",
+      "area": "curriculum",
+      "problem": "Investigations explain the right answer but don't ask the beginner to commit to a guess first. Without that, an existing misconception may never come to the surface. 'Common wrong answers' are currently written by the model, with nothing to anchor them.",
+      "proposal": "Add an optional prediction field to the scene schema: one question and two or three choices, exactly one of them correct. Show it as a tap-to-answer card before the reveal chapter. The renderer reveals the result and then names which wrong intuition each wrong choice reflects. Where a PhysPort concept test covers the topic, for example force and motion for falling-time, the reviewer must check that the wrong choices match documented misconceptions and record the citation. Without such a source, the card is labelled 'author's guess'. No answers are stored on the site, so it stays static.",
+      "benefit": "Predicting before seeing an answer, with implicit scaffolding, is a well-established way to build intuition, and it fits PhET's design approach. Sourcing the wrong answers keeps the misconception claims honest.",
+      "effort": "medium",
+      "risk": "PhysPort pages were not opened today, so check coverage and licensing before relying on it. Concept inventories cover mechanics well but quantum and relativity topics less well. A poorly written question can plant a new misconception.",
+      "evidence": [
+        "https://phet.colorado.edu/en/research",
+        "https://link.aps.org/doi/10.1103/PhysRevSTPER.6.020117",
+        "https://www.physport.org/"
+      ]
+    },
+    {
+      "id": "P-20261027-4",
+      "status": "open",
+      "created": "2026-10-27T16:08:46.326982+00:00",
+      "title": "Respect reduced motion and add a real pause control",
+      "area": "visuals",
+      "problem": "The hero stage runs looping canvas animations with timed subtitles. WCAG 2.2 SC 2.2.2 (Level A) requires a pause, stop or hide control for motion lasting more than 5 seconds. The renderers may also ignore the user's reduced-motion setting.",
+      "proposal": "Give the hero stage and the card previews a single shared playback controller. It provides a visible pause/play button, also on the spacebar, which pauses subtitles too, and arrow-key chapter stepping. It reads matchMedia('(prefers-reduced-motion: reduce)'), and when that is set it shows each chapter's key frame instead of the loop and autoplays nothing, including card previews. Add one headless capture with reduced motion emulated to the existing render check.",
+      "benefit": "Meets a Level A requirement, helps beginners who need time to read, and lets learners hold a frame while they move the sliders. Doing it in one controller keeps the engines simple.",
+      "effort": "small",
+      "risk": "Engines need a deterministic 'key frame' for each chapter, so a few may need small changes. The WCAG and MDN details are recalled from memory and should be checked.",
+      "evidence": [
+        "https://www.w3.org/TR/WCAG22/",
+        "https://developer.mozilla.org/en-US/docs/Web/CSS/@media/prefers-reduced-motion",
+        "https://www.w3.org/WAI/WCAG22/Understanding/animation-from-interactions.html"
+      ]
+    }
+  ]
+}
