@@ -122,8 +122,8 @@ No new-discovery claims.'''+COMMON
 
 TWIN_NOTES = '''TWIN TRIP. Special relativity, exact, in years and light-years (light speed 1), drawn as a concrete scene:
 Earth on the left, a destination star on the right, and a rocket that flies out at constant speed v, turns around
-instantly, and flies back. Below, each twin has a clock (one turn per year of that twin's own time) and a row of birthday
-dots that fill in as their own years pass; at the reunion a banner states how many fewer birthdays the traveller had.
+instantly, and flies back. Below, each twin has an age bar that grows with that twin's own time, with one notch per birthday
+and a small clock beside it (one turn per year); at the reunion one line states how many years younger the traveller is.
 Field mass sets v = 0.9*mass (UI "Speed", shown as a percentage of light speed; 0 keeps the rocket on Earth); field
 distance sets the turnaround at T = 1.6*distance home years (UI "Trip"). The star's distance v*T light-years is labelled.
 The readout is the real ageing gap 1 - 1/gamma, independent of trip length. Supported questions: why a moving clock

@@ -493,27 +493,22 @@ function drawTwinTrip(ctx,w,h,spec,st){
  drawEarth(ctx,xE,yTrip,r);drawStar(ctx,xS,yTrip,r*.75,v>.001?1:.35);
  const rx=v>.001?xE+r*1.9+(xS-xE-r*3.7)*leg:xE+r*1.9, ry=yTrip-(v>.001?0:r*1.2);
  drawRocket(ctx,rx,ry,r*.75,tc<=T?1:-1,moving,st.t);
- // Each twin carries a clock: one turn per year of that twin's own time.
- const cr=Math.min(w*.07,h*.1), cy=h*(small?.56:.52), homeX=small?w*.27:w*.3, travX=small?w*.73:w*.7;
- clockDial(ctx,homeX,cy,cr,tc*TAU,'#14171c');clockDial(ctx,travX,cy,cr,(tc/g)*TAU,accent);
- // Birthdays so far: one dot per year each twin has lived.
- const rows=[[tc,'#14171c',h*.8,'HOME'],[tc/g,accent,h*.9,'TRAVELLER']], gap=Math.min(30,(w*.62)/8), x0=small?w*.36:w*.32;
- for(const [years,color,y,name] of rows){
-  for(let i=1;i<=Math.floor(H+1e-9);i++){const done=i<=years+1e-9, x=x0+(i-1)*gap;ctx.beginPath();ctx.arc(x,y,done?6:4,0,TAU);ctx.fillStyle=done?color:'rgba(20,23,28,.16)';ctx.fill();
-   if(done&&years-i<.25){ctx.beginPath();ctx.arc(x,y,10+16*(years-i),0,TAU);ctx.strokeStyle=rgba(color==='#14171c'?'#14171c':accent,.35*(1-(years-i)*4));ctx.lineWidth=2;ctx.stroke();}}
-  if(st.labels)text(ctx,name,x0-16,y,{align:'right',size:small?9:10,weight:600,spacing:'1px',color:color==='#14171c'?'rgba(20,23,28,.7)':accent});
+ // Ages: two bars that grow with each twin's own time; the gap between them is the whole story.
+ const x0=w*(small?.4:.3), x1=w*(small?.82:.74), full=x1-x0, bh=small?14:18, rows=[[tc,'#14171c','Home twin',h*(small?.66:.62)],[tc/g,accent,'Traveller',h*(small?.8:.76)]];
+ // A small clock (one turn per year of that twin's own time) and one notch per birthday.
+ const cr=bh*.95;
+ for(const [years,color,name,y] of rows){
+  ctx.fillStyle='rgba(20,23,28,.07)';ctx.beginPath();ctx.roundRect(x0,y-bh/2,full,bh,bh/2);ctx.fill();
+  if(years>0){ctx.fillStyle=color;ctx.beginPath();ctx.roundRect(x0,y-bh/2,Math.max(bh,full*years/H),bh,bh/2);ctx.fill();}
+  for(let i=1;i<H-1e-9;i++){const x=x0+full*i/H;trace(ctx,[[x,y-bh/2],[x,y+bh/2]]);ctx.strokeStyle=i<=years?'rgba(255,255,255,.85)':'rgba(20,23,28,.12)';ctx.lineWidth=1.5;ctx.stroke();}
+  clockDial(ctx,x0-cr-12,y,cr,years*TAU,color);
+  if(st.labels){text(ctx,name,x0-2*cr-24,y,{align:'right',size:small?11:13,weight:600,color:color==='#14171c'?'rgba(20,23,28,.8)':accent});
+   text(ctx,`${years.toFixed(1)} yr`,x0+Math.max(bh,full*years/H)+10,y,{size:small?11:12,weight:600,color:'rgba(20,23,28,.7)'});}
  }
  if(st.labels){
-  const size=small?11:12;
   text(ctx,'EARTH',xE,yTrip+r*1.9,{align:'center',size:10,weight:600,spacing:'1.5px'});
   text(ctx,'STAR',xS,yTrip+r*1.9,{align:'center',size:10,weight:600,spacing:'1.5px'});
-  if(v>.001)text(ctx,`${(v*T).toFixed(1)} light-years away`,Math.min(xS,w-70),yTrip+r*1.9+14,{align:'center',size:10});
-  pill(ctx,v>.001?`${Math.round(v*100)}% of light speed`:'rocket stays on Earth',Math.max(rx,xE+r*3.4),ry-r*1.7,{align:'center',size:10,weight:600,color:accent});
-  text(ctx,`Home twin  ${tc.toFixed(1)} years`,homeX,cy+cr+20,{align:'center',size,weight:600,color:'rgba(20,23,28,.8)'});
-  text(ctx,`Traveller  ${(tc/g).toFixed(1)} years`,travX,cy+cr+20,{align:'center',size,weight:600,color:accent});
-  text(ctx,'BIRTHDAYS',x0-16,h*.8-22,{align:'right',size:9,weight:600,spacing:'1.5px',color:'rgba(20,23,28,.5)'});
-  if(tc>=H-1e-6&&v>.001){const fewer=Math.floor(H+1e-9)-Math.floor(H/g+1e-9), msg=`Together again: ${fewer} fewer birthday${fewer===1?'':'s'} for the traveller`;
-   if(small)pill(ctx,msg,w/2,h*.97,{align:'center',size:10,weight:600});else pill(ctx,msg,w*.79,h*.85,{align:'center',size,weight:600});}
+  if(tc>=H-1e-6&&v>.001)pill(ctx,`Together again: the traveller is ${(H-H/g).toFixed(1)} years younger`,w/2,h*(small?.93:.9),{align:'center',size:small?11:13,weight:600});
  }
 }
 
@@ -566,7 +561,7 @@ const ENGINES={
   fa:a=>Math.round(Physics.speed(a)*100)+'% of light',fb:b=>Physics.turnaround(b).toFixed(1)+' years out',
   measure:['Traveller comes home younger by',a=>(Physics.agingGap(a)*100).toFixed(1)+'%'],scale:'',demoEnd:()=>2.5,
   disclosure:'Ages and speeds are exact special relativity; the rocket turns around instantly, and the drawing is not to scale.',
-  try:'Set Speed to zero: do the twins still agree? Speed up, then make the trip longer and count the birthdays.',aria:'Twins: one stays on Earth while the other flies to a star and back. Each has a clock and a row of birthdays.'},
+  try:'Set Speed to zero: do the twins still agree? Speed up, then make the trip longer and compare the two bars.',aria:'Twins: one stays on Earth while the other flies to a star and back. Two bars show how much each twin has aged.'},
 };
 const engineOf=spec=>ENGINES[spec?.kind]||ENGINES['light-bending'];
 
@@ -618,7 +613,7 @@ function captions(){
  else if(ended&&mode!=='playing'){const c=spec.controls||'both', e=engineOf(spec);chapter='The idea';line=spec.takeaway||'';
   hint=c==='none'?'':c==='both'?'Now try it: '+e.try:`Now try it: move ${(c==='first'?e.a:e.b)[0]} and watch “${e.measure[0]}”.`;}
  else{
-  const beat=spec.beats[stage];chapter=`${stage+1} of ${spec.beats.length} · ${beat.title}`;line=beat.body;
+  const beat=spec.beats[stage];chapter='';line=beat.body;
   {
    // Show the latest sentence that has started; it stays up through the pause that follows.
    const lines=timeline.chapters[stage].lines;line=(lines.filter(l=>l.start<=time).at(-1)||lines[0]).text;
@@ -626,7 +621,7 @@ function captions(){
  }
  $('beat-title').textContent=chapter;
  $('try-hint').textContent=hint;
- const body=$('beat-body'), key=chapter+'|'+line;
+ const body=$('beat-body'), key=stage+'|'+chapter+'|'+line;
  if(key!==captionKey){captionKey=key;body.textContent=line;body.classList.remove('enter');if(mode==='playing'){void body.offsetWidth;body.classList.add('enter');}}
 }
 function transport(){
