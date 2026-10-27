@@ -1,5 +1,9 @@
 # The Council
 
+**[Open the live website →](https://eman2xr.github.io/the-council/)**
+
+The website currently hosts an interactive demo. Daily autonomous investigations and automatic publication of new guides are not enabled yet.
+
 An open-source visual research lab. Agents investigate an idea, design an intuitive explanation, inspect actual rendered frames, and revise it. The first milestone explains **why gravity bends light** through an interactive introduction to general relativity.
 
 The original persona debate CLI remains in `council.py`. The new visual lab is in `lab/` and `web/`.
