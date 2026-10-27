@@ -1,0 +1,312 @@
+{
+  "id": "20261027T160039-39e9e79b",
+  "status": "reviewed",
+  "question": "Why does a moving clock tick slowly?",
+  "topic": "twin-trip",
+  "created": "2026-10-27T16:00:39.999803+00:00",
+  "research": {
+    "claim": "A moving clock is not broken and does not run slowly for the person carrying it. Each clock ticks one second per second for its owner. But take a frame where the clock moves at speed v. Measured with that frame's synchronized clocks, the moving clock's ticks are spread out by the factor gamma = 1/sqrt(1 - v^2/c^2). This follows from two assumptions: physics is the same in every inertial frame, and every inertial observer measures the same light speed c. Between two inertial frames the effect is mutual. It only becomes a fixed, agreed age difference when the clocks meet again. That is the twin trip: the twin who turns around has lived less of their own time, and the gap is 1 - 1/gamma of the stay-at-home twin's time. Experiments with fast ions, muons and atomic clocks confirm this, in one case to 2.3 parts per billion.",
+    "explanation": "The scene uses years and light-years, so light speed is 1.\n\nStart with a light clock: a light pulse bouncing between two mirrors, one tick per round trip. In a frame where this clock moves sideways at speed v, the pulse has to travel a longer, slanted path. It still moves at the same speed c, so each tick takes longer in that frame: delta_t = gamma * delta_tau. The light clock is only a way to see the result. By the first assumption, every clock riding along must slow by the same factor: atomic, radioactive decay or biological. If they didn't, comparing them would reveal which frame was 'really' moving. So the slowing belongs to time in that frame, not to how the clock is built. No force acts on the clock.\n\nWhy doesn't this lead to a contradiction? Each inertial observer measures the other's clock as slow. Both are consistent because the two frames disagree about which distant events happen at the same moment.\n\nThe twin trip settles the question by bringing the clocks back together:\n- The Earth twin stays in one inertial frame.\n- The traveller flies out at v, turns around instantly (an idealization), and flies back. The trip changes the traveller's frame.\n- Measured in the Earth frame, the traveller's clock runs at 1/gamma of the Earth rate the whole time.\n- After a total Earth time of 2T, the traveller has aged 2T/gamma. They had fewer birthdays by 2T(1 - 1/gamma).\n\nThe traveller does not feel time slow. Their clock, heartbeat and birthdays seem normal to them. Fewer of their own years simply passed along their path. The age gap as a fraction of Earth time, 1 - 1/gamma, depends only on speed, not on trip length. A longer trip makes the number of missed birthdays grow, but not the percentage.\n\nAs v approaches 1, gamma grows without limit (gamma \u2248 2.29 at 0.9, 7.09 at 0.99, 22.4 at 0.999). This is one way to see that no object can be pushed to or past light speed.\n\nRecommended controls: the first (Speed) slider only. Moving the speed shows the gap growing faster and faster near light speed, which playback alone does not convey. Playback already sweeps the Trip slider, and it leaves the percentage unchanged, so a second slider adds little.",
+    "assumptions": [
+      "Special relativity in flat spacetime, using inertial frames. Gravity is not included.",
+      "Light speed is the same in every inertial frame, and the laws of physics are the same in every inertial frame.",
+      "'Ticks slowly' means rates compared using one frame's synchronized clocks, or by bringing the clocks back together. It does not mean what an observer sees through a telescope, which is dominated by light travel delay and the ordinary Doppler effect.",
+      "Clock hypothesis: an ideal clock's rate depends only on its speed at that instant, not on its acceleration. This is supported by storage-ring muons, whose source was seen only in a reference list.",
+      "The twin trip has a constant cruise speed v and an instant turnaround. Acceleration is not modelled.",
+      "Scene mapping: v = 0.9*mass (light speed 1); the turnaround comes at T = 1.6*distance Earth years; the star sits v*T light-years away; the readout is 1 - 1/gamma.",
+      "'Physical assumption 4' and 'misleading metaphors 2-6' are the researcher's own physics analysis, not taken from a retrieved source."
+    ],
+    "prediction": "Scene examples:\n- Speed 90% (mass = 1) and Trip distance = 1: T = 1.6 Earth years, so the round trip takes 3.2 Earth years. The star is 1.44 light-years away. gamma \u2248 2.294, and the traveller ages 3.2 \u00d7 0.436 \u2248 1.39 years. The Earth twin passes 3 birthdays and the traveller 1, so the banner shows 2 fewer birthdays. The readout shows 1 - 1/gamma \u2248 56.4%.\n- Same speed with Trip at its maximum 2.5: T = 4, so 8 Earth years pass. The star is 3.6 light-years away. The traveller ages \u2248 3.49 years, so 8 birthdays against 3: 5 fewer. The readout is still \u2248 56.4%.\n- Speed 50%: the readout is \u2248 13.4%.\n- Speed 0: the rocket stays on Earth and the gap is 0.\n\nLaboratory examples:\n- Muons in a storage ring with gamma \u2248 29.3 should live about 29.3 times longer than at rest, which is about 64.4 microseconds.\n- Ions at about 0.338c should show the second-order Doppler and time-dilation relation predicted by gamma.",
+    "falsifier": "Any of these results would count against the account:\n- A clock flown away and back in an inertial-frame set-up returns with no deficit.\n- A clock returns with a deficit that differs from 2T(1 - 1/gamma) by more than the experimental uncertainty. Gravity must be accounted for separately.\n- Different kinds of co-moving clocks (atomic, decay-based) slow by different factors.\n- Storage-ring muon lifetimes are not stretched by gamma.\n- Storage-ring Ives-Stilwell measurements depart from the relativistic time-dilation-versus-speed relation beyond their quoted precision (2.3 ppb at about 0.338c).",
+    "limitations": [
+      "The researcher had no search engine. A proxy blocked most primary journals and university hosts, including the Einstein translations. None of the sources reached is a university page.",
+      "Only the arXiv abstracts and the NIST press release were actually retrieved. Several papers are cited from a Wikipedia reference list only (Bailey 1977, Rossi & Hall 1941, Ives & Stilwell 1938, Reinhardt 2007, the Chou 2010 paper itself, Hornof 2025). Treat these as unverified.",
+      "The derivation summary came from Wikipedia's 'Time dilation' article, but the notes give no URL for it, so it is not listed as a source.",
+      "The Hafele-Keating figures (eastward -59 \u00b1 10 ns, westward +273 \u00b1 7 ns) come from Wikipedia only. They also combine motion and gravity effects, so they do not illustrate pure motion time dilation.",
+      "The instant turnaround is an idealization. The model includes no acceleration physics, gravitational time dilation, or Doppler 'what you would see' view.",
+      "The drawings are illustrations, not to scale.",
+      "This record summarizes established physics. It makes no claim of a new discovery."
+    ],
+    "sources": [
+      {
+        "title": "Botermann et al., Test of Time Dilation Using Stored Li+ Ions as Clocks at Relativistic Speed, PRL 113, 120405 (2014) [retrieved abstract]",
+        "url": "https://arxiv.org/abs/1409.7951",
+        "supports": "Ions at about 0.338c in the GSI ESR storage ring. The relativistic relation between time dilation and speed held to 2.3 ppb."
+      },
+      {
+        "title": "Gwinner et al., review of storage-ring Ives-Stilwell tests (2013) [retrieved abstract]",
+        "url": "https://arxiv.org/abs/1309.0549",
+        "supports": "How first-order Doppler shifts are cancelled in these time-dilation tests, and known pitfalls."
+      },
+      {
+        "title": "NIST press release: pair of aluminum atomic clocks reveal Einstein's relativity at a personal scale (2010) [retrieved]",
+        "url": "https://www.nist.gov/news-events/news/2010/09/nist-pair-aluminum-atomic-clocks-reveal-einsteins-relativity-personal-scale",
+        "supports": "An Al+ clock moving at a few m/s ticked slower than one at rest. Raising a clock about 1/3 m made it run faster, which is the separate gravity effect."
+      },
+      {
+        "title": "Chou et al., Optical Clocks and Relativity, Science 329, 1630 (2010) [seen in reference list only]",
+        "url": "https://doi.org/10.1126/science.1192720",
+        "supports": "The primary paper behind the NIST result: time dilation measured at everyday speeds."
+      },
+      {
+        "title": "Bailey et al., Nature 268, 301 (1977) [seen in reference list only]",
+        "url": "https://doi.org/10.1038/268301a0",
+        "supports": "Stored muons at gamma \u2248 29.3 lived about 64.4 microseconds, matching the prediction to about 0.1%. Their huge acceleration supports the clock hypothesis."
+      },
+      {
+        "title": "Rossi & Hall, Phys. Rev. 59, 223 (1941) [seen in reference list only]",
+        "url": "https://doi.org/10.1103/PhysRev.59.223",
+        "supports": "Cosmic-ray muons survive longer, depending on their momentum."
+      },
+      {
+        "title": "Ives & Stilwell, JOSA 28, 215 (1938) [seen in reference list only]",
+        "url": "https://doi.org/10.1364/JOSA.28.000215",
+        "supports": "Second-order (transverse) Doppler shift from fast hydrogen ions."
+      },
+      {
+        "title": "Reinhardt et al., Nature Physics 3, 861 (2007) [seen in reference list only]",
+        "url": "https://doi.org/10.1038/nphys778",
+        "supports": "Fast optical atomic clocks compared at different speeds."
+      },
+      {
+        "title": "Will, The Confrontation between General Relativity and Experiment, Living Rev. Rel. 17, 4 (2014) [retrieved abstract]",
+        "url": "https://arxiv.org/abs/1403.7377",
+        "supports": "Review of tests of local Lorentz invariance and clock experiments."
+      },
+      {
+        "title": "Terrell, Phys. Rev. 116, 1041 (1959) [seen in reference list only]",
+        "url": "https://doi.org/10.1103/PhysRev.116.1041",
+        "supports": "What a fast object looks like to a camera differs from what is measured in its frame. This is why the scene shows frame time, not camera appearance."
+      },
+      {
+        "title": "Penrose, Proc. Camb. Phil. Soc. 55, 137 (1959) [seen in reference list only]",
+        "url": "https://doi.org/10.1017/S0305004100033776",
+        "supports": "A passing sphere keeps a circular outline when seen. Appearance and measurement are different things."
+      },
+      {
+        "title": "Hornof et al., Commun. Phys. 8, 161 (2025) [seen in reference list only]",
+        "url": "https://arxiv.org/abs/2409.04296",
+        "supports": "Experimental demonstration of the Terrell-Penrose appearance effect."
+      }
+    ]
+  },
+  "scene": {
+    "title": "Twin Trip: Why a Moving Clock Ticks Slowly",
+    "subtitle": "One twin stays on Earth while the other flies to a star and back. Compare their clocks and birthdays when they meet again.",
+    "beats": [
+      {
+        "title": "Parked at home, both clocks agree",
+        "body": "The rocket stays on Earth, so both twins share every birthday. Their clocks turn together, year for year."
+      },
+      {
+        "title": "After a fast round trip, the traveller has had fewer birthdays",
+        "body": "Now the rocket flies to the star and back at nine-tenths of light speed. Each clock still ticks normally for its owner. Yet fewer of the traveller's own years pass before the twins meet again."
+      },
+      {
+        "title": "Speed sets the share of time; trip length only scales it",
+        "body": "Slow the rocket down and the gap almost disappears. A longer trip adds missed birthdays, but the share of time stays the same. Only the speed sets that share."
+      }
+    ],
+    "mass": 1,
+    "distance": 1,
+    "ray_count": 1,
+    "show_reference": true,
+    "show_labels": true,
+    "accent": "blue",
+    "line_width": 2,
+    "duration": 32,
+    "takeaway": "Speed doesn't break a clock. The traveller's path just holds fewer of their own years, so they come home younger.",
+    "controls": "first",
+    "kind": "twin-trip"
+  },
+  "checks": [
+    {
+      "name": "Zero speed gives equal ages",
+      "pass": true
+    },
+    {
+      "name": "Faster trips widen the age gap",
+      "pass": true
+    },
+    {
+      "name": "Time-dilation factor at 0.6 light speed is 1.25",
+      "pass": true
+    },
+    {
+      "name": "Traveller worldline stays inside the light cone",
+      "pass": true
+    },
+    {
+      "name": "Round-trip traveller time is home time divided by the factor",
+      "pass": true
+    },
+    {
+      "name": "Trip length does not change the percentage gap",
+      "pass": true
+    },
+    {
+      "name": "Subtitles read at most 14.0 characters per second (limit 15)",
+      "pass": true
+    },
+    {
+      "name": "Each subtitle stays up at least 2.8 s (minimum 2.5)",
+      "pass": true
+    },
+    {
+      "name": "Zero-mass control removes the modeled effect",
+      "pass": true
+    },
+    {
+      "name": "Mass control updates the rendered model",
+      "pass": true
+    },
+    {
+      "name": "No-mass step shows zero and restores the chosen mass afterward",
+      "pass": true
+    },
+    {
+      "name": "Seeking reproduces identical canvas pixels",
+      "pass": true
+    },
+    {
+      "name": "Mobile page fits viewport",
+      "pass": true
+    },
+    {
+      "name": "Renderer has no JavaScript errors",
+      "pass": true
+    }
+  ],
+  "provider": "reviewed-agents",
+  "provenance": {
+    "sources_retrieved": true,
+    "retrieved_by": "agent"
+  },
+  "revisions": [
+    {
+      "number": 1,
+      "scene": {
+        "title": "Twin Trip: Why a Moving Clock Ticks Slowly",
+        "subtitle": "One twin stays on Earth while the other flies to a star and back. Compare their clocks and birthdays when they meet again.",
+        "beats": [
+          {
+            "title": "Parked at home, both clocks agree",
+            "body": "The rocket stays on Earth, so both twins share every birthday. Their clocks turn together, year for year."
+          },
+          {
+            "title": "After a fast round trip, the traveller has had fewer birthdays",
+            "body": "Now the rocket flies to the star and back at nine-tenths of light speed. Each clock still ticks normally for its owner. Yet fewer of the traveller's own years pass before the twins meet again."
+          },
+          {
+            "title": "Speed sets the share of time; trip length only scales it",
+            "body": "Slow the rocket down and the gap almost disappears. A longer trip adds missed birthdays, but the share of time stays the same. Only the speed sets that share."
+          }
+        ],
+        "mass": 1,
+        "distance": 1,
+        "ray_count": 1,
+        "show_reference": true,
+        "show_labels": true,
+        "accent": "blue",
+        "line_width": 2,
+        "duration": 32,
+        "takeaway": "Speed doesn't break a clock. The traveller's path just holds fewer of their own years, so they come home younger.",
+        "controls": "first",
+        "kind": "twin-trip"
+      },
+      "checks": [
+        {
+          "name": "Zero speed gives equal ages",
+          "pass": true
+        },
+        {
+          "name": "Faster trips widen the age gap",
+          "pass": true
+        },
+        {
+          "name": "Time-dilation factor at 0.6 light speed is 1.25",
+          "pass": true
+        },
+        {
+          "name": "Traveller worldline stays inside the light cone",
+          "pass": true
+        },
+        {
+          "name": "Round-trip traveller time is home time divided by the factor",
+          "pass": true
+        },
+        {
+          "name": "Trip length does not change the percentage gap",
+          "pass": true
+        },
+        {
+          "name": "Subtitles read at most 14.0 characters per second (limit 15)",
+          "pass": true
+        },
+        {
+          "name": "Each subtitle stays up at least 2.8 s (minimum 2.5)",
+          "pass": true
+        },
+        {
+          "name": "Zero-mass control removes the modeled effect",
+          "pass": true
+        },
+        {
+          "name": "Mass control updates the rendered model",
+          "pass": true
+        },
+        {
+          "name": "No-mass step shows zero and restores the chosen mass afterward",
+          "pass": true
+        },
+        {
+          "name": "Seeking reproduces identical canvas pixels",
+          "pass": true
+        },
+        {
+          "name": "Mobile page fits viewport",
+          "pass": true
+        },
+        {
+          "name": "Renderer has no JavaScript errors",
+          "pass": true
+        }
+      ],
+      "accepted": true,
+      "physics_review": {
+        "pass": true,
+        "score": 8.5,
+        "summary": "The physics is correct and the frames are consistent with it. This passes as a teaching approximation. I checked the four attached frames against the scene mapping. Frame 1 (Speed 0%): both clocks show 0.4 years and the readout shows 0.0%. Frames 2-3 (90%, distance 1): the star is 1.4 light-years away, home time is 3.2 years and traveller time is 1.4 years (3.2/2.294 = 1.395). Home has 3 birthday dots and the traveller has 1, the reunion banner says 2 fewer birthdays, and the readout is 56.4%. Frame 4 (distance 2.5): the star is 3.6 light-years away, home time is 3.0 years and traveller time is 1.3 years (3.0/2.294 = 1.31). The rocket is about 73% of the way out, which matches x = 0.9 \u00d7 3.0 = 2.7 of 3.6 light-years. Both rows have 8 birthday dots, and the clock hands match the elapsed years. The gamma values are correct (2.294, 7.09, 22.4), and so are 1.25 at 0.6c and 13.4% at 0.5c. The text says each clock ticks normally for its owner and never says the traveller feels time slow. It explains that dilation is mutual between inertial frames and resolves through disagreement about simultaneity. It marks the instant turnaround as an idealization and does not cover Doppler or what an observer would see. Sources are honestly labelled: retrieved abstracts are separated from papers seen only in a reference list. The 2.3 ppb figure is tied to the Botermann abstract, which was retrieved. Hafele-Keating is kept out of the main claim because it mixes motion and gravity. There are no new-discovery claims. The issues left are wording and timing only (see changes), and none of them is a physics error.",
+        "changes": [
+          "The readout 'Traveller comes home younger by 56.4%' can be read as the traveller being 56.4% younger in total age. Make it specific, for example 'Traveller ages 56.4% less during the trip' or 'Age gap: 56.4% of the home twin's trip time'.",
+          "In frame 4 (0:18), the subtitle 'Slow the rocket down and the gap almost disappears' is on screen while the Speed slider shows 90% and the readout shows 56.4%. Time the first-control dip so that it happens while this sentence is showing. If the dip goes all the way to 0, change 'almost disappears' to 'disappears', or make the dip stop at a low non-zero speed.",
+          "The explanation says moving the Speed slider shows the gap 'growing faster and faster near light speed', but the slider stops at 90%. Change it to say the gap grows faster than in proportion to speed (for example 13% at 50% speed and 56% at 90%). Leave the claim that gamma grows without limit to the text values at 0.99 and 0.999.",
+          "Optional: label the star distance at Speed 0 (for example 'rocket stays on Earth; no trip'). Frame 1 shows the star with no distance, which is correct but could leave the viewer unsure what the star is for."
+        ],
+        "blocking_issues": []
+      },
+      "visual_review": {
+        "pass": true,
+        "score": 8,
+        "summary": "I looked at the six frames supplied (t=1, 9, 11 and 18, then mobile and the top-of-page overview). They don't show motion, so I can't judge smoothness.\n\n**Physics in the frames is correct.**\n- t=1: speed is 0%, the rocket sits on Earth with \"rocket stays on Earth\", both clocks read 0.4 years and the readout is 0.0%.\n- t=9 and t=11: speed is 90% and the star is labelled 1.4 light-years away. Home reads 3.2 years and the traveller 1.4. The home row has 3 birthday dots filled and the traveller row 1. The banner says \"Together again: 2 fewer birthdays for the traveller\" and the readout is 56.4%. All of this matches the research predictions.\n- t=18: the trip is at maximum, so the star is 3.6 light-years away and there are 8 birthday slots. Mid-flight the clocks read 3.0 and 1.3 years, still a ratio of about 0.436. The readout stays at 56.4%, which shows directly that trip length doesn't change the percentage.\n- Clock hands match one turn per year.\n- No text says the traveller feels time slow, and the stage has no scale or magnification labels.\n\n**Layout reads well for a beginner.** Earth and star are at the ends with the rocket between them. The two clocks sit side by side in the twins' colours (black for home, blue for the traveller), with matching birthday rows below. The banner states the result in plain words. The mobile layout fits and stays legible.\n\n**The Speed-only slider is the right choice.** Dragging speed toward light speed shows the gap rising steeply. Playback already sweeps Trip and the percentage doesn't change, so a second slider would add little.\n\n**Subtitles** are short single sentences within the measured pace limits.\n\n**Minor issues, none blocking:**\n1. At t=18 the subtitle says \"Slow the rocket down and the gap almost disappears\", but the frame shows 90% and 56.4%. The narration and the speed dip may be out of step, though this could be a side effect of the comparison frame being configured with Trip at maximum.\n2. At t=9 and t=11 the stage already shows the reunion while the subtitle reads \"Now the rocket flies to the star and back\". A viewer may see the result before the flight that causes it.\n3. In the t=9/t=11 frames the \"90% of light speed\" label overlaps the top-right of the Earth.\n4. \"Traveller comes home younger by 56.4%\" could be read as 56% younger in total age, rather than 56% fewer years passing during the trip. The banner and readout aren't scene fields, so the wording fixes below go through the beat text and takeaway.\n5. On mobile, the beat-3 title \"Speed sets the share of time; trip length only scales it\" wraps to two lines and is a bit abstract.\n6. The supported question \"why nothing can be pushed past light speed\" is never mentioned in the beats.\n7. At t=9 the chapter label already says \"2 of 3\" while the first progress segment is not yet full.",
+        "changes": [
+          "beats[2].title: shorten to \"Speed sets the percentage; trip length does not\" so it fits one mobile line and avoids the abstract word \"share\".",
+          "beats[2].body: \"Slow the rocket down and the gap almost disappears. A longer trip adds missed birthdays, but the percentage stays the same. Near light speed, the gap climbs steeply.\" This ties the text to the 56.4% readout and hints at the light-speed limit without saying the gap is unlimited.",
+          "beats[1].body: lead with the flight, then the result, so the words match what the frame shows: \"The rocket flies to the star and back at nine-tenths of light speed. Each clock ticks normally for its owner. Still, fewer of the traveller's own years pass before they meet again.\"",
+          "takeaway: make the readout's meaning explicit: \"Speed doesn't break a clock. At 90% of light speed, only about 44 of the traveller's years pass for every 100 on Earth, so they come home younger.\"",
+          "Keep controls = \"first\"; the Speed slider is the one that builds intuition here.",
+          "Renderer (not a scene field): move the rocket's speed label so it doesn't overlap the Earth while parked or arriving; make sure the chapter-3 speed dip happens while \"Slow the rocket down...\" is on screen; consider reading the readout as \"Traveller ages 56.4% less during the trip\"; check that the chapter label and progress segments change together."
+        ],
+        "blocking_issues": []
+      },
+      "frames": [
+        "published/20261027T160039-39e9e79b/revision-1-0.png",
+        "published/20261027T160039-39e9e79b/revision-1-1.png",
+        "published/20261027T160039-39e9e79b/revision-1-2.png",
+        "published/20261027T160039-39e9e79b/revision-1-3.png",
+        "published/20261027T160039-39e9e79b/revision-1-4.png",
+        "published/20261027T160039-39e9e79b/revision-1-5.png"
+      ]
+    }
+  ]
+}
