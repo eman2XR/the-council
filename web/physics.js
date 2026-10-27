@@ -11,6 +11,8 @@
     gamma(v) { return 1 / Math.sqrt(1 - v * v); },
     turnaround: b => 1.6 * b,
     agingGap(a) { return 1 - 1 / this.gamma(this.speed(a)); },
+    // Spacetime length of a straight step: the time a clock carried along it shows.
+    properTime(t, x) { return Math.sqrt(t * t - x * x); },
     // Two coherent sources or slits with amplitudes 1 and a.
     visibility: a => 2 * a / (1 + a * a),
     separation: b => 1.6 * b,
@@ -157,7 +159,7 @@
     },
     checksFor(kind) {
       return {'gravity-clocks':this.clockChecks,'spacetime':this.spacetimeChecks,'interference':this.waveChecks,
-        'two-slit-particles':this.waveChecks,'standing-waves':this.ropeChecks,'tunneling':this.tunnelChecks,'wave-packet':this.packetChecks,'quantum-well':this.wellChecks,'falling-time':this.fallChecks,'diffraction':this.gapChecks,'twin-trip':this.spacetimeChecks}[kind]?.call(this) || this.checks();
+        'two-slit-particles':this.waveChecks,'standing-waves':this.ropeChecks,'tunneling':this.tunnelChecks,'wave-packet':this.packetChecks,'quantum-well':this.wellChecks,'falling-time':this.fallChecks,'diffraction':this.gapChecks,'twin-trip':this.spacetimeChecks,'spacetime-paths':this.pathChecks}[kind]?.call(this) || this.checks();
     },
     spacetimeChecks() {
       const near=(a,b)=>Math.abs(a-b)<1e-12, g=this.gamma(this.speed(1));
@@ -169,6 +171,18 @@
         'Round-trip traveller time is home time divided by the factor':near(2*this.turnaround(2.5)/g,2*this.turnaround(2.5)*(1-this.agingGap(1))),
         'Trip length does not change the percentage gap':near(1-1/this.gamma(this.speed(.7)),this.agingGap(.7)),
       }).map(([name,pass])=>({name,pass}));
+    },
+    pathChecks() {
+      const near=(a,b)=>Math.abs(a-b)<1e-12, T=this.turnaround(2.5), v=this.speed(8/9*1);
+      const bent=(x,t,H)=>this.properTime(t,x)+this.properTime(H-t,x);
+      const kinks=Array.from({length:50},(_,i)=>[(i%10)/10*.9*((i/10|0)+1)*.8,((i/10|0)+1)*.8]);
+      return [...this.spacetimeChecks(),...Object.entries({
+        'Worked example: 10 years out at 8 light-years gives 6 years':near(this.properTime(10,8),6),
+        'Each leg holds the home time divided by the factor':near(this.properTime(T,v*T),T/this.gamma(v)),
+        'Light’s path has zero length':this.properTime(3,3)===0,
+        'Every bent path holds less time than the straight one':kinks.every(([x,t])=>x===0||bent(x,t,8)<8),
+        'A wider turnaround holds less time':bent(2,4,8)<bent(1,4,8),
+      }).map(([name,pass])=>({name,pass}))];
     },
     waveChecks() {
       const near=(a,b)=>Math.abs(a-b)<1e-12;

@@ -87,6 +87,10 @@ ENGINE_SCENES = {
         ('Nobody moves: the twins age together.', 'With zero speed the traveller never leaves. Both columns of ticks line up.'),
         ('Now the traveller flies out and back.', 'The traveller’s dots are spaced farther apart. Fewer of them fit before the twins meet again.'),
         ('Change the speed and the trip.', 'Faster trips widen the gap. A longer trip adds years, but the percentage stays the same.')], 'blue', .8),
+    'SPACETIME PATHS': _engine_scene('Two paths between one goodbye and one reunion', [
+        ('Nobody leaves: one shared path.', 'With zero speed the traveller stays on Earth. Both twins follow the same straight path up through time.'),
+        ('The traveller takes a detour.', 'Out to the star and back, the traveller’s path bends. Moving through space counts against time, so the bent path holds fewer years.'),
+        ('Drag the turnaround.', 'A wider detour holds less time. Bring it back to the home path and the twins agree again.')], 'blue', 8/9, 2.5),
     'TWO-SOURCE RIPPLE TANK': _engine_scene('When two waves meet', [
         ('One source: smooth rings.', 'A single source sends out rings. The screen is evenly lit.'),
         ('Add a second source.', 'Where crests meet crests the water swings harder. Where crests meet troughs it stays calm.'),

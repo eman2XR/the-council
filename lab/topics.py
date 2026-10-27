@@ -131,10 +131,28 @@ ticks slowly, why the travelling twin is younger, why nothing can be pushed past
 limit as v approaches 1). Each clock ticks normally for its owner; do not say the traveller feels time slow. The instant
 turnaround is an idealization; no acceleration physics, gravity or Doppler views. No new-discovery claims.'''+COMMON
 
+PATHS_NOTES = '''SPACETIME PATHS (WHY THE TRAVELLER IS YOUNGER). Special relativity in flat spacetime, years and light-years (light
+speed 1). The explanation is geometric: a clock measures the length of its own path through spacetime, and that length
+follows a rule with a minus sign, clock time = sqrt(time^2 - distance^2). Drawn: a spacetime diagram (time up, space right)
+with the goodbye and reunion events on Earth; the home twin's path straight up and the traveller's path out to the
+turnaround and back; one dot per year of each twin's own time (the traveller's dots sit farther apart on paper because
+fewer fit); a dotted light path from the goodbye (zero length); under the diagram the same trip as ordinary space (Earth,
+the star at v*T light-years, the rocket); beside it the rule and the worked lengths of each path (home H, each traveller
+leg sqrt(T^2 - (vT)^2)) and the traveller's total; at the reunion one line says how many years younger the traveller is.
+The viewer can drag the turnaround point (sideways sets speed, up sets the trip). Field mass sets v = 0.9*mass (UI
+"Speed"; 0 keeps both twins on one path); field distance sets T = 1.6*distance years (UI "Trip"). The readout is
+1 - 1/gamma, independent of trip length. Key ideas to explain: a path through spacetime is where you are at every
+moment; your clock reads its length; distance through space counts against time (the minus sign), so the straight path
+between two events holds the most time and any detour holds less; on paper the bent path looks longer, which is the
+opposite of its spacetime length; whether a path is bent is something everyone agrees on, which settles who is younger;
+light's path has zero length, which is why nothing reaches light speed. Each clock ticks normally for its owner. The
+turnaround is instant; no acceleration physics, gravity, Doppler views or what anyone sees. No new-discovery claims.'''+COMMON
+
 TOPICS = {
     'light-bending': {'label':'Light bending', 'question':'Why does gravity bend light?', 'notes':MODEL_NOTES},
     'gravity-clocks': {'label':'Gravity and clocks', 'question':'Why do clocks at different heights tick at different rates?', 'notes':CLOCK_NOTES},
     'twin-trip': {'label':'Twin trip', 'question':'Why is the travelling twin younger?', 'notes':TWIN_NOTES},
+    'spacetime-paths': {'label':'Paths through spacetime', 'question':'Why is the travelling twin younger?', 'notes':PATHS_NOTES},
     'spacetime': {'label':'Spacetime diagram', 'question':'Why is the travelling twin younger?', 'notes':SPACETIME_NOTES},
     'interference': {'label':'Wave interference', 'question':'What happens when two waves meet?', 'notes':INTERFERENCE_NOTES},
     'two-slit-particles': {'label':'Particles through two slits', 'question':'Why do particles fired one at a time still make stripes?', 'notes':PARTICLE_NOTES},
