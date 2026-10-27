@@ -1,0 +1,280 @@
+{
+  "id": "20261027T160200-e017fbe8",
+  "status": "reviewed",
+  "question": "What happens when two waves meet?",
+  "topic": "interference",
+  "created": "2026-10-27T16:02:00.292831+00:00",
+  "research": {
+    "claim": "When two waves meet in a linear medium, the displacement at each point is the sum of the two waves' displacements. The waves pass through each other unchanged [S1]. With two coherent sources of the same wavelength, this adding up gives a fixed pattern. Where the path difference is a whole number of wavelengths, the waves reinforce. Where it is a whole number plus a half, they cancel [S3, S4]. Moving the sources farther apart packs the stripes closer together [S4].",
+    "explanation": "1. Superposition. Where two waves overlap, the medium's displacement is \"the algebraic sum of the position due to the individual waves\" [S1]. Waves don't bounce off each other. Two opposing pulses combine briefly and then \"continue on unaffected by the encounter\" [S1]. The extra-tall crest you see while they overlap exists only during the overlap.\n\n2. Phase decides the result. Add two identical waves that are offset by a phase \u03c6. You get a wave with the same wavelength and amplitude 2A cos(\u03c6/2) [S1]:\n- In step (\u03c6 = 0) gives double the height. This is constructive interference.\n- Half a cycle out of step (\u03c6 = \u03c0) gives zero. This is destructive interference.\n- Most points fall somewhere in between [S1].\n\n3. From phase to place. With two sources, the phase offset at a point depends on how much farther that point is from one source than from the other:\n- Constructive where the path difference \u0394l = m\u03bb.\n- Destructive where \u0394l = (m + \u00bd)\u03bb [S3, S4].\nThese conditions trace out fixed lines of strong and weak shaking across the water. In the ripple tank, crests (accent) cross crests along the bright lanes, and crests meet troughs along the quiet lanes.\n\n4. Why two coherent sources are needed. A stable pattern needs a fixed phase relationship at the same frequency. Independent sources drift in phase, so their pattern smears out [S3]. One source alone makes rings but no stripes.\n\n5. Why wider spacing packs stripes closer. Bright fringes sit where d sin\u03b8 = m\u03bb, so the screen positions are y_m \u2248 m\u03bbD/d. Increasing the spacing d shrinks the gap between neighboring stripes [S3, S4].\n\n6. The screen strip. The strip shows the time-averaged brightness I = (1 + a\u00b2 + 2a cos(k\u0394l)) / (1+a)\u00b2. The readout shows fringe contrast 2a/(1+a\u00b2):\n- It is 1 (perfectly dark minima) only when the second source is as strong as the first.\n- It falls as a moves away from 1.\n- It is 0 when the second source is off.\nThis matches the sourced point that full cancellation needs equal amplitudes [S1]. Brightness going as amplitude squared is the lab's own modeling step. The notes do not source it.\n\n7. Standing waves. Two identical waves traveling in opposite directions form a standing wave, [2A sin kx] cos \u03c9t. Its nodes stay fixed at multiples of \u03bb/2, and its antinodes swing between \u00b12A [S2]. It is two traveling waves added together, not a wave that has stopped.\n\n8. Recommended field controls: none. Playback already switches the second source off and back on, dips it, and sweeps the spacing to its maximum. Free sliders would add little intuition beyond that.",
+    "assumptions": [
+      "Linear waves: superposition holds when amplitudes are small compared with the wavelength [S1]. Large-amplitude water waves and solitons do not follow it.",
+      "The two sources are coherent, in phase, and at the same single frequency [S3].",
+      "Perfect cancellation assumes equal amplitudes at the point in question, which is an idealization [S1, S3].",
+      "The fringe-spacing formula y_m \u2248 m\u03bbD/d uses the far-field, small-angle approximation [S4].",
+      "Lab reasoning, not sourced: brightness goes as amplitude squared, and amplitude falls off as 1/sqrt(distance) in two dimensions.",
+      "Lab reasoning, not sourced: the medium is uniform and non-dispersive, so pulses keep their shape."
+    ],
+    "prediction": "1. With the second source off (a = 0, chapter 1), the tank shows only one set of rings. The screen strip is uniform and the contrast reads 0.\n2. With the second source restored, fixed bright and dark lanes fan out from between the sources. The screen shows stripes.\n3. Contrast is greatest (1) when a = 1. It drops when the second source dips, and recovers when it returns.\n4. As the source spacing sweeps toward its maximum, more lanes appear and the stripes on the screen move closer together. To first order, their spacing scales as 1/d [S3, S4].\n5. Crests from each source pass through the overlap region and keep traveling outward unchanged [S1].",
+    "falsifier": "Any of these would contradict the account:\n- Stable stripes appear with only one source on.\n- Stripe spacing grows, or stays the same, when the source spacing increases.\n- Minima stay well above zero far from the sources when a = 1.\n- Crests come out of the overlap region changed or reflected.\n- A stable pattern persists when the relative phase of the sources is randomized over time.\n- With the formula as given, the contrast readout differs from 2a/(1+a\u00b2).",
+    "limitations": [
+      "Only four OpenStax pages gave usable text. Penn State Acoustics, HyperPhysics, LibreTexts, the Feynman Lectures, the Heriot-Watt soliton page, and Zabusky & Kruskal 1965 could not be retrieved. The PhET and MIT OCW pages loaded but had no relevant content. None of these are cited.",
+      "Several points are the lab's own reasoning and not backed by the fetched sources: intensity going as amplitude squared, energy being redistributed rather than destroyed at dark fringes, and the full-pattern energy total.",
+      "S2 does not explicitly state that a standing wave carries zero net energy, so this record makes no such claim.",
+      "With 1/sqrt(distance) falloff, the two waves are not exactly equal in strength away from the centerline. Dark lanes near the sources are therefore not perfectly dark, even at a = 1.",
+      "The model is an idealized ripple tank. It says nothing about light or sound beyond analogy, makes no single-photon claims, and does not model diffraction from slit width.",
+      "This is a textbook explanation of established physics. It makes no new-discovery claim."
+    ],
+    "sources": [
+      {
+        "title": "OpenStax University Physics Vol. 1, 16.5 Interference of Waves",
+        "url": "https://openstax.org/books/university-physics-volume-1/pages/16-5-interference-of-waves",
+        "supports": "Superposition as the algebraic sum; pulses passing through each other unaffected; resultant amplitude 2A cos(phi/2) with constructive and destructive cases; linearity condition; full cancellation needs equal amplitudes."
+      },
+      {
+        "title": "OpenStax University Physics Vol. 1, 16.6 Standing Waves and Resonance",
+        "url": "https://openstax.org/books/university-physics-volume-1/pages/16-6-standing-waves-and-resonance",
+        "supports": "Counter-propagating identical waves form the standing wave [2A sin kx] cos wt, with fixed nodes at multiples of lambda/2 and antinodes reaching 2A."
+      },
+      {
+        "title": "OpenStax University Physics Vol. 3, 3.1 Young's Double-Slit Interference",
+        "url": "https://openstax.org/books/university-physics-volume-3/pages/3-1-youngs-double-slit-interference",
+        "supports": "Coherent sources are needed for a stable pattern; independent sources are incoherent; bright fringes at d sin(theta) = m lambda."
+      },
+      {
+        "title": "OpenStax University Physics Vol. 3, 3.2 Mathematics of Interference",
+        "url": "https://openstax.org/books/university-physics-volume-3/pages/3-2-mathematics-of-interference",
+        "supports": "Path-difference conditions for constructive and destructive interference; fringe positions y_m approx. m lambda D / d, so wider spacing gives closer fringes."
+      }
+    ]
+  },
+  "scene": {
+    "title": "When Two Waves Meet: Ripples That Add, Cancel, and Draw Stripes",
+    "subtitle": "Two sources ripple in step across a water tank. Watch where they team up, where they cancel out, and how the stripes on the screen change when the sources move apart.",
+    "beats": [
+      {
+        "title": "One source: rings, but no stripes",
+        "body": "With only one source on, smooth rings spread across the tank. The screen glows evenly from end to end. One wave by itself has nothing to team up with or cancel against."
+      },
+      {
+        "title": "Two sources: the waves add up",
+        "body": "Turn the second source on and steady lanes fan out across the water. Where crest meets crest, the water shakes hard. Where crest meets trough, it goes still, and the screen shows bright and dark stripes."
+      },
+      {
+        "title": "Weaker partner, then wider spacing",
+        "body": "When the second source weakens, the dark stripes fill in and fade. Then the sources move apart. More lanes appear, and the stripes on the screen crowd closer together."
+      }
+    ],
+    "mass": 1,
+    "distance": 1.2,
+    "ray_count": 1,
+    "show_reference": true,
+    "show_labels": true,
+    "accent": "blue",
+    "line_width": 2,
+    "duration": 36,
+    "takeaway": "Waves pass right through each other, and where they overlap they add: in step they build, out of step they cancel.",
+    "controls": "none",
+    "kind": "interference"
+  },
+  "checks": [
+    {
+      "name": "One source gives no stripes",
+      "pass": true
+    },
+    {
+      "name": "Equal sources give full-contrast stripes",
+      "pass": true
+    },
+    {
+      "name": "Equal path lengths give a bright stripe",
+      "pass": true
+    },
+    {
+      "name": "Half-wavelength path difference cancels equal waves",
+      "pass": true
+    },
+    {
+      "name": "Unequal sources leave dark stripes partly lit",
+      "pass": true
+    },
+    {
+      "name": "Two equal sources make bright stripes four times one source",
+      "pass": true
+    },
+    {
+      "name": "Wider separation packs stripes closer",
+      "pass": true
+    },
+    {
+      "name": "Subtitles read at most 14.0 characters per second (limit 15)",
+      "pass": true
+    },
+    {
+      "name": "Each subtitle stays up at least 2.8 s (minimum 2.5)",
+      "pass": true
+    },
+    {
+      "name": "Zero-mass control removes the modeled effect",
+      "pass": true
+    },
+    {
+      "name": "Mass control updates the rendered model",
+      "pass": true
+    },
+    {
+      "name": "No-mass step shows zero and restores the chosen mass afterward",
+      "pass": true
+    },
+    {
+      "name": "Seeking reproduces identical canvas pixels",
+      "pass": true
+    },
+    {
+      "name": "Mobile page fits viewport",
+      "pass": true
+    },
+    {
+      "name": "Renderer has no JavaScript errors",
+      "pass": true
+    }
+  ],
+  "provider": "reviewed-agents",
+  "provenance": {
+    "sources_retrieved": true,
+    "retrieved_by": "agent"
+  },
+  "revisions": [
+    {
+      "number": 1,
+      "scene": {
+        "title": "When Two Waves Meet: Ripples That Add, Cancel, and Draw Stripes",
+        "subtitle": "Two sources ripple in step across a water tank. Watch where they team up, where they cancel out, and how the stripes on the screen change when the sources move apart.",
+        "beats": [
+          {
+            "title": "One source: rings, but no stripes",
+            "body": "With only one source on, smooth rings spread across the tank. The screen glows evenly from end to end. One wave by itself has nothing to team up with or cancel against."
+          },
+          {
+            "title": "Two sources: the waves add up",
+            "body": "Turn the second source on and steady lanes fan out across the water. Where crest meets crest, the water shakes hard. Where crest meets trough, it goes still, and the screen shows bright and dark stripes."
+          },
+          {
+            "title": "Weaker partner, then wider spacing",
+            "body": "When the second source weakens, the dark stripes fill in and fade. Then the sources move apart. More lanes appear, and the stripes on the screen crowd closer together."
+          }
+        ],
+        "mass": 1,
+        "distance": 1.2,
+        "ray_count": 1,
+        "show_reference": true,
+        "show_labels": true,
+        "accent": "blue",
+        "line_width": 2,
+        "duration": 36,
+        "takeaway": "Waves pass right through each other, and where they overlap they add: in step they build, out of step they cancel.",
+        "controls": "none",
+        "kind": "interference"
+      },
+      "checks": [
+        {
+          "name": "One source gives no stripes",
+          "pass": true
+        },
+        {
+          "name": "Equal sources give full-contrast stripes",
+          "pass": true
+        },
+        {
+          "name": "Equal path lengths give a bright stripe",
+          "pass": true
+        },
+        {
+          "name": "Half-wavelength path difference cancels equal waves",
+          "pass": true
+        },
+        {
+          "name": "Unequal sources leave dark stripes partly lit",
+          "pass": true
+        },
+        {
+          "name": "Two equal sources make bright stripes four times one source",
+          "pass": true
+        },
+        {
+          "name": "Wider separation packs stripes closer",
+          "pass": true
+        },
+        {
+          "name": "Subtitles read at most 14.0 characters per second (limit 15)",
+          "pass": true
+        },
+        {
+          "name": "Each subtitle stays up at least 2.8 s (minimum 2.5)",
+          "pass": true
+        },
+        {
+          "name": "Zero-mass control removes the modeled effect",
+          "pass": true
+        },
+        {
+          "name": "Mass control updates the rendered model",
+          "pass": true
+        },
+        {
+          "name": "No-mass step shows zero and restores the chosen mass afterward",
+          "pass": true
+        },
+        {
+          "name": "Seeking reproduces identical canvas pixels",
+          "pass": true
+        },
+        {
+          "name": "Mobile page fits viewport",
+          "pass": true
+        },
+        {
+          "name": "Renderer has no JavaScript errors",
+          "pass": true
+        }
+      ],
+      "accepted": true,
+      "physics_review": {
+        "pass": true,
+        "score": 7,
+        "summary": "The physics is correct for a teaching model and stays within the sources. Superposition, the path-difference conditions, coherence, the contrast formula 2a/(1+a^2) and the 1/d trend in stripe spacing are all stated correctly, and assumptions and unsourced steps are labeled honestly.\n\nFrame 1 matches its claims: one set of rings, a uniform screen, contrast 0% and the label \"second source off\". Frames 2 and 3 show fixed lanes fanning out between the sources, a screen with near-white minima, and contrast 100%. That is consistent with a = 1. Frame 4 (0:18, chapter 3) shows a wider source spacing with more lanes and more tightly packed screen fringes, which correctly shows the 1/d trend.\n\nThe problem is in chapter 3. At that moment the subtitle reads \"When the second source weakens, the dark stripes fill in and fade,\" but the readout still says 100% and the screen minima are still near-white. The spacing has also already widened. So the narration and the visual disagree. None of the attached frames show the amplitude dip itself, so I could not check that the minima actually fill in.\n\nThe \"Equal sources give full-contrast stripes\" check passes because the formula has no distance falloff, and the limitations section correctly notes that real minima near the sources would not be perfectly dark. The standing-wave section (explanation item 7) is outside the scene's supported questions. \"No field controls\" is a reasonable choice, because playback already covers both parameters.",
+        "changes": [
+          "Re-time chapter 3 so the 'second source weakens' subtitle plays during the amplitude dip, while the readout is below 100% and the screen minima are visibly lit. Show the 'sources move apart' subtitle only when the spacing sweep starts. At 0:18 the subtitle claims the stripes are filling in, but the frame shows 100% contrast and spacing that has already widened.",
+          "Add a review frame taken mid-dip (contrast around 50-80%, minima partly lit) so the 'Unequal sources leave dark stripes partly lit' behavior can be seen in a capture, not just in a check.",
+          "Clarify 'fill in and fade' in beat 3. Suggested wording: 'the dark stripes fill in and the pattern washes out', so viewers don't read it as the bright stripes disappearing.",
+          "Drop explanation item 7 (standing waves) or mark it as background. The scene does not show counter-propagating waves, and it is not one of the supported questions.",
+          "Optionally add to the limitations that the screen sits fairly close to the sources, so the y_m ~ m*lambda*D/d spacing is only approximate on the strip. The stripes near the screen edges will not be evenly spaced."
+        ],
+        "blocking_issues": []
+      },
+      "visual_review": {
+        "pass": true,
+        "score": 8,
+        "summary": "I reviewed the six still frames I was given. I did not watch the video, so smooth motion is not verified. The cause and effect is clear. At t=1 there is one source with even rings, a hollow \"second source off\" marker, a flat screen strip and \"Stripe contrast 0%\". At t=9 and t=11 the second source is on: fixed lanes fan out from between the sources, the screen shows three bright bands with dark gaps, and contrast reads 100%. At t=18 the sources are visibly farther apart, there are more lanes, and the screen shows about seven narrower bands. That is a clear, honest comparison of wider spacing packing the stripes closer. Each subtitle is short, plain and readable at the measured pace (14 characters per second or less). Choosing no sliders (controls \"none\") is correct: playback already turns the second source off and on, dips it, and sweeps the spacing, so free sliders would add little. Five smaller problems remain. (1) The stage has no key saying blue means crest and grey means trough, yet beat 2 talks about crests and troughs. (2) The beat 2 subtitle tells the viewer to \"Turn the second source on\", but the viewer has no control and the source is already on. (3) In the t=18 frame the subtitle describes the second source weakening while the readout still says 100%. That frame is the forced spacing comparison, so it does not show the dip itself. Nothing in these frames shows the dip, so the \"dark stripes fill in\" claim is not checked visually. (4) On mobile and in the overview, the \"SECOND SOURCE\" label is cut off at the right edge (\"SECOND SOUR\"). (5) The screen strip has fine vertical hatching that slightly muddies the smooth brightness gradient. None of these blocks the scene.",
+        "changes": [
+          "beats[1].body: start with something the viewer can see rather than an instruction, e.g. \"With the second source on, steady lanes fan out across the water.\" Viewers have no control, so \"Turn the second source on\" misleads them.",
+          "beats[1].body: name the colors so crest and trough link to the picture without an on-stage legend: \"Where blue crest meets blue crest, the water shakes hard. Where a crest meets a grey trough, it goes still, and the screen shows bright and dark stripes.\"",
+          "beats[2].body: say what fades and point to the readout: \"When the second source weakens, the dark stripes fill in and the contrast number drops.\" This makes the dip readable even when it is brief.",
+          "beats[2].body: keep the spacing sentence, but tie it to the screen strip: \"Then the sources move apart. More lanes appear, and the stripes on the screen crowd closer together.\" This is fine as written. Change it only if it gets longer.",
+          "controls: keep \"none\". Playback already shows the second source off and on, the dip, and the spacing sweep.",
+          "duration: the scene says 36 but the player shows 0:51. Check that the duration is meant to be driven by subtitle pacing, so chapter 3's dip and sweep get enough time.",
+          "Renderer (not a scene field): keep the \"SECOND SOURCE\" label inside the stage on narrow viewports, for example by flipping it to the left of the dot. Also consider removing the vertical hatching in the screen strip."
+        ],
+        "blocking_issues": []
+      },
+      "frames": [
+        "published/20261027T160200-e017fbe8/revision-1-0.png",
+        "published/20261027T160200-e017fbe8/revision-1-1.png",
+        "published/20261027T160200-e017fbe8/revision-1-2.png",
+        "published/20261027T160200-e017fbe8/revision-1-3.png",
+        "published/20261027T160200-e017fbe8/revision-1-4.png",
+        "published/20261027T160200-e017fbe8/revision-1-5.png"
+      ]
+    }
+  ]
+}
