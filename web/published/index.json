@@ -1,5 +1,21 @@
 [
   {
+    "id": "20261027T160931-173edbbc",
+    "question": "Why does a guitar string only play certain notes?",
+    "topic": "standing-waves",
+    "created": "2026-10-27T16:09:31.841062+00:00",
+    "curriculum": "3.2",
+    "title": "Why a Guitar String Plays Only Certain Notes"
+  },
+  {
+    "id": "20261027T160508-98dddabc",
+    "question": "How do two slits turn waves into stripes?",
+    "topic": "interference",
+    "created": "2026-10-27T16:05:08.378523+00:00",
+    "curriculum": "3.3",
+    "title": "Two Ripples, One Pattern: How Two Slits Make Stripes"
+  },
+  {
     "id": "20261027T160200-e017fbe8",
     "question": "What happens when two waves meet?",
     "topic": "interference",

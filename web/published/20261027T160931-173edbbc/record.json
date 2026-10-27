@@ -1,0 +1,261 @@
+{
+  "id": "20261027T160931-173edbbc",
+  "status": "reviewed",
+  "question": "Why does a guitar string only play certain notes?",
+  "topic": "standing-waves",
+  "created": "2026-10-27T16:09:31.841062+00:00",
+  "research": {
+    "claim": "A string held still at both ends can only keep vibrating in patterns where a whole number of half-wavelengths fits between the ends (wavelength = 2L/n). That allows only certain frequencies, f_n = (n/2L)\u00b7\u221a(T/\u03bc). The lowest one, f\u2081, is the pitch you hear. The higher ones (2f\u2081, 3f\u2081, ...) are overtones that colour the tone. So one string at one length gives one note. A guitarist gets other notes by changing the length (frets), the tension (tuning) or the mass per length (string gauge). This is standard, long-established physics, not a new finding.",
+    "explanation": "1. A wave travels along a stretched string at a speed set by tension T and mass per length \u03bc: v = \u221a(T/\u03bc) (source 2).\n2. Both ends are fixed: the nut or fret at one end, the saddle at the other. A wave reaching an end bounces back flipped upside down, so waves going left and right overlap.\n3. Two equal waves moving in opposite directions add up to a standing wave. Some points (nodes) never move, and the points between them swing back and forth. The lab scene shows exactly this. It draws y = sin(\u03c9t \u2212 kx) \u2212 a\u00b7sin(\u03c9t + kx), shows both travelling waves dashed, and uses a perfect reflection (a = 1) at the wall.\n4. A fixed end must be a node. The pattern only keeps reinforcing itself if both ends land on nodes, which means kL = n\u03c0: n half-wavelengths fit along the string. Other wavelengths fall out of step after repeated reflections and die away. Source 2 puts it this way: \"only particular frequencies can survive on this string\". The lab's \"Pattern\" control steps n through 1 to 5. Pattern n has n \u2212 1 still points between the ends, so higher patterns (higher frequencies) have more nodes.\n5. A pluck does not choose just one pattern. Source 1 notes that \"a shape can be decomposed into many normal modes\", so the plucked shape is a mixture of all the allowed modes at once. The ear hears the fundamental as the pitch.\n6. The lab's \"Reflection\" control (a) makes the overlap imperfect. Points that would be nodes then move with amplitude |1 \u2212 a|, while the loudest points move with amplitude 1 + a. The readout \"node stillness\" = 1 \u2212 |1 \u2212 a|/(1 + a) = 2a/(1 + a). It is 1 for a perfect reflection and 0 when nothing reflects, leaving a plain travelling wave with no nodes.\nSlider choice: playback already removes the reflection (chapter 1), dips it and brings it back (chapter 3), and sweeps the pattern up to its maximum. The one thing a slider adds is letting the viewer hold the reflection at partial values and watch the nodes blur. That makes \"first\" (Reflection only) a reasonable choice, and \"none\" acceptable. A pattern slider would mostly repeat the sweep in playback.",
+    "assumptions": [
+      "Ideal, perfectly flexible string with uniform mass per length (source 2).",
+      "Small-amplitude vibration; source 2 says the derivation 'is only valid for small amplitude vibrations'.",
+      "Perfectly rigid ends (a = 1). Real bridges and saddles move a little, which shifts and damps the modes slightly [unverified here].",
+      "No bending stiffness. Real strings, especially thick wound ones, have overtones slightly sharp of exact whole-number multiples (inharmonicity) [unverified here].",
+      "Motion in a single plane. Real strings can also move in the other direction and whirl; this is discussed in Molteno & Tufillaro, Am. J. Phys. 72, 1157 (2004), which was cited by source 2 but not read [unverified here].",
+      "The lab is a rope analogy: wave height is exaggerated, partial reflection stands in for an idealized lossy wall, and the scene contains no real tension, mass density, frequencies or instrument acoustics."
+    ],
+    "prediction": "In the lab with Reflection a = 1: the wall is still, there are exactly n \u2212 1 still points between the ends, and the stillness readout is 1. Stepping the pattern from n = 1 to 5 adds one node per step. With a = 0 (chapter 1) the rope carries a single travelling wave with no still points, and the readout is 0. At a = 0.5 the readout is 2(0.5)/1.5 \u2248 0.67, and the would-be nodes visibly wobble. On a real guitar: fretting at the 12th fret (half the length) should sound one octave higher (2f\u2081). Quadrupling the tension should double the frequency. Lightly touching the string at L/2, L/3 or L/4 should leave mainly 2f\u2081, 3f\u2081 or 4f\u2081. A spectrum of a plucked note should show peaks near whole-number multiples of f\u2081. The last two of these are standard textbook results [unverified here].",
+    "falsifier": "Any of these would show the explanation or the scene is wrong: at a = 1 the lab shows a node count other than n \u2212 1 between the ends, or points between nodes standing still, or a readout other than 2a/(1+a). On a real string: a halved length that does not give about double the frequency, a plucked-string spectrum whose main peaks are not near whole-number multiples of f\u2081 (allowing for a small upward drift from stiffness), or a fixed-length string that keeps sustained vibration at frequencies outside the harmonic series.",
+    "limitations": [
+      "Only two sources were retrieved: MIT OCW lecture page (topic summary only; the lecture notes PDFs were not opened) and Wikipedia (secondary). UNSW Physclips, HyperPhysics, Penn State demos and the AJP papers could not be loaded.",
+      "Claims marked [unverified here] come from standard textbook knowledge, not from the retrieved notes, and should be checked against a reachable primary source before publication: inharmonicity, end motion, whirling, pluck-position nulls, the real plucked-string shape (straight segments with travelling corners), rolling-shutter video artifacts, and the body/soundboard producing most of the sound.",
+      "The 12-tone scale comes from where the frets are placed and from tuning choices, not from the string itself. This framing is [unverified here].",
+      "The lab scene is a rope driven at one end with a reflecting wall. It is an analogy for a plucked string, which is fixed at both ends and set moving by an initial shape, not by continuous driving.",
+      "No images or browser captures were inspected for this record.",
+      "No new-discovery claims are made; this is established physics."
+    ],
+    "sources": [
+      {
+        "title": "MIT OCW 8.03SC Physics III, Lecture 9: Wave Equation, Standing Waves, Fourier Series",
+        "url": "https://ocw.mit.edu/courses/8-03sc-physics-iii-vibrations-and-waves-fall-2016/pages/part-i-mechanical-vibrations-and-waves/lecture-9/",
+        "supports": "The lecture covers standing-wave solutions of the wave equation, and states that 'a shape can be decomposed into many normal modes' (a pluck is a mixture of modes)."
+      },
+      {
+        "title": "Wikipedia: String vibration",
+        "url": "https://en.wikipedia.org/wiki/String_vibration",
+        "supports": "'Only particular frequencies can survive on this string'; f_n = (n/2L)\u00b7\u221a(T/\u03bc) (Mersenne's laws); wave speed set by T and \u03bc; the derivation is only valid for small amplitude vibrations; cites Molteno & Tufillaro 2004 and Tufillaro 1989 on real and nonlinear string motion (those papers were not read)."
+      }
+    ]
+  },
+  "scene": {
+    "title": "Why a Guitar String Plays Only Certain Notes",
+    "subtitle": "A wave goes down a rope, bounces off a wall and comes back. Where the two waves meet, some points stay still, and only patterns that fit whole loops between the ends can last.",
+    "beats": [
+      {
+        "title": "No bounce: the wave just runs",
+        "body": "Here the wall soaks up the wave, so nothing comes back. One ripple runs along the rope. No point on the rope ever stays still."
+      },
+      {
+        "title": "Add the bounce: some points freeze",
+        "body": "Now the wall flips the wave over and sends it back. The two dashed waves pass through each other. Where they always cancel out, the rope holds perfectly still."
+      },
+      {
+        "title": "Only whole loops fit, and higher notes have more",
+        "body": "Weaken the bounce and the still points start to wobble. Both ends must stay still, so only patterns of whole loops can fit. Each step up adds one loop and one still point, and the note gets higher."
+      }
+    ],
+    "mass": 1,
+    "distance": 1,
+    "ray_count": 1,
+    "show_reference": true,
+    "show_labels": true,
+    "accent": "blue",
+    "line_width": 3,
+    "duration": 30,
+    "takeaway": "A string held at both ends can only keep up patterns of whole loops, so it rings only certain notes.",
+    "controls": "first",
+    "kind": "standing-waves"
+  },
+  "checks": [
+    {
+      "name": "Full reflection makes still points",
+      "pass": true
+    },
+    {
+      "name": "No reflection leaves no still points",
+      "pass": true
+    },
+    {
+      "name": "Slider steps through whole-number patterns 1 to 5",
+      "pass": true
+    },
+    {
+      "name": "Node stillness is zero without reflection",
+      "pass": true
+    },
+    {
+      "name": "Node stillness is complete with full reflection",
+      "pass": true
+    },
+    {
+      "name": "Antinodes reach the sum of both amplitudes",
+      "pass": true
+    },
+    {
+      "name": "Subtitles read at most 14.0 characters per second (limit 15)",
+      "pass": true
+    },
+    {
+      "name": "Each subtitle stays up at least 2.8 s (minimum 2.5)",
+      "pass": true
+    },
+    {
+      "name": "Zero-mass control removes the modeled effect",
+      "pass": true
+    },
+    {
+      "name": "Mass control updates the rendered model",
+      "pass": true
+    },
+    {
+      "name": "No-mass step shows zero and restores the chosen mass afterward",
+      "pass": true
+    },
+    {
+      "name": "Seeking reproduces identical canvas pixels",
+      "pass": true
+    },
+    {
+      "name": "Mobile page fits viewport",
+      "pass": true
+    },
+    {
+      "name": "Renderer has no JavaScript errors",
+      "pass": true
+    }
+  ],
+  "provider": "reviewed-agents",
+  "provenance": {
+    "sources_retrieved": true,
+    "retrieved_by": "agent"
+  },
+  "revisions": [
+    {
+      "number": 1,
+      "scene": {
+        "title": "Why a Guitar String Plays Only Certain Notes",
+        "subtitle": "A wave goes down a rope, bounces off a wall and comes back. Where the two waves meet, some points stay still, and only patterns that fit whole loops between the ends can last.",
+        "beats": [
+          {
+            "title": "No bounce: the wave just runs",
+            "body": "Here the wall soaks up the wave, so nothing comes back. One ripple runs along the rope. No point on the rope ever stays still."
+          },
+          {
+            "title": "Add the bounce: some points freeze",
+            "body": "Now the wall flips the wave over and sends it back. The two dashed waves pass through each other. Where they always cancel out, the rope holds perfectly still."
+          },
+          {
+            "title": "Only whole loops fit, and higher notes have more",
+            "body": "Weaken the bounce and the still points start to wobble. Both ends must stay still, so only patterns of whole loops can fit. Each step up adds one loop and one still point, and the note gets higher."
+          }
+        ],
+        "mass": 1,
+        "distance": 1,
+        "ray_count": 1,
+        "show_reference": true,
+        "show_labels": true,
+        "accent": "blue",
+        "line_width": 3,
+        "duration": 30,
+        "takeaway": "A string held at both ends can only keep up patterns of whole loops, so it rings only certain notes.",
+        "controls": "first",
+        "kind": "standing-waves"
+      },
+      "checks": [
+        {
+          "name": "Full reflection makes still points",
+          "pass": true
+        },
+        {
+          "name": "No reflection leaves no still points",
+          "pass": true
+        },
+        {
+          "name": "Slider steps through whole-number patterns 1 to 5",
+          "pass": true
+        },
+        {
+          "name": "Node stillness is zero without reflection",
+          "pass": true
+        },
+        {
+          "name": "Node stillness is complete with full reflection",
+          "pass": true
+        },
+        {
+          "name": "Antinodes reach the sum of both amplitudes",
+          "pass": true
+        },
+        {
+          "name": "Subtitles read at most 14.0 characters per second (limit 15)",
+          "pass": true
+        },
+        {
+          "name": "Each subtitle stays up at least 2.8 s (minimum 2.5)",
+          "pass": true
+        },
+        {
+          "name": "Zero-mass control removes the modeled effect",
+          "pass": true
+        },
+        {
+          "name": "Mass control updates the rendered model",
+          "pass": true
+        },
+        {
+          "name": "No-mass step shows zero and restores the chosen mass afterward",
+          "pass": true
+        },
+        {
+          "name": "Seeking reproduces identical canvas pixels",
+          "pass": true
+        },
+        {
+          "name": "Mobile page fits viewport",
+          "pass": true
+        },
+        {
+          "name": "Renderer has no JavaScript errors",
+          "pass": true
+        }
+      ],
+      "accepted": true,
+      "physics_review": {
+        "pass": true,
+        "score": 8,
+        "summary": "This is scientifically sound as a teaching approximation. The physics in the frames matches the model. Frame 1 has reflection a = 0: the readout is 0% and the snapshot is a single sinusoid with no marked nodes. Frames 2 and 3 have a = 1 and n = 1: the solid curve is about twice the height of the dashed component, which matches the antinode height 1 + a = 2. Frame 4 has n = 5 and shows exactly 4 orange still points between the ends (n \u2212 1), with both ends at zero. The readout 2a/(1+a) gives 0% and 100% at the two limits, and the formula checks out. The research claims fit the cited sources or are marked [unverified here]: Mersenne's laws, the fret and tension predictions, and the pluck as a mix of modes. Nothing claims a new discovery. The rope-versus-plucked-string analogy is stated in the limitations. A Reflection-only slider is a reasonable choice, because holding partial reflection is the one thing playback doesn't show. The issues left are small. In two places the narration says more than the frames show. And one feature of the idealized model can look wrong to a viewer: with a = 1 the shaken 'HAND' end never moves.",
+        "changes": [
+          "Narration timing in chapter 3: at 0:18 the subtitle reads 'Weaken the bounce and the still points start to wobble', but Reflection already shows 100% and the pattern has already reached n = 5. Either hold the reflection dip on screen while that sentence is up, or delay the pattern sweep until the sentence about whole loops appears, so each sentence matches what is visible.",
+          "With a = 1 the hand end is a node, since y(0) = sin(wt) \u2212 a sin(wt) = 0. So the end labelled 'HAND' never moves, even though the story says a hand shakes it. Add a short caveat in the investigation details: in this idealized steady state, the driven end sits at a still point, and a real driver makes only a tiny motion near a node. Alternatively, rename the left end so it isn't described as visibly shaking.",
+          "'Each step up adds one loop ... and the note gets higher' should be shown, not just stated. If the renderer uses the same \u03c9 for every n, it is implying a faster wave speed for higher patterns rather than a higher frequency. Make the oscillation rate scale with n (fixed wave speed). If that isn't possible, add a caveat in the details that the animation speed is not the frequency.",
+          "'Only whole loops fit' is enforced by the discrete Pattern control, not demonstrated. Add a caveat in the details (not on stage) that the scene does not show non-fitting wavelengths dying away. At most, reword the subtitle to say that the fixed ends require whole loops.",
+          "In the n = 1, a = 1 frames only one dashed curve is visible, because both travelling components coincide at that instant. The legend says 'wave going right, and its reflection going left'. Consider giving the two components slightly different dash styles or shades so the viewer can tell there are two."
+        ],
+        "blocking_issues": []
+      },
+      "visual_review": {
+        "pass": true,
+        "score": 7,
+        "summary": "Clean, readable scene with a sound progression: no reflection (0% still), then full reflection, then the sweep to 5 half-waves with 4 orange still points and a 100% readout. The subtitles are short and plain. The Checks put the pace at 14 characters per second or less, and every sentence I saw fits comfortably on one line on desktop and two on mobile. Offering only the Reflection slider is the right call: playback already sweeps the pattern, and holding reflection at partial values is the one thing the slider adds. The main weakness is chapter 2. It runs at n = 1, so the only still points are the two ends and no orange markers appear. The beat's key claim (\"some points freeze... the rope holds perfectly still\") is therefore barely visible until chapter 3. The t=9 and t=11 frames are identical, and in both the two dashed components lie on top of each other, so those frames don't show \"two dashed waves pass through each other\". At t=18 the subtitle says \"Weaken the bounce\" while Reflection reads 100%. The dip may fall at a different moment, but sampled frames can't confirm it lines up with the sentence. The word \"loops\" in the text and \"half-waves\" on the stage are never connected. None of these blocks a pass; mobile layout and the page overview are legible.",
+        "changes": [
+          "Raise scene 'distance' so the restored chapter-2 state shows at least one interior still point (n = 2 or 3) instead of n = 1. Then beat 2's 'some points freeze' is visible as an orange marker mid-rope, not only at the ends.",
+          "Beat 3 body: link the two vocabularies. For example, change 'only patterns of whole loops can fit' to 'only patterns of whole loops (half-waves) can fit', so the stage label 'n half-waves fit' matches the narration.",
+          "Beat 3 title: replace 'Only whole loops fit, and higher notes have more' with something less ambiguous, e.g. 'Only whole loops fit; higher notes have more loops'.",
+          "Beat 2 body: 'The two dashed waves pass through each other' isn't supported in the sampled frames because the components overlap there. Consider 'The dashed lines show the wave going out and the wave coming back.'",
+          "Beat 3 body: if the reflection dip doesn't line up with the first sentence, reorder so 'Weaken the bounce...' appears while Reflection is actually below 100%. Otherwise put the loops/fit sentences first and the wobble sentence last.",
+          "Keep controls = 'first' (Reflection only); a Pattern slider would repeat the playback sweep."
+        ],
+        "blocking_issues": []
+      },
+      "frames": [
+        "published/20261027T160931-173edbbc/revision-1-0.png",
+        "published/20261027T160931-173edbbc/revision-1-1.png",
+        "published/20261027T160931-173edbbc/revision-1-2.png",
+        "published/20261027T160931-173edbbc/revision-1-3.png",
+        "published/20261027T160931-173edbbc/revision-1-4.png",
+        "published/20261027T160931-173edbbc/revision-1-5.png"
+      ]
+    }
+  ]
+}
