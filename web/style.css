@@ -345,3 +345,7 @@ body[data-draft=yes] .behind,body[data-draft=yes] .path{display:none}
 #drafts-head{margin-top:40px}
 #drafts-head{flex-wrap:wrap;gap:4px 16px}
 #drafts-head .muted{white-space:normal}
+.stage-note[hidden]{display:none}
+.draft-note{display:none}
+body[data-draft=yes] .draft-note:not(:empty){display:block;max-width:760px;margin:14px auto 0;padding:0 24px;font-size:13px;line-height:1.5;color:var(--muted);text-align:center}
+body[data-draft=yes] .credit{display:none}

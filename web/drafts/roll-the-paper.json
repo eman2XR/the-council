@@ -14,7 +14,7 @@
   "controls": "first",
   "kind": "fall-cone",
   "title": "Roll the paper: straight lines stay straight",
-  "subtitle": "The bent map of height and time, rolled into a paper cone. The ball’s path is still the straightest line on it.",
+  "subtitle": "Earlier version, built on the same bent map. The bent map of height and time, rolled into a paper cone. The ball’s path is still the straightest line on it.",
   "accent": "blue",
   "mass": 1,
   "distance": 2.5,

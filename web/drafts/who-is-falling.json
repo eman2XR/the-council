@@ -1,0 +1,43 @@
+{
+ "id": "who-is-falling",
+ "provider": "draft",
+ "status": "draft",
+ "created": "2026-10-27T21:00:00-07:00",
+ "question": "Who is really falling?",
+ "topic": "fall-views",
+ "scene": {
+  "ray_count": 1,
+  "show_reference": true,
+  "show_labels": true,
+  "line_width": 2.5,
+  "duration": 24,
+  "kind": "fall-views",
+  "title": "Who is really falling?",
+  "subtitle": "One toss, seen from the ground and from the ball. A scale and a clock decide which view tells the truth.",
+  "accent": "blue",
+  "mass": 1,
+  "distance": 1.6,
+  "controls": "none",
+  "takeaway": "Falling is what things do when nothing pushes them. Near Earth, clocks run slower lower down, which bends those paths back to the ground. Staying put takes a push.",
+  "beats": [
+   {
+    "title": "What straight means",
+    "body": "In empty space, a ball you let go of keeps going in a straight line at a steady speed. Nothing pushes it, and nothing pushes you: a scale on either would read zero."
+   },
+   {
+    "title": "From the ground",
+    "body": "On the ground, the toss comes back in an arc. You learned that gravity pulls the ball, yet a scale riding on it reads zero. You feel the same weightlessness in mid-jump. Scales measure pushes, and only yours reads one: the ground pushing up on you."
+   },
+   {
+    "title": "Float with the ball",
+    "body": "Now watch the same toss from the ball. It hangs still, on a straight line, just as in empty space. Floating needs no empty space, only nothing pushing you. The ground moves away at first, because of the toss, until the Earth beneath it pushes it back up."
+   },
+   {
+    "title": "Which view is right?",
+    "body": "Both views show the same toss, and the readings decide. The ball’s scale reads zero and its clock ends up ahead. That fits the twins’ rule only in the ball’s view, where its path is straight. So nothing needs to pull the ball: what needs a cause is you staying put."
+   }
+  ],
+  "next": "Next question: if the ground pushes up everywhere, why isn’t Earth growing? See “What curved spacetime really means”."
+ },
+ "note": "Owner review draft: hand-written subtitles, no research or review. Not published as an investigation."
+}

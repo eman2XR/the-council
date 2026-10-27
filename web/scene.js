@@ -728,6 +728,194 @@ function drawRiver(ctx,w,h,spec,st){
   const hx=X(R.rs);ctx.setLineDash([2,3]);trace(ctx,[[hx,Y(1)],[hx,gy+gh]]);ctx.strokeStyle='rgba(20,23,28,.4)';ctx.stroke();ctx.setLineDash([]);text(ctx,'horizon',hx,gy+gh+14,{align:'center',size:10});}
 }
 
+// One toss, two views: from the ground (the ball arcs) and floating with the ball (the ground moves).
+function viewsStage(st){
+ const since=st.since??st.t, flight=x=>Math.min(1,(x*.16)%1.25);
+ if(st.stage<=1)return {s:0,u:flight(since)};
+ if(st.stage===2){const s=smooth((since-1.5)/3.5);return {s,u:since<5.5?0:flight(since-5.5)};}
+ return {s:1,u:flight(since)};
+}
+function drawPerson(ctx,x,feet,size,color){
+ ctx.strokeStyle=color;ctx.lineWidth=Math.max(2,size*.3);ctx.lineCap='round';ctx.lineJoin='round';
+ trace(ctx,[[x-size*.4,feet],[x,feet-size*1.1],[x+size*.4,feet]]);ctx.stroke();
+ trace(ctx,[[x,feet-size*1.1],[x,feet-size*2.2]]);ctx.stroke();
+ trace(ctx,[[x-size*.7,feet-size*1.5],[x,feet-size*2],[x+size*.5,feet-size*2.6]]);ctx.stroke();
+ ctx.beginPath();ctx.arc(x,feet-size*2.75,size*.45,0,TAU);ctx.fillStyle=color;ctx.fill();
+}
+function drawViews(ctx,w,h,spec,st){
+ const accent=ACCENT[spec.accent]||ACCENT.blue, dark='#14171c', warm='#c2410c', small=w<520, V=Physics.views(st.mass,st.distance), full=Physics.views(1,st.distance), {s,u}=viewsStage(st), stage=st.stage;
+ const apex=full.h(full.T/2), lo=-1.3*apex, hi=1.35*apex, grav=Math.min(1,st.mass), tn=u*V.T;
+ const M=small?{l:w*.3,r:w*.95,t:100,b:h*.57}:{l:w*.2,r:w*.62,t:56,b:h*.86};
+ const X=t=>M.l+t/V.T*(M.r-M.l), Y=hh=>M.b-(hh-lo)/(hi-lo)*(M.b-M.t), shift=t=>s*V.h(t);
+ ctx.save();ctx.beginPath();ctx.rect(M.l-10,M.t-6,M.r-M.l+20,M.b-M.t+12);ctx.clip();
+ // The map: lines of equal height (measured from the ground) and of equal time. Changing the view bends them.
+ for(let i=0;i<=4;i++){const hh=apex*i/3;trace(ctx,Array.from({length:61},(_,j)=>{const t=V.T*j/60;return [X(t),Y(hh-shift(t))];}));ctx.strokeStyle='rgba(20,23,28,.09)';ctx.lineWidth=1;ctx.stroke();}
+ for(let j=0;j<=8;j++){const t=V.T*j/8;trace(ctx,[[X(t),Y(-shift(t))],[X(t),Y(apex*4/3-shift(t))]]);ctx.strokeStyle='rgba(20,23,28,.06)';ctx.lineWidth=1;ctx.stroke();}
+ trace(ctx,[[X(tn),M.t],[X(tn),M.b]]);ctx.setLineDash([2,4]);ctx.strokeStyle='rgba(20,23,28,.2)';ctx.stroke();ctx.setLineDash([]);
+ const path=f=>Array.from({length:81},(_,j)=>{const t=V.T*j/80;return [X(t),Y(f(t)-shift(t))];});
+ ctx.lineCap='round';ctx.lineJoin='round';
+ trace(ctx,path(()=>0));ctx.strokeStyle=dark;ctx.lineWidth=2.6;ctx.stroke();
+ trace(ctx,path(V.h));ctx.strokeStyle=accent;ctx.lineWidth=2.8;ctx.stroke();
+ for(const [hh,c] of [[-shift(tn),dark],[V.h(tn)-shift(tn),accent]]){const x=X(tn),y=Y(hh);ctx.beginPath();ctx.arc(x,y,6,0,TAU);ctx.fillStyle=c;ctx.fill();ctx.beginPath();ctx.arc(x,y,2.2,0,TAU);ctx.fillStyle='#fff';ctx.fill();}
+ ctx.restore();
+ const yb=V.h(tn)-shift(tn);
+ if(Y(yb)<M.t){let te=0;for(let j=1;j<=200;j++){const t=V.T*j/200;if(Y(V.h(t)-shift(t))<M.t){te=t;break;}}
+  const ax=X(te);trace(ctx,[[ax,M.t+10],[ax,M.t-6]]);ctx.strokeStyle=accent;ctx.lineWidth=2;ctx.stroke();trace(ctx,[[ax-4,M.t],[ax,M.t-6],[ax+4,M.t]]);ctx.stroke();
+  if(st.labels)text(ctx,'ball: still going',ax+8,M.t+2,{size:10,weight:600,color:accent});}
+ // Side view: the same moment as it looks. Your hand is where the toss starts; the ground is under your feet.
+ const sx=small?w*.14:w*.1, size=small?8:11, hand=Y(-shift(tn)), feet=hand+size*2.6, by=Y(V.h(tn)-shift(tn));
+ ctx.save();ctx.beginPath();ctx.rect(sx-size*4.5,M.t-6,size*9,h-M.t);ctx.clip();
+ const scaleH=grav>0?size*.55:0;
+ if(grav>0){ctx.fillStyle='#e9e4da';ctx.strokeStyle='rgba(20,23,28,.45)';ctx.lineWidth=1;ctx.beginPath();ctx.roundRect(sx-size*1.3,feet,size*2.6,scaleH,3);ctx.fill();ctx.stroke();ctx.fillStyle=warm;ctx.fillRect(sx-size*.35,feet+scaleH*.25,size*.7,scaleH*.5);}
+ if(grav>0){const feet0=feet;{const feet=feet0+scaleH;const soil=ctx.createLinearGradient(0,feet,0,feet+size*5);soil.addColorStop(0,`rgba(122,84,52,${.32*grav})`);soil.addColorStop(1,'rgba(122,84,52,0)');ctx.fillStyle=soil;ctx.fillRect(sx-size*4,feet,size*8,size*5);
+  trace(ctx,[[sx-size*4,feet],[sx+size*4,feet]]);ctx.strokeStyle=`rgba(122,84,52,${.8*grav})`;ctx.lineWidth=2;ctx.stroke();}}
+ drawPerson(ctx,sx,feet,size,dark);
+ ctx.beginPath();ctx.arc(sx+size*.6,by-size*.6,size*.55,0,TAU);ctx.fillStyle=accent;ctx.fill();
+ // The push you feel: the ground pressing up on your feet.
+ if(grav>0&&stage>=1){const ay=feet+scaleH+size*2.4;ctx.globalAlpha=grav;trace(ctx,[[sx,ay],[sx,feet+scaleH+3]]);ctx.strokeStyle=warm;ctx.lineWidth=2.4;ctx.stroke();
+  trace(ctx,[[sx-5,feet+scaleH+9],[sx,feet+scaleH+3],[sx+5,feet+scaleH+9]]);ctx.stroke();ctx.globalAlpha=1;}
+ ctx.restore();
+ if(!st.labels)return;
+ const size2=small?10:11;
+ if(grav>0&&stage>=1&&feet+size*2.6<h-6)text(ctx,'push',sx+8,feet+scaleH+size*2,{size:10,weight:600,color:warm});
+ if(!small&&by>M.t&&by<h-8)pill(ctx,grav>.5&&u>=.999&&stage!==2?'scale: its weight':'scale: 0',sx+size*1.6,by-size*.6,{size:10,weight:600,color:accent});
+ text(ctx,stage===0?'distance from you ↑':s<.5?'height above the ground ↑':'height, measured from the ball ↑',M.l,M.t+6,{size:10});text(ctx,'time →',M.r,M.b-6,{align:'right',size:10});
+ if(grav>.5){text(ctx,'toss',X(0)-8,Y(0)+20,{align:'right',size:size2,weight:600,color:'rgba(20,23,28,.75)'});text(ctx,'catch',X(V.T)+8,Y(0)+20,{size:size2,weight:600,color:'rgba(20,23,28,.75)'});}
+ if(stage>=3){const mid=V.T/2;
+  pill(ctx,'ball: nothing pushes it',X(mid),Y(V.h(mid)-shift(mid))-16,{align:'center',size:size2,weight:600,color:accent});
+  pill(ctx,'you: pushed by the ground',X(mid),Y(-shift(mid))+18,{align:'center',size:size2,weight:600,color:dark});}
+ // What each one feels, and which view this is.
+ const px=small?w*.06:w*.67, py=small?h*.63:h*.2, lh=small?18:26;
+ const heading=stage===0?'In empty space':stage===1?'Seen from the ground':stage===2?(s<.98?'Switching to the ball’s view':'Seen from the ball'):'Which view is right?';
+ text(ctx,heading,px,py,{size:small?13:17,weight:700,color:'#14171c'});
+ text(ctx,'What a scale reads',px,py+lh*1.15,{size:small?10:12,weight:600,spacing:'.5px',color:'rgba(20,23,28,.5)'});
+ const held=grav>.5&&u>=.999&&stage!==2, floating=stage===0||grav<.5;
+ const rows=[[accent,'Ball',held?'its weight: your hand pushes it':'0: nothing pushes it',held],[dark,'You',floating?'0: nothing pushes you':'your weight: the ground pushes you',!floating]];
+ rows.forEach(([c,a,b,on],i)=>{const y=py+lh*(2.1+i), r=small?6:7, cx0=px+r;
+  ctx.beginPath();ctx.arc(cx0,y,r,0,TAU);ctx.fillStyle='#fff';ctx.fill();ctx.strokeStyle=c;ctx.lineWidth=1.5;ctx.stroke();
+  const ang=on?.9:-.9;trace(ctx,[[cx0,y],[cx0+Math.sin(ang)*r*.8,y-Math.cos(ang)*r*.8]]);ctx.strokeStyle=c;ctx.lineWidth=1.8;ctx.stroke();
+  text(ctx,a,px+r*2+7,y,{size:small?11:14,weight:600,color:c});text(ctx,b,px+(small?54:66),y,{size:small?11:14,color:'rgba(20,23,28,.8)'});});
+ if(stage>=1&&grav>.5){const y=py+lh*4.6, bw=small?w*.46:w*.22, shown=stage>=2||u>=.98;
+  text(ctx,'Clocks, compared at the catch',px,y,{size:small?10:12,weight:600,spacing:'.5px',color:'rgba(20,23,28,.5)'});
+  [[accent,'Ball',1],[dark,'You',.82]].forEach(([c,a,f],i)=>{const yy=y+lh*(1+i);text(ctx,a,px,yy,{size:small?11:13,weight:600,color:c});
+   if(shown){ctx.fillStyle=c;ctx.beginPath();ctx.roundRect(px+(small?40:46),yy-5,bw*f,10,5);ctx.fill();}else text(ctx,'…',px+(small?40:46),yy,{size:13,color:'rgba(20,23,28,.4)'});});
+  const note=stage===1?'Ball ahead. From the ground: clocks run faster higher up.':stage===2?'Same readings. From the ball: your motion slows your clock.':'Your bent path looks longer on paper, yet holds less time.';
+  if(shown)text(ctx,note,px,y+lh*3,{size:small?10:12,color:'rgba(20,23,28,.7)'});
+  if(stage>=3)text(ctx,'Difference hugely enlarged: for a real toss, about 10⁻¹⁵ s.',px,y+lh*3+(small?14:17),{size:small?10:12,color:'rgba(20,23,28,.68)'});
+  if(stage>=3&&!small){const ty=y+lh*6, x0=px+10, x1=px+bw*.9;
+   text(ctx,'The twins’ paths had the same shapes',px,ty-lh*.9,{size:12,weight:600,spacing:'.5px',color:'rgba(20,23,28,.5)'});
+   trace(ctx,[[x0,ty],[x1,ty]]);ctx.strokeStyle=accent;ctx.lineWidth=2.4;ctx.stroke();
+   trace(ctx,[[x0,ty],[(x0+x1)/2,ty+34],[x1,ty]]);ctx.strokeStyle=dark;ctx.lineWidth=2.4;ctx.stroke();
+   for(const x of [x0,x1]){ctx.beginPath();ctx.arc(x,ty,3.5,0,TAU);ctx.fillStyle=dark;ctx.fill();}
+   text(ctx,'ball: like the twin who stays home',(x0+x1)/2,ty-10,{align:'center',size:11,color:accent});text(ctx,'you: like the twin who travels',(x0+x1)/2,ty+48,{align:'center',size:11,color:dark});}
+ }
+ if(s>.5&&!small)text(ctx,'grey lines: equal heights above the ground',M.r,M.t+6,{align:'right',size:10,color:'rgba(20,23,28,.5)'});
+}
+
+// What curvature means: straight paths that start side by side come together or spread apart.
+function drawTides(ctx,w,h,spec,st){
+ const accent=ACCENT[spec.accent]||ACCENT.blue, dark='#14171c', warm='#c2410c', small=w<520, since=st.since??st.t, stage=st.stage, P=Physics.tides(Math.max(st.mass,1e-6));
+ const px=small?w*.06:w*.64, py=small?h*.66:h*.16, lh=small?18:26;
+ const dot=(x,y,r,c)=>{ctx.beginPath();ctx.arc(x,y,r,0,TAU);ctx.fillStyle=c;ctx.fill();};
+ if(stage===0){
+  // A globe seen from a little above the equator; two walkers head due north along meridians.
+  const cx=small?w/2:w*.32, cy=small?h*.36:h*.52, R=Math.min(small?w*.36:w*.24,small?h*.26:h*.38), tilt=.42;
+  const G=(lat,lon)=>{const c=Math.cos(lat),x=c*Math.sin(lon),y=Math.sin(lat),z=c*Math.cos(lon);return [cx+R*x,cy-R*(y*Math.cos(tilt)-z*Math.sin(tilt)),y*Math.sin(tilt)+z*Math.cos(tilt)];};
+  const sea=ctx.createRadialGradient(cx-R*.35,cy-R*.4,R*.1,cx,cy,R);sea.addColorStop(0,'#fdf9f1');sea.addColorStop(1,'#e8dcc6');ctx.beginPath();ctx.arc(cx,cy,R,0,TAU);ctx.fillStyle=sea;ctx.fill();ctx.strokeStyle='rgba(20,23,28,.18)';ctx.lineWidth=1;ctx.stroke();
+  const arc=(f,n,style,width,dash)=>{let prev=null;for(let i=0;i<=n;i++){const p=f(i/n);if(prev&&p[2]>0&&prev[2]>0){trace(ctx,[prev,p]);ctx.strokeStyle=style;ctx.lineWidth=width;if(dash)ctx.setLineDash(dash);ctx.stroke();ctx.setLineDash([]);}prev=p;}};
+  for(let k=-5;k<=6;k++)arc(q=>G(-Math.PI/2+Math.PI*q,k*Math.PI/6),60,'rgba(20,23,28,.07)',1);
+  for(let k=-2;k<=2;k++)arc(q=>G(k*Math.PI/6,TAU*q),120,k===0?'rgba(20,23,28,.3)':'rgba(20,23,28,.07)',k===0?1.4:1);
+  const u=Math.min(1,(since*.15)%1.3), lat=u*Math.PI/2*.999, lons=[-.35,.35];
+  for(const lon of lons){arc(q=>G(Math.PI/2*q,lon),60,rgba(accent,.3),1.6,[3,4]);arc(q=>G(lat*q,lon),60,accent,2.8);}
+  const a=G(lat,lons[0]),b=G(lat,lons[1]);trace(ctx,[a,b]);ctx.setLineDash([2,3]);ctx.strokeStyle=warm;ctx.lineWidth=1.5;ctx.stroke();ctx.setLineDash([]);
+  dot(...a.slice(0,2),6,accent);dot(...b.slice(0,2),6,accent);const pole=G(Math.PI/2,0);dot(pole[0],pole[1],3,dark);
+  if(!st.labels)return;
+  const gap=Math.round(Math.sin(Math.acos(Math.sin(lat)**2+Math.cos(lat)**2*Math.cos(.7))/2)/Math.sin(.35)*100);
+  if(gap>6)pill(ctx,`gap: ${gap}% of the start`,(a[0]+b[0])/2,(a[1]+b[1])/2+16,{align:'center',size:small?10:11,weight:600,color:warm});
+  text(ctx,gap>6?'top':'they meet at the top',pole[0]+10,pole[1]-12,{size:10,weight:gap>6?500:600,color:gap>6?'rgba(20,23,28,.6)':warm});
+  text(ctx,'start line',G(0,1.3)[0]+6,G(0,1.3)[1]+12,{size:10,color:'rgba(20,23,28,.55)'});
+  text(ctx,'On a curved surface',px,py,{size:small?13:17,weight:700,color:dark});
+  text(ctx,'Both walk straight ahead, side by side.',px,py+lh*1.15,{size:small?11:14,color:'rgba(20,23,28,.8)'});
+  text(ctx,'Neither turns, yet their gap shrinks to nothing.',px,py+lh*2.1,{size:small?11:14,color:'rgba(20,23,28,.8)'});
+  return;
+ }
+ if(stage===1){
+  // Two balls let go side by side, at rest, high above the Earth. Their paths through time start parallel and come together.
+  const Re=small?h*.11:h*.15, ex=small?w*.24:w*.2, ey=small?h*.52:h*.8, r0=3, d=.3, tEnd=P.fallTime(r0,1.6), tt=Math.min(tEnd,((since*.6)%(tEnd+2.5)));
+  drawEarth(ctx,ex,ey,Re);
+  const gap=t=>{const [a,b]=[P.fall(-d,r0,t),P.fall(d,r0,t)];return Math.hypot(a[0]-b[0],a[1]-b[1]);};
+  for(const x of [-d,d]){ctx.beginPath();ctx.arc(ex+x*Re,ey-r0*Re,5,0,TAU);ctx.strokeStyle=rgba(accent,.5);ctx.lineWidth=1.2;ctx.setLineDash([2,2]);ctx.stroke();ctx.setLineDash([]);}
+  const now=[-d,d].map(x=>P.fall(x,r0,tt));now.forEach(([x,y])=>dot(ex+x*Re,ey-y*Re,5.5,accent));
+  // Their paths through time, with time running to the right. Dashed: the same two balls in empty space stay parallel.
+  const D=small?{l:w*.52,r:w*.94,t:110,b:h*.5}:{l:w*.38,r:w*.6,t:h*.22,b:h*.62}, mid=(D.t+D.b)/2, half=(D.b-D.t)*.32, Xt=t=>D.l+t/tEnd*(D.r-D.l);
+  trace(ctx,[[D.l,D.t-6],[D.l,D.b+6]]);ctx.strokeStyle='rgba(20,23,28,.25)';ctx.lineWidth=1;ctx.stroke();
+  for(const sgn of [-1,1]){trace(ctx,[[D.l,mid+sgn*half],[D.r,mid+sgn*half]]);ctx.setLineDash([3,4]);ctx.strokeStyle='rgba(20,23,28,.28)';ctx.lineWidth=1.2;ctx.stroke();ctx.setLineDash([]);
+   const pts=Array.from({length:41},(_,i)=>{const t=tt*i/40;return [Xt(t),mid+sgn*half*gap(t)/(2*d)];});trace(ctx,pts);ctx.strokeStyle=accent;ctx.lineWidth=2.6;ctx.stroke();dot(...pts.at(-1),4.5,accent);}
+  if(!st.labels)return;
+  text(ctx,'time →',D.r,D.b+18,{align:'right',size:10});text(ctx,'gap ↕',D.l-8,mid,{align:'right',size:10});
+  text(ctx,'let go at rest',D.l+4,D.t-16,{size:10,weight:600,color:'rgba(20,23,28,.7)'});
+  text(ctx,'their paths through time',(D.l+D.r)/2,D.t-34,{align:'center',size:small?10:11,weight:600,color:'rgba(20,23,28,.7)'});
+  text(ctx,small?'dashed: empty space':'dashed: in empty space they stay parallel',D.l,D.b+18,{size:10,color:'rgba(20,23,28,.55)'});
+  const top=Math.min(...now.map(([,y])=>ey-y*Re));pill(ctx,`gap: ${Math.round(gap(tt)/(2*d)*100)}% of the start`,ex,top-18,{align:'center',size:small?10:11,weight:600,color:warm});
+  text(ctx,'Falling side by side',px,py,{size:small?13:17,weight:700,color:dark});
+  text(ctx,'Neither is pushed, and at first neither moves.',px,py+lh*1.15,{size:small?11:14,color:'rgba(20,23,28,.8)'});
+  text(ctx,'Their paths start parallel and come together.',px,py+lh*2.1,{size:small?11:14,color:'rgba(20,23,28,.8)'});
+  if(!small)text(ctx,'On a flat graph straight paths look bent,',px,py+lh*3.3,{size:12,color:'rgba(20,23,28,.6)'});
+  if(!small)text(ctx,'as straight paths on a ball do on a flat map.',px,py+lh*3.3+17,{size:12,color:'rgba(20,23,28,.6)'});
+  return;
+ }
+ if(stage===2){
+  // A ring of balls let go all around the Earth: the Earth's mass inside makes the whole ring shrink, while the pushed ground stays put.
+  const cx=small?w/2:w*.3, cy=small?h*.36:h*.52, r0=2.3, R=Math.min(small?w*.44:w*.26,small?h*.3:h*.42)/r0, n=12;
+  const tEnd=P.fallTime(r0,1), tt=Math.min(tEnd,((since*.6)%(tEnd+2.5)));
+  ctx.beginPath();ctx.arc(cx,cy,r0*R,0,TAU);ctx.setLineDash([3,5]);ctx.strokeStyle='rgba(20,23,28,.2)';ctx.lineWidth=1;ctx.stroke();ctx.setLineDash([]);
+  drawEarth(ctx,cx,cy,R);
+  for(const ang of [-Math.PI/2,-Math.PI/2+TAU/3,-Math.PI/2-TAU/3]){ctx.save();ctx.translate(cx+Math.cos(ang)*R,cy+Math.sin(ang)*R);ctx.rotate(ang+Math.PI/2);drawPerson(ctx,0,0,small?4.5:6,dark);
+   trace(ctx,[[0,small?16:20],[0,3]]);ctx.strokeStyle=warm;ctx.lineWidth=2.2;ctx.stroke();trace(ctx,[[-4,9],[0,3],[4,9]]);ctx.stroke();ctx.restore();}
+  const pos=Array.from({length:n},(_,i)=>{const ang=-Math.PI/2+TAU*(i+.5)/n,[x,y]=P.fall(Math.cos(ang)*r0,Math.sin(ang)*r0,tt);return [cx+x*R,cy+y*R];});
+  trace(ctx,[...pos,pos[0]]);ctx.strokeStyle=rgba(accent,.4);ctx.lineWidth=1.4;ctx.stroke();pos.forEach(([x,y])=>dot(x,y,5.5,accent));
+  if(!st.labels)return;
+  const size=Math.hypot(pos[0][0]-cx,pos[0][1]-cy)/R/r0;
+  pill(ctx,`ring: ${Math.round(size*100)}% of its start size`,cx,cy-r0*R-14,{align:'center',size:small?10:11,weight:600,color:accent});
+  if(!small)text(ctx,'dashed: where the ring started',cx+r0*R*.72,cy+r0*R*.78,{size:10,color:'rgba(20,23,28,.5)'});
+  text(ctx,'Around the Earth',px,py,{size:small?13:17,weight:700,color:dark});
+  text(ctx,'The Earth’s mass makes the floating ring shrink.',px,py+lh*1.15,{size:small?11:14,color:'rgba(20,23,28,.8)'});
+  text(ctx,'The ground, pushed outward from it, stays put.',px,py+lh*2.1,{size:small?11:14,color:'rgba(20,23,28,.8)'});
+  return;
+ }
+ // Tides: a small ring around one ball, falling from high above. Floating with the middle ball, the ring stretches.
+ const r0=3, rho=.3, n=12, tEnd=P.fallTime(r0,2.3), tt=Math.min(tEnd,((since*.6)%(tEnd+2.5)));
+ const Re=small?h*.085:h*.14, ex=small?w*.26:w*.24, ey=small?h*.52:h*.82;
+ drawEarth(ctx,ex,ey,Re);
+ const start=[[0,r0],...Array.from({length:n},(_,i)=>{const a=TAU*i/n;return [rho*Math.cos(a),r0+rho*Math.sin(a)];})];
+ const now=start.map(([x,y])=>P.fall(x,y,tt));
+ now.forEach(([x,y],i)=>dot(ex+x*Re,ey-y*Re,i?2.6:3.4,i?accent:dark));
+ // Why it stretches: the ball nearest the Earth is pulled a little harder than the middle one, the farthest a little less.
+ if(st.labels&&!small)[[now[1+n*3/4],'nearest: speeds up more',warm],[now[0],'middle',dark],[now[1+n/4],'farthest: less','rgba(194,65,12,.55)']].forEach(([[x,y],name,c])=>{
+  const r=Math.hypot(x,y), L=120/(r*r), ax=ex-rho*Re*2.2-18, ay=ey-y*Re;trace(ctx,[[ax,ay],[ax,ay+L]]);ctx.strokeStyle=c;ctx.lineWidth=2;ctx.stroke();trace(ctx,[[ax-4,ay+L-6],[ax,ay+L],[ax+4,ay+L-6]]);ctx.stroke();
+  text(ctx,name,ax-8,ay+L/2,{align:'right',size:10,color:'rgba(20,23,28,.65)'});});
+ const [cx0,cy0]=[ex+now[0][0]*Re,ey-now[0][1]*Re];
+ ctx.strokeStyle='rgba(20,23,28,.3)';ctx.lineWidth=1;ctx.strokeRect(cx0-rho*Re*2.2,cy0-rho*Re*2.2,rho*Re*4.4,rho*Re*4.4);
+ // Floating with the middle ball: the same ring, zoomed in.
+ const ix=small?w*.72:w*.8, iy=small?h*.34:h*.5, Ri=Math.min(small?w*.12:w*.07,small?h*.1:h*.13);
+ trace(ctx,[[cx0+rho*Re*2.2,cy0],[ix-Ri*1.7,iy]]);ctx.setLineDash([2,4]);ctx.strokeStyle='rgba(20,23,28,.2)';ctx.stroke();ctx.setLineDash([]);
+ ctx.beginPath();ctx.arc(ix,iy,Ri,0,TAU);ctx.setLineDash([3,4]);ctx.strokeStyle='rgba(20,23,28,.3)';ctx.stroke();ctx.setLineDash([]);
+ const rel=now.slice(1).map(([x,y])=>[ix+(x-now[0][0])/rho*Ri,iy-(y-now[0][1])/rho*Ri]);
+ trace(ctx,[...rel,rel[0]]);ctx.strokeStyle=rgba(accent,.5);ctx.lineWidth=1.4;ctx.stroke();rel.forEach(([x,y])=>dot(x,y,5,accent));dot(ix,iy,5.5,dark);
+ if(!st.labels)return;
+ text(ctx,'floating with the middle ball',ix,iy-Ri*1.95-14,{align:'center',size:small?10:11,weight:600,color:'rgba(20,23,28,.7)'});
+ text(ctx,'toward Earth ↓',ix,iy+Ri*1.95+14,{align:'center',size:10,color:'rgba(20,23,28,.55)'});
+ if(tt>tEnd*.4){text(ctx,'apart ↕',ix+Ri*.85,iy-Ri*1.2,{size:10,weight:600,color:warm});text(ctx,'closer ↔',ix+Ri*1.05,iy+Ri*.3,{size:10,weight:600,color:warm});}
+ text(ctx,'dashed: where the ring started',ix,iy+Ri*1.95+30,{align:'center',size:10,color:'rgba(20,23,28,.5)'});
+ text(ctx,'middle ball',ix,iy+16,{align:'center',size:10,color:'rgba(20,23,28,.6)'});
+ if(!small){const mx=w*.47,my=h*.82,mr=22;ctx.beginPath();ctx.ellipse(mx,my,mr*1.75,mr*1.08,0,0,TAU);ctx.fillStyle='rgba(37,99,235,.22)';ctx.fill();ctx.strokeStyle='rgba(37,99,235,.45)';ctx.lineWidth=1;ctx.stroke();
+  drawEarth(ctx,mx,my,mr);dot(mx+110,my,7,'#b8b2a7');text(ctx,'Moon',mx+110,my+18,{align:'center',size:10,color:'rgba(20,23,28,.6)'});
+  text(ctx,'bulge',mx-mr*1.75-6,my,{align:'right',size:10,color:'rgba(37,99,235,.9)'});text(ctx,'bulge',mx+mr*1.75+6,my-12,{size:10,color:'rgba(37,99,235,.9)'});
+  text(ctx,'The Moon stretches Earth’s oceans the same way: two bulges.',mx-mr*1.75,my+mr*1.08+18,{size:11,color:'rgba(20,23,28,.7)'});}
+ text(ctx,'Tides',px,small?py:h*.12,{size:small?13:17,weight:700,color:dark});
+ text(ctx,'No mass inside: stretched one way, squeezed the other.',px,(small?py:h*.12)+lh*1.15,{size:small?11:14,color:'rgba(20,23,28,.8)'});
+}
+
 const ENGINES={
  'light-bending':{draw:drawLight,a:['Mass','how much mass sits nearby'],b:['Passing distance','how close the light passes','×'],
   fa:a=>a.toFixed(2),fb:b=>b.toFixed(2)+'×',
@@ -797,7 +985,15 @@ const ENGINES={
   fa:a=>a<.005?'none':Math.round(a*100)+'%',fb:b=>(Physics.river(1,b).re).toFixed(2)+' horizon sizes',
   measure:['Inflow where the flash starts',(a,b)=>Math.round(Physics.river(a,b).flow(Physics.river(a,b).re)*100)+'% of light'],scale:'Seen from above',demoEnd:()=>1,
   disclosure:'Exact for a non-rotating black hole in the river (Painlevé–Gullstrand) picture; distances in horizon sizes, motion slowed down. The flowing specks show the inflow speed, not real particles.',
-  try:'Move the flash inside the horizon: can it get out? Shrink the black hole and try again.',aria:'Space flowing into a black hole like a river, with light flashes swimming outward against the current.'}
+  try:'Move the flash inside the horizon: can it get out? Shrink the black hole and try again.',aria:'Space flowing into a black hole like a river, with light flashes swimming outward against the current.'},
+ 'fall-views':{draw:drawViews,demo:false,measure:null,a:['Gravity','how strong gravity is'],b:['Time in the air','between the toss and the catch',''],
+  fa:a=>a<.005?'none':Math.round(a*100)+'%',fb:b=>Physics.views(1,b).T.toFixed(1)+' units',scale:'',demoEnd:()=>1.6,
+  disclosure:'Schematic units; air resistance is ignored. The view from the ball is exact for a short toss. The clock difference is enormously enlarged: for a real three-second toss it is about a millionth of a billionth of a second.',
+  try:'',aria:'A ball tossed up and caught, drawn on a map of height and time, first as seen from the ground and then as seen from the ball, where the ball stays still and the ground moves.'},
+ 'tides':{draw:drawTides,demo:false,measure:null,a:['Planet mass','how strongly it pulls'],b:['Unused','',''],
+  fa:a=>Math.round(a*100)+'%',fb:b=>b.toFixed(2),scale:'',demoEnd:()=>1,
+  disclosure:'The ball is an analogy: a curved surface in space. Spacetime curvature also makes straight paths come together or spread apart, but it involves time and cannot be drawn exactly. The balls follow exact Newtonian free fall, accurate for weak gravity; sizes are not to scale. In three dimensions, a small floating ring away from the Earth stretches one way and squeezes in the other two, so its volume stays the same.',
+  try:'',aria:'Two walkers heading north on a globe come together; a ring of falling balls around the Earth shrinks; a small falling ring stretches into an egg shape.'}
 };
 const engineOf=spec=>ENGINES[spec?.kind]||ENGINES['light-bending'];
 
@@ -839,7 +1035,7 @@ function paint(){
  const since=started&&timeline?Math.max(0,time-timeline.chapters[stage].start):time;
  draw(ctx,w,h,spec,{t:time,since,stage,mass:shown,distance,labels:spec.show_labels});
  const value=target();
- $('bend-value').textContent=engineOf(spec).measure[1](value,distance);
+ if(engineOf(spec).measure)$('bend-value').textContent=engineOf(spec).measure[1](value,distance);
  captions();transport();
 }
 function sentences(body){return body.match(/[^.!?]+[.!?]*["”’)]*\s*/g)?.map(s=>s.trim()).filter(Boolean)||[body];}
@@ -847,7 +1043,7 @@ function captions(){
  let chapter, line, reveal=1, hint='';
  if(!started){chapter=`${spec.beats.length} chapters · ${fmt(timeline.total)}`;line=(spec.controls||'both')==='none'?'Press play to watch the explanation.':'Press play, or move the sliders to explore on your own.';}
  else if(ended&&mode!=='playing'){const c=spec.controls||'both', e=engineOf(spec);chapter='The idea';line=spec.takeaway||'';
-  hint=c==='none'?'':c==='both'?'Now try it: '+e.try:`Now try it: move ${(c==='first'?e.a:e.b)[0]} and watch “${e.measure[0]}”.`;}
+  hint=spec.next||(c==='none'?'':c==='both'?'Now try it: '+e.try:`Now try it: move ${(c==='first'?e.a:e.b)[0]} and watch “${e.measure[0]}”.`);}
  else{
   const beat=spec.beats[stage];chapter='';line=beat.body;
   {
@@ -891,7 +1087,8 @@ function configure(){
  document.querySelector('.workspace')?.setAttribute('data-kind',spec.kind||'light-bending');
  $('mass-label').textContent=e.a[0];$('mass-hint').textContent=e.a[1];
  $('distance-label').textContent=e.b[0];$('distance-hint').textContent=e.b[1];
- $('measure-label').textContent=e.measure[0];$('scale-label').textContent=e.scale;
+ // Engines without a readout hide the readout pill.
+ $('measure-label').closest('.stage-note').hidden=!e.measure;$('measure-label').textContent=e.measure?.[0]||'';$('scale-label').textContent=e.scale;
  canvas.setAttribute('aria-label',e.aria);
 }
 function load(scene){
@@ -928,9 +1125,9 @@ function tick(stamp){
  if(spec&&started&&mode!=='paused'){
   time+=dt;
   if(mode==='playing'){
-   const next=chapterAt(time), c=timeline.chapters[2];
+   const next=chapterAt(time), last=timeline.chapters.length-1, c=timeline.chapters[last];
    if(next!==stage)setStage(next);
-   if(stage===2)demo(clamp((time-c.start)/(c.end-c.start)));
+   if(stage===last&&engineOf(spec).demo!==false)demo(clamp((time-c.start)/(c.end-c.start)));
    if(time>=timeline.total){time=timeline.total;mode='live';ended=true;emit('ended');}
   }
   shown+=(target()-shown)*(1-Math.exp(-dt*(mode==='playing'?1.6:7)));
@@ -939,7 +1136,7 @@ function tick(stamp){
  requestAnimationFrame(tick);
 }
 // Taking control jumps to the last chapter; its scene clock starts there so trips and arrivals play out.
-function explore(){if(!started){started=true;ended=true;}mode='live';if(time<timeline.chapters[2].start)time=timeline.chapters[2].start;setStage(2);}
+function explore(){if(!started){started=true;ended=true;}mode='live';const last=timeline.chapters.length-1;if(time<timeline.chapters[last].start)time=timeline.chapters[last].start;setStage(last);}
 function input(id,value){
  // Touching a control before playing means exploring; during playback it hands control to the viewer.
  if(id==='mass')mass=value;else distance=value;

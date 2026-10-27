@@ -106,6 +106,27 @@
         for(let i=0;i<n&&r>.02&&r<12;i++){const k1=f(r),k2=f(r+h*k1/2),k3=f(r+h*k2/2),k4=f(r+h*k3);r+=h*(k1+2*k2+2*k3+k4)/6;}return r;};
       return {rs,re,flow,light};
     },
+    // One toss seen from the ground and from the ball (weak gravity, schematic units). The throw speed is fixed;
+    // gravity g = 0.8*a, so with a = 0 the ball keeps going and with a = 1 it comes back after T.
+    views(a, b) {
+      const g=.8*a, T=2+2*(b-1), v0=.8*T/2;
+      const h=t=>v0*t-g*t*t/2, v=t=>v0-g*t;
+      return {g,T,v0,h,v};
+    },
+    // Free fall from rest toward a planet of radius 1 (Newtonian, exact for weak gravity); stops at the surface.
+    tides(a) {
+      const GM=a;
+      const fall=(x0,y0,t)=>{let x=x0,y=y0,vx=0,vy=0;const n=Math.ceil(t/.01),h=t/Math.max(1,n);
+        const acc=(x,y)=>{const r=Math.hypot(x,y),k=-GM/(r*r*r);return [k*x,k*y];};
+        for(let i=0;i<n&&Math.hypot(x,y)>1;i++){
+          const [a1,b1]=acc(x,y),[a2,b2]=acc(x+vx*h/2,y+vy*h/2),[a3,b3]=acc(x+(vx+a1*h/2)*h/2,y+(vy+b1*h/2)*h/2),[a4,b4]=acc(x+(vx+a2*h/2)*h,y+(vy+b2*h/2)*h);
+          const dx=(vx+2*(vx+a1*h/2)+2*(vx+a2*h/2)+(vx+a3*h))/6,dy=(vy+2*(vy+b1*h/2)+2*(vy+b2*h/2)+(vy+b3*h))/6;
+          x+=h*dx;y+=h*dy;vx+=h*(a1+2*a2+2*a3+a4)/6;vy+=h*(b1+2*b2+2*b3+b4)/6;}
+        const r=Math.hypot(x,y);return r<1?[x/r,y/r]:[x,y];};
+      // Time to fall from rest at r0 to r (radial free fall).
+      const fallTime=(r0,r)=>GM>0?Math.sqrt(r0**3/(2*GM))*(Math.sqrt((r/r0)*(1-r/r0))+Math.acos(Math.sqrt(r/r0))):Infinity;
+      return {GM,fall,fallTime};
+    },
     fallGain(a,b){const f=this.fall(a,b);return f.gain(f.best)/f.T;},
     fallChecks() {
       const f=this.fall(1,1.6), scan=Array.from({length:2001},(_,i)=>i/2000*2*f.ref), top=scan.reduce((m,x)=>f.gain(x)>f.gain(m)?x:m,0);
@@ -181,7 +202,7 @@
     },
     checksFor(kind) {
       return {'gravity-clocks':this.clockChecks,'spacetime':this.spacetimeChecks,'interference':this.waveChecks,
-        'two-slit-particles':this.waveChecks,'standing-waves':this.ropeChecks,'tunneling':this.tunnelChecks,'wave-packet':this.packetChecks,'quantum-well':this.wellChecks,'falling-time':this.fallChecks,'diffraction':this.gapChecks,'twin-trip':this.spacetimeChecks,'spacetime-paths':this.pathChecks,'fall-fan':this.fanChecks,'fall-cone':this.fanChecks,'river':this.riverChecks}[kind]?.call(this) || this.checks();
+        'two-slit-particles':this.waveChecks,'standing-waves':this.ropeChecks,'tunneling':this.tunnelChecks,'wave-packet':this.packetChecks,'quantum-well':this.wellChecks,'falling-time':this.fallChecks,'diffraction':this.gapChecks,'twin-trip':this.spacetimeChecks,'spacetime-paths':this.pathChecks,'fall-fan':this.fanChecks,'fall-cone':this.fanChecks,'river':this.riverChecks,'fall-views':this.viewsChecks,'tides':this.tidesChecks}[kind]?.call(this) || this.checks();
     },
     spacetimeChecks() {
       const near=(a,b)=>Math.abs(a-b)<1e-12, g=this.gamma(this.speed(1));
@@ -226,6 +247,34 @@
         'Outgoing light at the horizon stands still':near(R.light(1,1,2),1,1e-6),
         'Outgoing light inside the horizon is swept inward':R.light(.8,1,.2)<.8,
         'With no mass, light moves at light speed':near(this.river(0,1.8).light(1,1,1.5),2.5,1e-9),
+      }).map(([name,pass])=>({name,pass}));
+    },
+    viewsChecks() {
+      const V=this.views(1,1.6), near=(x,y,e)=>Math.abs(x-y)<e, n=4000, dt=V.T/n;
+      let ground=0, ball=0;
+      // From the ground: height gains time, speed loses it. From the ball: only the ground's motion costs time.
+      for(let i=0;i<n;i++){const t=(i+.5)*dt;ground+=(V.g*V.h(t)-V.v(t)**2/2)*dt;ball+=(V.v(t)**2/2)*dt;}
+      const gain=k=>{let s=0;for(let i=0;i<n;i++){const t=(i+.5)*dt;s+=(V.g*k*V.h(t)-(k*V.v(t))**2/2)*dt;}return s;};
+      return Object.entries({
+        'Without gravity the tossed ball keeps going in a straight line':near(this.views(0,1.6).h(2),2*this.views(0,1.6).h(1),1e-12),
+        'With gravity the ball comes back to the hand at the catch':near(V.h(V.T),0,1e-12),
+        'Seen from the ball, the ground speeds up at g (it is pushed)':near(-(V.h(1.01)-2*V.h(1)+V.h(.99))/1e-4,V.g,1e-6),
+        'Ground view and ball view give the same extra time for the ball':near(ground,ball,1e-6)&&near(ball,V.g**2*V.T**3/24,1e-6),
+        'The real toss keeps more time than a lower or higher one':gain(1)>gain(.7)&&gain(1)>gain(1.3),
+      }).map(([name,pass])=>({name,pass}));
+    },
+    tidesChecks() {
+      const P=this.tides(1), d=(a,b)=>Math.hypot(a[0]-b[0],a[1]-b[1]), t=1.2;
+      const side=[P.fall(-.1,3,t),P.fall(.1,3,t)], stack=[P.fall(0,3,t),P.fall(0,3.2,t)], e=1e-3, s=.2;
+      const sq=P.fall(e,3,s)[0]-e, st=(P.fall(0,3+e,s)[1]-P.fall(0,3,s)[1])-e;
+      const gap=lat=>2*Math.asin(Math.cos(lat)*Math.sin(.35));
+      return Object.entries({
+        'Walkers heading north from the equator close their gap to zero at the pole':gap(Math.PI/2)<1e-12&&gap(1)<gap(.5),
+        'Balls released side by side drift together':d(...side)<.2,
+        'Balls released one above the other drift apart':d(...stack)>.2,
+        'Stretching starts at twice the squeezing':Math.abs(st/sq+2)<.05,
+        'Without the planet nothing drifts':this.tides(0).fall(.1,3,2)[0]===.1&&this.tides(0).fall(.1,3,2)[1]===3,
+        'Fall time from the formula matches the simulation':Math.abs(Math.hypot(...P.fall(0,2.3,P.fallTime(2.3,1.5)))-1.5)<1e-3,
       }).map(([name,pass])=>({name,pass}));
     },
     waveChecks() {

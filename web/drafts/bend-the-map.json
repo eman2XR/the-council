@@ -14,7 +14,7 @@
   "controls": "first",
   "kind": "fall-fan",
   "title": "Bend the map, and falling is straight",
-  "subtitle": "A map of height and time, bent so that the path of most time is a straight line.",
+  "subtitle": "Earlier version of “Who is really falling?”. A map of height and time, bent so that the path of most time is a straight line.",
   "accent": "blue",
   "mass": 1,
   "distance": 2.5,

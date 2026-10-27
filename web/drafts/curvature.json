@@ -1,0 +1,42 @@
+{
+ "id": "curvature",
+ "provider": "draft",
+ "status": "draft",
+ "created": "2026-10-27T21:00:00-07:00",
+ "question": "What curved spacetime really means",
+ "topic": "tides",
+ "scene": {
+  "ray_count": 1,
+  "show_reference": true,
+  "show_labels": true,
+  "line_width": 2.5,
+  "duration": 24,
+  "kind": "tides",
+  "title": "What curved spacetime really means",
+  "subtitle": "If the ground pushes up everywhere, why isn’t Earth growing? Because near Earth, straight paths that start side by side come together.",
+  "accent": "blue",
+  "mass": 1,
+  "distance": 1.6,
+  "controls": "none",
+  "takeaway": "Spacetime is curved where floating paths that start side by side come together or spread apart. Mass makes the paths around it come together, so the ground can push outward everywhere while the Earth keeps its size.",
+  "beats": [
+   {
+    "title": "Straight lines that meet",
+    "body": "Two walkers start side by side on a ball, facing the same way, and walk straight ahead. Neither ever turns, yet they get closer and meet. On a curved surface, straight paths that start parallel come together."
+   },
+   {
+    "title": "Falling side by side",
+    "body": "Now let go of two balls side by side, high above the Earth. Neither is pushed, and at first neither moves at all. In empty space they would stay the same distance apart forever. Near Earth they drift together, like the walkers: that is curved spacetime."
+   },
+   {
+    "title": "Around the Earth",
+    "body": "Now let go of a ring of balls all around the Earth. The whole ring shrinks: the Earth’s mass makes floating paths around it come together. So the ground can be pushed outward from them everywhere, and the Earth still keeps its size."
+   },
+   {
+    "title": "Tides",
+    "body": "Away from the Earth, float with one ball inside a small ring. The nearest ball speeds up a little more and the farthest a little less. So the ring stretches, while its sides draw in. With no mass inside, it doesn’t simply shrink. The Moon stretches Earth’s oceans the same way, into two bulges."
+   }
+  ]
+ },
+ "note": "Owner review draft: hand-written subtitles, no research or review. Not published as an investigation."
+}
