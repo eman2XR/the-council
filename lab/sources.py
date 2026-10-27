@@ -1,0 +1,88 @@
+"""Opt-in coordinator-side source retrieval (COUNCIL_COORDINATOR_FETCH=1).
+
+When a CLI researcher cannot reach the web, the model proposes candidate URLs as data and the
+coordinator fetches them with bounded size and time. Only pages that actually load become source
+notes, so every citation in the research record refers to text that was retrieved.
+"""
+import html
+import json
+import os
+import re
+import urllib.request
+from datetime import datetime, timezone
+from html.parser import HTMLParser
+from .contracts import obj, STR
+
+CANDIDATES = obj({'urls': {'type': 'array', 'items': obj({'url': STR, 'why': STR})}})
+MAX_BYTES = 600_000
+EXCERPT = 3500
+
+
+def enabled():
+    return os.environ.get('COUNCIL_COORDINATOR_FETCH') == '1'
+
+
+class _Text(HTMLParser):
+    def __init__(self):
+        super().__init__()
+        self.parts, self.title, self._skip, self._in_title = [], '', 0, False
+
+    def handle_starttag(self, tag, attrs):
+        if tag in ('script', 'style', 'nav', 'footer', 'header', 'noscript'):
+            self._skip += 1
+        self._in_title = tag == 'title'
+
+    def handle_endtag(self, tag):
+        if tag in ('script', 'style', 'nav', 'footer', 'header', 'noscript') and self._skip:
+            self._skip -= 1
+        self._in_title = False
+
+    def handle_data(self, data):
+        if self._in_title:
+            self.title += data
+        elif not self._skip:
+            self.parts.append(data)
+
+
+def fetch(url, opener=urllib.request.urlopen, timeout=15):
+    """Return (title, text) for an HTML or plain-text page, or None if it cannot be read."""
+    if not re.fullmatch(r'https://[^\s<>"]{4,300}', url):
+        return None
+    request = urllib.request.Request(url, headers={'User-Agent': 'TheCouncil/1.0 (educational research; github.com/eman2XR/the-council)'})
+    try:
+        with opener(request, timeout=timeout) as response:
+            kind = response.headers.get('Content-Type', '')
+            if not ('html' in kind or 'text/plain' in kind):
+                return None
+            raw = response.read(MAX_BYTES)
+    except Exception:
+        return None
+    body = raw.decode('utf-8', errors='replace')
+    if 'html' in kind:
+        parser = _Text()
+        parser.feed(body)
+        title, text = parser.title.strip(), ' '.join(parser.parts)
+    else:
+        title, text = url, body
+    text = re.sub(r'\s+', ' ', html.unescape(text)).strip()
+    return (title or url, text) if len(text) > 400 else None
+
+
+def retrieve(provider, question, opener=urllib.request.urlopen, limit=6):
+    """Ask the model for candidate sources, fetch them, and return notes built only from retrieved text."""
+    candidates = provider.generate('source_finder', question + '\nList up to eight specific, stable web pages '
+        '(university, government, encyclopedia, or open educational resources; https only) that explain this '
+        'question reliably. Prefer pages that are plain HTML. Return URLs only as data.', CANDIDATES)
+    retrieved = []
+    for item in candidates.get('urls', [])[:8]:
+        page = fetch(item.get('url', ''), opener)
+        if page:
+            retrieved.append({'url': item['url'], 'title': page[0][:160], 'text': page[1][:EXCERPT]})
+        if len(retrieved) >= limit:
+            break
+    if not retrieved:
+        raise RuntimeError('Coordinator could not retrieve any candidate source; refusing unsourced research.')
+    stamp = datetime.now(timezone.utc).isoformat(timespec='seconds')
+    notes = '\n\n'.join(f'SOURCE (retrieved by the coordinator {stamp}): {r["url"]}\nTITLE: {r["title"]}\nEXCERPT: {r["text"]}'
+                        for r in retrieved)
+    return notes, [r['url'] for r in retrieved]

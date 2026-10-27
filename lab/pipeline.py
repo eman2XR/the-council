@@ -10,6 +10,8 @@ from .render import capture, ROOT
 from .topics import TOPICS
 
 
+from . import sources
+
 def write_json(path, value):
     path.parent.mkdir(parents=True, exist_ok=True)
     temporary = path.with_suffix('.tmp')
@@ -46,7 +48,16 @@ def run(provider, rounds=3, on_update=None, topic="light-bending", question=None
 
     try:
         save('Researcher is gathering sources and constraints.')
-        notes=provider.generate('researcher', question+' Search primary or university sources for this question. Include URLs, physical assumptions, tests, and common misleading visual metaphors. Use web search, do not invent citations.', research=True)
+        retrieved_by='agent'
+        try:
+            notes=provider.generate('researcher', question+' Search primary or university sources for this question. Include URLs, physical assumptions, tests, and common misleading visual metaphors. Use web search, do not invent citations.', research=True)
+        except RuntimeError as error:
+            # Opt-in fallback: the coordinator fetches candidate pages itself; only pages that load become notes.
+            if not (sources.enabled() and 'retrieved no source content' in str(error)):
+                raise
+            save('The researcher could not reach the web; the coordinator is retrieving candidate sources.')
+            notes,_=sources.retrieve(provider,question)
+            retrieved_by='coordinator'
         (directory/'source-notes.txt').write_text(notes,encoding='utf-8')
         save('Sources retrieved. Scientist is preparing the research record.')
         research=provider.generate('scientist', question+'\nProduce a precise, beginner-friendly research record from these retrieved notes. Only cite URLs in the notes. No new-discovery claims.\n'+model_notes+'\n'+notes, RESEARCH_SCHEMA)
@@ -56,7 +67,7 @@ def run(provider, rounds=3, on_update=None, topic="light-bending", question=None
         if provider.name!='fixture' and any(s['url'] not in notes for s in research['sources']):
             raise ValueError('Research must cite sources present in retrieved notes.')
         state['research']=research
-        state['provenance']={'sources_retrieved':provider.name!='fixture'}
+        state['provenance']={'sources_retrieved':provider.name!='fixture','retrieved_by':retrieved_by}
         save('Research recorded. Director is designing the visual explanation.')
         feedback=''
         previous=None
