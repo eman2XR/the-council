@@ -1,0 +1,88 @@
+"""Small, provider-independent contracts. Model output is data, never executable code."""
+import math
+
+
+def obj(properties):
+    return {'type': 'object', 'properties': properties, 'required': list(properties), 'additionalProperties': False}
+
+
+STR = {'type': 'string'}
+BOOL = {'type': 'boolean'}
+NUM = {'type': 'number'}
+STRINGS = {'type': 'array', 'items': STR}
+SCENE_SCHEMA = obj({
+    'title': STR, 'subtitle': STR,
+    'beats': {'type': 'array', 'items': obj({'title': STR, 'body': STR})},
+    'mass': NUM, 'distance': NUM, 'ray_count': {'type': 'integer'},
+    'show_reference': BOOL, 'show_labels': BOOL,
+    'accent': {'type': 'string', 'enum': ['mint', 'gold', 'blue']},
+    'line_width': NUM, 'duration': NUM, 'takeaway': STR,
+})
+RESEARCH_SCHEMA = obj({
+    'claim': STR, 'explanation': STR, 'assumptions': STRINGS,
+    'prediction': STR, 'falsifier': STR, 'limitations': STRINGS,
+    'sources': {'type': 'array', 'items': obj({'title': STR, 'url': STR, 'supports': STR})},
+})
+REVIEW_SCHEMA = obj({
+    'pass': BOOL, 'score': NUM, 'summary': STR, 'changes': STRINGS,
+    'blocking_issues': STRINGS,
+})
+
+
+def validate(value, schema, path='output'):
+    typ = schema['type']
+    if typ == 'object':
+        if not isinstance(value, dict) or set(value) != set(schema['required']):
+            raise ValueError(f'{path}: missing or unexpected fields')
+        for key, spec in schema['properties'].items():
+            validate(value[key], spec, f'{path}.{key}')
+    elif typ == 'array':
+        if not isinstance(value, list) or len(value) > 30:
+            raise ValueError(f'{path}: expected a bounded array')
+        for item in value:
+            validate(item, schema['items'], path)
+    elif typ == 'string':
+        if not isinstance(value, str) or len(value) > 5000:
+            raise ValueError(f'{path}: invalid string')
+        if 'enum' in schema and value not in schema['enum']:
+            raise ValueError(f'{path}: invalid choice')
+    elif typ == 'boolean':
+        if type(value) is not bool:
+            raise ValueError(f'{path}: expected boolean')
+    elif typ in ('number', 'integer'):
+        if type(value) not in (int, float) or not math.isfinite(value):
+            raise ValueError(f'{path}: expected finite number')
+        if typ == 'integer' and type(value) is not int:
+            raise ValueError(f'{path}: expected integer')
+
+
+def validate_scene(scene):
+    validate(scene, SCENE_SCHEMA)
+    for key, lo, hi in [('mass', 0, 1), ('distance', 1, 2.5), ('ray_count', 1, 5),
+                        ('line_width', 1, 5), ('duration', 15, 45)]:
+        if not lo <= scene[key] <= hi:
+            raise ValueError(f'{key} must be between {lo} and {hi}')
+    if len(scene['beats']) != 3:
+        raise ValueError('Exactly three teaching beats required')
+    for beat in scene['beats']:
+        if len(beat['title']) > 90 or len(beat['body']) > 380:
+            raise ValueError('Teaching beat exceeds layout limits')
+    if len(scene['title']) > 100 or len(scene['subtitle']) > 250:
+        raise ValueError('Heading exceeds layout limits')
+    return scene
+
+
+MODEL_NOTES = '''Renderer is fixed: a 2D weak-field light-deflection diagram, not full spacetime.
+Coordinates use an arbitrary length unit, m=GM/c^2=0.025*mass, impact parameter b=distance.
+y(x)=b-2*m/b*(sqrt(x*x+b*b)+x), -7<=x<=7, to first order in m/b.
+Asymptotic deflection 4*m/b radians; m/b <=0.025. Vertical DEVIATION is magnified 6x
+for visibility and labeled. No black hole, horizon, orbit, rubber sheet, or numerical
+Einstein solver. A central sphere is a schematic compact mass (radius not to scale).
+Grid is a coordinate reference, NOT a drawing of spacetime curvature. The light pulse
+is a moving marker, not a measurement of coordinate speed. The three beats are:
+1 no mass/straight reference, 2 add mass/bending, 3 compare and experiment.
+All controls remain inside weak-field regime. Explain null geodesics in plain language;
+light has no rest mass and is locally measured at c. More mass or a closer pass increases
+bending. Do not imply light bends because it slows locally, or a dent pulls it downward.
+The animation cannot independently verify general relativity. Numeric checks verify
+only the implemented approximation. Keep claims appropriately scoped.'''

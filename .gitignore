@@ -4,3 +4,13 @@ DerivedData/
 node_modules/
 .build/
 .scribe/
+.sessions/
+__pycache__/
+*.pyc
+.venv/
+.env
+.env.*
+!.env.example
+web/runs/
+web/latest.json
+.council-runtime/

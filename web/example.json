@@ -1,0 +1,362 @@
+{
+  "id": "general-relativity-offline-example",
+  "provider": "fixture",
+  "model": null,
+  "status": "fixture_complete",
+  "question": "Explain general relativity to a beginner through the question: why does gravity bend light?",
+  "created": "2026-10-27T03:14:39.821717+00:00",
+  "events": [
+    {
+      "at": "2026-10-27T03:14:39.821723+00:00",
+      "message": "Researcher is gathering sources and constraints."
+    },
+    {
+      "at": "2026-10-27T03:14:39.822278+00:00",
+      "message": "Research recorded. Director is designing the visual explanation."
+    },
+    {
+      "at": "2026-10-27T03:14:39.822630+00:00",
+      "message": "Revision 1: rendering desktop and mobile frames."
+    },
+    {
+      "at": "2026-10-27T03:14:42.447307+00:00",
+      "message": "Revision 1: reviewers are inspecting the rendered frames."
+    },
+    {
+      "at": "2026-10-27T03:14:42.448005+00:00",
+      "message": "Revision 1: physics review saved; visual review in progress."
+    },
+    {
+      "at": "2026-10-27T03:14:42.448681+00:00",
+      "message": "Revision 1: changes requested; feedback saved."
+    },
+    {
+      "at": "2026-10-27T03:14:42.449055+00:00",
+      "message": "Revision 2: rendering desktop and mobile frames."
+    },
+    {
+      "at": "2026-10-27T03:14:44.788620+00:00",
+      "message": "Revision 2: reviewers are inspecting the rendered frames."
+    },
+    {
+      "at": "2026-10-27T03:14:44.789809+00:00",
+      "message": "Revision 2: physics review saved; visual review in progress."
+    },
+    {
+      "at": "2026-10-27T03:14:44.790834+00:00",
+      "message": "Revision 2: review gates passed."
+    },
+    {
+      "at": "2026-10-27T03:14:44.791315+00:00",
+      "message": "Offline fixture complete."
+    }
+  ],
+  "revisions": [
+    {
+      "number": 1,
+      "scene": {
+        "title": "Light takes the natural path.\nGravity changes the geometry.",
+        "subtitle": "An introduction to general relativity, one beam of light at a time.",
+        "beats": [
+          {
+            "title": "First, a universe without this mass.",
+            "body": "Follow the beam. With no nearby mass in this model, its path is straight. The faint line is our reference: where the light would go without the object."
+          },
+          {
+            "title": "Now put something massive in its way.",
+            "body": "The mass changes the geometry of spacetime around it. Light follows a natural path through that geometry. From this distant view, the path bends toward the mass."
+          },
+          {
+            "title": "Same light. A different route.",
+            "body": "Increase the mass, then move the beam farther away. More mass means more bending; a more distant pass means less. Light still travels at the speed of light when measured locally."
+          }
+        ],
+        "mass": 0.7,
+        "distance": 1.25,
+        "ray_count": 3,
+        "show_reference": false,
+        "show_labels": false,
+        "accent": "mint",
+        "line_width": 1,
+        "duration": 24,
+        "takeaway": "Gravity does not need to give light a rest mass. It changes the spacetime geometry that light travels through."
+      },
+      "frames": [
+        "/example-frames/revision-1/frame-1.png",
+        "/example-frames/revision-1/frame-2.png",
+        "/example-frames/revision-1/frame-3.png",
+        "/example-frames/revision-1/frame-4.png",
+        "/example-frames/revision-1/mobile.png"
+      ],
+      "checks": [
+        {
+          "name": "No mass gives a straight ray",
+          "pass": true
+        },
+        {
+          "name": "Doubling mass doubles weak-field deflection",
+          "pass": true
+        },
+        {
+          "name": "Doubling passing distance halves deflection",
+          "pass": true
+        },
+        {
+          "name": "Far-field slope agrees with 4m/b",
+          "pass": true
+        },
+        {
+          "name": "Bending points toward the mass",
+          "pass": true
+        },
+        {
+          "name": "Controls remain in the weak-field regime",
+          "pass": true
+        },
+        {
+          "name": "Zero-mass control removes deflection",
+          "pass": true
+        },
+        {
+          "name": "Mass control updates the rendered model",
+          "pass": true
+        },
+        {
+          "name": "Seeking reproduces identical canvas pixels",
+          "pass": true
+        },
+        {
+          "name": "Mobile page fits viewport",
+          "pass": true
+        },
+        {
+          "name": "Renderer has no JavaScript errors",
+          "pass": true
+        }
+      ],
+      "accepted": false,
+      "physics_review": {
+        "pass": true,
+        "score": 8,
+        "summary": "Fixture review only: scripted acceptance exercises the pipeline.",
+        "changes": [],
+        "blocking_issues": []
+      },
+      "visual_review": {
+        "pass": false,
+        "score": 5,
+        "summary": "Fixture critique: the bent path has no baseline for comparison.",
+        "changes": [
+          "Enable the straight reference path and labels.",
+          "Increase line width to 2.5 for small screens."
+        ],
+        "blocking_issues": [
+          "Missing visual comparison."
+        ]
+      }
+    },
+    {
+      "number": 2,
+      "scene": {
+        "title": "Light takes the natural path.\nGravity changes the geometry.",
+        "subtitle": "An introduction to general relativity, one beam of light at a time.",
+        "beats": [
+          {
+            "title": "First, a universe without this mass.",
+            "body": "Follow the beam. With no nearby mass in this model, its path is straight. The faint line is our reference: where the light would go without the object."
+          },
+          {
+            "title": "Now put something massive in its way.",
+            "body": "The mass changes the geometry of spacetime around it. Light follows a natural path through that geometry. From this distant view, the path bends toward the mass."
+          },
+          {
+            "title": "Same light. A different route.",
+            "body": "Increase the mass, then move the beam farther away. More mass means more bending; a more distant pass means less. Light still travels at the speed of light when measured locally."
+          }
+        ],
+        "mass": 0.7,
+        "distance": 1.25,
+        "ray_count": 3,
+        "show_reference": true,
+        "show_labels": true,
+        "accent": "mint",
+        "line_width": 2.5,
+        "duration": 24,
+        "takeaway": "Gravity does not need to give light a rest mass. It changes the spacetime geometry that light travels through."
+      },
+      "frames": [
+        "/example-frames/revision-2/frame-1.png",
+        "/example-frames/revision-2/frame-2.png",
+        "/example-frames/revision-2/frame-3.png",
+        "/example-frames/revision-2/frame-4.png",
+        "/example-frames/revision-2/mobile.png"
+      ],
+      "checks": [
+        {
+          "name": "No mass gives a straight ray",
+          "pass": true
+        },
+        {
+          "name": "Doubling mass doubles weak-field deflection",
+          "pass": true
+        },
+        {
+          "name": "Doubling passing distance halves deflection",
+          "pass": true
+        },
+        {
+          "name": "Far-field slope agrees with 4m/b",
+          "pass": true
+        },
+        {
+          "name": "Bending points toward the mass",
+          "pass": true
+        },
+        {
+          "name": "Controls remain in the weak-field regime",
+          "pass": true
+        },
+        {
+          "name": "Zero-mass control removes deflection",
+          "pass": true
+        },
+        {
+          "name": "Mass control updates the rendered model",
+          "pass": true
+        },
+        {
+          "name": "Seeking reproduces identical canvas pixels",
+          "pass": true
+        },
+        {
+          "name": "Mobile page fits viewport",
+          "pass": true
+        },
+        {
+          "name": "Renderer has no JavaScript errors",
+          "pass": true
+        }
+      ],
+      "accepted": true,
+      "physics_review": {
+        "pass": true,
+        "score": 8,
+        "summary": "Fixture review only: scripted acceptance exercises the pipeline.",
+        "changes": [],
+        "blocking_issues": []
+      },
+      "visual_review": {
+        "pass": true,
+        "score": 8,
+        "summary": "Fixture review only: scripted acceptance exercises the pipeline.",
+        "changes": [],
+        "blocking_issues": []
+      }
+    }
+  ],
+  "research": {
+    "claim": "A massive object changes the path of light passing nearby.",
+    "explanation": "General relativity describes gravity through the geometry of spacetime. Light follows a null geodesic: the natural path for light in that geometry. Near a mass, that path can look bent when viewed from far away.",
+    "assumptions": [
+      "An isolated, spherical, non-rotating mass.",
+      "Light passes far outside the strong-gravity region.",
+      "A first-order weak-field approximation; source and observer are treated as distant."
+    ],
+    "prediction": "At the same passing distance, doubling the mass doubles the small deflection angle. At the same mass, doubling the passing distance halves it.",
+    "falsifier": "A precise measurement of light deflection inconsistent with the predicted angle, after accounting for the mass, geometry and measurement uncertainty, would challenge this model in its stated regime.",
+    "limitations": [
+      "Bending is magnified six times in the drawing.",
+      "This is not a black-hole simulation or a literal picture of curved spacetime.",
+      "The moving dot illustrates a path; its screen speed is not a physical measurement.",
+      "Passing these checks does not establish a new scientific result."
+    ],
+    "sources": [
+      {
+        "title": "Einstein Online \u00b7 Gravitational deflection of light",
+        "url": "https://www.einstein-online.info/en/spotlight/light_deflection/",
+        "supports": "General relativity predicts gravitational light deflection, tested with astronomical observations."
+      },
+      {
+        "title": "Einstein Online \u00b7 The equivalence principle and light",
+        "url": "https://www.einstein-online.info/en/spotlight/equivalence_light/",
+        "supports": "Local equivalence alone does not determine the full deflection; spacetime geometry matters."
+      }
+    ]
+  },
+  "scene": {
+    "title": "Light takes the natural path.\nGravity changes the geometry.",
+    "subtitle": "An introduction to general relativity, one beam of light at a time.",
+    "beats": [
+      {
+        "title": "First, a universe without this mass.",
+        "body": "Follow the beam. With no nearby mass in this model, its path is straight. The faint line is our reference: where the light would go without the object."
+      },
+      {
+        "title": "Now put something massive in its way.",
+        "body": "The mass changes the geometry of spacetime around it. Light follows a natural path through that geometry. From this distant view, the path bends toward the mass."
+      },
+      {
+        "title": "Same light. A different route.",
+        "body": "Increase the mass, then move the beam farther away. More mass means more bending; a more distant pass means less. Light still travels at the speed of light when measured locally."
+      }
+    ],
+    "mass": 0.7,
+    "distance": 1.25,
+    "ray_count": 3,
+    "show_reference": true,
+    "show_labels": true,
+    "accent": "mint",
+    "line_width": 2.5,
+    "duration": 24,
+    "takeaway": "Gravity does not need to give light a rest mass. It changes the spacetime geometry that light travels through."
+  },
+  "checks": [
+    {
+      "name": "No mass gives a straight ray",
+      "pass": true
+    },
+    {
+      "name": "Doubling mass doubles weak-field deflection",
+      "pass": true
+    },
+    {
+      "name": "Doubling passing distance halves deflection",
+      "pass": true
+    },
+    {
+      "name": "Far-field slope agrees with 4m/b",
+      "pass": true
+    },
+    {
+      "name": "Bending points toward the mass",
+      "pass": true
+    },
+    {
+      "name": "Controls remain in the weak-field regime",
+      "pass": true
+    },
+    {
+      "name": "Zero-mass control removes deflection",
+      "pass": true
+    },
+    {
+      "name": "Mass control updates the rendered model",
+      "pass": true
+    },
+    {
+      "name": "Seeking reproduces identical canvas pixels",
+      "pass": true
+    },
+    {
+      "name": "Mobile page fits viewport",
+      "pass": true
+    },
+    {
+      "name": "Renderer has no JavaScript errors",
+      "pass": true
+    }
+  ],
+  "updated": 1793070884791314000,
+  "usage": [],
+  "calls": 8
+}
