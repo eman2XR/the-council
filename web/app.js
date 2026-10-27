@@ -25,7 +25,8 @@ CouncilScene.on(type=>{
 function show(data,{autoplay=false}={}){
  current=data;const scene=data.scene, fixture=data.provider==='fixture';
  if(scene){put('title',scene.title);put('subtitle',scene.subtitle);put('takeaway',scene.takeaway);CouncilScene.load(scene);}
- put('hero-kicker',fixture?'Example':isToday(data.created)?'Today’s investigation':'Investigation');
+ put('hero-kicker',fixture?'Example':isToday(data.created)?'Today':'Investigation');
+ put('hero-topic',topicOf(data));put('readbar-title',(scene?.title||'').replace(/\n/g,' '));
  put('hero-date',data.created?day(data.created,{weekday:'long',month:'long',day:'numeric'}):'');
  put('run-banner',fixture?'Hand-written example · scripted reviews':data.error?'Stopped · partial work kept as a draft':STATUS[data.status]||String(data.status||'').replaceAll('_',' '));
  $('run-banner').dataset.status=fixture?'example':data.status||'';
@@ -75,12 +76,13 @@ function card(entry,record){
  if(!isExample)link.dataset.guide=id;else link.dataset.example='';
  const canvas=el('canvas',{className:'thumb',ariaHidden:'true'});
  const media=el('div',{className:'card-media'},canvas,el('span',{className:'mini-play',ariaHidden:'true'}));
- const meta=el('p',{className:'card-meta',textContent:isExample?'Example · hand-written':`${day(entry.created)} · ${topicOf(entry)}`});
  const badge=el('span',{className:'badge'});
  if(current&&(current.id===id||(isExample&&current.provider==='fixture'))){badge.textContent='Now showing';badge.dataset.kind='now';}
  else if(!isExample&&!watched.has(id)){badge.textContent='New';badge.dataset.kind='new';}
  else if(watched.has(id)){badge.textContent='Watched';badge.dataset.kind='seen';}
- link.append(media,el('div',{className:'card-body'},meta,el('h3',{textContent:entry.title||entry.question}),badge));
+ const meta=el('p',{className:'card-meta'},el('em',{textContent:'By'}),' The Council',el('span',{className:'sep'}),isExample?'Hand-written example':day(entry.created,{month:'long',day:'numeric'}),badge);
+ const excerpt=el('p',{className:'card-excerpt',textContent:record?.scene?.subtitle||entry.question||''});
+ link.append(media,el('div',{className:'card-body'},el('span',{className:'card-cat',textContent:isExample?'Example':topicOf(record||entry)}),el('h3',{textContent:(entry.title||entry.question||'').replace(/\n/g,' ')}),meta,excerpt));
  link.onclick=event=>{event.preventDefault();openGuide(id,{autoplay:true,push:true});};
  if(record?.scene){canvas.scene=record.scene;thumbs.add(canvas);visible.observe(canvas);}
  return link;
@@ -328,3 +330,8 @@ CouncilScene.on(type=>{
   put('after-next',next?next.question:'a new question');$('after-ask').href=$('ask').href;$('after').hidden=false;
  }
 });
+
+/* Sticky reading bar: appears once the headline scrolls away, with reading progress. */
+const readbar=$('readbar');
+new IntersectionObserver(([e])=>readbar.classList.toggle('on',!e.isIntersecting&&e.boundingClientRect.top<0)).observe($('title'));
+addEventListener('scroll',()=>{const max=document.documentElement.scrollHeight-innerHeight;readbar.style.setProperty('--read',max>0?Math.min(1,scrollY/max):0);},{passive:true});

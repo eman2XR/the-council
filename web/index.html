@@ -8,10 +8,11 @@
 <link rel="stylesheet" href="style.css?v=dev">
 </head>
 <body>
-<header class="top">
- <a class="brand" href="./"><span class="mark" aria-hidden="true"></span>The Council</a>
- <button id="proposals-open" class="pill" type="button" hidden>Proposals<span id="proposals-count" class="count"></span></button>
+<header class="top" id="top">
+ <a class="brand" href="./"><svg class="mark" viewBox="0 0 40 40" aria-hidden="true"><g fill="currentColor"><circle cx="35.0" cy="20.0" r="1.6"/><circle cx="30.6" cy="30.6" r="2.2"/><circle cx="20.0" cy="35.0" r="1.6"/><circle cx="9.4" cy="30.6" r="2.2"/><circle cx="5.0" cy="20.0" r="1.6"/><circle cx="9.4" cy="9.4" r="2.2"/><circle cx="20.0" cy="5.0" r="1.6"/><circle cx="30.6" cy="9.4" r="2.2"/><circle cx="26.6" cy="23.6" r="1.5"/><circle cx="13.6" cy="23.9" r="1.5"/><circle cx="19.8" cy="12.5" r="1.5"/><circle cx="20" cy="20" r="3.4" class="core"/></g></svg><span class="wordmark">The<b>council</b></span></a>
+ <button id="proposals-open" class="text-btn" type="button" hidden>Proposals<span id="proposals-count" class="count"></span></button>
 </header>
+<div id="readbar" class="readbar" aria-hidden="true"><a href="#top"><svg class="mark" viewBox="0 0 40 40" aria-hidden="true"><g fill="currentColor"><circle cx="35.0" cy="20.0" r="1.6"/><circle cx="30.6" cy="30.6" r="2.2"/><circle cx="20.0" cy="35.0" r="1.6"/><circle cx="9.4" cy="30.6" r="2.2"/><circle cx="5.0" cy="20.0" r="1.6"/><circle cx="9.4" cy="9.4" r="2.2"/><circle cx="20.0" cy="5.0" r="1.6"/><circle cx="30.6" cy="9.4" r="2.2"/><circle cx="26.6" cy="23.6" r="1.5"/><circle cx="13.6" cy="23.9" r="1.5"/><circle cx="19.8" cy="12.5" r="1.5"/><circle cx="20" cy="20" r="3.4" class="core"/></g></svg></a><span id="readbar-title"></span><i id="read-progress"></i></div>
 
 <main>
  <details id="lab" class="lab-strip">
@@ -26,14 +27,15 @@
    <div id="bench" hidden><p class="label small">Drafts that didn’t pass review</p><ul id="bench-list"></ul></div>
   </div>
  </details>
- <section class="hero" aria-labelledby="title">
-  <div class="hero-head">
-   <p class="kicker"><span id="hero-kicker">Today’s investigation</span><span id="hero-date"></span><span id="run-banner" class="tag" role="status"></span></p>
+ <article class="hero" aria-labelledby="title">
+  <header class="hero-head">
+   <p class="category"><span id="hero-topic">Physics</span></p>
    <h1 id="title">Loading…</h1>
-   <p id="subtitle"></p>
-  </div>
+   <p id="subtitle" class="dek"></p>
+   <p class="byline"><em>By</em> <span class="author">The Council</span><span class="sep" aria-hidden="true"></span><span id="hero-kicker">Today’s investigation</span><span class="sep" aria-hidden="true"></span><span id="hero-date"></span><span id="run-banner" class="tag" role="status"></span></p>
+  </header>
 
-  <div class="workspace">
+  <figure class="workspace">
    <div class="stage">
     <canvas id="universe" role="img" aria-label="Interactive physics model"></canvas>
     <span id="scale-label" class="stage-note"></span>
@@ -66,14 +68,15 @@
     <label class="control"><span class="control-head"><span id="distance-label">Passing distance</span><output id="distance-value">1.25×</output></span>
      <input id="distance" type="range" min="1" max="2.5" step="0.01" value="1.25"><small id="distance-hint"></small></label>
    </div>
-  </div>
+  </figure>
+  <p class="credit">Interactive illustration · researched, rendered and reviewed by the Council’s agents</p>
 
-  <p class="takeaway"><span class="label">The idea</span><span id="takeaway"></span></p>
+  <div class="story"><p class="label">The idea</p><p id="takeaway" class="dropcap"></p></div>
   <div class="talk"><a id="ask" class="pill" target="_blank" rel="noopener noreferrer">Ask a question</a><a id="feedback" class="pill" target="_blank" rel="noopener noreferrer">Give feedback</a><span class="fine">Opens a public GitHub issue. The next morning's run reads it.</span></div>
- </section>
+ </article>
 
  <section class="past" aria-labelledby="past-title">
-  <div class="section-head"><h2 id="past-title">Past investigations</h2><span id="past-count" class="muted"></span></div>
+  <div class="section-head"><h2 id="past-title">Previous investigations</h2><span id="past-count" class="muted"></span></div>
   <nav id="archive" class="cards" aria-label="Investigations"></nav>
  </section>
 
@@ -104,7 +107,7 @@
  <div class="sheet-head"><div><h2 id="proposals-title">Proposals</h2><p class="muted">Ideas from the Council's daily project review. Approve the ones you want built. Nothing changes until you do.</p></div><button id="proposals-close" class="round quiet" type="button" aria-label="Close">×</button></div>
  <div id="proposals-list" class="proposals"></div>
 </dialog>
-<footer><span>The Council</span><span>Curiosity first. Evidence always.</span></footer>
+<footer><span class="wordmark small">The<b>council</b></span><span>Curiosity first. Evidence always.</span></footer>
 <script src="physics.js?v=dev"></script><script src="scene.js?v=dev"></script><script src="app.js?v=dev"></script>
 </body>
 </html>
