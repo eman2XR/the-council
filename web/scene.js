@@ -66,7 +66,7 @@ function drawClocks(ctx,w,h,spec,st){
  const cx=w*.5, rad=Math.min(w*.13,h*.135), horizon=h*.9;
  let lowerY=h*(.68-.09*(st.distance-1)), upperY=lowerY-Math.max(h*.34,rad*2.5);
  // Keep the top clock and its label clear of the stage notes.
- const clear=(small?92:24)-(upperY-rad-(small?13:0));
+ const clear=(st.labels?(small?92:24):6)-(upperY-rad-(st.labels&&small?13:0));
  if(clear>0){upperY+=clear;lowerY+=clear;}
  // Warm haze marks "deeper in gravity": schematic, not to scale.
  if(presence>0){
@@ -130,7 +130,7 @@ function pill(ctx,value,x,y,opts={}){
 function drawSpacetime(ctx,w,h,spec,st){
  const accent=ACCENT[spec.accent]||ACCENT.blue, v=Physics.speed(st.mass), g=Physics.gamma(v), T=Physics.turnaround(st.distance), H=2*T, small=w<520;
  // Scale to the whole trip, so the drawing fills the stage; the shape (and the percentage) does not depend on trip length.
- const k=Math.min((h-(small?128:92))/(H+.1),(w*.62)/Math.max(.9,v*T+1.1)), x0=w*.5-v*T*k*.5, y0=h-28, map=(x,t)=>[x0+x*k,y0-t*k];
+ const k=Math.min((h-(st.labels?(small?128:92):36))/(H+.1),(w*.62)/Math.max(.9,v*T+1.1)), x0=w*.5-v*T*k*.5, y0=h-28, map=(x,t)=>[x0+x*k,y0-t*k];
  const top=y0/k;
  ctx.beginPath();ctx.moveTo(...map(0,0));ctx.lineTo(...map(top,top));ctx.lineTo(...map(-top,top));ctx.closePath();ctx.fillStyle=rgba(accent,.045);ctx.fill();
  ctx.setLineDash([2,5]);ctx.strokeStyle=rgba('#d97706',.6);ctx.lineWidth=1.2;
@@ -171,7 +171,7 @@ function drawSpacetime(ctx,w,h,spec,st){
 let fieldBuffer=null;
 function drawInterference(ctx,w,h,spec,st){
  const accent=ACCENT[spec.accent]||ACCENT.blue, A=st.mass, lam=Math.max(22,Math.min(w,h)/9), k=TAU/lam, d=Physics.separation(st.distance)*lam;
- const cx=w/2, sy=w<520?h*.22:h*.1, screen=h*.8, s1=[cx-d/2,sy], s2=[cx+d/2,sy], phase=st.t*TAU*.55;
+ const cx=w/2, sy=st.labels&&w<520?h*.22:h*.1, screen=h*.8, s1=[cx-d/2,sy], s2=[cx+d/2,sy], phase=st.t*TAU*.55;
  const cell=w<520?3:4, cols=Math.ceil(w/cell), rows=Math.ceil(screen/cell);
  fieldBuffer=fieldBuffer||document.createElement('canvas');
  if(fieldBuffer.width!==cols||fieldBuffer.height!==rows){fieldBuffer.width=cols;fieldBuffer.height=rows;}
@@ -210,7 +210,7 @@ function slitPattern(A,sep,bins){
 }
 function drawParticles(ctx,w,h,spec,st){
  const accent=ACCENT[spec.accent]||ACCENT.mint, A=st.mass, sep=Physics.separation(st.distance), small=w<520;
- const srcX=w*.08, wallX=w*.42, scrX=w*.8, midY=small?h*.58:h*.5, span=small?h*.32:h*.38, gap=span*.075*sep, slit=Math.max(6,h*.025);
+ const srcX=w*.08, wallX=w*.42, scrX=w*.8, midY=st.labels&&small?h*.58:h*.5, span=st.labels&&small?h*.32:h*.38, gap=span*.075*sep, slit=Math.max(6,h*.025);
  const bins=120, pat=slitPattern(A,sep,bins);
  // Probability ripples: possibilities spread through every open slit; no path is drawn.
  const phase=(st.t*.8)%1;
@@ -323,7 +323,7 @@ function drawPacket(ctx,w,h,spec,st){
 
 function drawWell(ctx,w,h,spec,st){
  const accent=ACCENT[spec.accent]||ACCENT.gold, W=Physics.well(st.mass,st.distance), small=w<520;
- const xmin=-2.4,xmax=2.4, X=x=>w*.08+(x-xmin)/(xmax-xmin)*w*.84, Emax=4,Emin=-25.5, top=h*(small?.2:.12), bottom=h*.74;
+ const xmin=-2.4,xmax=2.4, X=x=>w*.08+(x-xmin)/(xmax-xmin)*w*.84, Emax=4,Emin=-25.5, top=h*(st.labels&&small?.2:.12), bottom=h*.74;
  const Y=E=>top+(Emax-E)/(Emax-Emin)*(bottom-top), half=W.L/2;
  // Potential: flat outside, a floor of depth V inside.
  ctx.fillStyle='rgba(20,23,28,.04)';ctx.fillRect(X(-half),Y(0),X(half)-X(-half),Y(-W.V)-Y(0));
@@ -356,7 +356,7 @@ function drawWell(ctx,w,h,spec,st){
 
 function drawFall(ctx,w,h,spec,st){
  const accent=ACCENT[spec.accent]||ACCENT.blue, F=Physics.fall(st.mass,st.distance), small=w<520;
- const x0=w*.08, x1=w*.92, ground=h*.8, topY=h*(small?.26:.16), Hs=Math.max(F.ref*2,1e-9);
+ const x0=w*.08, x1=w*.92, ground=h*.8, topY=h*(st.labels&&small?.26:.16), Hs=Math.max(F.ref*2,1e-9);
  const X=t=>x0+t/F.T*(x1-x0), Y=hh=>ground-hh/Hs*(ground-topY);
  // Clocks run slower lower down: warmer shading near the ground (schematic, exaggerated).
  const shade=ctx.createLinearGradient(0,ground,0,topY);shade.addColorStop(0,`rgba(245,158,66,${.22*Math.min(1,F.g/.8)})`);shade.addColorStop(1,'rgba(245,158,66,0)');
