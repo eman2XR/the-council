@@ -111,6 +111,10 @@ ENGINE_SCENES = {
         ('No gravity: stay put.', 'Without gravity, the clock that stays where it is keeps the most time.'),
         ('Turn gravity on.', 'Higher clocks run faster, so going up gains time. Moving fast loses time.'),
         ('Find the best compromise.', 'The path that keeps the most time is exactly the arc a thrown ball follows.')], 'blue', 1, 1.6),
+    'SINGLE-GAP DIFFRACTION': _engine_scene('Squeezing a wave through a gap', [
+        ('No barrier: straight on.', 'The wave keeps going in a straight band. Nothing spreads.'),
+        ('Add a gap.', 'Past the gap the wave fans out. The screen shows bright and dark bands.'),
+        ('Narrow the gap, lengthen the waves.', 'A narrower gap or longer waves make the spreading wider.')], 'blue', .6, 1.4),
     'STANDING WAVES ON A ROPE': _engine_scene('Why a rope only shakes in certain patterns', [
         ('No reflection: the wave just travels.', 'Every point on the rope swings in turn. Nothing stays still.'),
         ('Let the wall reflect the wave.', 'The returning wave overlaps the outgoing one. Some points now stay perfectly still.'),

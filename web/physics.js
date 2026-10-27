@@ -95,6 +95,24 @@
         'Both paths start and end at the same events':near(f.height(f.best,0),0)&&near(f.height(f.best,f.T),0),
       }).map(([name,pass])=>({name,pass}));
     },
+    // Single gap: width shrinks from 4.2 to 0.7 units as the first control rises (0 = no barrier); wavelength 0.7 to 1.15.
+    gap(a, b) {
+      const lambda=.7+.3*(b-1), width=a<.005?Infinity:.7*(6-5*a);
+      return {lambda,width,sinMin:width===Infinity?0:Math.min(1,lambda/width)};
+    },
+    spreadAngle(a,b){const g=this.gap(a,b);return Math.asin(g.sinMin)*180/Math.PI;},
+    singleSlit(a,b,sinTheta){const g=this.gap(a,b);if(g.width===Infinity)return sinTheta===0?1:0;const x=Math.PI*g.width*sinTheta/g.lambda;return x===0?1:(Math.sin(x)/x)**2;},
+    gapChecks() {
+      const near=(x,y,e=1e-9)=>Math.abs(x-y)<e, g=this.gap(.6,1.5);
+      return Object.entries({
+        'No barrier means no spreading':this.spreadAngle(0,1.5)===0,
+        'First dark direction sits where sin(angle) = wavelength / gap':near(this.singleSlit(.6,1.5,g.lambda/g.width),0,1e-20),
+        'A narrower gap spreads the wave wider':this.spreadAngle(1,1.5)>this.spreadAngle(.4,1.5),
+        'A longer wavelength spreads wider':this.spreadAngle(.6,2.5)>this.spreadAngle(.6,1),
+        'Straight ahead is the brightest direction':this.singleSlit(.6,1.5,0)===1&&this.singleSlit(.6,1.5,.05)<1,
+        'A gap narrower than the wavelength spreads to every side':near(this.gap(1,1.5).sinMin,1),
+      }).map(([name,pass])=>({name,pass}));
+    },
     reflected(a,b){return this.barrier(a,b).R;},
     momentumSpread(a){return 1.1*a;},
     levelCount(a,b){return this.well(a,b).levels.length;},
@@ -137,7 +155,7 @@
     },
     checksFor(kind) {
       return {'gravity-clocks':this.clockChecks,'spacetime':this.spacetimeChecks,'interference':this.waveChecks,
-        'two-slit-particles':this.waveChecks,'standing-waves':this.ropeChecks,'tunneling':this.tunnelChecks,'wave-packet':this.packetChecks,'quantum-well':this.wellChecks,'falling-time':this.fallChecks}[kind]?.call(this) || this.checks();
+        'two-slit-particles':this.waveChecks,'standing-waves':this.ropeChecks,'tunneling':this.tunnelChecks,'wave-packet':this.packetChecks,'quantum-well':this.wellChecks,'falling-time':this.fallChecks,'diffraction':this.gapChecks}[kind]?.call(this) || this.checks();
     },
     spacetimeChecks() {
       const near=(a,b)=>Math.abs(a-b)<1e-12, g=this.gamma(this.speed(1));

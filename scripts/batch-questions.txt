@@ -10,3 +10,4 @@ interference|How can two waves cancel each other out completely?
 falling-time|If gravity slows time, why do things fall?
 quantum-well|Why can a trapped particle only have certain energies?
 wave-packet|Why can't you pin down both where a particle is and how it moves?
+diffraction|Why do waves spread out after passing a narrow gap?

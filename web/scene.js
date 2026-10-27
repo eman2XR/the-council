@@ -385,6 +385,46 @@ function drawFall(ctx,w,h,spec,st){
  }
 }
 
+let gapBuffer=null;
+function drawGap(ctx,w,h,spec,st){
+ const accent=ACCENT[spec.accent]||ACCENT.blue, G=Physics.gap(st.mass,st.distance), small=w<520;
+ const u=Math.min(w,h)/12, k=TAU/(G.lambda*u), yb=h*(st.labels&&small?.3:.24), screen=h*.8, cx=w/2, phase=st.t*TAU*.55, open=G.width!==Infinity;
+ const half=open?Math.min(w*.45,G.width*u/2):w;
+ // Huygens: the open gap acts as a row of in-phase sources; with no barrier the plane wave continues.
+ const n=open?Math.max(6,Math.min(16,Math.ceil(G.width*u/(G.lambda*u)*4))):0, src=Array.from({length:n},(_,i)=>cx-half+(i+.5)/n*2*half);
+ const ref=open?src.reduce((s,x)=>s+1/Math.sqrt(1+Math.hypot(x-cx,3*G.lambda*u)/(G.lambda*u)),0)/1.15:1;
+ const cell=small?4:6, cols=Math.ceil(w/cell), rows=Math.ceil(screen/cell);
+ gapBuffer=gapBuffer||document.createElement('canvas');
+ if(gapBuffer.width!==cols||gapBuffer.height!==rows){gapBuffer.width=cols;gapBuffer.height=rows;}
+ const g=gapBuffer.getContext('2d'), image=g.createImageData(cols,rows), data=image.data;
+ const c=parseInt(accent.slice(1),16), ar=c>>16, ag=c>>8&255, ab=c&255;
+ for(let j=0;j<rows;j++)for(let i=0;i<cols;i++){
+  const x=i*cell, y=j*cell;let f;
+  if(!open||y<yb)f=Math.cos(k*y-phase);
+  else{f=0;for(const sx of src){const r=Math.hypot(x-sx,y-yb);f+=Math.cos(k*(yb+r)-phase)/Math.sqrt(1+r/(G.lambda*u));}f/=ref;}
+  const o=4*(j*cols+i), a=Math.min(1,Math.abs(f)*1.1);
+  if(f>0){data[o]=ar;data[o+1]=ag;data[o+2]=ab;data[o+3]=a*150;}else{data[o]=20;data[o+1]=30;data[o+2]=50;data[o+3]=a*55;}
+ }
+ g.putImageData(image,0,0);ctx.imageSmoothingEnabled=true;ctx.drawImage(gapBuffer,0,0,cols*cell,rows*cell);
+ if(open){ctx.fillStyle='rgba(20,23,28,.82)';ctx.fillRect(0,yb-4,cx-half,8);ctx.fillRect(cx+half,yb-4,w-cx-half,8);}
+ // Screen: time-averaged brightness from the single-gap pattern.
+ const band=h*.08;ctx.fillStyle='#fff';ctx.fillRect(0,screen,w,h-screen);
+ for(let i=0;i<=200;i++){const x=w*.04+w*.92*i/200, dx=x-cx, s=dx/Math.hypot(dx,screen-yb), I=open?Physics.singleSlit(st.mass,st.distance,s):1;
+  ctx.fillStyle=rgba(accent,.08+.85*I);ctx.fillRect(x-1.5,screen+6,w*.92/200+1,band);}
+ if(open&&G.sinMin<1&&(spec.show_reference||st.labels)){
+  const L=screen-yb, tan=G.sinMin/Math.sqrt(1-G.sinMin*G.sinMin);
+  ctx.setLineDash([4,5]);ctx.strokeStyle='rgba(20,23,28,.4)';ctx.lineWidth=1.2;
+  for(const sgn of [-1,1]){trace(ctx,[[cx,yb],[cx+sgn*L*tan,screen]]);ctx.stroke();}ctx.setLineDash([]);
+ }
+ if(st.labels){
+  const size=small?10:11;
+  pill(ctx,'WAVE COMING IN',cx,Math.max(16,yb-24),{align:'center',size,weight:600,spacing:'1px'});
+  if(open)pill(ctx,`gap ${(G.width/G.lambda).toFixed(1)} wavelengths wide`,cx,yb+18,{align:'center',size:10,weight:500});
+  else pill(ctx,'no barrier',cx,yb+18,{align:'center',size:10,weight:500});
+  text(ctx,open&&G.sinMin>=1?'SCREEN · gap narrower than the wave: it spreads to every side':'SCREEN · dashed lines: first dark directions',w*.04,screen+band+22,{size:10,weight:600,spacing:'.5px'});
+ }
+}
+
 const ENGINES={
  'light-bending':{draw:drawLight,a:['Mass','how much mass sits nearby'],b:['Passing distance','how close the light passes','×'],
   fa:a=>a.toFixed(2),fb:b=>b.toFixed(2)+'×',
@@ -426,6 +466,10 @@ const ENGINES={
   fa:a=>a<.005?'none':Math.round(a*100)+'%',fb:b=>(2+2*(b-1)).toFixed(1)+' units',
   measure:['Thrown clock gains',(a,b)=>(Physics.fallGain(a,b)*100).toFixed(1)+'%'],scale:'Time effects hugely exaggerated',demoEnd:()=>2.5,
   try:'Turn gravity off: which path keeps the most time? Turn it on and give the ball longer in the air.',aria:'Clocks held at the ground and thrown upward; the path a thrown ball takes is the one that keeps the most time.'},
+ 'diffraction':{draw:drawGap,a:['Gap','narrower to the right; 0 removes the barrier'],b:['Wavelength','length of one wave',''],
+  fa:a=>a<.005?'no barrier':Physics.gap(a,1).width.toFixed(1)+' units',fb:b=>Physics.gap(1,b).lambda.toFixed(2)+' units',
+  measure:['Spreads by',(a,b)=>Physics.spreadAngle(a,b).toFixed(0)+'°'],scale:'Seen from above · not to scale',demoEnd:()=>2.5,
+  try:'Remove the barrier: does the wave spread? Narrow the gap, then lengthen the waves.',aria:'A wave passes through a gap and spreads out, with bright and dark bands on a screen.'},
 };
 const engineOf=spec=>ENGINES[spec?.kind]||ENGINES['light-bending'];
 

@@ -106,6 +106,16 @@ the best path's extra time as a fraction of T, g^2 T^2 / 24 in these units. Supp
 why do things fall; why free fall is the path of most elapsed time; why gravity is mostly a time effect for slow objects.
 This is the weak-field, low-speed limit only; not a black hole, orbit or precise Earth numbers. No new-discovery claims.'''+COMMON
 
+GAP_NOTES = '''SINGLE-GAP DIFFRACTION. Top-down ripple tank: a plane wave of one wavelength arrives at a barrier with one
+gap; below the gap the wave is drawn as a Huygens sum of in-phase point sources across the gap (crests accent, troughs faint
+dark). A screen strip shows the time-averaged single-slit pattern I = (sin x / x)^2, x = pi * gap * sin(angle) / wavelength,
+with dashed lines at the first dark directions sin(angle) = wavelength / gap. Field mass sets the gap: 0 removes the barrier
+entirely (no spreading); higher values narrow it from 4.2 to 0.7 units (UI "Gap"). Field distance sets the wavelength
+0.7 to 1.15 units (UI "Wavelength"). The readout is the angle of the first dark direction (90 degrees when the gap is
+narrower than the wavelength). Supported questions: why waves spread after a narrow gap, why narrower gaps and longer
+waves spread more, why sound bends around doorways more than light. Not to scale; no single-photon claims.
+No new-discovery claims.'''+COMMON
+
 TOPICS = {
     'light-bending': {'label':'Light bending', 'question':'Why does gravity bend light?', 'notes':MODEL_NOTES},
     'gravity-clocks': {'label':'Gravity and clocks', 'question':'Why do clocks at different heights tick at different rates?', 'notes':CLOCK_NOTES},
@@ -116,5 +126,6 @@ TOPICS = {
     'tunneling': {'label':'Quantum tunnelling', 'question':'How can a particle pass through a wall it cannot climb over?', 'notes':TUNNEL_NOTES},
     'wave-packet': {'label':'Wave packets and uncertainty', 'question':"Why can't you pin down both where a particle is and how it moves?", 'notes':PACKET_NOTES},
     'falling-time': {'label':'Why things fall', 'question':'If gravity slows time, why do things fall?', 'notes':FALL_NOTES},
+    'diffraction': {'label':'Spreading through a gap', 'question':'Why do waves spread out after passing a narrow gap?', 'notes':GAP_NOTES},
     'quantum-well': {'label':'Allowed energies in a well', 'question':'Why can a trapped particle only have certain energies?', 'notes':WELL_NOTES},
 }

@@ -74,7 +74,7 @@
     {
      "id": "3.4",
      "question": "Why do waves spread out after passing a narrow gap?",
-     "model": null
+     "model": "diffraction"
     }
    ]
   },
