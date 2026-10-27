@@ -75,6 +75,23 @@ def export_accepted(state, root=ROOT):
     return target
 
 
+def export_run(run_dir, root=ROOT):
+    """Export an accepted run recorded in another checkout (for example a batch snapshot).
+    The run is copied into this checkout's ignored runs folder, then passes the same gates as daily exports."""
+    source=Path(run_dir).resolve()
+    state=json.loads((source/'record.json').read_text())
+    if not re.fullmatch(r'[A-Za-z0-9-]+',state.get('id','')) or source.name!=state['id']:
+        raise ValueError('Run folder does not match its record.')
+    target=root/'web'/'runs'/state['id']
+    if source!=target.resolve():
+        shutil.copytree(source,target,dirs_exist_ok=True)
+    items=[i for i in inbox.curriculum(root)
+           if re.sub(r'\W+','',i['question'].casefold())==re.sub(r'\W+','',state['question'].casefold())]
+    if items:
+        state['curriculum']=items[0]['id']
+    return export_accepted(state,root)
+
+
 def publish(root=ROOT):
     """Commit only the generated public archive, never other local edits."""
     def git(*args):

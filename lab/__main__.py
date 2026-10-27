@@ -17,7 +17,8 @@ from .topics import TOPICS
 
 def main():
     parser=argparse.ArgumentParser(description='The Council visual research lab')
-    parser.add_argument('command',choices=['serve','run','check','daily','schedule'])
+    parser.add_argument('command',choices=['serve','run','check','daily','schedule','export'])
+    parser.add_argument('--run-dir',help='For export: folder of an accepted run, e.g. from a batch snapshot.')
     parser.add_argument('--provider',choices=['codex','claude','openai','fixture'],default=os.environ.get('COUNCIL_PROVIDER','codex'))
     parser.add_argument('--model',help='Optional CLI model override; required for the direct OpenAI API.')
     parser.add_argument('--rounds',type=int,default=3)
@@ -44,6 +45,14 @@ def main():
     if args.command=='schedule':
         from .schedule import write_schedule
         print(write_schedule(args.hour,args.count,args.provider))
+        return
+    if args.command=='export':
+        from .daily import export_run, publish
+        if not args.run_dir:
+            parser.error('export needs --run-dir')
+        print(export_run(args.run_dir))
+        if args.publish:
+            publish()
         return
     if args.command=='daily':
         from .daily import daily
