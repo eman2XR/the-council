@@ -29,7 +29,7 @@ function show(data,{autoplay=false}={}){
  put('hero-date',data.created?day(data.created,{weekday:'long',month:'long',day:'numeric'}):'');
  put('run-banner',fixture?'Hand-written example · scripted reviews':data.error?'Stopped · partial work kept as a draft':STATUS[data.status]||String(data.status||'').replaceAll('_',' '));
  $('run-banner').dataset.status=fixture?'example':data.status||'';
- renderBehind(data);renderCards();
+ renderBehind(data);renderCards();updateTalk();renderPath();
  if(autoplay)CouncilScene.play();
 }
 
@@ -49,7 +49,7 @@ function renderBehind(data){
  put('history-label',fixture?'· scripted demonstration':`· ${revisions.length} saved`);
  $('history').replaceChildren(...revisions.map((rev,i)=>{
   const card=el('article',{className:'revision'});
-  if(rev.frames?.length)card.append(el('img',{src:rev.frames[0],alt:`Rendered frame from draft ${i+1}`,loading:'lazy'}));
+  if(rev.frames?.length)card.append(el('img',{src:rev.frames[0],alt:`Rendered frame from draft ${i+1}`}));
   const verdict=rev.accepted?(fixture?'Fixture passed':'Passed review'):'Changes requested';
   const notes=[rev.visual_review?.summary,rev.physics_review?.summary].filter(Boolean).join(' ');
   const view=el('button',{type:'button',className:'pill',textContent:'View this draft'});
@@ -209,9 +209,69 @@ async function refreshDashboard(){
   const drafts=[...new Map((state.attempts||[]).filter(a=>a.status==='needs_review'&&a.question).map(a=>[a.question,a])).values()].slice(-3).reverse();
   $('bench').hidden=!drafts.length;
   $('bench-list').replaceChildren(...drafts.map(a=>el('li',{textContent:a.question})));
-  renderNext();
+  renderNext();renderPath();
  }catch{
   put('dashboard-status','No status yet');put('now-title','No status published yet');put('next-title','—');
  }
 }
-refreshDashboard();setInterval(refreshDashboard,60000);setInterval(renderNext,30000);
+refreshDashboard();setInterval(refreshDashboard,60000);setInterval(()=>{renderNext();renderPath();},30000);
+
+/* The path: the curriculum, with requests sent as GitHub issues the morning worker reads. */
+const REPO='https://github.com/eman2XR/the-council';
+const OWNER='eman2XR';
+const READY_MODELS=new Set(['gravity-clocks','light-bending']);
+let curriculum=null, picks=new Map();
+const norm=s=>(s||'').toLowerCase().replace(/\W+/g,'');
+function issueURL(label,title,body){return `${REPO}/issues/new?${new URLSearchParams({title,body,labels:label})}`;}
+function updateTalk(){
+ const guide=current?.id&&current.provider!=='fixture'?current.id:'example', title=current?.scene?.title?.replace(/\n/g,' ')||'';
+ $('ask').href=issueURL('council:question','Question: ',`guide: ${guide}\n\nWhat I'm wondering (one question works best):\n\n`);
+ $('feedback').href=issueURL('council:feedback',`Feedback: ${title}`.slice(0,120),`guide: ${guide}\n\nWhat worked:\n\nWhat was confusing:\n\n`);
+}
+function doneItem(item){return entries.find(e=>e.curriculum===item.id||norm(e.question)===norm(item.question));}
+function renderPath(){
+ if(!curriculum)return;
+ const all=curriculum.stages.flatMap(s=>s.items);
+ const next=all.find(i=>READY_MODELS.has(i.model)&&!doneItem(i)&&!picks.has(i.id));
+ const done=all.filter(doneItem).length;
+ put('path-progress',`${done} of ${all.length} explored`);
+ $('stages').replaceChildren(...curriculum.stages.map(stage=>{
+  const states=stage.items.map(i=>doneItem(i)?'done':READY_MODELS.has(i.model)?'ready':'wait');
+  const here=stage.items.includes(next)||stage.items.some(i=>picks.has(i.id));
+  const details=el('details',{open:here});
+  const dots=el('span',{className:'dots',ariaHidden:'true'},...states.map(s=>el('i',{className:s==='wait'?'':s})));
+  details.append(el('summary',{},el('span',{className:'stage-num',textContent:stage.number}),
+   el('span',{className:'stage-title',textContent:stage.title},el('small',{textContent:stage.subtitle})),dots));
+  details.append(el('ul',{className:'items'},...stage.items.map((item,i)=>{
+   const published=doneItem(item), family=curriculum.families[item.family]||item.family;
+   let state;
+   if(published){state=el('a',{className:'state pill',href:'?guide='+encodeURIComponent(published.id),textContent:'Watch'});
+    state.onclick=e=>{e.preventDefault();openGuide(published.id,{autoplay:true,push:true});};}
+   else if(picks.has(item.id))state=el('a',{className:'state picked',href:picks.get(item.id),target:'_blank',rel:'noopener noreferrer',textContent:READY_MODELS.has(item.model)?'Picked for next run':'Voted'});
+   else if(READY_MODELS.has(item.model))state=el('a',{className:'state pill pick',target:'_blank',rel:'noopener noreferrer',textContent:'Pick next',
+    href:issueURL('council:choose',`Pick next: ${item.id} ${item.question}`.slice(0,120),`curriculum: ${item.id}\n\n${item.question}\n\nPicked on the website. The next morning's run investigates this.`)});
+   else state=el('a',{className:'state wait',target:'_blank',rel:'noopener noreferrer',title:`Needs a ${family} visual before the Council can investigate it`,textContent:`Needs ${family} · vote`,
+    href:issueURL('council:choose',`Vote: ${item.id} ${item.question}`.slice(0,120),`curriculum: ${item.id}\n\n${item.question}\n\nThis needs a ${family} visual model first. Votes help decide which model to build next.`)});
+   const li=el('li',{className:item===next?'next':''},el('span',{className:'num',textContent:item.id}),
+    el('span',{},el('span',{className:'q',textContent:item.question}),el('span',{className:'idea',textContent:item.idea})),state);
+   li.dataset.state=states[i];return li;
+  })));
+  const li=el('li',{className:'stage'},details);
+  li.dataset.state=states.every(s=>s==='done')?'done':here?'here':'';
+  return li;
+ }));
+ if(schedule?.enabled){
+  const pick=[...picks.keys()].map(id=>all.find(i=>i.id===id)).find(i=>i&&READY_MODELS.has(i.model)&&!doneItem(i));
+  const upcoming=pick||next;
+  put('next-pick',upcoming?`${pick?'Your pick':'Next on the path'}: ${upcoming.question}`:'');
+ }else put('next-pick','');
+}
+async function loadPath(){
+ try{curriculum=await (await fetch('curriculum.json')).json();}catch{return;}
+ try{
+  const response=await fetch(`https://api.github.com/repos/${OWNER}/the-council/issues?state=open&creator=${OWNER}&labels=council:choose&per_page=50`);
+  if(response.ok)for(const issue of await response.json()){const id=/curriculum:\s*([0-9]+\.[0-9]+)/.exec(issue.body||'')?.[1];if(id&&!picks.has(id))picks.set(id,issue.html_url);}
+ }catch{}
+ renderPath();
+}
+loadPath();

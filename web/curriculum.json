@@ -1,0 +1,406 @@
+{
+ "title": "From relativity to quantum field theory",
+ "families": {
+  "spacetime-diagram": "spacetime diagram",
+  "path-sum": "path-sum arrows",
+  "geodesics": "curved-surface paths",
+  "wave-tank": "wave tank",
+  "probability-cloud": "probability clouds",
+  "oscillator-chain": "oscillator chain",
+  "none": "overview map"
+ },
+ "stages": [
+  {
+   "number": 1,
+   "title": "Space, time and light",
+   "subtitle": "Special relativity",
+   "items": [
+    {
+     "id": "1.1",
+     "question": "If you ride a smooth train with no windows, can any experiment tell you are moving?",
+     "idea": "The principle of relativity",
+     "model": null,
+     "family": "spacetime-diagram"
+    },
+    {
+     "id": "1.2",
+     "question": "Why does everyone measure the same speed of light?",
+     "idea": "The one surprising rule",
+     "model": null,
+     "family": "spacetime-diagram"
+    },
+    {
+     "id": "1.3",
+     "question": "Can two events be simultaneous for one person but not another?",
+     "idea": "Simultaneity is relative",
+     "model": null,
+     "family": "spacetime-diagram"
+    },
+    {
+     "id": "1.4",
+     "question": "Why does a moving clock tick slowly?",
+     "idea": "Time dilation",
+     "model": null,
+     "family": "spacetime-diagram"
+    },
+    {
+     "id": "1.5",
+     "question": "Why do moving rulers shrink, but only along the motion?",
+     "idea": "Length contraction",
+     "model": null,
+     "family": "spacetime-diagram"
+    },
+    {
+     "id": "1.6",
+     "question": "What is a light cone, and why does it protect cause and effect?",
+     "idea": "Spacetime diagrams",
+     "model": null,
+     "family": "spacetime-diagram"
+    },
+    {
+     "id": "1.7",
+     "question": "What distance do all observers agree on?",
+     "idea": "The invariant interval",
+     "model": null,
+     "family": "spacetime-diagram"
+    },
+    {
+     "id": "1.8",
+     "question": "Why is the travelling twin younger?",
+     "idea": "Straight paths through spacetime take the most time",
+     "model": null,
+     "family": "spacetime-diagram"
+    },
+    {
+     "id": "1.9",
+     "question": "Why can nothing be pushed past the speed of light?",
+     "idea": "Energy, momentum and E = mc²",
+     "model": null,
+     "family": "spacetime-diagram"
+    }
+   ]
+  },
+  {
+   "number": 2,
+   "title": "Paths and least action",
+   "subtitle": "The bridge idea",
+   "items": [
+    {
+     "id": "2.1",
+     "question": "Why does light bend when it enters water?",
+     "idea": "Nature picks extreme paths",
+     "model": null,
+     "family": "path-sum"
+    },
+    {
+     "id": "2.2",
+     "question": "Why does a thrown ball follow the path of least action?",
+     "idea": "Action, the master principle",
+     "model": null,
+     "family": "path-sum"
+    },
+    {
+     "id": "2.3",
+     "question": "Why does symmetry make energy stay constant?",
+     "idea": "Noether's theorem, intuitively",
+     "model": null,
+     "family": "path-sum"
+    }
+   ]
+  },
+  {
+   "number": 3,
+   "title": "Gravity as geometry",
+   "subtitle": "General relativity",
+   "items": [
+    {
+     "id": "3.1",
+     "question": "In a falling elevator, where did gravity go?",
+     "idea": "The equivalence principle",
+     "model": null,
+     "family": "geodesics"
+    },
+    {
+     "id": "3.2",
+     "question": "Why do clocks at different heights tick at different rates?",
+     "idea": "Gravitational time dilation",
+     "model": "gravity-clocks",
+     "family": "geodesics"
+    },
+    {
+     "id": "3.3",
+     "question": "Why does gravity bend light?",
+     "idea": "Light follows the geometry",
+     "model": "light-bending",
+     "family": "geodesics"
+    },
+    {
+     "id": "3.4",
+     "question": "Two people walk straight north from the equator and meet. What is curvature?",
+     "idea": "Geodesics on curved surfaces",
+     "model": null,
+     "family": "geodesics"
+    },
+    {
+     "id": "3.5",
+     "question": "If gravity is not a force, why do things fall?",
+     "idea": "Straightest paths in curved spacetime",
+     "model": null,
+     "family": "geodesics"
+    },
+    {
+     "id": "3.6",
+     "question": "Why does Mercury's orbit slowly turn?",
+     "idea": "Testing the theory",
+     "model": null,
+     "family": "geodesics"
+    },
+    {
+     "id": "3.7",
+     "question": "What is a black hole's horizon, really?",
+     "idea": "Light cones tipping over",
+     "model": null,
+     "family": "geodesics"
+    },
+    {
+     "id": "3.8",
+     "question": "What are gravitational waves?",
+     "idea": "Spacetime is dynamic",
+     "model": null,
+     "family": "geodesics"
+    }
+   ]
+  },
+  {
+   "number": 4,
+   "title": "Waves",
+   "subtitle": "Foundation of the quantum track",
+   "items": [
+    {
+     "id": "4.1",
+     "question": "When two waves meet, why do they add up and pass through each other?",
+     "idea": "Superposition",
+     "model": null,
+     "family": "wave-tank"
+    },
+    {
+     "id": "4.2",
+     "question": "Why do guitar strings only play certain notes?",
+     "idea": "Standing waves and modes",
+     "model": null,
+     "family": "wave-tank"
+    },
+    {
+     "id": "4.3",
+     "question": "How do two slits turn light into stripes?",
+     "idea": "Interference",
+     "model": null,
+     "family": "wave-tank"
+    },
+    {
+     "id": "4.4",
+     "question": "Why does a spring bounce the way it does?",
+     "idea": "The harmonic oscillator",
+     "model": null,
+     "family": "wave-tank"
+    },
+    {
+     "id": "4.5",
+     "question": "Is light a wave in a field?",
+     "idea": "What a field is",
+     "model": null,
+     "family": "wave-tank"
+    }
+   ]
+  },
+  {
+   "number": 5,
+   "title": "Quantum mechanics",
+   "subtitle": "Waves of possibility",
+   "items": [
+    {
+     "id": "5.1",
+     "question": "Why does light knock out electrons in lumps?",
+     "idea": "Quanta",
+     "model": null,
+     "family": "probability-cloud"
+    },
+    {
+     "id": "5.2",
+     "question": "Why do single electrons through two slits still make stripes?",
+     "idea": "Particle-wave duality",
+     "model": null,
+     "family": "probability-cloud"
+    },
+    {
+     "id": "5.3",
+     "question": "Why can't you pin down both position and motion?",
+     "idea": "Uncertainty from waves",
+     "model": null,
+     "family": "probability-cloud"
+    },
+    {
+     "id": "5.4",
+     "question": "Why are the energies of a particle in a box quantized?",
+     "idea": "Quantization as standing waves",
+     "model": null,
+     "family": "probability-cloud"
+    },
+    {
+     "id": "5.5",
+     "question": "Why does a quantum spring have an energy ladder with equal steps?",
+     "idea": "The quantum harmonic oscillator",
+     "model": null,
+     "family": "probability-cloud"
+    },
+    {
+     "id": "5.6",
+     "question": "Why does an atom have shells?",
+     "idea": "Bound states",
+     "model": null,
+     "family": "probability-cloud"
+    },
+    {
+     "id": "5.7",
+     "question": "What does it mean to add up every possible path?",
+     "idea": "The path integral",
+     "model": null,
+     "family": "probability-cloud"
+    },
+    {
+     "id": "5.8",
+     "question": "What is spin, if nothing is spinning?",
+     "idea": "Intrinsic angular momentum",
+     "model": null,
+     "family": "probability-cloud"
+    },
+    {
+     "id": "5.9",
+     "question": "How can entangled particles be correlated without sending signals?",
+     "idea": "Quantum correlations",
+     "model": null,
+     "family": "probability-cloud"
+    }
+   ]
+  },
+  {
+   "number": 6,
+   "title": "Where the tracks meet",
+   "subtitle": "Relativity meets quantum mechanics",
+   "items": [
+    {
+     "id": "6.1",
+     "question": "Why can't the Schrödinger equation simply be made relativistic?",
+     "idea": "The tension between theories",
+     "model": null,
+     "family": "spacetime-diagram"
+    },
+    {
+     "id": "6.2",
+     "question": "How did an equation predict antimatter?",
+     "idea": "Particles have twins",
+     "model": null,
+     "family": "spacetime-diagram"
+    },
+    {
+     "id": "6.3",
+     "question": "Why does enough energy create new particles?",
+     "idea": "Particle number is not fixed",
+     "model": null,
+     "family": "spacetime-diagram"
+    }
+   ]
+  },
+  {
+   "number": 7,
+   "title": "Quantum field theory",
+   "subtitle": "Particles as ripples in fields",
+   "items": [
+    {
+     "id": "7.1",
+     "question": "How does a row of masses on springs become a wave?",
+     "idea": "Fields as countless oscillators",
+     "model": null,
+     "family": "oscillator-chain"
+    },
+    {
+     "id": "7.2",
+     "question": "What is a particle, if it is one step up a field's energy ladder?",
+     "idea": "Particles are field excitations",
+     "model": null,
+     "family": "oscillator-chain"
+    },
+    {
+     "id": "7.3",
+     "question": "Why are all electrons identical?",
+     "idea": "One field, everywhere",
+     "model": null,
+     "family": "oscillator-chain"
+    },
+    {
+     "id": "7.4",
+     "question": "Why does empty space still jitter?",
+     "idea": "The vacuum is not nothing",
+     "model": null,
+     "family": "oscillator-chain"
+    },
+    {
+     "id": "7.5",
+     "question": "How do fields talk to each other?",
+     "idea": "Interactions and coupling",
+     "model": null,
+     "family": "oscillator-chain"
+    },
+    {
+     "id": "7.6",
+     "question": "What do Feynman diagrams actually show?",
+     "idea": "Bookkeeping, not movies",
+     "model": null,
+     "family": "oscillator-chain"
+    },
+    {
+     "id": "7.7",
+     "question": "Why does symmetry require light to exist?",
+     "idea": "Gauge symmetry",
+     "model": null,
+     "family": "oscillator-chain"
+    },
+    {
+     "id": "7.8",
+     "question": "Why is the electron's magnetism slightly more than 2?",
+     "idea": "The most precise prediction in science",
+     "model": null,
+     "family": "oscillator-chain"
+    },
+    {
+     "id": "7.9",
+     "question": "Why does a force's strength change with distance?",
+     "idea": "Running couplings",
+     "model": null,
+     "family": "oscillator-chain"
+    },
+    {
+     "id": "7.10",
+     "question": "How does the Higgs field give particles mass?",
+     "idea": "The Standard Model in outline",
+     "model": null,
+     "family": "oscillator-chain"
+    }
+   ]
+  },
+  {
+   "number": 8,
+   "title": "Capstone",
+   "subtitle": "An open problem",
+   "items": [
+    {
+     "id": "8.1",
+     "question": "Why don't gravity and quantum field theory fit together yet?",
+     "idea": "An honest map of an open question",
+     "model": null,
+     "family": "none"
+    }
+   ]
+  }
+ ]
+}

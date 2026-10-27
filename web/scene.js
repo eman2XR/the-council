@@ -62,7 +62,11 @@ function drawLight(ctx,w,h,spec,st){
 function drawClocks(ctx,w,h,spec,st){
  const accent=ACCENT[spec.accent]||ACCENT.blue, m=st.mass, presence=clamp(m/.12);
  const ratio=Physics.clockRatio(m,st.distance), rate=1-12*(1-ratio), small=w<520;
- const cx=w*.5, rad=Math.min(w*.13,h*.135), lowerY=h*(.68-.09*(st.distance-1)), upperY=lowerY-Math.max(h*.34,rad*2.5), horizon=h*.9;
+ const cx=w*.5, rad=Math.min(w*.13,h*.135), horizon=h*.9;
+ let lowerY=h*(.68-.09*(st.distance-1)), upperY=lowerY-Math.max(h*.34,rad*2.5);
+ // Keep the top clock and its label clear of the stage notes.
+ const clear=(small?58:24)-(upperY-rad-(small?13:0));
+ if(clear>0){upperY+=clear;lowerY+=clear;}
  // Warm haze marks "deeper in gravity": schematic, not to scale.
  if(presence>0){
   const haze=ctx.createLinearGradient(0,h,0,h*.4);haze.addColorStop(0,`rgba(245,158,66,${.2*presence})`);haze.addColorStop(1,'rgba(245,158,66,0)');

@@ -36,7 +36,7 @@ class FixtureProvider:
     def generate(self, role, prompt, schema=None, images=(), research=False):
         self.calls += 1
         if role == 'planner':
-            return {'topic':'gravity-clocks','question':'Why does a lower clock accumulate less time?', 'reason':'Compare two stationary clocks.'}
+            return {'topic':'gravity-clocks','question':'Why does a lower clock accumulate less time?', 'reason':'Compare two stationary clocks.', 'request':0}
         if role == 'researcher':
             return 'OFFLINE FIXTURE: hand-authored source notes, no live search performed.'
         if role == 'scientist':

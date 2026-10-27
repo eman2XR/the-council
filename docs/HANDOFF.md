@@ -71,7 +71,13 @@ Light, minimal layout: today's guide at the top with a poster play button, word-
 
 `lab/render.py` depends on these IDs and behaviors: `.workspace`, `#universe`, `#mass`, `#distance`, `#mass-value`, `#bend-value` (real, unmagnified value, now a small stage label), `#beat-title`, `#title`/`#subtitle`/`#takeaway`, global `show(record)`, and `CouncilScene.load/seek/checks/getState`. `seek()` must stay deterministic and hide the poster. Reviewer frames now show one light-themed workspace with chapter subtitles instead of the old side panel.
 
-Not yet verified after the redesign: `python3 -m lab.sitecheck` and a fixture render. This Claude Code session cannot bind sockets or launch headless Chrome; run them from Terminal with the Framework Python that has Playwright. Do not pull this design into the worker checkout until a fixture render passes.
+A fixture render (`20261027T050015-a66670c3`) passed on the new design after the redesign. `lab.sitecheck` then failed because draft thumbnails were lazy-loaded inside the closed details section; they now load eagerly, but sitecheck has not been rerun since. This Claude Code session cannot bind sockets or launch headless Chrome; run them from Terminal with the Framework Python that has Playwright.
+
+### Curriculum, picks, questions and feedback
+
+`web/curriculum.json` is a 48-item path from special relativity through QFT, in 8 stages. Each item names the visual family it needs; only items whose `model` is a key in `lab/topics.py` can run today (3.2 clocks is done, 3.3 light bending is ready). The website's "The path" section shows progress and offers "Pick next" (ready items) or "vote" (items waiting on a visual family) as pre-filled GitHub issues. Hero buttons create `council:question` and `council:feedback` issues. The site reads open picks through the public GitHub API to show them under "Up next".
+
+`lab/inbox.py`: the publishing daily worker reads open issues **authored by `eman2XR` only** (public repo; others are ignored) with the three `council:*` labels, body capped at 800 characters. The oldest pick whose model exists and is unexplored becomes the plan directly, without a planner call. Otherwise ready curriculum items and quoted questions/feedback go to the planner, which may set `request` to an issue number. After an attempt, the coordinator comments with the outcome and closes picks and questions; feedback stays open. Votes for items without a model stay open as interest signals. Manual runs without `--publish` never read issues. Direct written answers to questions are not implemented (each would cost a model call).
 
 ## Commands
 
