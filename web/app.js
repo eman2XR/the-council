@@ -6,6 +6,9 @@ const STATUS={planning:'Choosing a question',running:'Investigating now',reviewe
 const STEPS=['Question','Research','Design','Render','Review','Publish'];
 const reduceMotion=matchMedia('(prefers-reduced-motion: reduce)').matches;
 let current=null, entries=[], busy=false, example=null;
+const requestedGuide=new URLSearchParams(location.search).get('guide');
+const VIEW=requestedGuide?'article':'home';
+document.body.dataset.view=VIEW;
 const records=new Map();
 
 function safeURL(url){try{const u=new URL(url);return ['http:','https:'].includes(u.protocol)?u.href:null;}catch{return null;}}
@@ -83,23 +86,39 @@ function card(entry,record){
  const meta=el('p',{className:'card-meta'},el('em',{textContent:'By'}),' The Council',el('span',{className:'sep'}),isExample?'Hand-written example':day(entry.created,{month:'long',day:'numeric'}),badge);
  const excerpt=el('p',{className:'card-excerpt',textContent:record?.scene?.subtitle||entry.question||''});
  link.append(media,el('div',{className:'card-body'},el('span',{className:'card-cat',textContent:isExample?'Example':topicOf(record||entry)}),el('h3',{textContent:(entry.title||entry.question||'').replace(/\n/g,' ')}),meta,excerpt));
- link.onclick=event=>{event.preventDefault();openGuide(id,{autoplay:true,push:true});};
+ if(record?.scene){canvas.scene=record.scene;thumbs.add(canvas);visible.observe(canvas);}
+ return link;
+}
+function thumbCard(entry,record){
+ const link=el('a',{href:'?guide='+encodeURIComponent(entry.id),className:'thumb-card'});
+ const canvas=el('canvas',{className:'thumb',ariaHidden:'true'});
+ link.append(el('div',{className:'card-media'},canvas,el('span',{className:'mini-play',ariaHidden:'true'})),
+  el('span',{className:'card-cat',textContent:topicOf(record||entry)}),el('h3',{textContent:(entry.title||entry.question||'').replace(/\n/g,' ')}));
  if(record?.scene){canvas.scene=record.scene;thumbs.add(canvas);visible.observe(canvas);}
  return link;
 }
 function renderCards(){
  thumbs.forEach(c=>visible.unobserve(c));thumbs.clear();
- const items=entries.map(e=>card(e,records.get(e.id)));
- if(example&&!entries.length)items.push(card({id:'example',title:example.scene.title.replace(/\n/g,' ')},example));
- $('archive').replaceChildren(...items);
- put('past-count',entries.length?`${entries.length} published`:'');
+ if(VIEW==='home'){
+  // Today's investigation is featured; the list below holds only the earlier ones.
+  const [lead,...rest]=entries;
+  $('featured').replaceChildren(...(lead?[card(lead,records.get(lead.id))]:example?[card({id:'example',title:example.scene.title.replace(/\n/g,' ')},example)]:[]));
+  $('featured').firstChild?.classList.add('featured-card');
+  $('archive').replaceChildren(...rest.map(e=>card(e,records.get(e.id))));
+  put('past-count',rest.length?`${rest.length} earlier`:'');
+  $('past-title').closest('.section-head').hidden=!rest.length;
+ }else{
+  const others=entries.filter(e=>e.id!==current?.id).slice(0,6);
+  $('more-list').replaceChildren(...others.map(e=>thumbCard(e,records.get(e.id))));
+  $('more').hidden=!others.length;
+ }
  paintThumbs(true);
 }
 let lastThumb=0;
 function paintThumbs(force){
   for(const canvas of thumbs){
    if(!force&&!canvas.classList.contains('in-view'))continue;
-   if(!force&&!canvas.closest('.card').matches(':hover'))continue;
+   if(!force&&!canvas.closest('.card,.thumb-card').matches(':hover'))continue;
    const w=canvas.clientWidth,h=canvas.clientHeight,dpr=Math.min(2,devicePixelRatio||1);if(!w||!h)continue;
    if(canvas.width!==Math.round(w*dpr)){canvas.width=Math.round(w*dpr);canvas.height=Math.round(h*dpr);}
    const ctx=canvas.getContext('2d'),s=canvas.scene;ctx.setTransform(dpr,0,0,dpr,0,0);ctx.clearRect(0,0,w,h);
@@ -122,22 +141,15 @@ async function getRecord(id){
  const response=await fetch('published/'+id+'/record.json');if(!response.ok)throw Error('Missing guide');
  const record=await response.json();records.set(id,record);return record;
 }
-async function openGuide(id,{autoplay=false,push=false}={}){
- try{
-  const record=await getRecord(id);
-  if(push)history.pushState({id},'',id==='example'?'?guide=example':'?guide='+encodeURIComponent(id));
-  show(record,{autoplay});
-  if(push)scrollTo({top:0,behavior:reduceMotion?'auto':'smooth'});
- }catch{if(!current)show(await getRecord('example'));}
+async function openGuide(id,{autoplay=false}={}){
+ try{show(await getRecord(id),{autoplay});}
+ catch{if(!current)show(await getRecord('example'));}
 }
-addEventListener('popstate',()=>openGuide(new URLSearchParams(location.search).get('guide')||entries[0]?.id||'example'));
 
 async function loadPublished(){
  try{const response=await fetch('published/index.json',{cache:'no-store'});entries=response.ok?await response.json():[];}catch{entries=[];}
  try{example=await (await fetch('example.json')).json();}catch{example=null;}
- const requested=new URLSearchParams(location.search).get('guide');
- const first=entries.find(e=>e.id===requested)?.id||(requested==='example'?'example':entries[0]?.id||'example');
- await openGuide(first);
+ if(VIEW==='article')await openGuide(entries.find(e=>e.id===requestedGuide)?.id||(requestedGuide==='example'||!entries.length?'example':requestedGuide));
  // Fetch the remaining records for previews without blocking the main guide.
  await Promise.all(entries.slice(0,24).map(e=>getRecord(e.id).catch(()=>null)));
  renderCards();
@@ -153,7 +165,7 @@ async function refresh(){
   $('run').textContent=busy?'The Council is working…':`Run a live investigation with ${data.runner==='claude'?'Claude Code':data.runner==='codex'?'Codex':data.runner==='fixture'?'the offline fixture':'the OpenAI API'}`;
  }catch{
   $('run').disabled=true;$('run').textContent='Read-only website';
-  if(!current)await loadPublished();
+  if(!current&&!entries.length)await loadPublished();
  }
 }
 $('run').onclick=async()=>{
@@ -254,7 +266,7 @@ function renderPath(){
  const rows=chapter.items.map(item=>{
   const published=doneItem(item);let state;
   if(published){state=el('a',{className:'state pill',href:'?guide='+encodeURIComponent(published.id),textContent:'Watch'});
-   state.onclick=e=>{e.preventDefault();openGuide(published.id,{autoplay:true,push:true});};}
+}
   else if(picks.has(item.id))state=el('a',{className:'state picked',href:picks.get(item.id),target:'_blank',rel:'noopener noreferrer',textContent:'Picked'});
   else if(item.model)state=el('a',{className:'state pill pick',target:'_blank',rel:'noopener noreferrer',textContent:'Pick for tomorrow',
    href:issueURL('council:choose',`Pick next: ${item.id} ${item.question}`.slice(0,120),`curriculum: ${item.id}\n\n${item.question}\n\nPicked on the website. The next morning's run investigates this.`)});

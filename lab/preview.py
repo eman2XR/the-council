@@ -22,10 +22,25 @@ def main():
                 route_files(page, ROOT / 'web', '/web/')
                 errors = []
                 page.on('pageerror', lambda error: errors.append(str(error)))
-                page.goto(ORIGIN + '/web/' + (f'?guide={args.guide}' if args.guide else ''), wait_until='networkidle')
-                page.wait_for_timeout(400)
+                page.goto(ORIGIN + '/web/', wait_until='networkidle')
+                page.wait_for_timeout(500)
+                page.screenshot(path=str(out / f'{name}-home.png'), full_page=True)
+                # Open an investigation the way a reader would: click the featured story.
+                link = page.locator('#featured a').first
+                target = args.guide and f'?guide={args.guide}'
+                if target:
+                    page.goto(ORIGIN + '/web/' + target, wait_until='networkidle')
+                elif link.count():
+                    link.click(); page.wait_for_load_state('networkidle')
+                else:
+                    page.goto(ORIGIN + '/web/?guide=example', wait_until='networkidle')
+                page.wait_for_timeout(500)
                 page.screenshot(path=str(out / f'{name}-top.png'))
                 page.screenshot(path=str(out / f'{name}-full.png'), full_page=True)
+                for i, y in enumerate((700, 1500)):
+                    page.evaluate(f'scrollTo(0,{y})'); page.wait_for_timeout(400)
+                    page.screenshot(path=str(out / f'{name}-scroll{i+1}.png'))
+                page.evaluate('scrollTo(0,0)')
                 page.evaluate('CouncilScene.play()')
                 page.wait_for_timeout(6000)
                 page.screenshot(path=str(out / f'{name}-playing.png'))

@@ -54,7 +54,8 @@ def capture(scene, directory, research=None, provider='fixture'):
             route_files(page, ROOT / 'web')
             errors = []
             page.on('pageerror', lambda error: errors.append(str(error)))
-            page.goto(ORIGIN + '/', wait_until='networkidle')
+            # Investigations render on their own page; an unknown id opens the player with the example first.
+            page.goto(ORIGIN + '/?guide=capture', wait_until='networkidle')
             page.add_style_tag(content='html {scroll-behavior:auto!important}')
             page.wait_for_function('window.CouncilScene && document.getElementById("beat-title").textContent.length > 0')
             if research:
