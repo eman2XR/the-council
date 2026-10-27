@@ -26,7 +26,7 @@ The user asked for an autonomous overnight session (started 22:28 PT): at least 
 
 ### Visual engines (`web/scene.js` ENGINES registry, `web/physics.js`, `lab/topics.py`)
 
-Ten engines; each topic key is the scene `kind`. Scene fields are generic: `mass` drives the first slider (always zero in chapter 1), `distance` the second; each engine formats physical values (`fa`/`fb`) and has its own readout, labels, demo end, try-text and checks (`Physics.checksFor(kind)`, 36 checks, run in CI).
+Eleven engines; each topic key is the scene `kind`. Scene fields are generic: `mass` drives the first slider (always zero in chapter 1), `distance` the second; each engine formats physical values (`fa`/`fb`) and has its own readout, labels, demo end, try-text and checks (`Physics.checksFor(kind)`, 36 checks, run in CI).
 
 - `light-bending`, `gravity-clocks`: original models. Readouts renamed "Unmagnified bend/slowdown" (model units, not real-world numbers).
 - `spacetime`: twin paradox diagram; v = 0.9·mass (shown in c), turnaround T = 1.6·distance yr; light cone, tilted "now" line, ageing gap 1−1/γ.
@@ -37,7 +37,8 @@ Ten engines; each topic key is the scene `kind`. Scene fields are generic: `mass
 - `wave-packet`: Gaussian blend of plane waves with free dispersion; readout momentum spread (σx·σk = ½ checked).
 - `quantum-well`: finite square well bound states by bisection; readout level count; two-level slosh panel.
 - `falling-time`: weak-field most-proper-time path between two events; best apex gT²/8, gain g²T²/24 (schematic units).
-- 60 physics checks in total.
+- `diffraction`: Huygens ripple tank through one gap; single-slit screen pattern, first dark direction sin θ = λ/gap.
+- 66 physics checks in total; every path item now has a model.
 - `lab/fixtures.py` has offline scenes for every engine (`lab run --provider fixture --topic <kind>`).
 
 ### Playback and subtitles
@@ -56,7 +57,7 @@ This Claude Code session cannot open ports, launch Chrome, or run the `claude` C
 
 Every live run's researcher had no WebSearch tool and every WebFetch was refused by Apple Claude Code's network proxy ("proxy refused the connection"). Before the fix, the citation check only required cited URLs to appear in the notes, and the notes listed URLs that were tried and failed, so unretrieved references passed. Both published guides (clocks `20261027T041411-61589ffe`, twins) are therefore labelled `provenance.sources_retrieved=false` with a visible "Reviewed · sources not retrieved" tag and note; retracting them is the owner's decision. `lab/cli_providers.retrieved()` now requires at least one successful search/fetch result, so unsourced research fails. Fixes are the owner's: allow educational domains in the ACC Dashboard (Domains tab) or `~/.claude/apple/dangerous_allowed_domains.csv`, or opt in to coordinator retrieval with `COUNCIL_COORDINATOR_FETCH=1` (`lab/sources.py`: the model proposes URLs as data, the coordinator fetches them with size/time bounds, only pages that load become notes). Never edit the ACC allowlist or sandbox settings without an explicit owner request. Until fixed, the 9 AM worker run will stop at research (honestly) and consume its slot.
 
-`scripts/batch.sh` reruns `scripts/batch-questions.txt` (11 questions, 12-run cap) from `~/Projects/council-batch`; start it from Terminal, optionally with `COUNCIL_COORDINATOR_FETCH=1`.
+`scripts/batch.sh` reruns `scripts/batch-questions.txt` (12 questions, 12-run cap) from `~/Projects/council-batch`; start it from Terminal, optionally with `COUNCIL_COORDINATOR_FETCH=1`.
 
 ### Website
 
@@ -76,7 +77,7 @@ Launch agent `org.the-council.daily` (9 AM, Claude, `--count 1 --rounds 3 --publ
 
 1. Resolve research retrieval (owner decision above), then run `scripts/batch.sh`; export accepted runs with `lab export --run-dir … --publish`; decide whether to publish the held speed-limit run after rerunning it with real sources.
 2. After 9 AM: verify the worker's live run, project review and publication.
-3. Build the single-gap diffraction engine (path item 3.4, the only item without a model).
+3. Plan the next chapter of the path (toward open problems, honestly scoped) and the engines it needs.
 4. Act on approved proposals; keep the handoff current.
 
 ## Commands
