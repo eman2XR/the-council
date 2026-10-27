@@ -105,8 +105,12 @@ def publish(root=ROOT):
     if any(p not in ('web/dashboard.json','web/proposals.json') and not p.startswith('web/published/') for p in staged):
         raise RuntimeError('Unrelated staged changes exist; leave publication pending.')
     git('add','--',*paths)
-    if git('diff','--cached','--name-only'):
-        git('commit','-m','Update Council investigation dashboard','--',*paths)
+    changed=git('diff','--cached','--name-only').splitlines()
+    if changed:
+        guides=sorted({c.split('/')[2] for c in changed if c.startswith('web/published/') and c.count('/')>=3})
+        message=(f'Publish reviewed investigation {", ".join(guides)}' if guides else
+                 'Update Council proposals' if 'web/proposals.json' in changed else 'Update Council investigation dashboard')
+        git('commit','-m',message,'--',*paths)
     # A failed push is retried next cycle even when there is nothing new to commit.
     git('push','origin','main')
 

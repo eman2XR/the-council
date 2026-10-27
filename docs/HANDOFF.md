@@ -20,64 +20,53 @@ The user is cost-sensitive and prefers existing Claude Code/Codex CLI authentica
 
 The website is static. GitHub does not run the model agents; the Mac runs them and pushes accepted public files. A deployed website remains available when the Mac is off. Research needs an awake, logged-in Mac and the managed Claude VPN connection.
 
-## Current checkpoint — read before resuming
+## Current checkpoint — read before resuming (2026-10-26 night)
 
-Implemented and deployed in source commit `c48b69f` (later verification/fix commits may follow):
+The user asked for an autonomous overnight session (started 22:28 PT): at least 10 investigations, continuous website/visual improvement, and a scheduled self-improvement review with owner approval. High-level goal: intuitive understanding of physics through honest interactive visuals, eventually scoped investigations of open problems; an autonomous lab with humans in the loop.
 
-- `lab/topics.py`: light-bending and stationary gravitational-clock models with scoped scientific notes.
-- `lab/daily.py`: structured planner, per-day cap, OS lock, persistent history, recovery of interrupted attempts, acceptance-only export and scoped Git publication.
-- `lab/dashboard.py`: safe status snapshots, throttled publishing (120 seconds plus start/completion), no raw errors/usage metadata.
-- `lab/schedule.py` and `scripts/run_daily.py`: generate a macOS launch agent with an explicit absolute Python/script path.
-- `lab/__main__.py`: `daily`, `schedule`, `--topic`, `--count`, `--publish`, `--hour`.
-- `web/physics.js` / `web/scene.js`: two clock model, labeled 12× magnification, actual rate readout, distance/mass controls, reference hand, and outward sweep during playback; original ray model preserved.
-- Public archive and `?guide=<id>` navigation, dashboard with phase/revision/activity/schedule and stale-status warnings. Browser polls status once a minute; Pages deployment adds latency.
-- Pages workflow packages only explicit public assets, accepted guides and dashboard.
+### Visual engines (`web/scene.js` ENGINES registry, `web/physics.js`, `lab/topics.py`)
 
-Verification:
+Six engines; each topic key is the scene `kind`. Scene fields are generic: `mass` drives the first slider (always zero in chapter 1), `distance` the second; each engine formats physical values (`fa`/`fb`) and has its own readout, labels, demo end, try-text and checks (`Physics.checksFor(kind)`, 36 checks, run in CI).
 
-- **31 unit tests passed**, plus 12 numerical model checks and JavaScript syntax checks.
-- `python3 -m lab.sitecheck` checks static hosting under `/web/` (project-prefix equivalent), disabled live-run button, revision images, archive links, dashboard loading, mobile overflow and JS errors.
-- Clock fixture `20261027T041255-383a6d3b` passed with corrected mobile capture; its screenshot was inspected.
-- First daily planner attempt exceeded a text bound and consumed a slot. Bounds are now included in the response schema.
-- First live daily investigation `20261027T040910-6d813087` exhausted three rounds and stayed `needs_review`; physics eventually passed, visual review correctly rejected missing moved-radius evidence. It was **not published**.
-- Mobile full-page screenshots initially repeated the top of the page due to browser capture behavior. The renderer now captures a mobile workspace in a tall viewport and a separate top-of-page viewport. The final clock comparison frame explicitly moves radius to 2.5.
-- Separate bounded live regression `20261027T041411-61589ffe` **passed on revision two**, physics score **8.5**, visual score **7.5**, all 12 renderer/model checks passed. It has been exported to `web/published/20261027T041411-61589ffe/`. Its question is “Why do clocks at different heights tick at different rates?” This did not reset the daily ledger. No live model workers remain after this check.
-- The dashboard deployment at commit `c48b69f` succeeded in GitHub Actions run `40448748038`. Check later workflows for the accepted-guide deployment.
+- `light-bending`, `gravity-clocks`: original models. Readouts renamed "Unmagnified bend/slowdown" (model units, not real-world numbers).
+- `spacetime`: twin paradox diagram; v = 0.9·mass (shown in c), turnaround T = 1.6·distance yr; light cone, tilted "now" line, ageing gap 1−1/γ.
+- `interference`: two-source ripple tank plus time-averaged screen; contrast 2a/(1+a²).
+- `two-slit-particles`: one-at-a-time arrivals sampled from the predicted pattern; ripples depict amplitude, never trajectories.
+- `standing-waves`: rope with partial reflection; whole-number patterns 1–5; node stillness 2a/(1+a).
+- `lab/fixtures.py` has offline scenes for every engine (`lab run --provider fixture --topic <kind>`).
 
-### Scheduler status — enabled from a worker checkout
+### Playback and subtitles
 
-The user chose a separate worker checkout. The launch agent `org.the-council.daily` (9 AM local, Claude, `--count 1 --rounds 3 --publish`) runs from `~/Projects/the-council-worker`, outside macOS-protected folders. The Desktop checkout remains the interactive development workspace; do not point launchd at it.
+Playback timing is derived from subtitle text (14 characters/s, ≥2.8 s per sentence, pauses), never compressed; `spec.duration` can only stretch it. One sentence at a time, no word-by-word reveal. `lab/render.py` adds pacing checks (≤15 cps, ≥2.5 s) that reviewers see; the director prompt asks for 2–3 sentences under 110 characters per beat.
 
-Worker setup:
+### Browser capture without sockets
 
-- Cloned from GitHub; repo-local `commit.gpgsign=false` and the personal `gh auth git-credential` helper/username, matching the Desktop checkout. Global work signing is untouched.
-- `.council-state/history.json` was copied from the Desktop checkout so today's used slots carry over. The worker's ledger is now authoritative for scheduled runs; manual Desktop `daily` runs keep a separate ledger and can therefore duplicate a day's work.
-- Plist generated with `/Library/Frameworks/Python.framework/Versions/3.13/bin/python3` (has Playwright) and a minimal PATH (`~/.local/bin` first for managed `claude`, then Homebrew for `gh`/`node`/`codex`).
-- The user's global `core.hooksPath` previously pointed to `~/Desktop/weekly notes/scripts`, which background jobs cannot read, so every push failed under launchd. At the user's direction those Git LFS hooks were copied to `~/Projects/weekly-notes-hooks` and the global hooksPath now points there. Desktop originals remain.
-- Registration: Claude Code's sandbox cannot `launchctl bootstrap` (error 5); the user ran it in Terminal. `launchctl kickstart` works from the agent session.
+This Claude Code session cannot open ports, launch Chrome, or run the `claude` CLI (exit 71); launchd job submission from the session was refused by the auto-mode safety check and must not be retried. `lab/render.py` now serves files through Playwright request routing (no server) and falls back from Chromium/Chrome to WebKit, so renders, `lab.sitecheck` and `python3 -m lab.preview` (desktop/phone screenshots) work from this session. Live model runs must be started from the user's Terminal or by the 9 AM launch agent.
 
-Smoke test 2026-10-26: kickstart exited 0, no permission errors, and the publish step pushed successfully (the day's cap was already reached, so no model calls were made). Not yet verified under launchd: a real Claude call (managed auth/VPN in the background context) and Chrome rendering. The first 9 AM run is that test; inspect `~/Projects/the-council-worker/.council-state/daily*.log` and the ledger afterwards.
+### Overnight batch
+
+`scripts/overnight.sh` (user-started in Terminal at 22:51) runs 10 single live investigations from a snapshot copy `~/Projects/council-overnight` (no `.git`, no publishing). Verified renderer fixes were synced into the snapshot mid-batch. Accepted runs are published with `python3 -m lab export --run-dir <snapshot>/web/runs/<id> --publish`, which copies the run into this checkout and applies the same gates as daily exports. Results so far: light bending stopped (beat too long for layout); moving clock 3 rounds needs_review (control labels showed raw values — fixed); simultaneity needs_review; **twin paradox passed (physics 8.5, visuals 7.4) and is published** (`20261027T060526-17d8ad17`, curriculum 2.3). Check `overnight.log` for the rest.
+
+### Website
+
+Light minimal layout: slim lab status strip (expands for steps/drafts), hero investigation with poster play, captions, chapter bar, physical-unit sliders, ask/feedback links; past investigations cards (still previews, animate on hover, New/Watched in localStorage); compact path (four chapter tiles + selected chapter list; `web/curriculum.json`, 15 items, items with a `model` are runnable); collapsed "How the Council checked this"; Proposals sheet (header button). Asset links get `?v=<sha>` per deploy to prevent mixed caches.
+
+`lab/render.py` depends on: `.workspace`, `#universe`, `#mass`, `#distance`, `#mass-value` (with `data-value`), `#bend-value`, `#beat-title`, `#title`/`#subtitle`/`#takeaway`, global `show(record)`, `CouncilScene.load/seek/checks/getState/timeline`. `seek()` must stay deterministic and hide the poster.
+
+### Picks, questions, feedback, proposals (`lab/inbox.py`, `lab/improve.py`)
+
+Owner-authored issues only (`eman2XR`; public repo). Labels: `council:choose`, `council:question`, `council:feedback`, `council:approve`, `council:decline`. Picks of runnable items become the plan without a planner call; questions/feedback are quoted data for the planner; the coordinator comments and closes picks/questions after an attempt. The scheduled `daily --publish` also runs `improve.daily_review` once per local day (one web-search "scout" call and one structured "architect" call): up to four proposals merged into `web/proposals.json` with owner decisions applied; published with the dashboard. Nothing is implemented automatically; approved proposals wait for a supervised coding session — check the Proposals sheet and `council:approve` issues when resuming.
+
+### Scheduler — enabled from a worker checkout
+
+Launch agent `org.the-council.daily` (9 AM, Claude, `--count 1 --rounds 3 --publish`) runs from `~/Projects/the-council-worker` (repo-local signing off, personal gh credentials, Framework Python with Playwright). Global `core.hooksPath` now points to `~/Projects/weekly-notes-hooks` (user's choice) so background pushes work. Smoke test passed without model calls; the first real background Claude call and render is the next 9 AM run — inspect `~/Projects/the-council-worker/.council-state/daily*.log`, the ledger and `improve.json`. Pull into the worker after every push: `git -C ~/Projects/the-council-worker pull --ff-only`.
 
 ## Next steps
 
-1. After the next 9 AM run, check the worker logs, ledger and GitHub Actions. If Claude auth or rendering fails under launchd, set the dashboard schedule back to blocked with an honest reason.
-2. Pull source changes into the worker (`git -C ~/Projects/the-council-worker pull --ff-only`) after pushing from the Desktop checkout; regenerate the plist only if interpreter/paths change.
-3. Expand visual model families over time. The planner currently creates questions within two models, not arbitrary physics animations. Semantic novelty is model-assisted rather than guaranteed.
-4. Update this handoff after material changes so either coding agent can resume.
-
-### Website design (2026-10-26)
-
-Light, minimal layout: today's guide at the top with a poster play button, word-by-word subtitles per chapter, chapter progress bar, and sliders the last chapter moves by itself; then lab status (now / up next / drafts on the bench), past-investigation cards with previews drawn by the same renderer (still until hovered; "New"/"Watched" stored in localStorage), and a collapsed "How the Council checked this" section. Nothing animates until the viewer presses play or touches a control.
-
-`lab/render.py` depends on these IDs and behaviors: `.workspace`, `#universe`, `#mass`, `#distance`, `#mass-value`, `#bend-value` (real, unmagnified value, now a small stage label), `#beat-title`, `#title`/`#subtitle`/`#takeaway`, global `show(record)`, and `CouncilScene.load/seek/checks/getState`. `seek()` must stay deterministic and hide the poster. Reviewer frames now show one light-themed workspace with chapter subtitles instead of the old side panel.
-
-A fixture render (`20261027T050015-a66670c3`) passed on the new design after the redesign. `lab.sitecheck` then failed because draft thumbnails were lazy-loaded inside the closed details section; they now load eagerly, but sitecheck has not been rerun since. This Claude Code session cannot bind sockets or launch headless Chrome; run them from Terminal with the Framework Python that has Playwright.
-
-### Curriculum, picks, questions and feedback
-
-`web/curriculum.json` is a 48-item path from special relativity through QFT, in 8 stages. Each item names the visual family it needs; only items whose `model` is a key in `lab/topics.py` can run today (3.2 clocks is done, 3.3 light bending is ready). The website's "The path" section shows progress and offers "Pick next" (ready items) or "vote" (items waiting on a visual family) as pre-filled GitHub issues. Hero buttons create `council:question` and `council:feedback` issues. The site reads open picks through the public GitHub API to show them under "Up next".
-
-`lab/inbox.py`: the publishing daily worker reads open issues **authored by `eman2XR` only** (public repo; others are ignored) with the three `council:*` labels, body capped at 800 characters. The oldest pick whose model exists and is unexplored becomes the plan directly, without a planner call. Otherwise ready curriculum items and quoted questions/feedback go to the planner, which may set `request` to an issue number. After an attempt, the coordinator comments with the outcome and closes picks and questions; feedback stays open. Votes for items without a model stay open as interest signals. Manual runs without `--publish` never read issues. Direct written answers to questions are not implemented (each would cost a model call).
+1. After the batch: export accepted runs, inspect drafts' reviewer findings, fix renderer issues they reveal, and rerun failed items (light bending, moving clock, simultaneity) from Terminal.
+2. After 9 AM: verify the worker's live run, project review and publication.
+3. Build the remaining engines (gravity in spacetime, single-gap diffraction, 1D quantum wave) to unlock the rest of the path.
+4. Act on approved proposals; keep the handoff current.
 
 ## Commands
 
