@@ -47,7 +47,7 @@
     {
      "id": "2.5",
      "question": "If gravity slows time, why do things fall?",
-     "model": null
+     "model": "falling-time"
     }
    ]
   },

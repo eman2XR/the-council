@@ -107,6 +107,10 @@ ENGINE_SCENES = {
         ('No well: nothing is trapped.', 'Without a well, the particle can have any energy at all.'),
         ('Dig a well.', 'Only a few energy levels fit. Each one is a wave that matches the walls.'),
         ('Make it deeper and wider.', 'A bigger well holds more levels, packed closer together.')], 'gold', 1, 1.6),
+    'MOST-TIME PATH (WHY THINGS FALL)': _engine_scene('The path that keeps the most time', [
+        ('No gravity: stay put.', 'Without gravity, the clock that stays where it is keeps the most time.'),
+        ('Turn gravity on.', 'Higher clocks run faster, so going up gains time. Moving fast loses time.'),
+        ('Find the best compromise.', 'The path that keeps the most time is exactly the arc a thrown ball follows.')], 'blue', 1, 1.6),
     'STANDING WAVES ON A ROPE': _engine_scene('Why a rope only shakes in certain patterns', [
         ('No reflection: the wave just travels.', 'Every point on the rope swings in turn. Nothing stays still.'),
         ('Let the wall reflect the wave.', 'The returning wave overlaps the outgoing one. Some points now stay perfectly still.'),

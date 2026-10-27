@@ -354,6 +354,37 @@ function drawWell(ctx,w,h,spec,st){
  }
 }
 
+function drawFall(ctx,w,h,spec,st){
+ const accent=ACCENT[spec.accent]||ACCENT.blue, F=Physics.fall(st.mass,st.distance), small=w<520;
+ const x0=w*.08, x1=w*.92, ground=h*.8, topY=h*(small?.26:.16), Hs=Math.max(F.ref*2,1e-9);
+ const X=t=>x0+t/F.T*(x1-x0), Y=hh=>ground-hh/Hs*(ground-topY);
+ // Clocks run slower lower down: warmer shading near the ground (schematic, exaggerated).
+ const shade=ctx.createLinearGradient(0,ground,0,topY);shade.addColorStop(0,`rgba(245,158,66,${.22*Math.min(1,F.g/.8)})`);shade.addColorStop(1,'rgba(245,158,66,0)');
+ ctx.fillStyle=shade;ctx.fillRect(x0,topY,x1-x0,ground-topY);
+ trace(ctx,[[x0,ground],[x1,ground]]);ctx.strokeStyle='rgba(20,23,28,.5)';ctx.lineWidth=1.6;ctx.stroke();
+ const path=apex=>Array.from({length:121},(_,i)=>{const t=F.T*i/120;return [X(t),Y(F.height(apex,t))];});
+ const candidates=[.5,1.5,2].map(m=>m*F.ref);
+ for(const apex of candidates){trace(ctx,path(apex));ctx.setLineDash([4,5]);ctx.strokeStyle='rgba(20,23,28,.3)';ctx.lineWidth=1.2;ctx.stroke();ctx.setLineDash([]);
+  if(st.labels){const g=F.gain(apex);text(ctx,`${g>=0?'+':''}${g.toFixed(2)}`,X(F.T/2),Y(apex)-10,{align:'center',size:10,color:'rgba(20,23,28,.55)'});}}
+ if(F.best>1e-9){trace(ctx,path(F.best));ctx.strokeStyle=accent;ctx.lineWidth=spec.line_width||2.6;ctx.lineCap='round';ctx.stroke();}
+ // Two clocks leave together and meet again: one held at the ground, one on the best path.
+ const u=((st.t*.16)%1.15+1.15)%1.15, t=Math.min(1,u)*F.T;
+ const held=[X(t),ground], ball=[X(t),Y(F.height(F.best,t))];
+ for(const [p,c] of [[held,'#14171c'],[ball,accent]]){const glow=ctx.createRadialGradient(p[0],p[1],0,p[0],p[1],15);glow.addColorStop(0,rgba(c,.3));glow.addColorStop(1,rgba(c,0));ctx.fillStyle=glow;ctx.fillRect(p[0]-15,p[1]-15,30,30);
+  ctx.beginPath();ctx.arc(p[0],p[1],5.5,0,TAU);ctx.fillStyle=c;ctx.fill();}
+ if(st.labels){
+  const size=small?10:11, frac=t/F.T, gained=(2/3)*F.g*F.best*F.T*(frac*frac*(3-2*frac))-8*F.best*F.best/(3*F.T)*(1-Math.pow(1-2*frac,3))/2;
+  text(ctx,'height ↑',x0,topY-14,{size:10});text(ctx,'time →',x1,ground+18,{align:'right',size:10});
+  text(ctx,'clocks run slower lower down',x0,ground+18,{size:10,color:'rgba(180,83,15,.9)'});
+  pill(ctx,'HELD',held[0],ground+18,{align:'center',size,weight:600,spacing:'1px'});
+  if(F.best>1e-9){
+   pill(ctx,`THROWN  ${gained>=0?'+':''}${gained.toFixed(2)}`,ball[0]+14,ball[1]-16,{size,weight:600,color:accent,spacing:'.5px'});
+   text(ctx,`+${F.gain(F.best).toFixed(2)} most time: the path a ball really takes`,X(F.T*.22)-8,Y(F.height(F.best,F.T*.22))-6,{align:'right',size:small?10:11,weight:600,color:accent});
+  }else text(ctx,'no gravity: staying put keeps the most time',X(F.T/2),ground-30,{align:'center',size});
+  text(ctx,'dashed: other paths between the same two moments, with their extra time',x0,h-12,{size:small?9:10});
+ }
+}
+
 const ENGINES={
  'light-bending':{draw:drawLight,a:['Mass','how much mass sits nearby'],b:['Passing distance','how close the light passes','×'],
   fa:a=>a.toFixed(2),fb:b=>b.toFixed(2)+'×',
@@ -391,6 +422,10 @@ const ENGINES={
   fa:a=>a<.005?'no well':Math.round(a*100)+'%',fb:b=>(1+(b-1)).toFixed(2)+'×',
   measure:['Allowed energy levels',(a,b)=>String(Physics.levelCount(a,b))],scale:'Energies to scale · wave heights not',demoEnd:()=>2.5,
   try:'Remove the well: are there any levels? Deepen it, then widen it. When does a new level appear?',aria:'A particle trapped in a well can only have certain energies, drawn as levels with their wave shapes.'},
+ 'falling-time':{draw:drawFall,a:['Gravity','how strong gravity is'],b:['Time in the air','between leaving and meeting again',''],
+  fa:a=>a<.005?'none':Math.round(a*100)+'%',fb:b=>(2+2*(b-1)).toFixed(1)+' units',
+  measure:['Thrown clock gains',(a,b)=>(Physics.fallGain(a,b)*100).toFixed(1)+'%'],scale:'Time effects hugely exaggerated',demoEnd:()=>2.5,
+  try:'Turn gravity off: which path keeps the most time? Turn it on and give the ball longer in the air.',aria:'Clocks held at the ground and thrown upward; the path a thrown ball takes is the one that keeps the most time.'},
 };
 const engineOf=spec=>ENGINES[spec?.kind]||ENGINES['light-bending'];
 

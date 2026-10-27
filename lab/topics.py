@@ -95,6 +95,17 @@ least one, deeper or wider wells hold more. Supported questions: why trapped par
 (standing waves that fit), why a bigger well has more and closer levels, why the wave leaks into the walls. Energies are to
 scale; wave heights are not. Not an atom model; no spin or 3D. No new-discovery claims.'''+COMMON
 
+FALL_NOTES = '''MOST-TIME PATH (WHY THINGS FALL). Weak gravity, slow motion, schematic units with effects hugely exaggerated.
+Two clocks leave the ground together and meet again a time T later: one is held at the ground, one is thrown up and falls
+back. Between those same two events, a path's elapsed (proper) time is T plus the integral of (g h - v^2/2): height gains
+time because clocks run faster higher up, speed loses time. Drawn: height against time, warm shading where clocks run
+slower, dashed alternative arcs labelled with their extra time, and the arc of greatest extra time (apex g T^2 / 8, exactly
+the ordinary free-fall throw) in the accent colour with a moving clock comparing running totals. Field mass sets gravity
+g = 0.8*mass (UI "Gravity", 0 = none); field distance sets T = 2 + 2*(distance - 1) (UI "Time in the air"). The readout is
+the best path's extra time as a fraction of T, g^2 T^2 / 24 in these units. Supported questions: if gravity slows time,
+why do things fall; why free fall is the path of most elapsed time; why gravity is mostly a time effect for slow objects.
+This is the weak-field, low-speed limit only; not a black hole, orbit or precise Earth numbers. No new-discovery claims.'''+COMMON
+
 TOPICS = {
     'light-bending': {'label':'Light bending', 'question':'Why does gravity bend light?', 'notes':MODEL_NOTES},
     'gravity-clocks': {'label':'Gravity and clocks', 'question':'Why do clocks at different heights tick at different rates?', 'notes':CLOCK_NOTES},
@@ -104,5 +115,6 @@ TOPICS = {
     'standing-waves': {'label':'Standing waves', 'question':'Why does a guitar string only play certain notes?', 'notes':ROPE_NOTES},
     'tunneling': {'label':'Quantum tunnelling', 'question':'How can a particle pass through a wall it cannot climb over?', 'notes':TUNNEL_NOTES},
     'wave-packet': {'label':'Wave packets and uncertainty', 'question':"Why can't you pin down both where a particle is and how it moves?", 'notes':PACKET_NOTES},
+    'falling-time': {'label':'Why things fall', 'question':'If gravity slows time, why do things fall?', 'notes':FALL_NOTES},
     'quantum-well': {'label':'Allowed energies in a well', 'question':'Why can a trapped particle only have certain energies?', 'notes':WELL_NOTES},
 }

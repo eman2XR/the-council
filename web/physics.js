@@ -75,6 +75,26 @@
         return edge*Math.exp(-l.kappa*(Math.abs(x)-h));};
       return {V,L,levels,psi};
     },
+    // Weak gravity, slow motion (schematic units): proper time = T + integral of (g h - v^2/2) dt.
+    fall(a, b) {
+      const g=.8*a, T=2+2*(b-1), ref=.8*T*T/8, best=g*T*T/8;
+      const gain=apex=>(2/3)*g*apex*T-8*apex*apex/(3*T);
+      const height=(apex,t)=>4*apex*t*(T-t)/(T*T);
+      return {g,T,ref,best,gain,height};
+    },
+    fallGain(a,b){const f=this.fall(a,b);return f.gain(f.best)/f.T;},
+    fallChecks() {
+      const f=this.fall(1,1.6), scan=Array.from({length:2001},(_,i)=>i/2000*2*f.ref), top=scan.reduce((m,x)=>f.gain(x)>f.gain(m)?x:m,0);
+      const near=(x,y,e=1e-9)=>Math.abs(x-y)<e;
+      return Object.entries({
+        'Without gravity the straight path keeps the most time':this.fall(0,1.6).best===0&&this.fallGain(0,1.6)===0,
+        'Most-time path peaks at the free-fall height gT²/8':Math.abs(top-f.best)<f.ref/1000,
+        'Going higher or lower than free fall gains less':f.gain(f.best)>f.gain(f.best*.7)&&f.gain(f.best)>f.gain(f.best*1.3),
+        'Time gained equals g²T²/24':near(this.fallGain(1,1.6),f.g*f.g*f.T*f.T/24,1e-12),
+        'Stronger gravity throws the best path higher':this.fall(1,1.6).best>this.fall(.5,1.6).best,
+        'Both paths start and end at the same events':near(f.height(f.best,0),0)&&near(f.height(f.best,f.T),0),
+      }).map(([name,pass])=>({name,pass}));
+    },
     reflected(a,b){return this.barrier(a,b).R;},
     momentumSpread(a){return 1.1*a;},
     levelCount(a,b){return this.well(a,b).levels.length;},
@@ -117,7 +137,7 @@
     },
     checksFor(kind) {
       return {'gravity-clocks':this.clockChecks,'spacetime':this.spacetimeChecks,'interference':this.waveChecks,
-        'two-slit-particles':this.waveChecks,'standing-waves':this.ropeChecks,'tunneling':this.tunnelChecks,'wave-packet':this.packetChecks,'quantum-well':this.wellChecks}[kind]?.call(this) || this.checks();
+        'two-slit-particles':this.waveChecks,'standing-waves':this.ropeChecks,'tunneling':this.tunnelChecks,'wave-packet':this.packetChecks,'quantum-well':this.wellChecks,'falling-time':this.fallChecks}[kind]?.call(this) || this.checks();
     },
     spacetimeChecks() {
       const near=(a,b)=>Math.abs(a-b)<1e-12, g=this.gamma(this.speed(1));
