@@ -65,6 +65,14 @@ Smoke test 2026-10-26: kickstart exited 0, no permission errors, and the publish
 3. Expand visual model families over time. The planner currently creates questions within two models, not arbitrary physics animations. Semantic novelty is model-assisted rather than guaranteed.
 4. Update this handoff after material changes so either coding agent can resume.
 
+### Website design (2026-10-26)
+
+Light, minimal layout: today's guide at the top with a poster play button, word-by-word subtitles per chapter, chapter progress bar, and sliders the last chapter moves by itself; then lab status (now / up next / drafts on the bench), past-investigation cards with previews drawn by the same renderer (still until hovered; "New"/"Watched" stored in localStorage), and a collapsed "How the Council checked this" section. Nothing animates until the viewer presses play or touches a control.
+
+`lab/render.py` depends on these IDs and behaviors: `.workspace`, `#universe`, `#mass`, `#distance`, `#mass-value`, `#bend-value` (real, unmagnified value, now a small stage label), `#beat-title`, `#title`/`#subtitle`/`#takeaway`, global `show(record)`, and `CouncilScene.load/seek/checks/getState`. `seek()` must stay deterministic and hide the poster. Reviewer frames now show one light-themed workspace with chapter subtitles instead of the old side panel.
+
+Not yet verified after the redesign: `python3 -m lab.sitecheck` and a fixture render. This Claude Code session cannot bind sockets or launch headless Chrome; run them from Terminal with the Framework Python that has Playwright. Do not pull this design into the worker checkout until a fixture render passes.
+
 ## Commands
 
 ```sh

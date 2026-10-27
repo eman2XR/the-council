@@ -1,25 +1,103 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>The Council — A visual research lab</title><link rel="stylesheet" href="style.css"></head><body>
-<header><a class="brand" href="./">◉ <span>THE COUNCIL</span></a><span class="header-note">Ideas, made visible.</span><a href="#investigation">Inside the investigation ↗</a></header>
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="color-scheme" content="light">
+<title>The Council — a visual physics lab</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header class="top">
+ <a class="brand" href="./"><span class="mark" aria-hidden="true"></span>The Council</a>
+ <a class="lab-chip" href="#lab"><span class="pulse" aria-hidden="true"></span><span id="dashboard-status">Checking status…</span></a>
+</header>
+
+<a id="live-banner" class="live-banner" href="#lab" hidden><span class="pulse" aria-hidden="true"></span><span id="live-text"></span></a>
+
 <main>
-<div class="eyebrow"><span class="dot"></span> THE VISUAL LAB <span class="slash">/</span> EXPLORATIONS IN PHYSICS</div>
-<section class="dashboard" aria-labelledby="dashboard-title">
-<div class="section-heading"><div><div class="eyebrow">THE COUNCIL AT WORK</div><h2 id="dashboard-title">Investigation dashboard</h2></div><span id="dashboard-status" class="status-pill">Checking status…</span></div>
-<p id="dashboard-question">Loading the current investigation.</p>
-<div class="dashboard-meta"><span id="dashboard-revision"></span><span id="dashboard-updated"></span><span id="dashboard-schedule"></span></div>
-<p id="dashboard-freshness" class="fine"></p><p id="dashboard-phase" class="muted"></p><details><summary>Recent activity</summary><ol id="dashboard-events"></ol></details>
-<details><summary>Recent daily attempts</summary><ul id="dashboard-attempts"></ul></details>
-<p class="fine">Progress updates follow website deployments and can take several minutes. Only reviewed guides appear below.</p>
-</section>
-<nav id="archive" class="archive" aria-label="Published investigations"></nav>
-<section class="intro"><div><h1 id="title">What does gravity<br>do to light?</h1><p id="subtitle">An introduction to general relativity, one beam of light at a time.</p></div><div class="topic-stamp">GENERAL RELATIVITY<br><span>Established physics · simplified model</span></div></section>
-<div id="run-banner" role="status">Loading the exploration…</div>
-<section class="workspace">
-<div class="visual-panel"><div class="scene-top"><span id="scene-label">01 — FOLLOW THE LIGHT</span><span class="live-dot">INTERACTIVE MODEL</span></div><canvas id="universe" role="img" aria-label="Light passing a massive object, compared with the straight path without the object. Change mass and passing distance with the controls below."></canvas><div class="scene-bottom"><span id="scale-label">Bending magnified 6× for visibility</span><span id="model-label">Weak-field approximation</span></div><div class="controls"><label>Mass <output id="mass-value">0.70</output><input id="mass" type="range" min="0" max="1" step="0.01" value="0.7"></label><label><span id="distance-label">Passing distance</span> <output id="distance-value">1.25×</output><input id="distance" type="range" min="1" max="2.5" step="0.01" value="1.25"></label><div class="measurement"><span id="measure-label">Asymptotic deflection</span><strong id="bend-value">—</strong><small id="measure-note">unmagnified far-field angle</small></div></div></div>
-<aside class="lesson"><div class="eyebrow">BUILD YOUR INTUITION</div><div class="beat-tabs"><button data-beat="0">01</button><button data-beat="1">02</button><button data-beat="2" class="active">03</button></div><h2 id="beat-title"></h2><p id="beat-body"></p><button id="play" class="primary">Play the explanation</button><button id="reset" class="quiet">Reset the experiment ↺</button><div class="try"><span>TRY THIS</span><p id="try-text">Turn the mass all the way down. Then bring it back. What changes about the light’s path?</p></div></aside>
-</section>
-<section class="takeaway"><span>THE IDEA TO TAKE WITH YOU</span><p id="takeaway"></p></section>
-<section id="investigation" class="investigation"><div class="section-heading"><div><div class="eyebrow">THINKING IN THE OPEN</div><h2>Inside the Council</h2></div><button id="run" class="outline">Run a live investigation ↗</button></div><p class="muted">Follow the evidence, inspect the frames, and see what changed between revisions.</p>
-<div class="research-grid"><article><h3>The question</h3><p id="claim"></p><h3>What could challenge it?</h3><p id="falsifier"></p></article><article><h3>What the model predicts</h3><p id="prediction"></p><h3>Assumptions & limits</h3><ul id="limits"></ul></article><article><h3>Numerical checks</h3><ul id="checks" class="checks"></ul><p class="fine">Checks validate this approximation’s implementation, not general relativity itself.</p></article></div>
-<div class="history-head"><h3>Render → review → revise</h3><span id="history-label"></span></div><div id="history" class="history"></div><div class="sources"><h3>Read the evidence</h3><div id="sources"></div></div><details><summary>Full investigation record</summary><pre id="record"></pre></details>
-</section><footer><span>THE COUNCIL</span><span>Curiosity first. Evidence always.</span></footer>
-</main><script src="physics.js"></script><script src="scene.js"></script><script src="app.js"></script></body></html>
+ <section class="hero" aria-labelledby="title">
+  <div class="hero-head">
+   <p class="kicker"><span id="hero-kicker">Today’s investigation</span><span id="hero-date"></span><span id="run-banner" class="tag" role="status"></span></p>
+   <h1 id="title">Loading…</h1>
+   <p id="subtitle"></p>
+  </div>
+
+  <div class="workspace">
+   <div class="stage">
+    <canvas id="universe" role="img" aria-label="Interactive physics model"></canvas>
+    <span id="scale-label" class="stage-note"></span>
+    <span class="stage-note right"><span id="measure-label"></span> <strong id="bend-value">—</strong></span>
+    <button id="poster" class="poster" type="button" aria-label="Play the explanation">
+     <span class="big-play" aria-hidden="true"></span><span class="poster-label">Play</span>
+    </button>
+   </div>
+
+   <div class="captions" aria-live="polite">
+    <p id="beat-title" class="chapter-label"></p>
+    <p id="beat-body" class="caption-line"></p>
+   </div>
+
+   <div class="transport">
+    <button id="play" class="round" type="button" aria-label="Play"><span class="icon" aria-hidden="true"></span></button>
+    <div class="chapters" role="group" aria-label="Chapters">
+     <button type="button" data-beat="0" aria-label="Chapter 1"><i></i></button>
+     <button type="button" data-beat="1" aria-label="Chapter 2"><i></i></button>
+     <button type="button" data-beat="2" aria-label="Chapter 3"><i></i></button>
+    </div>
+    <span id="clock-time" class="time">0:00 / 0:00</span>
+    <button id="reset" class="round quiet" type="button" aria-label="Start over"><span class="restart" aria-hidden="true">↺</span></button>
+   </div>
+
+   <div class="controls">
+    <label class="control"><span class="control-head"><span>Mass</span><output id="mass-value">0.70</output></span>
+     <input id="mass" type="range" min="0" max="1" step="0.01" value="0.7"><small>how much mass sits nearby</small></label>
+    <label class="control"><span class="control-head"><span id="distance-label">Passing distance</span><output id="distance-value">1.25×</output></span>
+     <input id="distance" type="range" min="1" max="2.5" step="0.01" value="1.25"><small id="distance-hint"></small></label>
+   </div>
+  </div>
+
+  <p class="takeaway"><span class="label">The idea</span><span id="takeaway"></span></p>
+ </section>
+
+ <section id="lab" class="lab" aria-label="Lab status">
+  <article class="panel now">
+   <h2 class="label">In the lab</h2>
+   <p id="now-title" class="panel-title">Checking…</p>
+   <p id="dashboard-question" class="muted"></p>
+   <ol id="steps" class="steps" hidden></ol>
+   <p id="dashboard-phase" class="fine"></p>
+   <p id="dashboard-freshness" class="fine warn"></p>
+  </article>
+  <article class="panel next">
+   <h2 class="label">Up next</h2>
+   <p id="next-title" class="panel-title">—</p>
+   <p id="dashboard-schedule" class="muted"></p>
+   <div id="bench" hidden><p class="label small">On the bench · drafts that didn’t pass review</p><ul id="bench-list"></ul></div>
+  </article>
+ </section>
+
+ <section class="past" aria-labelledby="past-title">
+  <div class="section-head"><h2 id="past-title">Past investigations</h2><span id="past-count" class="muted"></span></div>
+  <nav id="archive" class="cards" aria-label="Investigations"></nav>
+ </section>
+
+ <details id="investigation" class="behind">
+  <summary><span>How the Council checked this</span><span id="review-summary" class="chips"></span></summary>
+  <div class="behind-body">
+   <div class="research-grid">
+    <article><h3>The claim</h3><p id="claim"></p><h3>What would prove it wrong</h3><p id="falsifier"></p></article>
+    <article><h3>What the model predicts</h3><p id="prediction"></p><h3>Assumptions and limits</h3><ul id="limits"></ul></article>
+    <article><h3>Checks</h3><ul id="checks" class="checks"></ul><p class="fine">Checks confirm this simplified model is implemented correctly, not general relativity itself.</p></article>
+   </div>
+   <h3>Sources</h3><div id="sources" class="sources"></div>
+   <h3>Drafts and reviews <span id="history-label" class="muted"></span></h3><div id="history" class="history"></div>
+   <div class="behind-foot"><details><summary>Raw record</summary><pre id="record"></pre></details><button id="run" class="pill" type="button" disabled>Read-only website</button></div>
+  </div>
+ </details>
+</main>
+
+<footer><span>The Council</span><span>Curiosity first. Evidence always.</span></footer>
+<script src="physics.js"></script><script src="scene.js"></script><script src="app.js"></script>
+</body>
+</html>

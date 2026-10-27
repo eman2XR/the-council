@@ -28,7 +28,7 @@ def main():
             index=ROOT/'web'/'published'/'index.json'
             if index.exists():
                 entries=json.loads(index.read_text())
-                assert page.locator('#archive a').count()==len(entries)
+                assert page.locator('#archive a[data-guide]').count()==len(entries)
                 for entry in entries:
                     page.goto(url+'?guide='+entry['id'],wait_until='networkidle')
                     page.wait_for_function('(id)=>JSON.parse(document.getElementById("record").textContent).id===id',arg=entry['id'])
