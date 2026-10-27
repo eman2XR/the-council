@@ -79,13 +79,13 @@ def publish(root=ROOT):
     """Commit only the generated public archive, never other local edits."""
     def git(*args):
         return subprocess.run(['git',*args],cwd=root,text=True,capture_output=True,check=True,timeout=120).stdout.strip()
-    paths=[p for p in ('web/published','web/dashboard.json') if (root/p).exists()]
+    paths=[p for p in ('web/published','web/dashboard.json','web/proposals.json') if (root/p).exists()]
     if not paths:
         return
     if git('branch','--show-current')!='main':
         raise RuntimeError('Automatic publication requires the main branch.')
     staged=git('diff','--cached','--name-only').splitlines()
-    if any(p!='web/dashboard.json' and not p.startswith('web/published/') for p in staged):
+    if any(p not in ('web/dashboard.json','web/proposals.json') and not p.startswith('web/published/') for p in staged):
         raise RuntimeError('Unrelated staged changes exist; leave publication pending.')
     git('add','--',*paths)
     if git('diff','--cached','--name-only'):

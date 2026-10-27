@@ -10,7 +10,7 @@
 <body>
 <header class="top">
  <a class="brand" href="./"><span class="mark" aria-hidden="true"></span>The Council</a>
- <button id="proposals-open" class="pill" type="button" hidden>Proposals</button>
+ <button id="proposals-open" class="pill" type="button">Proposals<span id="proposals-count" class="count"></span></button>
 </header>
 
 <main>
@@ -98,6 +98,10 @@
  </details>
 </main>
 
+<dialog id="proposals" class="sheet" aria-labelledby="proposals-title">
+ <div class="sheet-head"><div><h2 id="proposals-title">Proposals</h2><p class="muted">Ideas from the Council's daily project review. Approve the ones you want built. Nothing changes until you do.</p></div><button id="proposals-close" class="round quiet" type="button" aria-label="Close">×</button></div>
+ <div id="proposals-list" class="proposals"></div>
+</dialog>
 <footer><span>The Council</span><span>Curiosity first. Evidence always.</span></footer>
 <script src="physics.js?v=dev"></script><script src="scene.js?v=dev"></script><script src="app.js?v=dev"></script>
 </body>

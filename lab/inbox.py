@@ -10,7 +10,8 @@ from .pipeline import ROOT
 
 OWNER = 'eman2XR'
 REPO = 'eman2XR/the-council'
-KINDS = {'council:choose': 'choose', 'council:question': 'question', 'council:feedback': 'feedback'}
+KINDS = {'council:choose': 'choose', 'council:question': 'question', 'council:feedback': 'feedback',
+         'council:approve': 'approve', 'council:decline': 'decline'}
 
 
 def curriculum(root=ROOT):

@@ -48,6 +48,15 @@ def main():
     if args.command=='daily':
         from .daily import daily
         daily(provider,args.count,args.rounds,args.publish)
+        if args.publish:
+            # The scheduled worker also reviews the project once a day; proposals wait for owner approval.
+            from .improve import daily_review
+            from .daily import publish
+            if daily_review(provider):
+                try:
+                    publish()
+                except Exception as error:
+                    print(f'Proposal publication pending ({type(error).__name__}).',flush=True)
         return
     if args.command=='check':
         if args.provider not in ('codex','claude'):

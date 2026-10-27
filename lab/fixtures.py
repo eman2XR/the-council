@@ -37,6 +37,12 @@ class FixtureProvider:
         self.calls += 1
         if role == 'planner':
             return {'topic':'gravity-clocks','question':'Why does a lower clock accumulate less time?', 'reason':'Compare two stationary clocks.', 'request':0}
+        if role == 'scout':
+            return 'OFFLINE FIXTURE: no live search performed. https://example.org/fixture-note'
+        if role == 'architect':
+            return {'proposals': [{'title': 'Fixture proposal', 'area': 'website', 'problem': 'Offline example.',
+                    'proposal': 'Offline example.', 'benefit': 'None; fixture only.', 'effort': 'small', 'risk': 'None.',
+                    'evidence': ['https://example.org/fixture-note']}]}
         if role == 'researcher':
             return 'OFFLINE FIXTURE: hand-authored source notes, no live search performed.'
         if role == 'scientist':

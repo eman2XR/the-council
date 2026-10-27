@@ -33,6 +33,7 @@ jobs:
           cp web/index.html web/style.css web/app.js web/scene.js web/physics.js web/example.json web/curriculum.json _site/
           cp -R web/example-frames _site/
           if [ -f web/dashboard.json ]; then cp web/dashboard.json _site/; fi
+          if [ -f web/proposals.json ]; then cp web/proposals.json _site/; fi
           if [ -d web/published ]; then cp -R web/published _site/; fi
           # Version asset links per commit so browsers never mix cached files from different deploys.
           sed -i "s/?v=dev/?v=${GITHUB_SHA::7}/g" _site/index.html

@@ -204,6 +204,30 @@ input[type=range]:disabled{opacity:.4;cursor:default}
 .behind-foot summary{font-size:12px;color:var(--muted);cursor:pointer}
 #record{max-height:360px;overflow:auto;font-size:11px;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:14px;margin-top:10px;max-width:calc(100vw - 48px)}
 
+/* Proposals sheet */
+#proposals-open .count{margin-left:6px;color:var(--accent)}
+#proposals-open .count:empty{display:none}
+.sheet{width:min(720px,calc(100vw - 32px));max-height:min(820px,calc(100vh - 48px));border:0;border-radius:20px;padding:0;box-shadow:0 30px 80px -20px rgba(20,30,50,.45);color:var(--ink);background:var(--bg)}
+.sheet::backdrop{background:rgba(20,23,28,.32);backdrop-filter:blur(3px)}
+.sheet-head{position:sticky;top:0;background:var(--bg);display:flex;justify-content:space-between;gap:16px;padding:22px 24px 14px;border-bottom:1px solid var(--line)}
+.sheet-head h2{font:600 22px/1.2 var(--display);letter-spacing:-.02em;margin:0 0 4px}
+.sheet-head .muted{font-size:13px;max-width:52ch}
+.proposals{padding:16px 24px 24px;display:flex;flex-direction:column;gap:12px}
+.proposal{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px 18px}
+.proposal header{display:flex;flex-wrap:wrap;align-items:baseline;gap:6px 10px;margin-bottom:8px}
+.proposal h3{font-size:16px;margin:0;flex:1 1 260px;letter-spacing:-.01em}
+.proposal .meta{font-size:12px;color:var(--faint)}
+.proposal p{font-size:14px;margin:6px 0 0}
+.proposal p b{font-weight:600}
+.proposal .why{color:var(--muted)}
+.proposal .evidence{font-size:12px;margin-top:8px;display:flex;flex-wrap:wrap;gap:4px 12px}
+.proposal .evidence a{color:var(--muted);text-decoration:underline;text-underline-offset:2px}
+.proposal .actions{display:flex;gap:8px;margin-top:12px;align-items:center}
+.proposal .approve{border-color:#16a34a;color:#15803d}
+.proposal .status{font-size:12px;font-weight:600;padding:3px 10px;border-radius:999px;background:#f1f2f4;color:var(--muted)}
+.proposal .status[data-status=approved]{background:#ecfdf3;color:#15803d}
+.empty{font-size:14px;color:var(--muted);padding:12px 0}
+
 footer{max-width:1180px;margin:40px auto 0;padding:26px 24px 40px;display:flex;justify-content:space-between;font-size:12px;color:var(--faint);border-top:1px solid var(--line)}
 
 @media (max-width:860px){

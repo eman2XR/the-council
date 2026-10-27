@@ -278,3 +278,40 @@ async function loadPath(){
  renderPath();
 }
 loadPath();
+
+/* Proposals: the daily project review's suggestions, approved or declined through GitHub issues. */
+let proposals=null, verdicts=new Map();
+function proposalCard(p){
+ const status=verdicts.get(p.id)||(p.status!=='open'?p.status:null);
+ const actions=el('div',{className:'actions'});
+ if(status){const badge=el('span',{className:'status',textContent:status==='approved'?'Approved':status==='declined'?'Declined':'Decision sent'});badge.dataset.status=status;actions.append(badge);}
+ else actions.append(
+  el('a',{className:'pill approve',target:'_blank',rel:'noopener noreferrer',textContent:'Approve',href:issueURL('council:approve',`Approve: ${p.title}`.slice(0,120),`proposal: ${p.id}\n\n${p.proposal}\n\nNotes for the implementation (optional):\n`)}),
+  el('a',{className:'pill',target:'_blank',rel:'noopener noreferrer',textContent:'Decline',href:issueURL('council:decline',`Decline: ${p.title}`.slice(0,120),`proposal: ${p.id}\n\nWhy not (optional, helps future reviews):\n`)}));
+ const evidence=(p.evidence||[]).map(safeURL).filter(Boolean).map(url=>el('a',{href:url,target:'_blank',rel:'noopener noreferrer',textContent:new URL(url).hostname.replace(/^www\./,'')}));
+ return el('article',{className:'proposal'},
+  el('header',{},el('h3',{textContent:p.title}),el('span',{className:'meta',textContent:`${p.area} · ${p.effort} effort · ${day(p.created)}`})),
+  el('p',{className:'why'},el('b',{textContent:'Problem. '}),p.problem),
+  el('p',{},el('b',{textContent:'Proposal. '}),p.proposal),
+  el('p',{className:'why'},el('b',{textContent:'Why it helps. '}),p.benefit,' ',el('b',{textContent:'Risk. '}),p.risk),
+  evidence.length?el('div',{className:'evidence'},'Sources: ',...evidence):'',actions);
+}
+function renderProposals(){
+ const list=proposals?.proposals||[], open=list.filter(p=>p.status==='open'&&!verdicts.has(p.id));
+ put('proposals-count',open.length?String(open.length):'');
+ $('proposals-list').replaceChildren(...(list.length?list.map(proposalCard):[el('p',{className:'empty',textContent:'The first project review runs with the next morning investigation. Its suggestions will appear here.'})]));
+}
+async function loadProposals(){
+ try{const r=await fetch('proposals.json',{cache:'no-store'});proposals=r.ok?await r.json():null;}catch{proposals=null;}
+ try{
+  for(const [label,status] of [['council:approve','approved'],['council:decline','declined']]){
+   const r=await fetch(`https://api.github.com/repos/${OWNER}/the-council/issues?state=all&creator=${OWNER}&labels=${label}&per_page=50`);
+   if(r.ok)for(const issue of await r.json()){const id=/proposal:\s*(P-\d{8}-\d+)/.exec(issue.body||'')?.[1];if(id)verdicts.set(id,status);}
+  }
+ }catch{}
+ renderProposals();
+}
+$('proposals-open').onclick=()=>{$('proposals').showModal();};
+$('proposals-close').onclick=()=>$('proposals').close();
+$('proposals').addEventListener('click',e=>{if(e.target===$('proposals'))$('proposals').close();});
+loadProposals();
