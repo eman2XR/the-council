@@ -10,12 +10,22 @@
 <body>
 <header class="top">
  <a class="brand" href="./"><span class="mark" aria-hidden="true"></span>The Council</a>
- <a class="lab-chip" href="#lab"><span class="pulse" aria-hidden="true"></span><span id="dashboard-status">Checking status…</span></a>
+ <button id="proposals-open" class="pill" type="button" hidden>Proposals</button>
 </header>
 
-<a id="live-banner" class="live-banner" href="#lab" hidden><span class="pulse" aria-hidden="true"></span><span id="live-text"></span></a>
-
 <main>
+ <details id="lab" class="lab-strip">
+  <summary><span class="pulse" aria-hidden="true"></span><strong id="dashboard-status">Checking status…</strong><span id="next-pick" class="strip-next"></span><span id="next-title" class="strip-when"></span></summary>
+  <div class="lab-detail">
+   <p id="now-title" class="panel-title"></p>
+   <p id="dashboard-question" class="muted"></p>
+   <ol id="steps" class="steps" hidden></ol>
+   <p id="dashboard-phase" class="fine"></p>
+   <p id="dashboard-freshness" class="fine warn"></p>
+   <p id="dashboard-schedule" class="fine"></p>
+   <div id="bench" hidden><p class="label small">Drafts that didn’t pass review</p><ul id="bench-list"></ul></div>
+  </div>
+ </details>
  <section class="hero" aria-labelledby="title">
   <div class="hero-head">
    <p class="kicker"><span id="hero-kicker">Today’s investigation</span><span id="hero-date"></span><span id="run-banner" class="tag" role="status"></span></p>
@@ -59,24 +69,6 @@
 
   <p class="takeaway"><span class="label">The idea</span><span id="takeaway"></span></p>
   <div class="talk"><a id="ask" class="pill" target="_blank" rel="noopener noreferrer">Ask a question</a><a id="feedback" class="pill" target="_blank" rel="noopener noreferrer">Give feedback</a><span class="fine">Opens a public GitHub issue. The next morning's run reads it.</span></div>
- </section>
-
- <section id="lab" class="lab" aria-label="Lab status">
-  <article class="panel now">
-   <h2 class="label">In the lab</h2>
-   <p id="now-title" class="panel-title">Checking…</p>
-   <p id="dashboard-question" class="muted"></p>
-   <ol id="steps" class="steps" hidden></ol>
-   <p id="dashboard-phase" class="fine"></p>
-   <p id="dashboard-freshness" class="fine warn"></p>
-  </article>
-  <article class="panel next">
-   <h2 class="label">Up next</h2>
-   <p id="next-title" class="panel-title">—</p>
-   <p id="next-pick" class="next-pick"></p>
-   <p id="dashboard-schedule" class="muted"></p>
-   <div id="bench" hidden><p class="label small">On the bench · drafts that didn’t pass review</p><ul id="bench-list"></ul></div>
-  </article>
  </section>
 
  <section class="past" aria-labelledby="past-title">

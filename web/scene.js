@@ -6,7 +6,7 @@ const clamp=(x,a=0,b=1)=>Math.min(b,Math.max(a,x));
 const smooth=x=>{x=clamp(x);return x*x*(3-2*x);};
 function rgba(hex,a){const n=parseInt(hex.slice(1),16);return `rgba(${n>>16},${n>>8&255},${n&255},${a})`;}
 function trace(ctx,points){ctx.beginPath();points.forEach(([x,y],i)=>i?ctx.lineTo(x,y):ctx.moveTo(x,y));}
-function text(ctx,value,x,y,{align='left',color='rgba(20,23,28,.5)',size=11,weight=500,spacing='0px'}={}){
+function text(ctx,value,x,y,{align='left',color='rgba(20,23,28,.64)',size=11,weight=500,spacing='0px'}={}){
  ctx.font=`${weight} ${size}px ${FONT}`;ctx.textAlign=align;ctx.textBaseline='middle';ctx.fillStyle=color;
  if('letterSpacing' in ctx)ctx.letterSpacing=spacing;ctx.fillText(value,x,y);if('letterSpacing' in ctx)ctx.letterSpacing='0px';
 }
@@ -26,7 +26,7 @@ function drawLight(ctx,w,h,spec,st){
   ctx.save();ctx.shadowColor='rgba(180,83,15,.35)';ctx.shadowBlur=R*.9;ctx.shadowOffsetY=R*.25;
   ctx.beginPath();ctx.arc(cx,cy,R,0,TAU);ctx.fillStyle=body;ctx.fill();ctx.restore();
   ctx.globalAlpha=1;
-  if(st.labels){text(ctx,'MASS',cx,cy+R+18,{align:'center',size:10,weight:600,spacing:'1.5px'});text(ctx,'size not to scale',cx,cy+R+32,{align:'center',size:10,color:'rgba(20,23,28,.32)'});}
+  if(st.labels){text(ctx,'MASS',cx,cy+R+18,{align:'center',size:10,weight:600,spacing:'1.5px'});text(ctx,'size not to scale',cx,cy+R+32,{align:'center',size:10,color:'rgba(20,23,28,.55)'});}
  }else{
   ctx.setLineDash([3,5]);ctx.beginPath();ctx.arc(cx,cy,R,0,TAU);ctx.strokeStyle='rgba(20,23,28,.22)';ctx.lineWidth=1;ctx.stroke();ctx.setLineDash([]);
   if(st.labels)text(ctx,'no mass',cx,cy+R+18,{align:'center',size:10,weight:600,spacing:'1px'});
@@ -183,7 +183,7 @@ function drawInterference(ctx,w,h,spec,st){
  if(st.labels){
   const size=w<520?10:11;
   text(ctx,'SOURCE',s1[0]-12,s1[1],{align:'right',size,weight:600,spacing:'1.5px'});
-  text(ctx,A>0.001?'SECOND SOURCE':'second source off',s2[0]+12,s2[1],{size,weight:600,spacing:A>0.001?'1.5px':'0px',color:A>0.001?'rgba(20,23,28,.5)':'rgba(20,23,28,.35)'});
+  text(ctx,A>0.001?'SECOND SOURCE':'second source off',s2[0]+12,s2[1],{size,weight:600,spacing:A>0.001?'1.5px':'0px',color:A>0.001?'rgba(20,23,28,.64)':'rgba(20,23,28,.5)'});
   text(ctx,'SCREEN · brightness averaged over time',sx0,screen+band+22,{size:10,weight:600,spacing:'1px'});
  }
 }
@@ -291,7 +291,22 @@ if(!canvas)return;
 const ctx=canvas.getContext('2d');
 let spec=null, time=0, mass=.7, distance=1.25, stage=2, mode='live', last=0, shown=0, started=false, ended=false, captionKey='';
 const listeners=new Set(), emit=type=>listeners.forEach(fn=>fn(type));
-const beatLength=()=>spec.duration/3;
+// Subtitle pacing: comfortable reading speed, a minimum time on screen, and a pause between sentences.
+const READING={cps:14,minimum:2.8,pause:.9,lead:.8,tail:.8};
+let timeline=null;
+function buildTimeline(){
+ let t=0;
+ const chapters=spec.beats.map(beat=>{
+  const start=t;t+=READING.lead;
+  const lines=sentences(beat.body).map(text=>{const shown=Math.max(READING.minimum,text.length/READING.cps),line={text,start:t,end:t+shown};t+=shown+READING.pause;return line;});
+  t+=READING.tail;return {start,end:t,lines};
+ });
+ // A scene may ask for a longer duration than reading needs; stretch evenly, never compress.
+ const stretch=Math.max(1,spec.duration/t);
+ for(const c of chapters){c.start*=stretch;c.end*=stretch;for(const l of c.lines){l.start*=stretch;l.end*=stretch;}}
+ timeline={chapters,total:t*stretch};
+}
+const chapterAt=t=>{const i=timeline.chapters.findIndex(c=>t<c.end);return i<0?timeline.chapters.length-1:i;};
 const target=()=>stage===0?0:mass;
 const fmt=s=>`${Math.floor(s/60)}:${String(Math.floor(s%60)).padStart(2,'0')}`;
 
@@ -310,28 +325,26 @@ function paint(){
 function sentences(body){return body.match(/[^.!?]+[.!?]*["”’)]*\s*/g)?.map(s=>s.trim()).filter(Boolean)||[body];}
 function captions(){
  let chapter, line, reveal=1;
- if(!started){chapter=`${spec.beats.length} short chapters · ${Math.round(spec.duration)} seconds`;line='Press play, or move the sliders to explore on your own.';}
+ if(!started){chapter=`${spec.beats.length} short chapters · about ${Math.round(timeline.total/5)*5||Math.round(timeline.total)} seconds`;line='Press play, or move the sliders to explore on your own.';}
  else if(ended&&mode!=='playing'){chapter='Your turn';line=engineOf(spec).try;}
  else{
   const beat=spec.beats[stage];chapter=`${stage+1} of ${spec.beats.length} · ${beat.title}`;line=beat.body;
   if(mode==='playing'){
-   const parts=sentences(beat.body), total=parts.reduce((a,p)=>a+p.length,0), L=beatLength(), local=clamp(time-stage*L,0,L);
-   let start=0;for(const part of parts){const slot=L*part.length/total;if(local<start+slot||part===parts.at(-1)){line=part;reveal=clamp((local-start)/Math.max(.6,slot*.55));break;}start+=slot;}
+   // Show the latest sentence that has started; it stays up through the pause that follows.
+   const lines=timeline.chapters[stage].lines;line=(lines.filter(l=>l.start<=time).at(-1)||lines[0]).text;
   }
  }
  $('beat-title').textContent=chapter;
  const body=$('beat-body'), key=chapter+'|'+line;
- if(key!==captionKey){captionKey=key;body.replaceChildren(...line.split(/\s+/).map(word=>{const span=document.createElement('span');span.textContent=word+' ';span.className=mode==='playing'?'':'on';return span;}));}
- const words=body.children, on=Math.ceil(reveal*words.length);
- for(let i=0;i<words.length;i++)words[i].classList.toggle('on',i<on);
+ if(key!==captionKey){captionKey=key;body.textContent=line;body.classList.remove('enter');if(mode==='playing'){void body.offsetWidth;body.classList.add('enter');}}
 }
 function transport(){
- const L=beatLength();
  document.querySelectorAll('[data-beat]').forEach((button,i)=>{
-  button.style.setProperty('--fill',started?clamp((time-i*L)/L):0);
+  const c=timeline.chapters[i];
+  button.style.setProperty('--fill',started&&c?clamp((time-c.start)/(c.end-c.start)):0);
   button.classList.toggle('active',started&&!ended&&i===stage);
  });
- $('clock-time').textContent=`${fmt(started?Math.min(time,spec.duration):0)} / ${fmt(spec.duration)}`;
+ $('clock-time').textContent=`${fmt(started?Math.min(time,timeline.total):0)} / ${fmt(timeline.total)}`;
  const play=$('play'), playing=mode==='playing';
  play.classList.toggle('is-playing',playing);play.setAttribute('aria-label',playing?'Pause':ended?'Replay':'Play');
  $('poster').hidden=started;
@@ -356,13 +369,13 @@ function configure(){
 }
 function load(scene){
  // The poster is a still frame a few seconds in, where the comparison is already visible.
- spec=scene;mass=scene.mass;distance=scene.distance;time=scene.duration*.3;mode='live';started=false;ended=false;captionKey='';
+ spec=scene;buildTimeline();mass=scene.mass;distance=scene.distance;time=scene.duration*.3;mode='live';started=false;ended=false;captionKey='';
  configure();setStage(2);shown=target();paint();
 }
 function restore(){mass=spec.mass;distance=spec.distance;}
 function play(){
  if(!spec)return;
- if(!started||ended||time>=spec.duration){time=0;restore();setStage(0);shown=0;}
+ if(!started||ended||time>=timeline.total){time=0;restore();setStage(0);shown=0;}
  started=true;ended=false;mode='playing';last=0;emit('play');paint();
 }
 function pause(){if(mode==='playing'){mode='paused';paint();}}
@@ -371,7 +384,7 @@ function seek(t,beat=2){mode='paused';started=true;ended=false;time=t;setStage(b
 function chapter(n){
  if(!spec)return;n=clamp(n,0,spec.beats.length-1);
  const wasPlaying=mode==='playing';
- restore();started=true;ended=false;time=n*beatLength()+.001;setStage(n);shown=target();
+ restore();started=true;ended=false;time=timeline.chapters[n].start+.001;setStage(n);shown=target();
  mode=wasPlaying?'playing':'paused';last=0;paint();
 }
 function demo(p){
@@ -387,10 +400,10 @@ function tick(stamp){
  if(spec&&started&&mode!=='paused'){
   time+=dt;
   if(mode==='playing'){
-   const L=beatLength(), next=Math.min(2,Math.floor(time/L));
+   const next=chapterAt(time), c=timeline.chapters[2];
    if(next!==stage)setStage(next);
-   if(stage===2)demo(clamp((time-2*L)/L));
-   if(time>=spec.duration){time=spec.duration;mode='live';ended=true;emit('ended');}
+   if(stage===2)demo(clamp((time-c.start)/(c.end-c.start)));
+   if(time>=timeline.total){time=timeline.total;mode='live';ended=true;emit('ended');}
   }
   shown+=(target()-shown)*(1-Math.exp(-dt*(mode==='playing'?5:9)));
   paint();
@@ -406,7 +419,8 @@ function input(id,value){
 }
 
 window.CouncilScene={load,seek,play,pause,toggle,chapter,render:t=>{time=t;paint();},
- getState:()=>({time,mass,distance,stage,mode,ended}),on:fn=>listeners.add(fn),
+ getState:()=>({time,mass,distance,stage,mode,ended}),
+ timeline:()=>timeline&&JSON.parse(JSON.stringify(timeline)),on:fn=>listeners.add(fn),
  checks:()=>Physics.checksFor(spec?.kind)};
 $('play').onclick=toggle;$('poster').onclick=play;
 $('reset').onclick=()=>{started=false;play();};

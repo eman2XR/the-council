@@ -159,7 +159,7 @@ $('run').onclick=async()=>{
 refresh();setInterval(()=>{if(busy)refresh();},1500);
 
 /* Lab status from the published snapshot. It is not a live heartbeat. */
-let schedule=null;
+let schedule=null, labActive=false, labQuestion='';
 function stepOf(state){
  if(state.status==='planning')return 0;
  if(state.status==='reviewed')return 6;
@@ -182,8 +182,8 @@ function nextRun(s){
 function renderNext(){
  if(schedule?.enabled){
   const {label,wait}=nextRun(schedule), hours=Math.floor(wait/3600), minutes=Math.floor(wait%3600/60);
-  put('next-title',label);
-  put('dashboard-schedule',`In ${hours?hours+' h ':''}${minutes} min. Published only if it passes review.`);
+  put('next-title',labActive?'':`${label} · in ${hours?hours+' h ':''}${minutes} min`);
+  put('dashboard-schedule','One new investigation each morning. Only investigations that pass physics and visual review are published.');
  }else{
   put('next-title',schedule?.state==='blocked'?'Schedule paused':'No schedule confirmed');
   put('dashboard-schedule',schedule?.state==='blocked'?'The background worker needs setup before daily runs resume.':'Investigations are started by hand for now.');
@@ -195,7 +195,8 @@ async function refreshDashboard(){
   const state=await response.json();schedule=state.schedule;
   const active=['running','planning'].includes(state.status), age=Date.now()-new Date(state.updated).getTime();
   put('dashboard-status',active?'Investigating now':schedule?.enabled?'Lab resting':'Lab paused');
-  document.querySelector('.lab-chip').dataset.state=active?'active':schedule?.enabled?'idle':'paused';
+  $('lab').dataset.state=active?'active':schedule?.enabled?'idle':'paused';
+  labActive=active;labQuestion=state.question&&state.question!=='Choosing the next question'?state.question:'';
   const outcome={reviewed:'Last investigation passed review',needs_review:'Last attempt stayed a draft',failed:'Last attempt stopped early',interrupted:'Last attempt was interrupted'};
   put('now-title',active?(state.status==='planning'?'Choosing today’s question':'Investigating now'):outcome[state.status]||'Resting');
   put('dashboard-question',state.question&&state.question!=='Choosing the next question'?state.question:'');
@@ -204,8 +205,6 @@ async function refreshDashboard(){
   $('steps').replaceChildren(...STEPS.map((name,i)=>el('li',{className:i<step?'done':i===step?'active':'',textContent:name})));
   put('dashboard-phase',active?plain(state.events?.at(-1)?.message):state.updated?`Updated ${new Date(state.updated).toLocaleString(undefined,{month:'short',day:'numeric',hour:'numeric',minute:'2-digit'})}`:'');
   put('dashboard-freshness',active&&age>15*60*1000?'No update for a while. The Mac may be offline or unable to publish.':age>36*60*60*1000?'No update in more than a day. The Mac may be asleep or a run was missed.':'');
-  $('live-banner').hidden=!active;
-  put('live-text',active?`The Council is investigating: ${state.question&&state.question!=='Choosing the next question'?state.question:'choosing today’s question'}`:'');
   const drafts=[...new Map((state.attempts||[]).filter(a=>a.status==='needs_review'&&a.question).map(a=>[a.question,a])).values()].slice(-3).reverse();
   $('bench').hidden=!drafts.length;
   $('bench-list').replaceChildren(...drafts.map(a=>el('li',{textContent:a.question})));
@@ -267,8 +266,8 @@ function renderPath(){
  if(schedule?.enabled){
   const pick=[...picks.keys()].map(id=>all.find(i=>i.id===id)).find(i=>i&&i.model&&!doneItem(i));
   const upcoming=pick||next;
-  put('next-pick',upcoming?`${pick?'Your pick':'Next on the path'}: ${upcoming.question}`:'');
- }else put('next-pick','');
+  put('next-pick',labActive?labQuestion:upcoming?`${pick?'Your pick':'Next'}: ${upcoming.question}`:'');
+ }else put('next-pick',labActive?labQuestion:'');
 }
 async function loadPath(){
  try{curriculum=await (await fetch('curriculum.json')).json();}catch{return;}

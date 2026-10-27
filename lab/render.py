@@ -62,6 +62,12 @@ def capture(scene, directory, research=None, provider='fixture'):
                     'provider':provider, 'status':'running', 'checks':[], 'revisions':[]})
             page.evaluate('(s)=>{CouncilScene.load(s);document.getElementById("title").textContent=s.title;document.getElementById("subtitle").textContent=s.subtitle;document.getElementById("takeaway").textContent=s.takeaway;}', scene)
             checks = page.evaluate('CouncilScene.checks()')
+            # Subtitles are timed from their text; verify the result stays comfortably readable.
+            lines = [line for chapter in page.evaluate('CouncilScene.timeline()')['chapters'] for line in chapter['lines']]
+            fastest = max(len(l['text']) / (l['end'] - l['start']) for l in lines)
+            shortest = min(l['end'] - l['start'] for l in lines)
+            checks.append({'name': f'Subtitles read at most {fastest:.1f} characters per second (limit 15)', 'pass': fastest <= 15})
+            checks.append({'name': f'Each subtitle stays up at least {shortest:.1f} s (minimum 2.5)', 'pass': shortest >= 2.5})
             interaction = page.evaluate('''() => {
                 const slider=document.getElementById('mass'); slider.value='0';
                 slider.dispatchEvent(new Event('input'));
