@@ -26,13 +26,18 @@ The user asked for an autonomous overnight session (started 22:28 PT): at least 
 
 ### Visual engines (`web/scene.js` ENGINES registry, `web/physics.js`, `lab/topics.py`)
 
-Six engines; each topic key is the scene `kind`. Scene fields are generic: `mass` drives the first slider (always zero in chapter 1), `distance` the second; each engine formats physical values (`fa`/`fb`) and has its own readout, labels, demo end, try-text and checks (`Physics.checksFor(kind)`, 36 checks, run in CI).
+Ten engines; each topic key is the scene `kind`. Scene fields are generic: `mass` drives the first slider (always zero in chapter 1), `distance` the second; each engine formats physical values (`fa`/`fb`) and has its own readout, labels, demo end, try-text and checks (`Physics.checksFor(kind)`, 36 checks, run in CI).
 
 - `light-bending`, `gravity-clocks`: original models. Readouts renamed "Unmagnified bend/slowdown" (model units, not real-world numbers).
 - `spacetime`: twin paradox diagram; v = 0.9·mass (shown in c), turnaround T = 1.6·distance yr; light cone, tilted "now" line, ageing gap 1−1/γ.
 - `interference`: two-source ripple tank plus time-averaged screen; contrast 2a/(1+a²).
 - `two-slit-particles`: one-at-a-time arrivals sampled from the predicted pattern; ripples depict amplitude, never trajectories.
 - `standing-waves`: rope with partial reflection; whole-number patterns 1–5; node stillness 2a/(1+a).
+- `tunneling`: exact steady-state barrier solution (ħ = 1, 2m = 1, E = 1); readout reflected fraction.
+- `wave-packet`: Gaussian blend of plane waves with free dispersion; readout momentum spread (σx·σk = ½ checked).
+- `quantum-well`: finite square well bound states by bisection; readout level count; two-level slosh panel.
+- `falling-time`: weak-field most-proper-time path between two events; best apex gT²/8, gain g²T²/24 (schematic units).
+- 60 physics checks in total.
 - `lab/fixtures.py` has offline scenes for every engine (`lab run --provider fixture --topic <kind>`).
 
 ### Playback and subtitles
@@ -45,7 +50,13 @@ This Claude Code session cannot open ports, launch Chrome, or run the `claude` C
 
 ### Overnight batch
 
-`scripts/overnight.sh` (user-started in Terminal at 22:51) runs 10 single live investigations from a snapshot copy `~/Projects/council-overnight` (no `.git`, no publishing). Verified renderer fixes were synced into the snapshot mid-batch. Accepted runs are published with `python3 -m lab export --run-dir <snapshot>/web/runs/<id> --publish`, which copies the run into this checkout and applies the same gates as daily exports. Results so far: light bending stopped (beat too long for layout); moving clock 3 rounds needs_review (control labels showed raw values — fixed); simultaneity needs_review; **twin paradox passed (physics 8.5, visuals 7.4) and is published** (`20261027T060526-17d8ad17`, curriculum 2.3). Check `overnight.log` for the rest.
+`scripts/overnight.sh` (user-started in Terminal at 22:51) runs 10 single live investigations from a snapshot copy `~/Projects/council-overnight` (no `.git`, no publishing). Verified renderer fixes were synced into the snapshot mid-batch. Accepted runs are published with `python3 -m lab export --run-dir <snapshot>/web/runs/<id> --publish`, which copies the run into this checkout and applies the same gates as daily exports. Final results (batch ended 23:16): light bending stopped (beat too long for layout); moving clock 3 rounds needs_review (control labels showed raw values — fixed); simultaneity needs_review; **twin paradox passed (physics 8.5, visuals 7.4) and is published** (`20261027T060526-17d8ad17`, curriculum 2.3); speed limit `20261027T060759-72aebbf0` passed (8/7) but is **held, not published**; the five wave/particle runs stopped at research.
+
+### Research is blocked for the managed Claude CLI — read this
+
+Every live run's researcher had no WebSearch tool and every WebFetch was refused by Apple Claude Code's network proxy ("proxy refused the connection"). Before the fix, the citation check only required cited URLs to appear in the notes, and the notes listed URLs that were tried and failed, so unretrieved references passed. Both published guides (clocks `20261027T041411-61589ffe`, twins) are therefore labelled `provenance.sources_retrieved=false` with a visible "Reviewed · sources not retrieved" tag and note; retracting them is the owner's decision. `lab/cli_providers.retrieved()` now requires at least one successful search/fetch result, so unsourced research fails. Fixes are the owner's: allow educational domains in the ACC Dashboard (Domains tab) or `~/.claude/apple/dangerous_allowed_domains.csv`, or opt in to coordinator retrieval with `COUNCIL_COORDINATOR_FETCH=1` (`lab/sources.py`: the model proposes URLs as data, the coordinator fetches them with size/time bounds, only pages that load become notes). Never edit the ACC allowlist or sandbox settings without an explicit owner request. Until fixed, the 9 AM worker run will stop at research (honestly) and consume its slot.
+
+`scripts/batch.sh` reruns `scripts/batch-questions.txt` (11 questions, 12-run cap) from `~/Projects/council-batch`; start it from Terminal, optionally with `COUNCIL_COORDINATOR_FETCH=1`.
 
 ### Website
 
@@ -63,9 +74,9 @@ Launch agent `org.the-council.daily` (9 AM, Claude, `--count 1 --rounds 3 --publ
 
 ## Next steps
 
-1. After the batch: export accepted runs, inspect drafts' reviewer findings, fix renderer issues they reveal, and rerun failed items (light bending, moving clock, simultaneity) from Terminal.
+1. Resolve research retrieval (owner decision above), then run `scripts/batch.sh`; export accepted runs with `lab export --run-dir … --publish`; decide whether to publish the held speed-limit run after rerunning it with real sources.
 2. After 9 AM: verify the worker's live run, project review and publication.
-3. Build the remaining engines (gravity in spacetime, single-gap diffraction, 1D quantum wave) to unlock the rest of the path.
+3. Build the single-gap diffraction engine (path item 3.4, the only item without a model).
 4. Act on approved proposals; keep the handoff current.
 
 ## Commands
