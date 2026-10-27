@@ -43,3 +43,13 @@ class SourceTests(unittest.TestCase):
         with patch.dict(os.environ,{'COUNCIL_COORDINATOR_FETCH':'1'}):self.assertTrue(sources.enabled())
 
 if __name__=='__main__':unittest.main()
+
+
+class KeepRetrievedTests(unittest.TestCase):
+    def test_sources_marked_unretrieved_are_removed_and_noted(self):
+        from lab.pipeline import keep_retrieved
+        research={'sources':[{'url':'https://good.example/a','title':'','supports':''},{'url':'https://paywall.example/b','title':'','supports':''}],'limitations':[]}
+        notes='Retrieved: https://good.example/a\n- Paper: https://paywall.example/b **[not retrieved]**'
+        kept=keep_retrieved(research,notes)
+        self.assertEqual([s['url'] for s in kept['sources']],['https://good.example/a'])
+        self.assertIn('could not retrieve',kept['limitations'][-1])

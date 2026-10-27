@@ -1,5 +1,6 @@
 """Bounded research → render → image review → revise state machine."""
 import json
+import re
 import time
 import uuid
 from pathlib import Path
@@ -21,6 +22,21 @@ def write_json(path, value):
 
 def approved(review):
     return review['pass'] is True and 7 <= review['score'] <= 10 and not review['blocking_issues']
+
+
+UNRETRIEVED = re.compile(r'not retrieved|could(?:n.t| not) (?:open|retrieve|fetch|get)|refused|failed|403|blocked', re.I)
+
+
+def keep_retrieved(research, notes):
+    """Drop cited sources that the researcher's notes mark as not retrieved; note the removal honestly."""
+    flagged = {url for line in notes.splitlines() if UNRETRIEVED.search(line)
+               for url in re.findall(r'https?://[^\s)\]>`\'"|]+', line)}
+    kept = [s for s in research['sources'] if not any(s['url'].rstrip('.,;') == u.rstrip('.,;') or s['url'].startswith(u.rstrip('.,;')) for u in flagged)]
+    removed = len(research['sources']) - len(kept)
+    if removed:
+        research = {**research, 'sources': kept,
+                    'limitations': research['limitations'] + [f'{removed} reference(s) the researcher could not retrieve were removed from the sources.']}
+    return research
 
 
 def run(provider, rounds=3, on_update=None, topic="light-bending", question=None):
@@ -62,6 +78,7 @@ def run(provider, rounds=3, on_update=None, topic="light-bending", question=None
         save('Sources retrieved. Scientist is preparing the research record.')
         research=provider.generate('scientist', question+'\nProduce a precise, beginner-friendly research record from these retrieved notes. Only cite URLs in the notes. No new-discovery claims.\n'+model_notes+'\n'+notes, RESEARCH_SCHEMA)
         validate(research,RESEARCH_SCHEMA)
+        research=keep_retrieved(research,notes)
         if not research['sources'] or any(not s['url'].startswith(('https://','http://')) for s in research['sources']):
             raise ValueError('Research must include valid HTTP source URLs.')
         if provider.name!='fixture' and any(s['url'] not in notes for s in research['sources']):

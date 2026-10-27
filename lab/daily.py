@@ -87,6 +87,12 @@ def export_run(run_dir, root=ROOT):
     target=root/'web'/'runs'/state['id']
     if source!=target.resolve():
         shutil.copytree(source,target,dirs_exist_ok=True)
+    notes=source/'source-notes.txt'
+    if state.get('research') and notes.exists():
+        from .pipeline import keep_retrieved
+        state['research']=keep_retrieved(state['research'],notes.read_text(encoding='utf-8'))
+        if not state['research']['sources']:
+            raise ValueError('No retrieved sources remain; refusing to publish.')
     items=[i for i in inbox.curriculum(root)
            if re.sub(r'\W+','',i['question'].casefold())==re.sub(r'\W+','',state['question'].casefold())]
     if items:
