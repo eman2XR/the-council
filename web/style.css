@@ -39,6 +39,9 @@ main{max-width:1180px;margin:auto;padding:0 24px}
 .tag{font-size:12px;padding:3px 10px;border-radius:999px;background:#eefaf5;color:#0b7a5e}
 .tag:empty{display:none}
 .tag[data-status=example]{background:#f1f1ee;color:var(--muted)}
+.tag[data-status=unverified]{background:#fff7ed;color:#9a3412}
+.provenance{font-size:13px;color:#9a3412;background:#fff7ed;border-radius:10px;padding:10px 12px;margin:0 0 12px}
+.provenance:empty{display:none}
 .tag[data-status=needs_review],.tag[data-status=failed]{background:#fff7ed;color:#9a3412}
 h1{font:600 clamp(28px,3.6vw,44px)/1.1 var(--display);letter-spacing:-.035em;margin:0 0 12px;white-space:pre-line;text-wrap:balance}
 #subtitle{font-size:17px;color:var(--muted);max-width:64ch;text-wrap:pretty}

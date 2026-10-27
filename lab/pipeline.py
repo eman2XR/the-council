@@ -56,6 +56,7 @@ def run(provider, rounds=3, on_update=None, topic="light-bending", question=None
         if provider.name!='fixture' and any(s['url'] not in notes for s in research['sources']):
             raise ValueError('Research must cite sources present in retrieved notes.')
         state['research']=research
+        state['provenance']={'sources_retrieved':provider.name!='fixture'}
         save('Research recorded. Director is designing the visual explanation.')
         feedback=''
         previous=None

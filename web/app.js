@@ -29,6 +29,7 @@ function show(data,{autoplay=false}={}){
  put('hero-date',data.created?day(data.created,{weekday:'long',month:'long',day:'numeric'}):'');
  put('run-banner',fixture?'Hand-written example · scripted reviews':data.error?'Stopped · partial work kept as a draft':STATUS[data.status]||String(data.status||'').replaceAll('_',' '));
  $('run-banner').dataset.status=fixture?'example':data.status||'';
+ if(data.provenance?.sources_retrieved===false){put('run-banner','Reviewed · sources not retrieved');$('run-banner').dataset.status='unverified';}
  renderBehind(data);renderCards();updateTalk();renderPath();
  if(autoplay)CouncilScene.play();
 }
@@ -41,6 +42,7 @@ function renderBehind(data){
  if(revisions.length)chips.push(`${revisions.length} draft${revisions.length===1?'':'s'}`);
  const checks=data.checks||[];if(checks.length)chips.push(`${checks.filter(c=>c.pass).length}/${checks.length} checks`);
  if(fixture)chips.unshift('Scripted example');
+ if(data.provenance?.sources_retrieved===false)chips.unshift('Sources not retrieved');
  $('review-summary').replaceChildren(...chips.map(c=>el('span',{textContent:c})));
  if(!r)return;
  put('claim',r.claim);put('falsifier',r.falsifier);put('prediction',r.prediction);
@@ -58,6 +60,7 @@ function renderBehind(data){
   card.append(el('div',{},el('h4',{textContent:`Draft ${i+1} · ${verdict}`}),el('p',{textContent:notes||'Waiting for review'}),view));
   return card;
  }));
+ put('sources-note',data.provenance?.sources_retrieved===false?data.provenance.note:'');
  $('sources').replaceChildren(...(r.sources||[]).map(s=>{const url=safeURL(s.url), item=el('div');
   item.append(url?el('a',{href:url,target:'_blank',rel:'noopener noreferrer',textContent:s.title}):el('span',{textContent:s.title}),el('small',{textContent:s.supports}));return item;}));
  put('record',JSON.stringify(data,null,2));

@@ -54,9 +54,22 @@ class CLIAdapterTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp, patch('lab.cli_providers.ROOT',Path(tmp)):
             def execute(argv,*args):
                 self.assertEqual(argv[argv.index('--tools')+1],'WebSearch,WebFetch')
-                return json.dumps({'type':'assistant','message':{'content':[{'type':'tool_use','name':'WebSearch'}]}})+'\n'+json.dumps({'type':'result','subtype':'success','result':'Retrieved source notes'})
+                return json.dumps({'type':'assistant','message':{'content':[{'type':'tool_use','name':'WebFetch'}]}})+'\n'+\
+                    json.dumps({'type':'user','message':{'content':[{'type':'tool_result','is_error':False,'content':'Page text '*40}]}})+'\n'+\
+                    json.dumps({'type':'result','subtype':'success','result':'Retrieved source notes'})
             with patch.object(provider,'_execute',side_effect=execute):
                 self.assertEqual(provider.generate('researcher','test',research=True),'Retrieved source notes')
+
+    def test_claude_research_with_only_failed_fetches_is_rejected(self):
+        provider=self.adapter('claude')
+        with tempfile.TemporaryDirectory() as tmp, patch('lab.cli_providers.ROOT',Path(tmp)):
+            def execute(argv,*args):
+                return json.dumps({'type':'assistant','message':{'content':[{'type':'tool_use','name':'WebFetch'}]}})+'\n'+\
+                    json.dumps({'type':'user','message':{'content':[{'type':'tool_result','is_error':True,'content':'proxy refused the connection'}]}})+'\n'+\
+                    json.dumps({'type':'result','subtype':'success','result':'Notes from memory'})
+            with patch.object(provider,'_execute',side_effect=execute):
+                with self.assertRaisesRegex(RuntimeError,'retrieved no source content'):
+                    provider.generate('researcher','test',research=True)
 
     def test_claude_failures_and_missing_schema_are_rejected(self):
         for result in [{'type':'result','subtype':'error_max_turns','is_error':True},

@@ -50,6 +50,8 @@ def export_accepted(state, root=ROOT):
     target.mkdir(parents=True,exist_ok=True)
     record={key:copy.deepcopy(state[key]) for key in ('id','status','question','topic','created','research','scene','checks')}
     record['provider']='reviewed-agents'
+    if state.get('provenance'):
+        record['provenance']=copy.deepcopy(state['provenance'])
     record['revisions']=[]
     run_dir=(root/'web'/'runs'/run_id).resolve()
     for rev in state['revisions']:

@@ -5,6 +5,7 @@ No shell interpolation, permission bypasses, or credential extraction.
 """
 import base64
 import json
+import re
 import math
 import os
 import shutil
@@ -186,6 +187,9 @@ class CLIProvider:
                 for event in events if event.get('type')=='assistant'
                 for block in event.get('message',{}).get('content',[]) if isinstance(block,dict)):
             raise RuntimeError('Claude research completed without recorded web retrieval; refusing to present it as retrieved evidence.')
+        # Attempts are not evidence: at least one search or fetch must have returned content.
+        if research and not retrieved(events):
+            raise RuntimeError('Claude research retrieved no source content (every search or fetch failed); refusing unsourced research.')
         self._record(role, {'usage':result.get('usage',{}),'num_turns':result.get('num_turns'),
                             'reported_cost_usd':result.get('total_cost_usd')})
         if schema:
@@ -202,6 +206,24 @@ class CLIProvider:
     def _record(self, role, usage):
         with self._lock:
             self.usage.append({'role':role, **usage})
+
+
+def retrieved(events):
+    """Count web tool results that returned content rather than an error."""
+    count = 0
+    for event in events:
+        message = event.get('message')
+        for block in message.get('content', []) if isinstance(message, dict) else []:
+            if not isinstance(block, dict):
+                continue
+            if block.get('type') == 'tool_result' and not block.get('is_error'):
+                body = block.get('content')
+                text = ' '.join(part.get('text', '') for part in body if isinstance(part, dict)) if isinstance(body, list) else str(body or '')
+                if len(text) > 200 and not re.search(r'refused|failed to fetch|unable to fetch|error', text[:200], re.I):
+                    count += 1
+            elif block.get('type') == 'web_search_tool_result' and isinstance(block.get('content'), list) and block['content']:
+                count += 1
+    return count
 
 
 def parse_events(stdout):
