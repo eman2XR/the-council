@@ -1,0 +1,269 @@
+{
+  "id": "20261027T060526-17d8ad17",
+  "status": "reviewed",
+  "question": "Why is the travelling twin younger?",
+  "topic": "spacetime",
+  "created": "2026-10-27T06:05:26.479772+00:00",
+  "research": {
+    "claim": "The travelling twin is younger because the two twins take different paths through spacetime between the same two events, departure and reunion. In flat spacetime, the straight path of the home twin, who never changes speed or direction, has the most elapsed proper time. The traveller's path bends at the turnaround, so it has less. For constant speed v, the traveller ages a fraction 1/gamma of the home twin's time, where gamma = 1/sqrt(1 - v^2) with light speed set to 1. The age gap as a fraction is 1 - 1/gamma. It depends only on speed, not on trip length. This is standard special relativity, not a new result.",
+    "explanation": "How to read the diagram: time runs up the page, space runs to the right, and light moves at 45 degrees. A worldline is the path a twin traces in this picture.\n\n1) Each clock measures time along its own worldline. The home twin's line is vertical, with one tick every half year. The traveller goes out at speed v until home time T, turns around instantly, and comes back at the same speed. The home twin therefore ages 2T. The traveller ages 2T*sqrt(1 - v^2) = 2T/gamma. Each clock ticks normally for its owner. Neither twin feels time slow down. Their clocks simply measured different paths.\n\n2) Spacetime geometry reverses everyday intuition. On paper the bent out-and-back path looks longer. But elapsed time along a path at speed v is sqrt(dt^2 - dx^2), so the space travelled is subtracted. The straight vertical path collects the most time. Any bent path between the same two events collects less. That is why the dots on the traveller's line, one every half year of their own time, are spaced farther apart up the page than the home ticks.\n\n3) Why it isn't symmetric: during each leg, each twin can correctly say the other's clock runs slow in their own frame. Only the traveller changes direction, though. The dashed \"now\" line shows which home-twin events the traveller counts as simultaneous with themselves. It tilts with speed, and at the turnaround it swings suddenly across a stretch of home time. That swing comes from switching reference frames. Nothing physical happens to the home twin. The age gap still comes from the difference in path length. The turnaround only determines which path is the bent one.\n\n4) Speed stays below light speed. Any v < 1 keeps the worldline inside the shaded light cone. As v approaches 1, gamma grows without limit and the traveller's elapsed time approaches zero. The worldline is never allowed to reach or cross the cone.\n\n5) The readout 1 - 1/gamma contains no T. A longer trip makes both ages larger in proportion, so the fractional gap stays the same.",
+    "assumptions": [
+      "Flat spacetime (special relativity) with no gravity. Units are years and light-years, with light speed 1.",
+      "The home twin stays inertial for the whole trip.",
+      "The turnaround is instantaneous. This is an idealization: the scene models no acceleration physics.",
+      "Ideal clocks whose rate depends only on speed, not on acceleration (the 'clock hypothesis').",
+      "In the scene, v = 0.9 x the Speed control and T = 1.6 x the Trip length control, in years. The total home time is 2T.",
+      "The scene does not model Doppler effects or what either twin actually sees through a telescope."
+    ],
+    "prediction": "These follow from gap = 1 - sqrt(1 - v^2):\n- Chapter 1 sets Speed to 0, so v = 0. The two worldlines coincide and the gap is 0%.\n- At v = 0.6, gamma = 1.25 and the gap is 20%. With T = 4 years, home ages 8 years and the traveller ages 6.4 years.\n- At v = 0.8, gamma = 5/3 and the gap is 40%.\n- At v = 0.9, the top speed if the Speed control maxes out at 1, gamma \u2248 2.29 and the gap is \u2248 56%.\n\nIn chapter 3, Trip length sweeps up to 2.5, giving T = 4 years. Both ages grow, but the percentage readout should stay exactly the same. The dashed simultaneity line should tilt more as speed rises and swing at the turnaround. The traveller's worldline should never leave the light cone.",
+    "falsifier": "Either of these would contradict the account:\n- Two ideal clocks reunited after one made a round trip at sustained speed v show elapsed times whose ratio differs measurably from sqrt(1 - v^2), after correcting for gravity.\n- Fast-moving unstable particles fail to live longer by the factor gamma.\n\nSeparately, the scene itself would be wrong if any of these happened:\n- the percentage readout changed when only Trip length changed;\n- the gap at Speed 0 were not 0%;\n- the traveller's worldline reached or crossed the light-cone edge.",
+    "limitations": [
+      "Retrieval failed: the proxy refused every fetch, so no source was actually read. The experimental summaries below (Hafele\u2013Keating 1972, Bailey et al. 1977 muon storage ring, Chou et al. 2010 optical clocks, GPS corrections) come from memory and need checking against the original papers.",
+      "The instant turnaround is not physical. A finite turnaround changes the result only slightly, because most of the gap builds up during the cruise legs, but the scene does not show this.",
+      "No gravity or general relativity. Real Earth-based clock tests also include gravitational shifts.",
+      "The scene shows coordinate time and proper time, not what the twins see. Doppler-shifted views are left out on purpose.",
+      "The 'now' line's sudden swing at the turnaround reflects a change of coordinates, not a physical effect on the home twin.",
+      "Nothing here is a new discovery. This is textbook special relativity."
+    ],
+    "sources": [
+      {
+        "title": "John Baez et al., Usenet Physics FAQ: The Twin Paradox",
+        "url": "https://math.ucr.edu/home/baez/physics/Relativity/SR/TwinParadox/twin_paradox.html",
+        "supports": "Not retrieved (fetch refused); unverified lead. Expected to cover the proper-time explanation and common misconceptions."
+      },
+      {
+        "title": "Hafele & Keating, Around-the-World Atomic Clocks, Science 177:166 (1972)",
+        "url": "https://doi.org/10.1126/science.177.4044.166",
+        "supports": "Not retrieved; unverified lead. Expected to be an experimental test of speed plus gravity time dilation with flown clocks."
+      },
+      {
+        "title": "Bailey et al., Measurements of relativistic time dilatation for positive and negative muons in a circular orbit, Nature 268:301 (1977)",
+        "url": "https://doi.org/10.1038/268301a0",
+        "supports": "Not retrieved; unverified lead. Expected to show longer muon lifetimes by the factor gamma under huge acceleration, supporting the clock hypothesis."
+      },
+      {
+        "title": "Chou et al., Optical Clocks and Relativity, Science 329:1630 (2010)",
+        "url": "https://doi.org/10.1126/science.1192720",
+        "supports": "Not retrieved; unverified lead. Expected to report time dilation measured at speeds of a few m/s with optical clocks."
+      }
+    ]
+  },
+  "scene": {
+    "title": "Why the Travelling Twin Comes Home Younger",
+    "subtitle": "Two twins go from the same goodbye to the same reunion by different paths through space and time. The straight path holds the most time.",
+    "beats": [
+      {
+        "title": "Standing still: one path, one age",
+        "body": "With the speed at zero, the traveller never leaves home. Both lines sit on top of each other, straight up the page. Their clocks agree exactly, so there is no age gap."
+      },
+      {
+        "title": "The bent path holds less time",
+        "body": "Now the traveller flies out, turns, and flies back, staying inside the shaded light cone. Their dots sit farther apart than the home ticks, so fewer birthdays fit between the same goodbye and reunion. Each clock ticks normally for its owner. The two paths just hold different amounts of time."
+      },
+      {
+        "title": "Only the traveller turns around",
+        "body": "Watch the dashed \"now\" line swing suddenly at the turnaround. Only the traveller changes direction, so the two trips are not mirror images. A longer trip makes both twins older, but the percentage gap stays the same. Only speed sets it."
+      }
+    ],
+    "mass": 0.8,
+    "distance": 1.5,
+    "ray_count": 1,
+    "show_reference": true,
+    "show_labels": true,
+    "accent": "blue",
+    "line_width": 3,
+    "duration": 38,
+    "takeaway": "Both twins' clocks tick normally. The traveller's bent out-and-back path through space and time simply holds less time than staying put. Faster trips mean a bigger gap, and a longer trip does not change the percentage.",
+    "kind": "spacetime"
+  },
+  "checks": [
+    {
+      "name": "Zero speed gives equal ages",
+      "pass": true
+    },
+    {
+      "name": "Faster trips widen the age gap",
+      "pass": true
+    },
+    {
+      "name": "Time-dilation factor at 0.6 light speed is 1.25",
+      "pass": true
+    },
+    {
+      "name": "Traveller worldline stays inside the light cone",
+      "pass": true
+    },
+    {
+      "name": "Round-trip traveller time is home time divided by the factor",
+      "pass": true
+    },
+    {
+      "name": "Trip length does not change the percentage gap",
+      "pass": true
+    },
+    {
+      "name": "Subtitles read at most 14.0 characters per second (limit 15)",
+      "pass": true
+    },
+    {
+      "name": "Each subtitle stays up at least 2.8 s (minimum 2.5)",
+      "pass": true
+    },
+    {
+      "name": "Zero-mass control removes the modeled effect",
+      "pass": true
+    },
+    {
+      "name": "Mass control updates the rendered model",
+      "pass": true
+    },
+    {
+      "name": "No-mass step shows zero and restores the chosen mass afterward",
+      "pass": true
+    },
+    {
+      "name": "Seeking reproduces identical canvas pixels",
+      "pass": true
+    },
+    {
+      "name": "Mobile page fits viewport",
+      "pass": true
+    },
+    {
+      "name": "Renderer has no JavaScript errors",
+      "pass": true
+    }
+  ],
+  "provider": "reviewed-agents",
+  "revisions": [
+    {
+      "number": 1,
+      "scene": {
+        "title": "Why the Travelling Twin Comes Home Younger",
+        "subtitle": "Two twins go from the same goodbye to the same reunion by different paths through space and time. The straight path holds the most time.",
+        "beats": [
+          {
+            "title": "Standing still: one path, one age",
+            "body": "With the speed at zero, the traveller never leaves home. Both lines sit on top of each other, straight up the page. Their clocks agree exactly, so there is no age gap."
+          },
+          {
+            "title": "The bent path holds less time",
+            "body": "Now the traveller flies out, turns, and flies back, staying inside the shaded light cone. Their dots sit farther apart than the home ticks, so fewer birthdays fit between the same goodbye and reunion. Each clock ticks normally for its owner. The two paths just hold different amounts of time."
+          },
+          {
+            "title": "Only the traveller turns around",
+            "body": "Watch the dashed \"now\" line swing suddenly at the turnaround. Only the traveller changes direction, so the two trips are not mirror images. A longer trip makes both twins older, but the percentage gap stays the same. Only speed sets it."
+          }
+        ],
+        "mass": 0.8,
+        "distance": 1.5,
+        "ray_count": 1,
+        "show_reference": true,
+        "show_labels": true,
+        "accent": "blue",
+        "line_width": 3,
+        "duration": 38,
+        "takeaway": "Both twins' clocks tick normally. The traveller's bent out-and-back path through space and time simply holds less time than staying put. Faster trips mean a bigger gap, and a longer trip does not change the percentage.",
+        "kind": "spacetime"
+      },
+      "checks": [
+        {
+          "name": "Zero speed gives equal ages",
+          "pass": true
+        },
+        {
+          "name": "Faster trips widen the age gap",
+          "pass": true
+        },
+        {
+          "name": "Time-dilation factor at 0.6 light speed is 1.25",
+          "pass": true
+        },
+        {
+          "name": "Traveller worldline stays inside the light cone",
+          "pass": true
+        },
+        {
+          "name": "Round-trip traveller time is home time divided by the factor",
+          "pass": true
+        },
+        {
+          "name": "Trip length does not change the percentage gap",
+          "pass": true
+        },
+        {
+          "name": "Subtitles read at most 14.0 characters per second (limit 15)",
+          "pass": true
+        },
+        {
+          "name": "Each subtitle stays up at least 2.8 s (minimum 2.5)",
+          "pass": true
+        },
+        {
+          "name": "Zero-mass control removes the modeled effect",
+          "pass": true
+        },
+        {
+          "name": "Mass control updates the rendered model",
+          "pass": true
+        },
+        {
+          "name": "No-mass step shows zero and restores the chosen mass afterward",
+          "pass": true
+        },
+        {
+          "name": "Seeking reproduces identical canvas pixels",
+          "pass": true
+        },
+        {
+          "name": "Mobile page fits viewport",
+          "pass": true
+        },
+        {
+          "name": "Renderer has no JavaScript errors",
+          "pass": true
+        }
+      ],
+      "accepted": true,
+      "physics_review": {
+        "pass": true,
+        "score": 8.5,
+        "summary": "This is a sound teaching approximation of the twin paradox. I checked the four frames against the stated model and the numbers and geometry match.\n\nReadout: Speed 0.72c (0.9 x 0.8) gives a gap of 1 - sqrt(1 - 0.5184) = 30.6%, which is what the readout shows.\n\nPaired ages: 3.8/2.6, 4.6/3.2 and 7.6/5.2 all fit the ratio 1/gamma of about 0.694.\n\nTurnaround: it sits at x = vT, about 1.73 ly, and t = 2.4 yr, and stays inside the 45-degree cone.\n\nDot spacing: traveller dots are about 0.72 home-years apart vertically (0.5 x gamma). Home ticks are 0.5 yr apart.\n\n\"Now\" line: on the return leg its slope is about 0.72 with the correct sign (it falls toward the right).\n\nSpeed 0: gives 0.0% with a single vertical worldline.\n\nTrip length sweep: going to 2.5 gives T = 4.0 yr. Both ages grow and the percentage stays at 30.6%.\n\nThe narration correctly says each clock ticks normally for its owner. It ties the asymmetry to the different paths and to the change of direction, and stays within textbook special relativity. The limitations admit that no sources were retrieved, and the scene claims nothing beyond standard results.\n\nRemaining issues are minor clarity points, not physics errors:\n- Beat 3 could be read as saying the swing of the \"now\" line causes the age gap.\n- The Trip length caption doesn't say which clock its years are measured on.\n- The narration never mentions the speed dip in chapter 3.\n- The captured frames don't show the swing itself, so I can't confirm it happens while beat 3's subtitle is on screen.",
+        "changes": [
+          "Beat 3: add a short sentence such as \"The swing is the traveller switching viewpoints, not something happening to the home twin; the gap still comes from the shorter path.\" This stops viewers concluding that the swing causes the ageing.",
+          "Change the Trip length caption from \"years out before turning back\" to \"home-clock years before the turnaround\". As written, viewers may read T as the traveller's own time.",
+          "Make sure chapter 3 playback passes the turnaround moment while the \"Watch the dashed now line swing\" subtitle is on screen. In the captured beat-3 frame the traveller is already near the reunion.",
+          "The narration doesn't explain the chapter 3 Speed dip. Either mention it (e.g. \"lower speed, smaller gap\") or make sure it doesn't distract from the point that trip length leaves the gap unchanged.",
+          "Optional: show a reunion label such as \"same reunion event\" where the worldlines meet. This reinforces the point that both paths join the same two events.",
+          "Not physics: the frames show whole multi-sentence beat bodies, but the spec says the viewer shows one subtitle sentence at a time. Also, the 1:05 timeline doesn't match duration 38. Check the subtitle-timing checks against what is actually rendered."
+        ],
+        "blocking_issues": []
+      },
+      "visual_review": {
+        "pass": true,
+        "score": 7.4,
+        "summary": "The physics in the six frames is correct. Speed 0.8 x 0.9 = 0.72c, which gives a gap of 1 - sqrt(1 - 0.72^2) = 30.6%, and the readout shows 30.6%. Trip length 1.5 x 1.6 = 2.4 yr. The ages shown agree with the 0.694 ratio: home 3.8 / traveller 2.6, 4.6 / 3.2, and 7.6 / 5.2 (the last pair looks truncated, not rounded). Pixel distances give equal time and space scales (about 56 px per year), so light really runs at 45 degrees. The traveller's worldline stays inside the shaded cone. The traveller's half-year dots are about 39 px apart vertically, against 28 px for the home ticks, which matches 1/0.694. On the return leg the dashed \"now\" line slopes down to the right and crosses the home line at a later home time, which is the correct direction. At t=1 the two lines coincide, the label reads \"traveller stays home\" and the readout is 0.0%: a clean zero-speed baseline. From t=11 to t=18, Trip length rises from 2.4 to 4.0 yr, both ages grow, and the 30.6% readout stays the same. That is a clear, checkable comparison showing trip length doesn't change the percentage gap.\n\nWeaknesses:\n- **Captions show whole paragraphs.** Every frame shows the full beat body (3\u20134 sentences, up to about 260 characters) at once, not one sentence at a time. That is a lot to read while the markers move.\n- **Turnaround swing not captured.** Beat 3 says \"watch the dashed now line swing at the turnaround\". In the t=18 frame the turnaround is already over (home is 7.6 of 8 yr), and no sampled frame shows the swing or the outbound tilt. I can't confirm the swing is visible during chapter 3.\n- **Label overlap.** The \"traveller's now\" label sits on or right next to the traveller's worldline at t=18, on both desktop and mobile.\n- **Small, faint text.** The time and space axis labels are tiny, and the orange \"LIGHT\" label is low-contrast.\n- **No numbers on the time axis.** Viewers can't check ages from the ticks.\n- **Crowded reunion markers.** At t=11 the HOME and TRAVELLER markers overlap.\n- **Mismatched runtime.** The scene says duration 38, but the timeline shows 1:05.\n\nNone of these are blockers. Beginners can still follow the cause and effect: speed opens the gap, and trip length doesn't change it.",
+        "changes": [
+          "beats[1].body: break it into shorter, simpler sentences and drop 'birthdays' (the dots are half-years, not years). For example: \"Now the traveller flies out, turns, and flies back. The path stays inside the shaded cone. Each blue dot is half a year of the traveller's time. The dots are spaced farther apart up the page than the home ticks. So fewer of them fit before the reunion. Each clock still ticks normally for its owner.\"",
+          "beats[1].body: move the turnaround-swing sentence here, where the turnaround actually happens, e.g. \"At the turn, the dashed 'now' line suddenly swings.\" In the t=18 frame of chapter 3 the turnaround is already over.",
+          "beats[2].body: make it about the comparison the frames actually show. For example: \"Only the traveller changes direction, so the two trips are not mirror images. Watch the trip get longer. Both twins end up older. The percentage gap stays at the top right. Only speed sets it.\" Keep a reference to the swing only if the player restarts the traveller from departure during chapter 3.",
+          "beats[0].body: shorten slightly, e.g. \"With the speed at zero, the traveller stays home. The two lines sit on top of each other. Their clocks agree, so the gap is zero.\"",
+          "subtitle: add one plain-language reading cue for beginners, e.g. \"Time runs up the page and space runs right. The straight path holds the most time.\"",
+          "takeaway: simplify, e.g. \"Both clocks tick normally. The bent out-and-back path holds less time than staying put. Going faster widens the gap. A longer trip does not change the percentage.\"",
+          "duration: set it to match the actual reading-paced timeline (about 65 s, as shown), or check why 38 becomes 1:05.",
+          "mass: keep 0.8 (0.72c, 30.6%). It gives a gap you can see while keeping the dots readable. Do not raise it to 1.0: the path would hug the cone and the dots would get sparse.",
+          "Renderer note (outside the scene fields): the frames show the whole beat body rather than one sentence at a time. Move the 'traveller's \"now\"' label away from the worldline. Increase the size and contrast of the time and space axis labels and the 'LIGHT' label. Separate the HOME and TRAVELLER labels when they meet at the reunion. Show traveller ages rounded the same way as home ages."
+        ],
+        "blocking_issues": []
+      },
+      "frames": [
+        "published/20261027T060526-17d8ad17/revision-1-0.png",
+        "published/20261027T060526-17d8ad17/revision-1-1.png",
+        "published/20261027T060526-17d8ad17/revision-1-2.png",
+        "published/20261027T060526-17d8ad17/revision-1-3.png",
+        "published/20261027T060526-17d8ad17/revision-1-4.png",
+        "published/20261027T060526-17d8ad17/revision-1-5.png"
+      ]
+    }
+  ]
+}
