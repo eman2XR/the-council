@@ -338,3 +338,10 @@ body[data-view=article] #home,body[data-view=article] .path{display:none}
 .thumb-card:hover h3{text-decoration:underline;text-underline-offset:4px}
 .thumb-card:hover .mini-play{transform:scale(1.08);background:var(--orange)}
 @media (max-width:900px){.featured-card{grid-template-columns:1fr!important;gap:18px!important}}
+
+/* Drafts: owner review only; the checking story and path do not apply. */
+body[data-draft=yes] .behind,body[data-draft=yes] .path{display:none}
+#run-banner[data-status=draft]{background:#fdf2e3;color:#9a4b0b}
+#drafts-head{margin-top:40px}
+#drafts-head{flex-wrap:wrap;gap:4px 16px}
+#drafts-head .muted{white-space:normal}

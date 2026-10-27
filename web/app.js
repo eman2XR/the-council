@@ -1,13 +1,15 @@
 const $=id=>document.getElementById(id);
 const put=(id,text)=>{const el=$(id);if(el)el.textContent=text??'';};
 const el=(tag,props={},...children)=>{const node=Object.assign(document.createElement(tag),props);node.append(...children);return node;};
-const TOPICS={'gravity-clocks':'Gravity and time','light-bending':'Gravity and light','spacetime':'Space and time','twin-trip':'Space and time','interference':'Waves','standing-waves':'Waves','two-slit-particles':'Quanta','tunneling':'Quanta','wave-packet':'Quanta','quantum-well':'Quanta','falling-time':'Gravity and time','diffraction':'Waves'};
+const TOPICS={'gravity-clocks':'Gravity and time','light-bending':'Gravity and light','spacetime':'Space and time','twin-trip':'Space and time','interference':'Waves','standing-waves':'Waves','two-slit-particles':'Quanta','tunneling':'Quanta','wave-packet':'Quanta','quantum-well':'Quanta','falling-time':'Gravity and time','diffraction':'Waves','spacetime-paths':'Space and time','fall-fan':'Gravity and time','fall-cone':'Gravity and time','river':'Black holes'};
 const STATUS={planning:'Choosing a question',running:'Investigating now',reviewed:'Passed review',needs_review:'Draft, not published',failed:'Attempt stopped',interrupted:'Run interrupted',idle:'Resting'};
 const STEPS=['Question','Research','Design','Render','Review','Publish'];
 const reduceMotion=matchMedia('(prefers-reduced-motion: reduce)').matches;
 let current=null, entries=[], busy=false, example=null;
 const requestedGuide=new URLSearchParams(location.search).get('guide');
-const VIEW=requestedGuide?'article':'home';
+const requestedDraft=new URLSearchParams(location.search).get('draft');
+const VIEW=requestedGuide||requestedDraft?'article':'home';
+let drafts=[];
 document.body.dataset.view=VIEW;
 const records=new Map();
 
@@ -27,14 +29,16 @@ CouncilScene.on(type=>{
 });
 
 function show(data,{autoplay=false}={}){
- current=data;const scene=data.scene, fixture=data.provider==='fixture';
+ current=data;const scene=data.scene, fixture=data.provider==='fixture', draft=data.provider==='draft';
+ document.body.dataset.draft=draft?'yes':'';
  if(scene){put('title',scene.title);put('subtitle',scene.subtitle);put('takeaway',scene.takeaway);CouncilScene.load(scene);}
- put('hero-kicker',fixture?'Example':isToday(data.created)?'Today':'Investigation');
+ put('hero-kicker',draft?'Draft':fixture?'Example':isToday(data.created)?'Today':'Investigation');
  put('hero-topic',topicOf(data));put('readbar-title',(scene?.title||'').replace(/\n/g,' '));
  put('hero-date',data.created?day(data.created,{weekday:'long',month:'long',day:'numeric'}):'');
  put('run-banner',fixture?'Hand-written example · scripted reviews':data.error?'Stopped · partial work kept as a draft':STATUS[data.status]||String(data.status||'').replaceAll('_',' '));
  $('run-banner').dataset.status=fixture?'example':data.status||'';
  if(data.provenance?.sources_retrieved===false){put('run-banner','Reviewed · sources not retrieved');$('run-banner').dataset.status='unverified';}
+ if(draft){put('run-banner','Draft visual · not reviewed');$('run-banner').dataset.status='draft';}
  renderBehind(data);renderCards();updateTalk();renderPath();
  if(autoplay)CouncilScene.play();
 }
@@ -76,7 +80,7 @@ const thumbs=new Set();
 const visible=new IntersectionObserver(items=>items.forEach(i=>i.target.classList.toggle('in-view',i.isIntersecting)));
 function card(entry,record){
  const isExample=entry.id==='example', id=entry.id;
- const link=el('a',{href:isExample?'?guide=example':'?guide='+encodeURIComponent(id),className:'card'});
+ const link=el('a',{href:entry.draft?'?draft='+encodeURIComponent(id):isExample?'?guide=example':'?guide='+encodeURIComponent(id),className:'card'});
  if(!isExample)link.dataset.guide=id;else link.dataset.example='';
  const canvas=el('canvas',{className:'thumb',ariaHidden:'true'});
  const media=el('div',{className:'card-media'},canvas,el('span',{className:'mini-play',ariaHidden:'true'}));
@@ -84,14 +88,14 @@ function card(entry,record){
  if(current&&(current.id===id||(isExample&&current.provider==='fixture'))){badge.textContent='Now showing';badge.dataset.kind='now';}
  else if(!isExample&&!watched.has(id)&&Date.now()-new Date(entry.created).getTime()<36*3600*1000){badge.textContent='New';badge.dataset.kind='new';}
  else if(watched.has(id)){badge.textContent='Watched';badge.dataset.kind='seen';}
- const meta=el('p',{className:'card-meta'},el('em',{textContent:'By'}),' The Council',el('span',{className:'sep'}),isExample?'Hand-written example':day(entry.created,{month:'long',day:'numeric'}),badge);
+ const meta=el('p',{className:'card-meta'},el('em',{textContent:'By'}),' The Council',el('span',{className:'sep'}),entry.draft?'Draft · not reviewed':isExample?'Hand-written example':day(entry.created,{month:'long',day:'numeric'}),badge);
  const excerpt=el('p',{className:'card-excerpt',textContent:record?.scene?.subtitle||entry.question||''});
- link.append(media,el('div',{className:'card-body'},el('span',{className:'card-cat',textContent:isExample?'Example':topicOf(record||entry)}),el('h3',{textContent:(entry.title||entry.question||'').replace(/\n/g,' ')}),meta,excerpt));
+ link.append(media,el('div',{className:'card-body'},el('span',{className:'card-cat',textContent:entry.draft?'Draft':isExample?'Example':topicOf(record||entry)}),el('h3',{textContent:(entry.title||entry.question||'').replace(/\n/g,' ')}),meta,excerpt));
  if(record?.scene){canvas.scene=record.scene;thumbs.add(canvas);visible.observe(canvas);}
  return link;
 }
 function thumbCard(entry,record){
- const link=el('a',{href:'?guide='+encodeURIComponent(entry.id),className:'thumb-card'});
+ const link=el('a',{href:(entry.draft?'?draft=':'?guide=')+encodeURIComponent(entry.id),className:'thumb-card'});
  const canvas=el('canvas',{className:'thumb',ariaHidden:'true'});
  link.append(el('div',{className:'card-media'},canvas,el('span',{className:'mini-play',ariaHidden:'true'})),
   el('span',{className:'card-cat',textContent:topicOf(record||entry)}),el('h3',{textContent:(entry.title||entry.question||'').replace(/\n/g,' ')}));
@@ -108,9 +112,11 @@ function renderCards(){
   $('archive').replaceChildren(...rest.map(e=>card(e,records.get(e.id))));
   put('past-count',rest.length?`${rest.length} earlier`:'');
   $('past-title').closest('.section-head').hidden=!rest.length;
+  $('drafts').replaceChildren(...drafts.map(d=>card(d,records.get('draft:'+d.id))));$('drafts-head').hidden=!drafts.length;
  }else{
-  const others=entries.filter(e=>e.id!==current?.id).slice(0,4);
-  $('more-list').replaceChildren(...others.map(e=>thumbCard(e,records.get(e.id))));
+  const pool=current?.provider==='draft'?drafts:entries, others=pool.filter(e=>e.id!==current?.id).slice(0,current?.provider==='draft'?8:4);
+  put('more-title',current?.provider==='draft'?'More drafts':'More investigations');
+  $('more-list').replaceChildren(...others.map(e=>thumbCard(e,records.get((e.draft?'draft:':'')+e.id))));
   $('more').hidden=!others.length;
  }
  paintThumbs(true);
@@ -135,6 +141,12 @@ function thumbLoop(now){
 requestAnimationFrame(thumbLoop);
 addEventListener('resize',()=>paintThumbs(true));
 
+async function getDraft(id){
+ const key='draft:'+id;if(records.has(key))return records.get(key);
+ if(!/^[A-Za-z0-9-]+$/.test(id))throw Error('Invalid draft');
+ const response=await fetch('drafts/'+id+'.json',{cache:'no-store'});if(!response.ok)throw Error('Missing draft');
+ const record=await response.json();records.set(key,record);return record;
+}
 async function getRecord(id){
  if(id==='example')return example||(example=await (await fetch('example.json')).json());
  if(records.has(id))return records.get(id);
@@ -150,9 +162,11 @@ async function openGuide(id,{autoplay=false}={}){
 async function loadPublished(){
  try{const response=await fetch('published/index.json',{cache:'no-store'});entries=response.ok?await response.json():[];}catch{entries=[];}
  try{example=await (await fetch('example.json')).json();}catch{example=null;}
- if(VIEW==='article')await openGuide(entries.find(e=>e.id===requestedGuide)?.id||(requestedGuide==='example'||!entries.length?'example':requestedGuide));
+ try{const r=await fetch('drafts/index.json',{cache:'no-store'});drafts=r.ok?(await r.json()).map(d=>({...d,draft:true})):[];}catch{drafts=[];}
+ if(requestedDraft){try{show(await getDraft(requestedDraft));}catch{await openGuide('example');}}
+ else if(VIEW==='article')await openGuide(entries.find(e=>e.id===requestedGuide)?.id||(requestedGuide==='example'||!entries.length?'example':requestedGuide));
  // Fetch the remaining records for previews without blocking the main guide.
- await Promise.all(entries.slice(0,24).map(e=>getRecord(e.id).catch(()=>null)));
+ await Promise.all([...entries.slice(0,24).map(e=>getRecord(e.id).catch(()=>null)),...drafts.map(d=>getDraft(d.id).catch(()=>null))]);
  renderCards();
 }
 
@@ -203,7 +217,7 @@ function renderNext(){
   put('next-title',labActive?'':`${label} · in ${hours?hours+' h ':''}${minutes} min`);
   put('dashboard-schedule','One new investigation each morning. Only investigations that pass physics and visual review are published.');
  }else{
-  put('next-title',schedule?.state==='paused'?'New investigations paused':schedule?.state==='blocked'?'Schedule paused':'No schedule confirmed');
+  put('next-title',schedule?.state==='paused'?'Improving how investigations are made':schedule?.state==='blocked'?'Schedule paused':'No schedule confirmed');
   put('dashboard-schedule',schedule?.state==='paused'?'The Council is improving how investigations are made. Published ones stay available.':schedule?.state==='blocked'?'The background worker needs setup before daily runs resume.':'Investigations are started by hand for now.');
  }
 }

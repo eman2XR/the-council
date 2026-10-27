@@ -1,0 +1,38 @@
+{
+ "id": "twin-paths",
+ "provider": "draft",
+ "status": "draft",
+ "created": "2026-10-27T19:00:00-07:00",
+ "question": "Two paths between one goodbye and one reunion",
+ "topic": "spacetime-paths",
+ "scene": {
+  "ray_count": 1,
+  "show_reference": true,
+  "show_labels": true,
+  "line_width": 2.5,
+  "duration": 24,
+  "controls": "both",
+  "kind": "spacetime-paths",
+  "title": "Two paths between one goodbye and one reunion",
+  "subtitle": "Your clock measures the length of your path through spacetime. The traveller’s path is bent, so it is shorter.",
+  "accent": "blue",
+  "mass": 0.8888888888888888,
+  "distance": 2.5,
+  "takeaway": "In spacetime the straight path between two moments holds the most time. The traveller’s path is bent, so the traveller comes home younger.",
+  "beats": [
+   {
+    "title": "One shared path",
+    "body": "A path through spacetime is where you are at every moment. With no trip, both twins stay on Earth and share one straight path up through time."
+   },
+   {
+    "title": "The traveller takes a detour",
+    "body": "The traveller flies out to the star and back, so their path bends. Each clock measures the length of its own path. Spacetime’s rule has a minus sign: distance counts against time. So the bent path holds 4.8 years, and the straight one holds 8."
+   },
+   {
+    "title": "Move the turnaround",
+    "body": "A faster trip bends the path more and leaves less time on it. Drag the turnaround back to the home path, and the twins agree again."
+   }
+  ]
+ },
+ "note": "Owner review draft: hand-written subtitles, no research or review. Not published as an investigation."
+}

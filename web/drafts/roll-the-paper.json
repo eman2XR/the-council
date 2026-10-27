@@ -1,0 +1,38 @@
+{
+ "id": "roll-the-paper",
+ "provider": "draft",
+ "status": "draft",
+ "created": "2026-10-27T19:00:00-07:00",
+ "question": "Roll the paper: straight lines stay straight",
+ "topic": "fall-cone",
+ "scene": {
+  "ray_count": 1,
+  "show_reference": true,
+  "show_labels": true,
+  "line_width": 2.5,
+  "duration": 24,
+  "controls": "first",
+  "kind": "fall-cone",
+  "title": "Roll the paper: straight lines stay straight",
+  "subtitle": "The bent map of height and time, rolled into a paper cone. The ball’s path is still the straightest line on it.",
+  "accent": "blue",
+  "mass": 1,
+  "distance": 2.5,
+  "takeaway": "Spacetime can be curved while falling things still go as straight as they can through it.",
+  "beats": [
+   {
+    "title": "A flat map",
+    "body": "Here is a map of height and time. Without gravity it stays flat, and staying put is the straight path."
+   },
+   {
+    "title": "Roll it up",
+    "body": "With gravity, the map is bent so the ball’s path is straight. Now roll the paper into a cone. Nothing stretches, so the ball’s path is still the straightest line on the paper."
+   },
+   {
+    "title": "Curved, but straight",
+    "body": "On the cone the paths look curved from outside. On the paper itself, the ball still goes as straight as it can. That is what falling is."
+   }
+  ]
+ },
+ "note": "Owner review draft: hand-written subtitles, no research or review. Not published as an investigation."
+}

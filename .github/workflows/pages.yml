@@ -26,7 +26,7 @@ jobs:
       - name: Check coordinator and providers without live model calls
         run: python -m unittest discover -s tests -v
       - name: Check physics
-        run: node -e "const p=require('./web/physics.js'); const c=['light-bending','gravity-clocks','spacetime','interference','two-slit-particles','standing-waves','tunneling','wave-packet','quantum-well','falling-time','diffraction','twin-trip'].flatMap(k=>p.checksFor(k)); if(c.some(x=>!x.pass))process.exit(1)"
+        run: node -e "const p=require('./web/physics.js'); const c=['light-bending','gravity-clocks','spacetime','interference','two-slit-particles','standing-waves','tunneling','wave-packet','quantum-well','falling-time','diffraction','twin-trip','spacetime-paths','fall-fan','fall-cone','river'].flatMap(k=>p.checksFor(k)); if(c.some(x=>!x.pass))process.exit(1)"
       - name: Stage public demo only
         run: |
           mkdir _site
@@ -35,6 +35,7 @@ jobs:
           if [ -f web/dashboard.json ]; then cp web/dashboard.json _site/; fi
           if [ -f web/proposals.json ]; then cp web/proposals.json _site/; fi
           if [ -d web/published ]; then cp -R web/published _site/; fi
+          if [ -d web/drafts ]; then cp -R web/drafts _site/; fi
           # Version asset links per commit so browsers never mix cached files from different deploys.
           sed -i "s/?v=dev/?v=${GITHUB_SHA::7}/g" _site/index.html
           touch _site/.nojekyll

@@ -596,6 +596,138 @@ function dragPaths(w,h,spec,st,x,y,grab){
  return {mass:Math.min(1,xs/t/.9),distance:Math.min(2.5,Math.max(1,t/1.6))};
 }
 
+// Bending the map of height and time so that the path of most time becomes a straight line.
+function fanPoint(F,t,hh,s){
+ const flat=[t-F.T/2,hh];if(!(F.g>1e-6)||s<=0)return flat;
+ const th=F.g*(t-F.T/2), R=F.R0-hh, bent=[R*Math.sin(th),F.R0-R*Math.cos(th)];
+ return [flat[0]+(bent[0]-flat[0])*s,flat[1]+(bent[1]-flat[1])*s];
+}
+function fanPaths(F){
+ // Held at the ground, the ball's real path, and a too-low and too-high throw between the same two events.
+ const shape=F.g>1e-6?F.ball:(t=>.3*4*t*(F.T-t)/(F.T*F.T)/(1/1)), top=Math.max(.3,shape(F.T/2));
+ return {top,list:[['held',t=>0],['low',t=>.45*shape(t)],['ball',shape],['high',t=>1.7*shape(t)]]};
+}
+function fanStage(st){
+ // Chapter 1: flat, no gravity. Chapter 2: the throw, then the map bends. Chapter 3: bent, explore.
+ const since=st.since??st.t;
+ if(st.stage===0)return {s:0,u:Math.min(1,since*.22)};
+ if(st.stage===1)return {s:smooth((since-5.5)/4),u:Math.min(1,since*.22)};
+ return {s:1,u:Math.min(1,((since*.2)%1.35))};
+}
+function drawFan(ctx,w,h,spec,st){
+ const accent=ACCENT[spec.accent]||ACCENT.blue, F=Physics.fan(st.mass,st.distance), small=w<520, {s,u}=fanStage(st), P=fanPaths(F);
+ const hTop=Math.max(P.top*1.9,.55), Fmax=Physics.fan(1,st.distance);
+ // A fixed scale for this trip length, so bending never changes the size of the drawing.
+ const box=(()=>{let x0=1e9,x1=-1e9,y0=1e9,y1=-1e9;for(const ss of [0,1])for(const t of [0,F.T/2,F.T])for(const hh of [0,hTop]){const [x,y]=fanPoint(Fmax,t,hh,ss);x0=Math.min(x0,x);x1=Math.max(x1,x);y0=Math.min(y0,y);y1=Math.max(y1,y);}return {x0,x1,y0,y1};})();
+ const area=small?{l:w*.08,r:w*.92,t:96,b:h*.56}:{l:w*.05,r:w*.56,t:60,b:h*.82};
+ const k=Math.min((area.r-area.l)/(box.x1-box.x0),(area.b-area.t)/(box.y1-box.y0+.15)), cx=(area.l+area.r)/2-(box.x0+box.x1)/2*k, by=area.b-(-box.y0)*k;
+ const S=([x,y])=>[cx+x*k,by-y*k], at=(t,hh)=>S(fanPoint(F,t,hh,s));
+ // The map itself: lines of equal height and of equal time.
+ for(let i=0;i<=6;i++){const hh=hTop*i/6;trace(ctx,Array.from({length:41},(_,j)=>at(F.T*j/40,hh)));ctx.strokeStyle=i===0?'rgba(122,84,52,.7)':'rgba(20,23,28,.09)';ctx.lineWidth=i===0?2:1;ctx.stroke();}
+ for(let j=0;j<=8;j++){const t=F.T*j/8;trace(ctx,[at(t,0),at(t,hTop)]);ctx.strokeStyle='rgba(20,23,28,.07)';ctx.lineWidth=1;ctx.stroke();}
+ if(F.g>1e-6){const shade=ctx.createLinearGradient(0,at(F.T/2,0)[1],0,at(F.T/2,hTop)[1]);shade.addColorStop(0,`rgba(245,158,66,${.2*Math.min(1,F.g/.3)})`);shade.addColorStop(1,'rgba(245,158,66,0)');
+  ctx.beginPath();Array.from({length:41},(_,j)=>at(F.T*j/40,0)).forEach(([x,y],i)=>i?ctx.lineTo(x,y):ctx.moveTo(x,y));Array.from({length:41},(_,j)=>at(F.T*(40-j)/40,hTop)).forEach(([x,y])=>ctx.lineTo(x,y));ctx.closePath();ctx.fillStyle=shade;ctx.fill();}
+ // Paths between the same two events.
+ const curve=f=>Array.from({length:81},(_,j)=>{const t=F.T*j/80;return at(t,f(t));});
+ for(const [name,f] of P.list){if(name==='held')continue;if(name!=='ball'||F.g<=1e-6){trace(ctx,curve(f));ctx.setLineDash([4,5]);ctx.strokeStyle='rgba(20,23,28,.32)';ctx.lineWidth=1.2;ctx.stroke();ctx.setLineDash([]);}}
+ if(F.g>1e-6){const c=curve(F.ball);
+  // A ruler laid along the ball's path once the map is bent: it is straight.
+  if(s>.85){const [a,b]=[c[0],c.at(-1)],len=Math.hypot(b[0]-a[0],b[1]-a[1]),nx=-(b[1]-a[1])/len,ny=(b[0]-a[0])/len,off=small?9:12;ctx.globalAlpha=(s-.85)/.15;
+   ctx.beginPath();ctx.moveTo(a[0]+nx*2,a[1]+ny*2);ctx.lineTo(b[0]+nx*2,b[1]+ny*2);ctx.lineTo(b[0]+nx*off,b[1]+ny*off);ctx.lineTo(a[0]+nx*off,a[1]+ny*off);ctx.closePath();ctx.fillStyle='rgba(234,214,170,.55)';ctx.fill();
+   for(let i=1;i<20;i++){const x=a[0]+(b[0]-a[0])*i/20,y=a[1]+(b[1]-a[1])*i/20,l=i%5?4:7;trace(ctx,[[x+nx*2,y+ny*2],[x+nx*(2+l),y+ny*(2+l)]]);ctx.strokeStyle='rgba(122,84,52,.5)';ctx.lineWidth=1;ctx.stroke();}ctx.globalAlpha=1;}
+  trace(ctx,c);ctx.strokeStyle=accent;ctx.lineWidth=2.8;ctx.lineCap='round';ctx.stroke();}
+ const t=u*F.T, marks=[[at(t,0),'#14171c'],...(F.g>1e-6?[[at(t,F.ball(t)),accent]]:[])];
+ for(const [[x,y],c] of marks){ctx.beginPath();ctx.arc(x,y,6,0,TAU);ctx.fillStyle=c;ctx.fill();ctx.beginPath();ctx.arc(x,y,2.2,0,TAU);ctx.fillStyle='#fff';ctx.fill();}
+ if(!st.labels)return;
+ const size=small?10:11;
+ text(ctx,'leave',...at(0,0).map((v,i)=>i?v+16:v),{align:'center',size,weight:600,color:'rgba(20,23,28,.75)'});
+ text(ctx,'meet again',...at(F.T,0).map((v,i)=>i?v+16:v),{align:small?'right':'center',size,weight:600,color:'rgba(20,23,28,.75)'});
+ if(s<.2){text(ctx,'height ↑',at(0,hTop)[0],at(0,hTop)[1]-12,{size:10});text(ctx,'time →',at(F.T,0)[0],at(F.T,0)[1]+30,{align:'right',size:10});}
+ const px=small?w*.06:w*.6, py=small?h*.64:h*.2, lh=small?17:24, wrap=small?52:46;
+ const lines=F.g<=1e-6?['A map of height and time.','Without gravity it is flat, and the straight path,','staying put, keeps the most time.']
+  :s<.5?['A flat map of height and time.','The thrown ball’s path curves.','The held clock’s path is straight.']
+  :['The same map, bent so that straight lines','are the paths that keep the most time.','The ball’s path is now straight: nothing pushes it.','The held clock’s path curves:','the ground pushes it the whole time.'];
+ text(ctx,lines[0],px,py,{size:small?12:16,weight:700,color:'#14171c'});
+ lines.slice(1).forEach((l,i)=>text(ctx,l,px,py+lh*(i+1.2),{size:small?11:14,color:l.includes('ball')?accent:'rgba(20,23,28,.75)',weight:l.includes('ball')?600:500}));
+ if(F.g>1e-6&&!small)text(ctx,'Higher up, clocks run faster. That is what bends the map.',px,py+lh*(lines.length+1),{size:12,color:'rgba(180,83,15,.9)'});
+}
+
+// The bent map rolled into a cone of paper: the ball's path is still a straight line on the paper.
+function drawCone(ctx,w,h,spec,st){
+ const accent=ACCENT[spec.accent]||ACCENT.blue, F=Physics.fan(st.mass,st.distance), small=w<520, since=st.since??st.t;
+ if(!(F.g>1e-6))return drawFan(ctx,w,h,spec,st);
+ const roll=st.stage===1?smooth((since-7)/5):st.stage===0?0:1, P=fanPaths(F), hTop=Math.max(P.top*1.9,.55), Phi=F.g*F.T;
+ const alpha=TAU+(Phi*1.3-TAU)*roll, sinB=Math.min(1,alpha/TAU), cosB=Math.sqrt(1-sinB*sinB), yaw=Math.sin(st.t*.35)*.5*roll, tilt=1.05*roll;
+ // Roll the sector into a cone about its centre: flat when the cone's half-angle is 90 degrees.
+ const P3=(t,hh)=>{const th=F.g*(t-F.T/2), R=F.R0-hh, psi=th*TAU/alpha;return [R*sinB*Math.sin(psi),F.R0-R*sinB*Math.cos(psi),R*cosB];};
+ const mid=P3(F.T/2,hTop/2);
+ const view=([X,Y,Z])=>{X-=mid[0];Y-=mid[1];Z-=mid[2];const c=Math.cos(yaw),s=Math.sin(yaw);[X,Z]=[X*c+Z*s,-X*s+Z*c];const ct=Math.cos(tilt),stt=Math.sin(tilt);[Y,Z]=[Y*ct-Z*stt,Y*stt+Z*ct];return [X,Y,Z];};
+ const area=small?{l:w*.08,r:w*.92,t:96,b:h*.56}:{l:w*.05,r:w*.56,t:60,b:h*.82};
+  const flatW=2*F.R0*Math.sin(Phi/2)+.2, flatH=hTop+F.R0*(1-Math.cos(Phi/2))+.2, k=Math.min((area.r-area.l)/flatW,(area.b-area.t)/flatH), D=F.R0*4;
+ const S=p=>{const [X,Y,Z]=view(p), f=D/(D+Z);return [(area.l+area.r)/2+X*k*f,(area.t+area.b)/2-Y*k*f,Z];};
+ // Paper: quads drawn back to front, shaded by how squarely they face the viewer.
+ const nt=24,nh=6,quads=[];
+ for(let i=0;i<nt;i++)for(let j=0;j<nh;j++){const t0=F.T*i/nt,t1=F.T*(i+1)/nt,h0=hTop*j/nh,h1=hTop*(j+1)/nh;
+  const c=[S(P3(t0,h0)),S(P3(t1,h0)),S(P3(t1,h1)),S(P3(t0,h1))];
+  const ax=c[1][0]-c[0][0],ay=c[1][1]-c[0][1],bx=c[3][0]-c[0][0],byy=c[3][1]-c[0][1],area2=Math.abs(ax*byy-ay*bx), flatArea=(F.T/nt)*(hTop/nh)*k*k;
+  quads.push({c,z:(c[0][2]+c[2][2])/2,light:Math.min(1,area2/flatArea/1.1)});}
+ quads.sort((a,b)=>b.z-a.z);
+ for(const q of quads){ctx.beginPath();q.c.forEach(([x,y],i)=>i?ctx.lineTo(x,y):ctx.moveTo(x,y));ctx.closePath();const l=.82+.18*q.light;ctx.fillStyle=`rgb(${Math.round(252*l)},${Math.round(246*l)},${Math.round(234*l)})`;ctx.fill();ctx.strokeStyle='rgba(20,23,28,.06)';ctx.lineWidth=1;ctx.stroke();}
+ const curve=f=>Array.from({length:81},(_,j)=>{const t=F.T*j/80;return S(P3(t,f(t)));});
+ const drawCurve=(c,style,width,dash)=>{for(let i=1;i<c.length;i++){trace(ctx,[c[i-1],c[i]]);ctx.globalAlpha=c[i][2]>.05?.35:1;ctx.strokeStyle=style;ctx.lineWidth=width;if(dash)ctx.setLineDash(dash);ctx.stroke();ctx.setLineDash([]);}ctx.globalAlpha=1;};
+ drawCurve(curve(t=>0),'rgba(122,84,52,.75)',2);
+ for(const [name,f] of P.list)if(name==='low'||name==='high')drawCurve(curve(f),'rgba(20,23,28,.32)',1.2,[4,5]);
+ drawCurve(curve(F.ball),accent,2.8);
+ const u=Math.min(1,(since*.2)%1.35), t=u*F.T;
+ for(const [p,c] of [[S(P3(t,0)),'#14171c'],[S(P3(t,F.ball(t))),accent]]){ctx.beginPath();ctx.arc(p[0],p[1],6,0,TAU);ctx.fillStyle=c;ctx.fill();ctx.beginPath();ctx.arc(p[0],p[1],2.2,0,TAU);ctx.fillStyle='#fff';ctx.fill();}
+ if(!st.labels)return;
+ const px=small?w*.06:w*.6, py=small?h*.64:h*.2, lh=small?17:24;
+ const lines=roll<.03?['The bent map, still flat on the table.','The ball’s path is a straight line on it.','Now roll the paper up.']:roll<.97?['Rolling the paper up…','Nothing stretches, so the ball’s line','stays the straightest line on the paper.']
+  :['Rolled into a cone, the paper is curved,','but nothing on it has stretched.','The ball’s path is still the straightest line','you could draw on this paper.','Straightest paths keep the most time: that is falling.'];
+ text(ctx,lines[0],px,py,{size:small?12:16,weight:700,color:'#14171c'});
+ lines.slice(1).forEach((l,i)=>text(ctx,l,px,py+lh*(i+1.2),{size:small?11:14,color:'rgba(20,23,28,.75)'}));
+ if(!small)text(ctx,'Uniform gravity needs no real curvature: the paper rolls without stretching.',px,py+lh*(lines.length+1),{size:12,color:'rgba(20,23,28,.55)'});
+}
+
+// River model of a black hole: space flows inward; light swims through it at light speed.
+function drawRiver(ctx,w,h,spec,st){
+ const accent=ACCENT[spec.accent]||ACCENT.gold, R=Physics.river(st.mass,st.distance), small=w<520;
+ const cx=small?w/2:w*.33, cy=small?h*.36:h*.5, rmax=3, k=Math.min(small?w*.46:w*.3,small?h*.3:h*.44)/rmax, since=st.since??st.t;
+ // The inner region and the horizon, where the inflow reaches light speed.
+ const bg=ctx.createRadialGradient(cx,cy,0,cx,cy,rmax*k);bg.addColorStop(0,'rgba(20,23,28,.12)');bg.addColorStop(1,'rgba(20,23,28,0)');ctx.fillStyle=bg;ctx.beginPath();ctx.arc(cx,cy,rmax*k,0,TAU);ctx.fill();
+ if(R.rs>1e-4){ctx.beginPath();ctx.arc(cx,cy,R.rs*k,0,TAU);ctx.fillStyle='rgba(20,23,28,.85)';ctx.fill();ctx.setLineDash([5,4]);ctx.strokeStyle='rgba(217,119,6,.9)';ctx.lineWidth=2;ctx.stroke();ctx.setLineDash([]);}
+ // Flowing space: specks carried inward at the local flow speed, faster closer in.
+ for(let i=0;i<90;i++){const a=hash(i*7.13)*TAU, r0=rmax*(.35+.65*hash(i*3.71)), phase=hash(i*1.9)*20;
+  let r=r0;if(R.rs>1e-4){// Time to fall from rmax to r with dr/dt = -sqrt(rs/r): t = (2/3)(rmax^1.5 - r^1.5)/sqrt(rs).
+   const span=(2/3)*(Math.pow(rmax,1.5)-Math.pow(.05,1.5))/Math.sqrt(R.rs), tt=((since*.5+phase)%span);r=Math.pow(Math.max(0,Math.pow(rmax,1.5)-1.5*Math.sqrt(R.rs)*tt),2/3);}
+  if(r<.05)continue;const x=cx+Math.cos(a)*r*k,y=cy+Math.sin(a)*r*k, len=Math.min(14,4+8*R.flow(r));
+  trace(ctx,[[x,y],[x-Math.cos(a)*len,y-Math.sin(a)*len]]);ctx.strokeStyle=r<R.rs?'rgba(255,255,255,.35)':'rgba(37,99,235,.35)';ctx.lineWidth=1.4;ctx.lineCap='round';ctx.stroke();}
+ // Flashes of light sent outward from one ring, one every two seconds.
+ ctx.beginPath();ctx.arc(cx,cy,R.re*k,0,TAU);ctx.setLineDash([2,4]);ctx.strokeStyle='rgba(20,23,28,.3)';ctx.lineWidth=1;ctx.stroke();ctx.setLineDash([]);
+ const emitter=[cx+R.re*k*Math.cos(-.6),cy+R.re*k*Math.sin(-.6)];
+ for(let n=0;n<6;n++){const age=((since*.5)%2)+2*n;if(age>11)continue;const r=R.light(R.re,1,age*.4);if(r>rmax||r<.03)continue;
+  const p=[cx+r*k*Math.cos(-.6),cy+r*k*Math.sin(-.6)], glow=ctx.createRadialGradient(...p,0,...p,12);glow.addColorStop(0,'rgba(255,196,80,.95)');glow.addColorStop(1,'rgba(255,196,80,0)');ctx.fillStyle=glow;ctx.fillRect(p[0]-12,p[1]-12,24,24);}
+ ctx.beginPath();ctx.arc(...emitter,5,0,TAU);ctx.fillStyle=accent;ctx.fill();ctx.strokeStyle='#fff';ctx.lineWidth=1.5;ctx.stroke();
+ if(!st.labels)return;
+ const size=small?10:11, out=1-R.flow(R.re);
+ if(R.rs>1e-4)pill(ctx,'horizon: inflow = light speed',cx,cy+R.rs*k+16,{align:'center',size:10,weight:600,color:'rgba(180,83,9,.95)'});
+ pill(ctx,'flash sent outward',emitter[0]+10,emitter[1]-14,{size:10,weight:600,color:'rgba(20,23,28,.8)'});
+ const px=small?w*.06:w*.64, py=small?h*.72:h*.22, lh=small?17:24;
+ const lines=R.rs<=1e-4?['No black hole: space is still.','Light swims outward at light speed and escapes.']
+  :['Space flows inward, faster closer in.','Light always swims at light speed through it.',
+    out>.02?`Here the flow is ${Math.round(R.flow(R.re)*100)}% of light speed: the flash escapes slowly.`:out>-.02?'At the horizon the flow equals light speed: the flash stands still.':`Inside, the flow beats light (${Math.round(R.flow(R.re)*100)}%): the flash is swept in.`];
+ text(ctx,lines[0],px,py,{size:small?12:16,weight:700,color:'#14171c'});
+ lines.slice(1).forEach((l,i)=>text(ctx,l,px,py+lh*(i+1.2),{size:small?11:14,color:'rgba(20,23,28,.75)'}));
+ // Flow speed against distance, with light speed marked.
+ if(!small&&R.rs>1e-4){const gx=px,gy=py+lh*5.4,gw=w*.28,gh=h*.22;trace(ctx,[[gx,gy],[gx,gy+gh],[gx+gw,gy+gh]]);ctx.strokeStyle='rgba(20,23,28,.35)';ctx.lineWidth=1;ctx.stroke();
+  const X=r=>gx+r/rmax*gw, Y=v=>gy+gh-Math.min(v,1.6)/1.6*gh;
+  trace(ctx,Array.from({length:120},(_,i)=>{const r=.12+i/119*(rmax-.12);return [X(r),Y(R.flow(r))];}));ctx.strokeStyle='rgba(37,99,235,.8)';ctx.lineWidth=2;ctx.stroke();
+  ctx.setLineDash([4,4]);trace(ctx,[[gx,Y(1)],[gx+gw,Y(1)]]);ctx.strokeStyle='rgba(217,119,6,.8)';ctx.lineWidth=1.2;ctx.stroke();ctx.setLineDash([]);
+  text(ctx,'light speed',gx+gw,Y(1)-9,{align:'right',size:10,color:'rgba(180,83,9,.95)'});text(ctx,'inflow speed',gx+6,gy+4,{size:10,color:'rgba(37,99,235,.9)'});text(ctx,'distance from centre →',gx+gw,gy+gh+14,{align:'right',size:10});
+  const ex=X(R.re);trace(ctx,[[ex,gy],[ex,gy+gh]]);ctx.strokeStyle=rgba(accent,.6);ctx.stroke();text(ctx,'flash',ex+4,gy+gh-10,{size:10,color:rgba(accent,.95)});
+  const hx=X(R.rs);ctx.setLineDash([2,3]);trace(ctx,[[hx,Y(1)],[hx,gy+gh]]);ctx.strokeStyle='rgba(20,23,28,.4)';ctx.stroke();ctx.setLineDash([]);text(ctx,'horizon',hx,gy+gh+14,{align:'center',size:10});}
+}
+
 const ENGINES={
  'light-bending':{draw:drawLight,a:['Mass','how much mass sits nearby'],b:['Passing distance','how close the light passes','×'],
   fa:a=>a.toFixed(2),fb:b=>b.toFixed(2)+'×',
@@ -651,6 +783,21 @@ const ENGINES={
   measure:['Traveller comes home younger by',a=>(Physics.agingGap(a)*100).toFixed(1)+'%'],scale:'',demoEnd:()=>2.5,
   disclosure:'Exact special relativity in years and light-years; the turnaround is instant. Distances on the page are not spacetime lengths: tilted paths look longer than they are.',
   try:'Drag the turnaround sideways: the faster the trip, the shorter the traveller’s path. Drag it straight down to the home path: the twins agree again.',aria:'A spacetime diagram: the home twin’s straight path and the traveller’s bent path between the same goodbye and reunion, with one dot per year of each twin’s own time.'},
+ 'fall-fan':{draw:drawFan,a:['Gravity','how strong gravity is'],b:['Time in the air','between leaving and meeting again',''],
+  fa:a=>a<.005?'none':Math.round(a*100)+'%',fb:b=>Physics.fan(1,b).T.toFixed(1)+' units',
+  measure:['Map bent by',(a,b)=>(Physics.fan(a,b).g*Physics.fan(a,b).T*180/Math.PI).toFixed(0)+'°'],scale:'',demoEnd:()=>2.5,
+  disclosure:'Gravity is hugely exaggerated. The bent map is drawn so that straight lines are the paths of most time; for weak gravity they match free fall exactly. Real spacetime’s geometry, with its minus sign, cannot be drawn exactly on paper.',
+  try:'Turn gravity off: the map goes flat. Turn it up and watch the bend grow.',aria:'A map of height and time bends so that the thrown ball’s path becomes a straight line and the held clock’s path curves.'},
+ 'fall-cone':{draw:drawCone,a:['Gravity','how strong gravity is'],b:['Time in the air','between leaving and meeting again',''],
+  fa:a=>a<.005?'none':Math.round(a*100)+'%',fb:b=>Physics.fan(1,b).T.toFixed(1)+' units',
+  measure:['Map bent by',(a,b)=>(Physics.fan(a,b).g*Physics.fan(a,b).T*180/Math.PI).toFixed(0)+'°'],scale:'',demoEnd:()=>2.5,
+  disclosure:'Gravity is hugely exaggerated. The paper is the bent map of height and time rolled into a cone; rolling does not stretch it, so straight lines stay straightest. Real spacetime’s minus-sign geometry cannot be built exactly from paper.',
+  try:'Change the gravity and watch the cone tighten or open up.',aria:'The bent map of height and time rolled into a paper cone, with the ball’s path drawn as a straight line on the paper.'},
+ 'river':{draw:drawRiver,a:['Black hole mass','sets the size of the horizon'],b:['Flash position','where the light is sent from',''],
+  fa:a=>a<.005?'none':Math.round(a*100)+'%',fb:b=>(Physics.river(1,b).re).toFixed(2)+' horizon sizes',
+  measure:['Inflow where the flash starts',(a,b)=>Math.round(Physics.river(a,b).flow(Physics.river(a,b).re)*100)+'% of light'],scale:'Seen from above',demoEnd:()=>1,
+  disclosure:'Exact for a non-rotating black hole in the river (Painlevé–Gullstrand) picture; distances in horizon sizes, motion slowed down. The flowing specks show the inflow speed, not real particles.',
+  try:'Move the flash inside the horizon: can it get out? Shrink the black hole and try again.',aria:'Space flowing into a black hole like a river, with light flashes swimming outward against the current.'}
 };
 const engineOf=spec=>ENGINES[spec?.kind]||ENGINES['light-bending'];
 

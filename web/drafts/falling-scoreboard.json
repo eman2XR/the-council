@@ -1,0 +1,38 @@
+{
+ "id": "falling-scoreboard",
+ "provider": "draft",
+ "status": "draft",
+ "created": "2026-10-27T19:00:00-07:00",
+ "question": "The path that keeps the most time",
+ "topic": "falling-time",
+ "scene": {
+  "ray_count": 1,
+  "show_reference": true,
+  "show_labels": true,
+  "line_width": 2.5,
+  "duration": 24,
+  "controls": "first",
+  "kind": "falling-time",
+  "title": "The path that keeps the most time",
+  "subtitle": "Height gains time, speed loses it. The arc a ball really follows is the best trade.",
+  "accent": "blue",
+  "mass": 1,
+  "distance": 1.6,
+  "takeaway": "A falling ball is not pushed. It follows the path between two moments that keeps the most time.",
+  "beats": [
+   {
+    "title": "No gravity: stay put",
+    "body": "Without gravity, a thrown clock only loses time by moving. Staying put keeps the most time, just like the home twin."
+   },
+   {
+    "title": "Turn gravity on",
+    "body": "Now clocks run faster higher up, so going up gains time. But getting there means moving fast, which loses time. A low throw gains little, and a high throw loses too much."
+   },
+   {
+    "title": "The best trade",
+    "body": "The path that keeps the most time is exactly the arc a thrown ball follows. Change the gravity and the best arc changes with it."
+   }
+  ]
+ },
+ "note": "Owner review draft: hand-written subtitles, no research or review. Not published as an investigation."
+}

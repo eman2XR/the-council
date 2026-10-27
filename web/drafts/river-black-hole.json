@@ -1,0 +1,38 @@
+{
+ "id": "river-black-hole",
+ "provider": "draft",
+ "status": "draft",
+ "created": "2026-10-27T19:00:00-07:00",
+ "question": "A black hole as a river of space",
+ "topic": "river",
+ "scene": {
+  "ray_count": 1,
+  "show_reference": true,
+  "show_labels": true,
+  "line_width": 2.5,
+  "duration": 24,
+  "controls": "second",
+  "kind": "river",
+  "title": "A black hole as a river of space",
+  "subtitle": "Space flows inward, faster closer in. Light swims through it at light speed. The horizon is where the flow wins.",
+  "accent": "gold",
+  "mass": 1,
+  "distance": 1.9,
+  "takeaway": "A black hole’s horizon is where space flows inward at light speed. Inside, even light is carried in.",
+  "beats": [
+   {
+    "title": "Still space",
+    "body": "Without a black hole, space is still. A flash of light swims outward at light speed and gets away."
+   },
+   {
+    "title": "Space starts to flow",
+    "body": "Add a black hole and space flows inward, faster closer in. Light always swims at light speed through the flowing space. Out here the flow is slower than light, so the flash still escapes, slowly."
+   },
+   {
+    "title": "Past the horizon",
+    "body": "At the horizon the flow equals light speed: an outward flash stands still. Inside, the flow is faster than light and sweeps every flash inward."
+   }
+  ]
+ },
+ "note": "Owner review draft: hand-written subtitles, no research or review. Not published as an investigation."
+}
