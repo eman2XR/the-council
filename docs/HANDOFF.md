@@ -20,6 +20,12 @@ The user is cost-sensitive and prefers existing Claude Code/Codex CLI authentica
 
 The website is static. GitHub does not run the model agents; the Mac runs them and pushes accepted public files. A deployed website remains available when the Mac is off. Research needs an awake, logged-in Mac and the managed Claude VPN connection.
 
+### Paused (2026-10-27) — read first
+
+The owner paused new investigations while the investigation format is reworked. `~/Projects/the-council-worker/.council-state/paused` makes `daily()` return without using a slot (the daily project review still runs); `web/dashboard.json` shows "New investigations paused". Delete the file and set the dashboard schedule back to enabled to resume. Do not start batches until the owner says the format is ready.
+
+Open design work the owner raised: illustrations must be concrete and intuitive (the twin-trip engine is the model; graph-style engines — spacetime diagram, tunnelling, wave packet, falling-time — still need concrete redesigns); sliders only where they build intuition (scene field `controls`); subtitles live inside the animation box; the end of playback shows the idea. `python3 -m lab.qa` captures every page and state at desktop and phone sizes for review; run it after any UI change. Eleven investigations are published; the two from 2026-10-26 carry "sources not retrieved" labels, and the old spacetime-diagram twin guide is superseded by the twin-trip one (retraction is the owner's call).
+
 ## Current checkpoint — read before resuming (2026-10-26 night)
 
 The user asked for an autonomous overnight session (started 22:28 PT): at least 10 investigations, continuous website/visual improvement, and a scheduled self-improvement review with owner approval. High-level goal: intuitive understanding of physics through honest interactive visuals, eventually scoped investigations of open problems; an autonomous lab with humans in the loop.
