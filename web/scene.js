@@ -192,7 +192,7 @@ function drawSpacetime(ctx,w,h,spec,st){
 let fieldBuffer=null;
 function drawInterference(ctx,w,h,spec,st){
  const accent=ACCENT[spec.accent]||ACCENT.blue, A=st.mass, lam=Math.max(22,Math.min(w,h)/9), k=TAU/lam, d=Physics.separation(st.distance)*lam;
- const cx=w/2, sy=st.labels&&w<520?h*.22:h*.1, screen=h*.8, s1=[cx-d/2,sy], s2=[cx+d/2,sy], phase=st.t*TAU*.55;
+ const cx=w/2, sy=st.labels&&w<520?h*.22:h*.1, screen=st.labels?h*.8:h, s1=[cx-d/2,sy], s2=[cx+d/2,sy], phase=st.t*TAU*.55;
  const cell=w<520?3:4, cols=Math.ceil(w/cell), rows=Math.ceil(screen/cell);
  fieldBuffer=fieldBuffer||document.createElement('canvas');
  if(fieldBuffer.width!==cols||fieldBuffer.height!==rows){fieldBuffer.width=cols;fieldBuffer.height=rows;}
@@ -207,9 +207,11 @@ function drawInterference(ctx,w,h,spec,st){
  fctx.putImageData(image,0,0);ctx.imageSmoothingEnabled=true;ctx.drawImage(fieldBuffer,0,0,cols*cell,rows*cell);
  // Time-averaged brightness on the screen: crests meeting crests stay bright.
  const band=h*.08, sx0=w*.04, sx1=w*.96;
+ if(st.labels){
  const pts=[];for(let i=0;i<=200;i++){const x=sx0+(sx1-sx0)*i/200, dr=Math.hypot(x-s1[0],screen-s1[1])-Math.hypot(x-s2[0],screen-s2[1]);pts.push([x,Physics.brightness(A,k*dr)]);}
- ctx.fillStyle='#fff';ctx.fillRect(0,screen,w,h-screen);
+ ctx.fillStyle='rgba(255,255,255,.7)';ctx.fillRect(0,screen,w,h-screen);
  for(const [x,I] of pts){ctx.fillStyle=rgba(accent,.08+.85*I);ctx.fillRect(x-1.5,screen+6,(sx1-sx0)/200+1,band);}
+ }
  for(const [p,on] of [[s1,1],[s2,A]]){ctx.globalAlpha=on>0.001?.4+.6*Math.min(1,on):.25;ctx.beginPath();ctx.arc(p[0],p[1],6,0,TAU);ctx.fillStyle=on>0.001?accent:'#fff';ctx.fill();ctx.strokeStyle='rgba(20,23,28,.4)';ctx.lineWidth=1;ctx.stroke();ctx.globalAlpha=1;}
  if(st.labels){
   const size=w<520?10:11;
@@ -409,7 +411,7 @@ function drawFall(ctx,w,h,spec,st){
 let gapBuffer=null;
 function drawGap(ctx,w,h,spec,st){
  const accent=ACCENT[spec.accent]||ACCENT.blue, G=Physics.gap(st.mass,st.distance), small=w<520;
- const u=Math.min(w,h)/12, k=TAU/(G.lambda*u), yb=h*(st.labels&&small?.3:.24), screen=h*.8, cx=w/2, phase=st.t*TAU*.55, open=G.width!==Infinity;
+ const u=Math.min(w,h)/12, k=TAU/(G.lambda*u), yb=h*(st.labels&&small?.3:.24), screen=st.labels?h*.8:h, cx=w/2, phase=st.t*TAU*.55, open=G.width!==Infinity;
  const half=open?Math.min(w*.45,G.width*u/2):w;
  // Huygens: the open gap acts as a row of in-phase sources; with no barrier the plane wave continues.
  const n=open?Math.max(6,Math.min(16,Math.ceil(G.width*u/(G.lambda*u)*4))):0, src=Array.from({length:n},(_,i)=>cx-half+(i+.5)/n*2*half);
@@ -429,7 +431,8 @@ function drawGap(ctx,w,h,spec,st){
  g.putImageData(image,0,0);ctx.imageSmoothingEnabled=true;ctx.drawImage(gapBuffer,0,0,cols*cell,rows*cell);
  if(open){ctx.fillStyle='rgba(20,23,28,.82)';ctx.fillRect(0,yb-4,cx-half,8);ctx.fillRect(cx+half,yb-4,w-cx-half,8);}
  // Screen: time-averaged brightness from the single-gap pattern.
- const band=h*.08;ctx.fillStyle='#fff';ctx.fillRect(0,screen,w,h-screen);
+ if(!st.labels)return;
+ const band=h*.08;ctx.fillStyle='rgba(255,255,255,.7)';ctx.fillRect(0,screen,w,h-screen);
  for(let i=0;i<=200;i++){const x=w*.04+w*.92*i/200, dx=x-cx, s=dx/Math.hypot(dx,screen-yb), I=open?Physics.singleSlit(st.mass,st.distance,s):1;
   ctx.fillStyle=rgba(accent,.08+.85*I);ctx.fillRect(x-1.5,screen+6,w*.92/200+1,band);}
  if(open&&G.sinMin<1&&(spec.show_reference||st.labels)){
@@ -475,7 +478,7 @@ function drawRocket(ctx,x,y,size,dir,thrust,t){
 function drawTwinTrip(ctx,w,h,spec,st){
  const accent=ACCENT[spec.accent]||ACCENT.blue, v=Physics.speed(st.mass), g=Physics.gamma(v), T=Physics.turnaround(st.distance), H=2*T, small=w<520;
  const tc=Math.min(H,((st.t*.42*Math.max(1,H/4.8))%(H+1.6)+H+1.6)%(H+1.6)), leg=tc<=T?tc/T:(H-tc)/T, moving=v>.001&&tc>0&&tc<H;
- const xE=w*(small?.16:.14), xS=w*(small?.86:.84), yTrip=h*(st.labels&&small?.3:.24), r=Math.min(w,h)*.055;
+ const xE=w*(small?.16:.14), xS=w*(small?.86:.84), yTrip=h*(st.labels&&small?.33:.24), r=Math.min(w,h)*.055;
  // The route, Earth and the destination star.
  ctx.setLineDash([3,6]);trace(ctx,[[xE+r*1.3,yTrip],[xS-r*1.1,yTrip]]);ctx.strokeStyle='rgba(20,23,28,.2)';ctx.lineWidth=1.2;ctx.stroke();ctx.setLineDash([]);
  drawEarth(ctx,xE,yTrip,r);drawStar(ctx,xS,yTrip,r*.75,v>.001?1:.35);
@@ -615,11 +618,9 @@ function captions(){
  if(key!==captionKey){captionKey=key;body.textContent=line;body.classList.remove('enter');if(mode==='playing'){void body.offsetWidth;body.classList.add('enter');}}
 }
 function transport(){
- document.querySelectorAll('[data-beat]').forEach((button,i)=>{
-  const c=timeline.chapters[i];
-  button.style.setProperty('--fill',started&&c?clamp((time-c.start)/(c.end-c.start)):0);
-  button.classList.toggle('active',started&&!ended&&i===stage);
- });
+ const progress=started?clamp(time/timeline.total):0, scrub=$('scrub');
+ scrub.style.setProperty('--p',progress);scrub.setAttribute('aria-valuenow',String(Math.round(progress*100)));
+ document.querySelectorAll('#ticks [data-beat]').forEach((tick,i)=>tick.classList.toggle('passed',started&&time>=timeline.chapters[i].start));
  $('clock-time').textContent=`${fmt(started?Math.min(time,timeline.total):0)} / ${fmt(timeline.total)}`;
  const play=$('play'), playing=mode==='playing';
  play.classList.toggle('is-playing',playing);play.setAttribute('aria-label',playing?'Pause':ended?'Replay':'Play');
@@ -649,7 +650,8 @@ function configure(){
 }
 function load(scene){
  // The poster is a still frame a few seconds in, where the comparison is already visible.
- spec=scene;buildTimeline();$('poster-label').textContent=`Play · ${Math.round(timeline.total)} s`;mass=scene.mass;distance=scene.distance;time=scene.duration*.3;mode='live';started=false;ended=false;captionKey='';
+ spec=scene;buildTimeline();
+ $('ticks').replaceChildren(...timeline.chapters.slice(1).map((c,i)=>{const tick=document.createElement('button');tick.type='button';tick.dataset.beat=String(i+1);tick.style.left=`${c.start/timeline.total*100}%`;tick.title=`Chapter ${i+2}: ${spec.beats[i+1].title}`;tick.setAttribute('aria-label',tick.title);tick.onclick=e=>{e.stopPropagation();chapter(i+1);};return tick;}));$('poster-label').textContent=`Play · ${Math.round(timeline.total)} s`;mass=scene.mass;distance=scene.distance;time=scene.duration*.3;mode='live';started=false;ended=false;captionKey='';
  configure();setStage(2);shown=target();paint();
 }
 function restore(){mass=spec.mass;distance=spec.distance;}
@@ -704,7 +706,14 @@ window.CouncilScene={load,seek,play,pause,toggle,chapter,render:t=>{time=t;paint
  checks:()=>Physics.checksFor(spec?.kind)};
 $('play').onclick=toggle;$('poster').onclick=play;
 $('reset').onclick=()=>{started=false;play();};
-document.querySelectorAll('[data-beat]').forEach(b=>b.onclick=()=>chapter(Number(b.dataset.beat)));
+// Scrubbing: click or drag anywhere on the bar; playback continues if it was playing.
+function scrubTo(clientX){
+ const box=$('scrub').getBoundingClientRect(), t=clamp((clientX-box.left)/box.width)*timeline.total, n=chapterAt(t);
+ started=true;ended=false;restore();time=t;setStage(n);shown=target();if(mode!=='playing')mode='paused';last=0;paint();
+}
+$('scrub').addEventListener('pointerdown',e=>{if(!spec||e.target.closest('[data-beat]'))return;$('scrub').setPointerCapture(e.pointerId);scrubTo(e.clientX);});
+$('scrub').addEventListener('pointermove',e=>{if(e.buttons&&$('scrub').hasPointerCapture(e.pointerId))scrubTo(e.clientX);});
+$('scrub').addEventListener('keydown',e=>{if(!spec)return;const step=e.key==='ArrowRight'?5:e.key==='ArrowLeft'?-5:0;if(!step)return;e.preventDefault();const box=$('scrub').getBoundingClientRect();scrubTo(box.left+clamp((time+step)/timeline.total)*box.width);});
 for(const id of ['mass','distance'])$(id).addEventListener('input',e=>input(id,Number(e.target.value)));
 document.addEventListener('keydown',e=>{
  if(e.target.closest('input,textarea,select,button,a,summary')||e.metaKey||e.ctrlKey||e.altKey)return;

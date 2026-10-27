@@ -51,6 +51,8 @@
     </button>
    </div>
 
+   <div id="scrub" class="scrub" role="slider" tabindex="0" aria-label="Playback position" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><i class="fill"></i><span id="ticks"></span></div>
+
    <div class="captions" aria-live="polite">
     <p id="beat-title" class="chapter-label"></p>
     <p id="beat-body" class="caption-line"></p>
@@ -59,11 +61,6 @@
    <div id="after" class="after" hidden><span>Tomorrow’s investigation: <strong id="after-next">a new question</strong></span><a id="after-ask" class="pill" target="_blank" rel="noopener noreferrer">Ask a question</a></div>
    <div class="transport">
     <button id="play" class="round" type="button" aria-label="Play"><span class="icon" aria-hidden="true"></span></button>
-    <div class="chapters" role="group" aria-label="Chapters">
-     <button type="button" data-beat="0" aria-label="Chapter 1"><i></i></button>
-     <button type="button" data-beat="1" aria-label="Chapter 2"><i></i></button>
-     <button type="button" data-beat="2" aria-label="Chapter 3"><i></i></button>
-    </div>
     <span id="clock-time" class="time">0:00 / 0:00</span>
     <button id="reset" class="round quiet" type="button" aria-label="Start over"><span class="restart" aria-hidden="true">↺</span></button>
    </div>

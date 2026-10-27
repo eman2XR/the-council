@@ -22,7 +22,8 @@ CouncilScene.on(type=>{
  if(type==='ended')markWatched(current?.id);
  // Keep the stage and subtitles fully visible while an explanation plays.
  if(type==='play'){const box=document.querySelector('.workspace').getBoundingClientRect();
-  if(box.top<0||box.bottom-box.height*.25>innerHeight)scrollBy({top:box.top-Math.max(12,(innerHeight-box.height)/2),behavior:reduceMotion?'auto':'smooth'});}
+  // Put the scene, bar and subtitle in view: the player's top just below the reading bar.
+  if(Math.abs(box.top-72)>24)scrollBy({top:box.top-72,behavior:reduceMotion?'auto':'smooth'});}
 });
 
 function show(data,{autoplay=false}={}){
