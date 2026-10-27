@@ -63,6 +63,38 @@ node stillness 2a/(1+a). Supported questions: superposition of opposite waves, w
 fixed ends, why higher notes have more nodes. Height exaggerated; partial reflection is an idealized lossy wall; no tension,
 mass density, real frequencies or musical-instrument acoustics beyond analogy. No new-discovery claims.'''+COMMON
 
+TUNNEL_NOTES = '''QUANTUM BARRIER (TUNNELLING). Exact steady-state solution of the one-dimensional Schrodinger equation
+(units hbar = 1, 2m = 1, particle energy E = 1, wavelength 2 pi) for a stream of particles meeting a rectangular barrier.
+Drawn: a band for the barrier; the real part of the wave at one instant (line, rotating in phase over time) and its
+magnitude (shaded band). Left of the barrier the incoming and reflected waves overlap into ripples; inside it decays (or
+oscillates if the barrier is lower than the energy); right of it the transmitted wave is flat in magnitude.
+Field mass sets barrier height V = 2*mass*E (UI "Barrier height", shown as a multiple of the energy, 0 = none); field
+distance sets width 0.6*distance (UI "Barrier width", shown in wavelengths). The readout is the exact reflected fraction R;
+the canvas prints the transmitted percentage T = 1 - R. Supported questions: how a particle can pass a barrier taller than
+its energy, why thicker or taller barriers let less through, why some reflects even from a low barrier. This is a steady
+stream, not one particle's path; do not say the particle "borrows energy" or travels inside the barrier classically.
+No new-discovery claims.'''+COMMON
+
+PACKET_NOTES = '''WAVE PACKET AND UNCERTAINTY. A free quantum particle's wave built from a Gaussian blend of plane waves
+(units hbar = 1, 2m = 1). Top: the real part of the wave (line) and its magnitude (shaded band) along a line; the packet
+moves and slowly spreads (correct free-particle dispersion, time slowed down, loops). Bottom: bars showing how strongly
+each momentum (wavelength) is blended in. Field mass sets the momentum spread 1.1*mass (UI "Momentum mix"; 0 means one pure
+wave with exact momentum, spread over all space); field distance sets the average momentum 2 + 2*(distance - 1)
+(UI "Average momentum"). The readout is the momentum spread; for a Gaussian the position spread times the momentum spread
+equals one half (the minimum allowed). Supported questions: why pinning down position blurs momentum and vice versa, why
+packets spread. Do not describe uncertainty as measurement clumsiness or disturbance; it is a property of waves.
+No new-discovery claims.'''+COMMON
+
+WELL_NOTES = '''FINITE SQUARE WELL (ALLOWED ENERGIES). Bound states of a particle in a one-dimensional finite well
+(units hbar = 1, 2m = 1), found by solving the standard even/odd matching conditions numerically. Drawn: the well (flat
+outside, floor of depth V inside), each allowed energy as a level line with its wave shape drawn on it (the wave leaks
+slightly into the walls), and at the bottom the probability of a mix of the two lowest levels sloshing back and forth
+(time scaled). Field mass sets depth V = 25*mass (UI "Well depth", 0 = no well); field distance sets width
+1 + (distance - 1) (UI "Well width"). The readout is the number of allowed levels; any well in one dimension holds at
+least one, deeper or wider wells hold more. Supported questions: why trapped particles have only certain energies
+(standing waves that fit), why a bigger well has more and closer levels, why the wave leaks into the walls. Energies are to
+scale; wave heights are not. Not an atom model; no spin or 3D. No new-discovery claims.'''+COMMON
+
 TOPICS = {
     'light-bending': {'label':'Light bending', 'question':'Why does gravity bend light?', 'notes':MODEL_NOTES},
     'gravity-clocks': {'label':'Gravity and clocks', 'question':'Why do clocks at different heights tick at different rates?', 'notes':CLOCK_NOTES},
@@ -70,4 +102,7 @@ TOPICS = {
     'interference': {'label':'Wave interference', 'question':'What happens when two waves meet?', 'notes':INTERFERENCE_NOTES},
     'two-slit-particles': {'label':'Particles through two slits', 'question':'Why do particles fired one at a time still make stripes?', 'notes':PARTICLE_NOTES},
     'standing-waves': {'label':'Standing waves', 'question':'Why does a guitar string only play certain notes?', 'notes':ROPE_NOTES},
+    'tunneling': {'label':'Quantum tunnelling', 'question':'How can a particle pass through a wall it cannot climb over?', 'notes':TUNNEL_NOTES},
+    'wave-packet': {'label':'Wave packets and uncertainty', 'question':"Why can't you pin down both where a particle is and how it moves?", 'notes':PACKET_NOTES},
+    'quantum-well': {'label':'Allowed energies in a well', 'question':'Why can a trapped particle only have certain energies?', 'notes':WELL_NOTES},
 }

@@ -95,6 +95,18 @@ ENGINE_SCENES = {
         ('One slit open.', 'Particles land one at a time in a single broad patch.'),
         ('Open the second slit.', 'Each particle still lands at one spot, but the arrivals slowly build stripes.'),
         ('Change the slit spacing.', 'Closer slits give wider stripes. The pattern belongs to the possibilities, not to any single path.')], 'mint'),
+    'QUANTUM BARRIER (TUNNELLING)': _engine_scene('Through a wall it cannot climb', [
+        ('No barrier: everything passes.', 'The wave flows on unchanged. Nothing bounces back.'),
+        ('Raise a barrier taller than the energy.', 'Most of the wave reflects, but a little leaks out the far side.'),
+        ('Make the barrier thicker.', 'A thicker barrier lets through much less. The leak shrinks fast.')], 'blue', 1, 1.3),
+    'WAVE PACKET AND UNCERTAINTY': _engine_scene('Pinning down a particle', [
+        ('One pure wave.', 'Its momentum is exact, but it is spread over all of space.'),
+        ('Blend in more wavelengths.', 'The waves cancel almost everywhere, leaving one compact packet.'),
+        ('Trade one spread for the other.', 'A narrower packet needs a wider mix of momenta.')], 'mint', .7, 1.5),
+    'FINITE SQUARE WELL (ALLOWED ENERGIES)': _engine_scene('Only certain energies fit', [
+        ('No well: nothing is trapped.', 'Without a well, the particle can have any energy at all.'),
+        ('Dig a well.', 'Only a few energy levels fit. Each one is a wave that matches the walls.'),
+        ('Make it deeper and wider.', 'A bigger well holds more levels, packed closer together.')], 'gold', 1, 1.6),
     'STANDING WAVES ON A ROPE': _engine_scene('Why a rope only shakes in certain patterns', [
         ('No reflection: the wave just travels.', 'Every point on the rope swings in turn. Nothing stays still.'),
         ('Let the wall reflect the wave.', 'The returning wave overlaps the outgoing one. Some points now stay perfectly still.'),

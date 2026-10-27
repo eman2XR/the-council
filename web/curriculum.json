@@ -91,17 +91,17 @@
     {
      "id": "4.2",
      "question": "Why can a trapped particle only have certain energies?",
-     "model": null
+     "model": "quantum-well"
     },
     {
      "id": "4.3",
      "question": "Why can't you pin down both where a particle is and how it moves?",
-     "model": null
+     "model": "wave-packet"
     },
     {
      "id": "4.4",
      "question": "How can a particle pass through a wall it cannot climb over?",
-     "model": null
+     "model": "tunneling"
     }
    ]
   }

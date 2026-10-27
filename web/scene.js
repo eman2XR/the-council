@@ -122,8 +122,8 @@ function drawClocks(ctx,w,h,spec,st){
 
 function pill(ctx,value,x,y,opts={}){
  // A label on a soft white backing so moving labels stay legible over lines and other text.
- const size=opts.size||11;ctx.font=`${opts.weight||600} ${size}px ${FONT}`;if('letterSpacing' in ctx)ctx.letterSpacing=opts.spacing||'0px';
- const width=ctx.measureText(value).width, left=opts.align==='right'?x-width:x;
+ const size=opts.size||11;ctx.font=`${opts.weight||500} ${size}px ${FONT}`;if('letterSpacing' in ctx)ctx.letterSpacing=opts.spacing||'0px';
+ const width=ctx.measureText(value).width, left=opts.align==='right'?x-width:opts.align==='center'?x-width/2:x;
  ctx.fillStyle='rgba(255,255,255,.88)';ctx.beginPath();ctx.roundRect?ctx.roundRect(left-5,y-size*.75,width+10,size*1.5,size*.75):ctx.rect(left-5,y-size*.75,width+10,size*1.5);ctx.fill();
  if('letterSpacing' in ctx)ctx.letterSpacing='0px';text(ctx,value,x,y,opts);
 }
@@ -270,6 +270,90 @@ function drawRope(ctx,w,h,spec,st){
  }
 }
 
+function drawTunnel(ctx,w,h,spec,st){
+ const accent=ACCENT[spec.accent]||ACCENT.blue, bar=Physics.barrier(st.mass,st.distance), small=w<520, C=Physics.cx;
+ const xmin=-14,xmax=14, X=x=>w*.05+(x-xmin)/(xmax-xmin)*w*.9, y0=h*(small?.6:.56), amp=h*.15, phase=st.t*2.2;
+ const rot=[Math.cos(-phase),Math.sin(-phase)];
+ // Barrier band; its height relative to the particle's energy is printed on it.
+ if(bar.V>1e-4){
+  const x0=X(0),x1=X(bar.w);ctx.fillStyle=`rgba(20,23,28,${.06+.12*Math.min(1,bar.V/2)})`;ctx.fillRect(x0,h*.14,x1-x0,h*.72);
+  ctx.strokeStyle='rgba(20,23,28,.3)';ctx.lineWidth=1;ctx.strokeRect(x0,h*.14,x1-x0,h*.72);
+ }
+ trace(ctx,[[X(xmin),y0],[X(xmax),y0]]);ctx.strokeStyle='rgba(20,23,28,.12)';ctx.stroke();
+ const N=520, env=[], re=[];
+ for(let i=0;i<=N;i++){const x=xmin+(xmax-xmin)*i/N, v=bar.psi(x), m=Math.sqrt(C.abs2(v)), r=C.mul(v,rot)[0];env.push([X(x),m]);re.push([X(x),y0-r*amp]);}
+ ctx.beginPath();env.forEach(([x,m],i)=>i?ctx.lineTo(x,y0-m*amp):ctx.moveTo(x,y0-m*amp));for(let i=env.length-1;i>=0;i--)ctx.lineTo(env[i][0],y0+env[i][1]*amp);ctx.closePath();
+ ctx.fillStyle=rgba(accent,.1);ctx.fill();
+ ctx.lineJoin='round';trace(ctx,re);ctx.strokeStyle=accent;ctx.lineWidth=spec.line_width||2.4;ctx.stroke();
+ if(st.labels){
+  const size=small?10:11, top=h*.14-12;
+  text(ctx,'COMING IN + BOUNCING BACK',X(-7),top,{align:'center',size,weight:600,spacing:'1px'});
+  text(ctx,'GETS THROUGH',X(7.4),top,{align:'center',size,weight:600,spacing:'1px'});
+  if(bar.V>1e-4)pill(ctx,`barrier ${(bar.V/bar.E).toFixed(1)}× the energy`,(X(0)+X(bar.w))/2,h*.86+14,{align:'center',size:10,weight:500});
+  else text(ctx,'no barrier',X(.5),h*.86+14,{align:'center',size:10});
+  pill(ctx,`${Math.round(bar.T*100)}% through`,X(10.5),y0-Math.sqrt(bar.T)*amp-18,{align:'center',size,weight:600,color:accent});
+  text(ctx,'shaded band: how spread out the wave is · line: the wave at this instant',w/2,h-14,{align:'center',size:small?9:10});
+ }
+}
+
+function drawPacket(ctx,w,h,spec,st){
+ const accent=ACCENT[spec.accent]||ACCENT.mint, P=Physics.packet(st.mass,st.distance), small=w<520;
+ const cycle=((st.t*.035)%1+1)%1, tt=cycle*.9, fade=smooth(cycle/.06)*smooth((1-cycle)/.06);
+ const xmin=-16,xmax=16,start=-9, X=x=>w*.05+(x-xmin)/(xmax-xmin)*w*.9, y0=h*(small?.42:.38), amp=h*.17;
+ const peak=P.comps.reduce((s,[,v])=>s+v,0)/Math.sqrt(P.comps.reduce((s,[,v])=>s+v*v,0));
+ trace(ctx,[[X(xmin),y0],[X(xmax),y0]]);ctx.strokeStyle='rgba(20,23,28,.12)';ctx.lineWidth=1;ctx.stroke();
+ const N=600, env=[], re=[];
+ for(let i=0;i<=N;i++){const x=xmin+(xmax-xmin)*i/N, v=P.psi(x-start,tt), m=Math.sqrt(Physics.cx.abs2(v))/peak;env.push([X(x),m]);re.push([X(x),y0-v[0]/peak*amp]);}
+ ctx.globalAlpha=fade;
+ ctx.beginPath();env.forEach(([x,m],i)=>i?ctx.lineTo(x,y0-m*amp):ctx.moveTo(x,y0-m*amp));for(let i=env.length-1;i>=0;i--)ctx.lineTo(env[i][0],y0+env[i][1]*amp);ctx.closePath();
+ ctx.fillStyle=rgba(accent,.12);ctx.fill();
+ trace(ctx,re);ctx.strokeStyle=accent;ctx.lineWidth=spec.line_width||2.2;ctx.lineJoin='round';ctx.stroke();ctx.globalAlpha=1;
+ // Momentum mix: one bar per wavelength blended into the packet.
+ const by=h*.88, bh=h*.17, kmin=P.k0-4, kmax=P.k0+4, K=k=>w*.2+(k-kmin)/(kmax-kmin)*w*.6, top=Math.max(...P.comps.map(([,v])=>v));
+ trace(ctx,[[K(kmin),by],[K(kmax),by]]);ctx.strokeStyle='rgba(20,23,28,.2)';ctx.stroke();
+ const bw=Math.max(1.5,(K(kmin+2*Math.PI/P.L)-K(kmin))*.7);
+ for(const [k,v] of P.comps){const hh=(v/top)**2*bh;ctx.fillStyle=rgba(accent,.75);ctx.fillRect(K(k)-bw/2,by-hh,bw,hh);}
+ if(st.labels){
+  const size=small?10:11;
+  text(ctx,'WHERE IT MIGHT BE',X(xmin),y0-amp-22,{size,weight:600,spacing:'1px'});
+  text(ctx,'WHICH MOMENTA ARE MIXED IN',K(kmin),by-bh-12,{size,weight:600,spacing:'1px'});
+  text(ctx,P.comps.length===1?'one pure wave: exact momentum, spread everywhere':`${P.comps.length} waves blended: narrower in place, wider in momentum`,w/2,by+16,{align:'center',size:small?9:10});
+ }
+}
+
+function drawWell(ctx,w,h,spec,st){
+ const accent=ACCENT[spec.accent]||ACCENT.gold, W=Physics.well(st.mass,st.distance), small=w<520;
+ const xmin=-2.4,xmax=2.4, X=x=>w*.08+(x-xmin)/(xmax-xmin)*w*.84, Emax=4,Emin=-25.5, top=h*(small?.2:.12), bottom=h*.74;
+ const Y=E=>top+(Emax-E)/(Emax-Emin)*(bottom-top), half=W.L/2;
+ // Potential: flat outside, a floor of depth V inside.
+ ctx.fillStyle='rgba(20,23,28,.04)';ctx.fillRect(X(-half),Y(0),X(half)-X(-half),Y(-W.V)-Y(0));
+ trace(ctx,[[X(xmin),Y(0)],[X(-half),Y(0)],[X(-half),Y(-W.V)],[X(half),Y(-W.V)],[X(half),Y(0)],[X(xmax),Y(0)]]);
+ ctx.strokeStyle='rgba(20,23,28,.55)';ctx.lineWidth=1.6;ctx.stroke();
+ const scale=Math.min(h*.045,(bottom-top)/(W.levels.length+2)*.42);
+ W.levels.forEach((l,i)=>{
+  const y=Y(l.E);ctx.setLineDash([3,4]);trace(ctx,[[X(xmin),y],[X(xmax),y]]);ctx.strokeStyle='rgba(20,23,28,.14)';ctx.lineWidth=1;ctx.stroke();ctx.setLineDash([]);
+  trace(ctx,[[X(-half),y],[X(half),y]]);ctx.strokeStyle='rgba(20,23,28,.35)';ctx.stroke();
+  const pts=Array.from({length:241},(_,j)=>{const x=xmin+(xmax-xmin)*j/240;return [X(x),y-W.psi(l,x)*scale];});
+  trace(ctx,pts);ctx.strokeStyle=i===0?accent:rgba(accent,.55);ctx.lineWidth=i===0?2.4:1.6;ctx.stroke();
+  if(st.labels)text(ctx,`level ${i+1}`,X(xmax),y-8,{align:'right',size:10,weight:600,color:'rgba(20,23,28,.6)'});
+ });
+ // A mix of the two lowest levels is not stationary: its probability sloshes back and forth (time scaled).
+ const by=h*.93, bh=h*.13;
+ if(W.levels.length>=2){
+  const [a,b]=W.levels, ph=(b.E-a.E)*st.t*.18;
+  const pts=Array.from({length:241},(_,j)=>{const x=xmin+(xmax-xmin)*j/240, p=W.psi(a,x), q=W.psi(b,x);return [X(x),(p*p+q*q+2*p*q*Math.cos(ph))/2];});
+  const m=Math.max(...pts.map(p=>p[1]))||1;
+  ctx.beginPath();ctx.moveTo(pts[0][0],by);pts.forEach(([x,v])=>ctx.lineTo(x,by-v/m*bh));ctx.lineTo(pts.at(-1)[0],by);ctx.closePath();ctx.fillStyle=rgba(accent,.28);ctx.fill();
+  if(st.labels)text(ctx,'a mix of levels 1 and 2 sloshes back and forth',X(xmin),by-bh-10,{size:10,color:'rgba(20,23,28,.6)'});
+ }
+ if(st.labels){
+  const size=small?10:11;
+  if(W.V>1e-4)text(ctx,'WELL',X(0),Y(-W.V)+16,{align:'center',size,weight:600,spacing:'1.5px'});
+  else text(ctx,'no well: nothing holds the particle, so any energy is possible',w/2,Y(0)+24,{align:'center',size});
+  text(ctx,'higher energy ↑',X(xmin),top-6,{size:10});
+ }
+}
+
 const ENGINES={
  'light-bending':{draw:drawLight,a:['Mass','how much mass sits nearby'],b:['Passing distance','how close the light passes','×'],
   fa:a=>a.toFixed(2),fb:b=>b.toFixed(2)+'×',
@@ -295,6 +379,18 @@ const ENGINES={
   fa:a=>Math.round(a*100)+'%',fb:b=>{const n=Physics.harmonic(b);return n+' half-wave'+(n>1?'s':'');},
   measure:['Still points',a=>(Physics.stillness(a)*100).toFixed(0)+'% still'],scale:'Wave height exaggerated',demoEnd:()=>2.5,
   try:'Turn Reflection to zero: are there still points? Turn it up, then step the Pattern slider.',aria:'A rope shaken at one end and tied to a wall at the other, forming a standing wave.'},
+ 'tunneling':{draw:drawTunnel,a:['Barrier height','compared with the particle’s energy'],b:['Barrier width','how thick the barrier is',''],
+  fa:a=>a<.005?'none':(2*a).toFixed(1)+'× energy',fb:b=>(.6*b/(2*Math.PI)).toFixed(2)+' wavelengths',
+  measure:['Bounces back',(a,b)=>(Physics.reflected(a,b)*100).toFixed(0)+'%'],scale:'A steady stream, shown at one instant',demoEnd:()=>2.5,
+  try:'Remove the barrier: does anything bounce back? Raise it above the energy, then make it thicker.',aria:'A quantum wave meets a barrier: part bounces back, part leaks through.'},
+ 'wave-packet':{draw:drawPacket,a:['Momentum mix','how many wavelengths are blended'],b:['Average momentum','sets the main wavelength',''],
+  fa:a=>a<.005?'one wave':(1.1*a).toFixed(2),fb:b=>(2+2*(b-1)).toFixed(1),
+  measure:['Momentum spread',a=>(1.1*a).toFixed(2)],scale:'Time slowed down · units where ħ = 1',demoEnd:()=>2.5,
+  try:'Set the mix to one wave: where is the particle? Blend more wavelengths and watch the packet narrow.',aria:'A wave packet made by blending wavelengths, with a bar chart of the momenta mixed in.'},
+ 'quantum-well':{draw:drawWell,a:['Well depth','how strongly the particle is held'],b:['Well width','how much room it has',''],
+  fa:a=>a<.005?'no well':Math.round(a*100)+'%',fb:b=>(1+(b-1)).toFixed(2)+'×',
+  measure:['Allowed energy levels',(a,b)=>String(Physics.levelCount(a,b))],scale:'Energies to scale · wave heights not',demoEnd:()=>2.5,
+  try:'Remove the well: are there any levels? Deepen it, then widen it. When does a new level appear?',aria:'A particle trapped in a well can only have certain energies, drawn as levels with their wave shapes.'},
 };
 const engineOf=spec=>ENGINES[spec?.kind]||ENGINES['light-bending'];
 

@@ -19,9 +19,105 @@
     harmonic: b => 1 + Math.round((b - 1) / 1.5 * 4),
     rope(x, t, a, n) { const k = n * Math.PI; return Math.sin(t - k * x) - a * Math.sin(t + k * x); },
     stillness: a => 2 * a / (1 + a),
+    // Quantum models in units where hbar = 1 and 2m = 1, so energy E = k^2.
+    cx: {
+      add:(a,b)=>[a[0]+b[0],a[1]+b[1]], sub:(a,b)=>[a[0]-b[0],a[1]-b[1]],
+      mul:(a,b)=>[a[0]*b[0]-a[1]*b[1],a[0]*b[1]+a[1]*b[0]],
+      div(a,b){const d=b[0]*b[0]+b[1]*b[1];return [(a[0]*b[0]+a[1]*b[1])/d,(a[1]*b[0]-a[0]*b[1])/d];},
+      exp:z=>{const m=Math.exp(z[0]);return [m*Math.cos(z[1]),m*Math.sin(z[1])];},
+      scale:(a,s)=>[a[0]*s,a[1]*s], abs2:a=>a[0]*a[0]+a[1]*a[1],
+    },
+    barrier(a, b) {
+      // Particle energy 1 (k = 1) meets a rectangular barrier of height 2a and width 0.6b.
+      const C=this.cx, E=1, k=1, V=2*a+(Math.abs(2*a-1)<1e-6?1e-6:0), w=.6*b;
+      const q=E>=V?[Math.sqrt(E-V),0]:[0,Math.sqrt(V-E)];
+      const i=[0,1], iq=C.mul(i,q), eiqa=C.exp(C.scale(iq,w)), emiqa=C.exp(C.scale(iq,-w));
+      const cosqa=C.scale(C.add(eiqa,emiqa),.5), sinqa=C.div(C.sub(eiqa,emiqa),[0,2]);
+      const sHalf=C.scale(C.add(C.div([k,0],q),C.div(q,[k,0])),.5);
+      const teika=C.div([1,0],C.sub(cosqa,C.mul(i,C.mul(sHalf,sinqa))));
+      const t=C.mul(teika,C.exp([0,-k*w]));
+      const c=C.mul(C.scale(teika,.5),C.mul(C.add([1,0],C.div([k,0],q)),emiqa));
+      const d=C.mul(C.scale(teika,.5),C.mul(C.sub([1,0],C.div([k,0],q)),eiqa));
+      const r=C.sub(C.add(c,d),[1,0]);
+      const psi=x=>{
+        if(x<0)return C.add(C.exp([0,k*x]),C.mul(r,C.exp([0,-k*x])));
+        if(x<=w)return C.add(C.mul(c,C.exp(C.scale(iq,x))),C.mul(d,C.exp(C.scale(iq,-x))));
+        return C.mul(t,C.exp([0,k*x]));
+      };
+      return {E,V,w,r,t,T:C.abs2(t),R:C.abs2(r),psi};
+    },
+    packet(a, b) {
+      // Gaussian mix of momenta around k0; the momentum spread is set by the first control.
+      const k0=2+2*(b-1), sk=1.1*a, L=48, dk=2*Math.PI/L, comps=[];
+      const J=a<1e-6?0:Math.min(40,Math.ceil(4*sk/dk));
+      for(let j=-J;j<=J;j++){const kj=k0+j*dk, w=J?Math.exp(-((kj-k0)**2)/(4*sk*sk)):1;if(w>1e-4)comps.push([kj,w]);}
+      const norm=Math.sqrt(comps.reduce((s,[,w])=>s+w*w,0));
+      const psi=(x,t)=>{let re=0,im=0;for(const [kj,w] of comps){const ph=kj*x-kj*kj*t;re+=w*Math.cos(ph);im+=w*Math.sin(ph);}return [re/norm,im/norm];};
+      return {k0,sk,L,comps,psi};
+    },
+    well(a, b) {
+      // Bound states of a finite square well of depth 25a and width 1+(b-1); returns sorted levels.
+      const V=25*a, L=1+(b-1), z0=L/2*Math.sqrt(V), levels=[];
+      if(V<=0)return {V,L,levels};
+      const root=(f,lo,hi)=>{for(let n=0;n<80;n++){const m=(lo+hi)/2;if(f(lo)*f(m)<=0)hi=m;else lo=m;}return (lo+hi)/2;};
+      for(let n=0;;n++){
+        const even=z=>z*Math.tan(z)-Math.sqrt(Math.max(0,z0*z0-z*z)), odd=z=>-z/Math.tan(z)-Math.sqrt(Math.max(0,z0*z0-z*z));
+        let added=false;
+        if(z0>n*Math.PI){const z=root(even,n*Math.PI+1e-9,Math.min(n*Math.PI+Math.PI/2-1e-9,z0));levels.push({z,parity:'even'});added=true;}
+        if(z0>n*Math.PI+Math.PI/2){const z=root(odd,n*Math.PI+Math.PI/2+1e-9,Math.min(n*Math.PI+Math.PI-1e-9,z0));levels.push({z,parity:'odd'});added=true;}
+        if(!added)break;
+      }
+      for(const l of levels){const k=2*l.z/L;l.E=k*k-V;l.k=k;l.kappa=Math.sqrt(Math.max(0,-l.E));}
+      levels.sort((p,q)=>p.E-q.E);
+      const psi=(l,x)=>{const h=L/2, inside=l.parity==='even'?Math.cos(l.k*x):Math.sin(l.k*x);
+        if(Math.abs(x)<=h)return inside;
+        const edge=l.parity==='even'?Math.cos(l.k*h):Math.sin(l.k*h)*Math.sign(x);
+        return edge*Math.exp(-l.kappa*(Math.abs(x)-h));};
+      return {V,L,levels,psi};
+    },
+    reflected(a,b){return this.barrier(a,b).R;},
+    momentumSpread(a){return 1.1*a;},
+    levelCount(a,b){return this.well(a,b).levels.length;},
+    tunnelChecks() {
+      const near=(x,y,e=1e-9)=>Math.abs(x-y)<e, cases=[[.8,1],[.8,2.5],[.3,1.6],[1,1.4]];
+      const deep=this.barrier(1,2.5), C=this.cx, b=this.barrier(.8,1.7);
+      const k=1,kappa=Math.sqrt(2*.8-1),w=.6*1.7, analytic=1/(1+(2*.8)**2*Math.sinh(kappa*w)**2/(4*1*(2*.8-1)));
+      return Object.entries({
+        'No barrier lets everything through':near(this.barrier(0,1.5).T,1),
+        'Reflected plus transmitted is always 100%':cases.every(([a,c])=>near(this.barrier(a,c).T+this.barrier(a,c).R,1,1e-9)),
+        'A wider barrier lets less through':this.barrier(.8,2.5).T<this.barrier(.8,1).T,
+        'Some still gets through a barrier taller than the energy':deep.T>0&&deep.V>deep.E,
+        'Wave is continuous at both barrier edges':C.abs2(C.sub(b.psi(-1e-9),b.psi(1e-9)))<1e-12&&C.abs2(C.sub(b.psi(b.w-1e-9),b.psi(b.w+1e-9)))<1e-12,
+        'Transmission matches the textbook formula':near(b.T,analytic,1e-9),
+      }).map(([name,pass])=>({name,pass}));
+    },
+    packetChecks() {
+      const spread=(a,t=0)=>{const p=this.packet(a,1.5);let s=0,s1=0,s2=0;const n=3000;
+        for(let i=0;i<n;i++){const x=-p.L/2+p.L*i/n, v=this.cx.abs2(p.psi(x,t));s+=v;s1+=v*x;s2+=v*x*x;}const m=s1/s;return Math.sqrt(s2/s-m*m);};
+      const sx=spread(.6), sk=this.momentumSpread(.6);
+      return Object.entries({
+        'A single momentum is one pure wave':this.packet(0,1.5).comps.length===1,
+        'Narrower momentum mix gives a wider packet':spread(.3)>spread(.9),
+        'Position spread times momentum spread is the minimum, one half':Math.abs(sx*sk-.5)<.02,
+        'A packet spreads out as it moves':spread(.6,.4)>spread(.6,0),
+        'Momentum spread readout is zero for one wave':this.momentumSpread(0)===0,
+        'Total probability is the same for any mix':[.3,.9].every(a=>{const q=this.packet(a,1.5);let s=0;const n=4000;for(let i=0;i<n;i++)s+=this.cx.abs2(q.psi(-q.L/2+q.L*i/n,0))*q.L/n;return Math.abs(s/q.L-1)<1e-6;}),
+      }).map(([name,pass])=>({name,pass}));
+    },
+    wellChecks() {
+      const w=this.well(1,2.5), E=w.levels.map(l=>l.E), deep=this.well(1,2.5);
+      return Object.entries({
+        'No well holds no levels':this.levelCount(0,1.5)===0,
+        'Any well in one dimension holds at least one level':this.levelCount(.02,1)>=1,
+        'Deeper and wider wells hold more levels':this.levelCount(1,2.5)>this.levelCount(.3,1),
+        'Levels sit between the well floor and zero':E.every(e=>e>-w.V&&e<0),
+        'Levels alternate even and odd shapes':w.levels.every((l,i)=>l.parity===(i%2?'odd':'even')),
+        'Lowest level lies below the infinite-well value':(deep.levels[0].E+deep.V)<(Math.PI/deep.L)**2,
+      }).map(([name,pass])=>({name,pass}));
+    },
     checksFor(kind) {
       return {'gravity-clocks':this.clockChecks,'spacetime':this.spacetimeChecks,'interference':this.waveChecks,
-        'two-slit-particles':this.waveChecks,'standing-waves':this.ropeChecks}[kind]?.call(this) || this.checks();
+        'two-slit-particles':this.waveChecks,'standing-waves':this.ropeChecks,'tunneling':this.tunnelChecks,'wave-packet':this.packetChecks,'quantum-well':this.wellChecks}[kind]?.call(this) || this.checks();
     },
     spacetimeChecks() {
       const near=(a,b)=>Math.abs(a-b)<1e-12, g=this.gamma(this.speed(1));
