@@ -2,11 +2,13 @@
 
 **[Open the live website →](https://eman2xr.github.io/the-council/)**
 
-The website currently hosts an interactive demo. Daily autonomous investigations and automatic publication of new guides are not enabled yet.
+The website hosts accepted interactive investigations and a labeled offline example. A local daily runner can select questions, research them, revise their visuals, and push accepted guides to GitHub Pages.
 
-An open-source visual research lab. Agents investigate an idea, design an intuitive explanation, inspect actual rendered frames, and revise it. The first milestone explains **why gravity bends light** through an interactive introduction to general relativity.
+An open-source visual research lab. Agents investigate an idea, design an intuitive explanation, inspect actual rendered frames, and revise it. Supported interactive models explain **why gravity bends light** and **why stationary clocks at different distances from a mass accumulate different amounts of time**.
 
 The original persona debate CLI remains in `council.py`. The new visual lab is in `lab/` and `web/`.
+
+For coding-agent continuity, read [the handoff](docs/HANDOFF.md). Claude Code loads [CLAUDE.md](CLAUDE.md) as its entry point.
 
 ## Run locally
 
@@ -98,23 +100,69 @@ Runs are saved in `web/runs/<id>/record.json` with scenes, frames, source notes,
 
 ## Boundaries of this milestone
 
-- One supported topic and one validated visual primitive: weak-field light deflection around an isolated spherical mass. This is not a general animation-code generator yet.
+- Two supported visual primitives: weak-field light bending and stationary gravitational clock comparison. The planner proposes questions within these models, not arbitrary scientific topics or animation code. It receives recent history to avoid paraphrased repeats; exact repeats are rejected deterministically. Semantic novelty still depends on the planner.
 - The director changes scene **data**, not executable code or the physics implementation.
 - First-order model: `m = GM/c² = 0.025 × mass`, impact parameter `b = distance`, and `y(x) = b − 2m/b × (sqrt(x²+b²)+x)`. The asymptotic bending angle is `4m/b`. Controls ensure `m/b ≤ 0.025`.
 - Vertical deviation is magnified 6× and labeled. The grid is a coordinate reference; the object's radius and marker speed are illustrative. No black holes or strong-field claims.
 - Screen samples support visual review, but do not replace continuous video or temporal-quality review.
 - Source URLs are checked against retrieved notes; source reliability and entailment still depend on model review and human inspection.
 - Codex, Claude Code, the direct OpenAI API, and the offline fixture share `generate(role, prompt, schema, images, research)`. The coordinator is independent of the model provider.
-- HyperFrames video export, voiceover, broader scene generation, daily scheduling and notifications are follow-on work. The current artifact is an interactive webpage with a deterministic `CouncilScene.seek(time, beat)` capture interface.
+- HyperFrames video export, voiceover, broader scene generation and notifications are follow-on work. The current artifact is an interactive webpage with a deterministic `CouncilScene.seek(time, beat)` capture interface.
 - Local loopback server only. No authentication or production deployment is provided. Do not expose it publicly without adding authentication and job isolation.
 
-## Publish the demo website
+## Daily investigations
+
+Run one daily cycle using existing Claude Code authentication:
+
+```sh
+python3 -m lab daily --provider claude --count 1 --rounds 3 --publish
+```
+
+Use `--provider codex` for Codex. Omit `--publish` to export accepted guides locally without committing or pushing. `--count 2` permits up to two attempts per local calendar day, not two guaranteed publications. Each investigation uses one planner call plus at most `2 + 3 × rounds` research/director/reviewer calls (12 total at three rounds), with the same 30-minute model-work deadline and two concurrent reviewers. Failed planning, crashes, and rejected investigations consume a daily slot to prevent retry loops.
+
+The coordinator uses an OS file lock and persistent `.council-state/history.json` to prevent overlapping daily jobs and duplicate attempts on repeated triggers. It retains draft records in `web/runs/`. Only live runs that pass both reviews and all render checks enter `web/published/`; fixtures are never published as research. The public record includes sources, assumptions, checks, and visual revision history. Passing automated review is not proof of scientific correctness.
+
+Publication commits only `web/published/` and `web/dashboard.json` and pushes `main` using the existing Git credentials. It refuses to commit when unrelated changes are staged. A failed push leaves the export on disk and is retried on the next cycle. A remote conflict is not force-pushed or automatically merged: resolve it locally, then rerun the daily command. Keep this checkout on `main` and sync it before making changes elsewhere.
+
+### Schedule on macOS
+
+Generate a launch-agent configuration for 9 AM local time:
+
+```sh
+python3 -m lab schedule --provider claude --hour 9 --count 1
+```
+
+Install the generated configuration (once):
+
+```sh
+mkdir -p "$HOME/Library/LaunchAgents"
+cp .council-state/org.the-council.daily.plist "$HOME/Library/LaunchAgents/"
+launchctl bootstrap "gui/$(id -u)" "$HOME/Library/LaunchAgents/org.the-council.daily.plist"
+```
+
+The generated file uses absolute paths to this checkout and Python interpreter, plus your current PATH. Regenerate it if either moves. The Mac must be on and you must be logged in; managed Claude also needs its VPN connection. `caffeinate` prevents idle sleep during a run, but does not power on the Mac or defeat a closed laptop lid. A missed calendar trigger can run on wake; the daily ledger prevents duplicate work. There is no always-on cloud research worker.
+
+Check or stop the schedule:
+
+```sh
+launchctl print "gui/$(id -u)/org.the-council.daily"
+tail -n 50 .council-state/daily.log .council-state/daily-error.log
+launchctl bootout "gui/$(id -u)/org.the-council.daily"
+```
+
+This scheduler and file lock target macOS/Linux; the generated launch agent is macOS-specific. Logs and history are local and ignored by Git.
+
+The clock model compares supported stationary observers at radii `r` and `r+2` outside a nonrotating spherical mass: `lower/upper = sqrt((1-2m/r)/(1-2m/(r+2)))`, with `m=.025×mass`. The relative clock-hand speed difference is magnified 12×; the percentage readout is unmagnified. Spatial positions are schematic. This is not a GPS, orbit, or black-hole simulation. See [NIST's optical-clock measurements](https://www.nist.gov/publications/relativity-and-optical-clocks).
+
+## Publish the website
 
 The repository's `.github/workflows/pages.yml` deploys the static demo to GitHub Pages on pushes to `main`, or when manually dispatched. In GitHub, open **Settings → Pages → Build and deployment → Source**, and select **GitHub Actions** before the first deployment.
 
-The workflow runs the offline unit tests and physics checks, then uploads an explicit list of public website assets. It excludes local runs, draft records, credentials, and runtime files. The hosted edition disables the agent-run button; agents still run on your own machine. The expected project URL after a successful deployment is https://eman2XR.github.io/the-council/.
+The workflow runs the offline unit tests and physics checks, then uploads an explicit list of public website assets. It includes the accepted `web/published/` archive and excludes local runs, source notes, provider usage metadata, credentials, and runtime files. The hosted edition disables the agent-run button; agents still run on your own machine. The expected project URL after a successful deployment is https://eman2XR.github.io/the-council/.
 
-This publishes the labeled example, not a daily autonomous feed. Topic planning, a reviewed-guide archive, scheduled investigations, and export of accepted live results remain follow-on work.
+The dashboard shows the current question, phase, revision, recent activity, daily attempts, and configured schedule. With `--publish`, safe status snapshots are pushed at most once every two minutes at phase boundaries (plus start/completion); Pages deployment adds latency. The browser refreshes status once a minute and flags stale activity. This is not a streaming heartbeat, and GitHub cannot determine whether the Mac is currently awake. Raw model output, internal errors, and usage metadata are not part of status snapshots.
+
+The public homepage opens the newest accepted guide; archive links retain older guides. If no guide has passed review, it displays the labeled offline example. GitHub Actions only tests and deploys files; model work stays on your machine.
 
 ## Verify
 

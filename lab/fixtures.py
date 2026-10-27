@@ -35,15 +35,36 @@ class FixtureProvider:
 
     def generate(self, role, prompt, schema=None, images=(), research=False):
         self.calls += 1
+        if role == 'planner':
+            return {'topic':'gravity-clocks','question':'Why does a lower clock accumulate less time?', 'reason':'Compare two stationary clocks.'}
         if role == 'researcher':
             return 'OFFLINE FIXTURE: hand-authored source notes, no live search performed.'
         if role == 'scientist':
-            return deepcopy(RESEARCH)
+            return deepcopy(CLOCK_RESEARCH if 'CLOCK MODEL' in prompt else RESEARCH)
         if role == 'director':
-            scene = deepcopy(SCENE)
+            scene = deepcopy(CLOCK_SCENE if 'CLOCK MODEL' in prompt else SCENE)
             if 'Previous scene' not in prompt:
                 scene.update(show_reference=False, show_labels=False, line_width=1)
             return scene
         if role == 'visual_reviewer' and '"show_reference": false' in prompt:
             return {'pass': False, 'score': 5, 'summary': 'Fixture critique: the bent path has no baseline for comparison.', 'changes': ['Enable the straight reference path and labels.', 'Increase line width to 2.5 for small screens.'], 'blocking_issues': ['Missing visual comparison.']}
         return {'pass': True, 'score': 8, 'summary': 'Fixture review only: scripted acceptance exercises the pipeline.', 'changes': [], 'blocking_issues': []}
+
+CLOCK_RESEARCH = {
+    'claim':'Stationary clocks closer to a spherical mass accumulate less proper time than clocks farther out.',
+    'explanation':'Each clock operates normally nearby. Comparing their elapsed times reveals the gravitational difference.',
+    'assumptions':['Stationary, supported clocks outside a nonrotating spherical mass.', 'Comparison over the same coordinate-time interval.'],
+    'prediction':'Increasing mass increases the relative rate difference; moving both clocks outward reduces it.',
+    'falsifier':'A corrected comparison of stationary clocks inconsistent with this rate ratio would challenge the model.',
+    'limitations':['Animated rate differences are magnified 12 times.', 'Distances are schematic, in arbitrary units.', 'No velocity effects or Earth-specific predictions.'],
+    'sources':[{'title':'NIST: Relativity and Optical Clocks','url':'https://www.nist.gov/publications/relativity-and-optical-clocks','supports':'Measurements of gravitational time dilation using optical clocks.'}],
+}
+CLOCK_SCENE = {**deepcopy(SCENE),
+    'title':'Same clocks. Different elapsed time.',
+    'subtitle':'Compare two stationary clocks at different distances from a mass.',
+    'beats':[
+        {'title':'Start with matching clocks.', 'body':'Without this mass, both hands move together. We start them at the same position.'},
+        {'title':'Add the mass. Watch the lower hand.', 'body':'The lower clock accumulates less time over the comparison. Each clock still ticks normally for someone right beside it.'},
+        {'title':'Move both clocks farther out.', 'body':'Increase the lower clock radius: both clocks move outward, keeping the same separation. The rate difference shrinks. The hand-speed difference is exaggerated to make it visible.'},
+    ],
+    'takeaway':'Gravity changes how much time stationary clocks accumulate between comparisons.'}

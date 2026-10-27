@@ -82,11 +82,11 @@
         "takeaway": "Gravity does not need to give light a rest mass. It changes the spacetime geometry that light travels through."
       },
       "frames": [
-        "/example-frames/revision-1/frame-1.png",
-        "/example-frames/revision-1/frame-2.png",
-        "/example-frames/revision-1/frame-3.png",
-        "/example-frames/revision-1/frame-4.png",
-        "/example-frames/revision-1/mobile.png"
+        "example-frames/revision-1/frame-1.png",
+        "example-frames/revision-1/frame-2.png",
+        "example-frames/revision-1/frame-3.png",
+        "example-frames/revision-1/frame-4.png",
+        "example-frames/revision-1/mobile.png"
       ],
       "checks": [
         {
@@ -185,11 +185,11 @@
         "takeaway": "Gravity does not need to give light a rest mass. It changes the spacetime geometry that light travels through."
       },
       "frames": [
-        "/example-frames/revision-2/frame-1.png",
-        "/example-frames/revision-2/frame-2.png",
-        "/example-frames/revision-2/frame-3.png",
-        "/example-frames/revision-2/frame-4.png",
-        "/example-frames/revision-2/mobile.png"
+        "example-frames/revision-2/frame-1.png",
+        "example-frames/revision-2/frame-2.png",
+        "example-frames/revision-2/frame-3.png",
+        "example-frames/revision-2/frame-4.png",
+        "example-frames/revision-2/mobile.png"
       ],
       "checks": [
         {

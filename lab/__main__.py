@@ -15,12 +15,16 @@ from .contracts import obj, STR
 
 def main():
     parser=argparse.ArgumentParser(description='The Council visual research lab')
-    parser.add_argument('command',choices=['serve','run','check'])
+    parser.add_argument('command',choices=['serve','run','check','daily','schedule'])
     parser.add_argument('--provider',choices=['codex','claude','openai','fixture'],default=os.environ.get('COUNCIL_PROVIDER','codex'))
     parser.add_argument('--model',help='Optional CLI model override; required for the direct OpenAI API.')
     parser.add_argument('--rounds',type=int,default=3)
     parser.add_argument('--timeout',type=float,default=300,help='Maximum seconds per CLI worker (default: 300).')
     parser.add_argument('--minutes',type=float,default=30,help='Total CLI model-work deadline in minutes (default: 30).')
+    parser.add_argument('--hour',type=int,default=9,help='Local hour for generated macOS schedule.')
+    parser.add_argument('--count',type=int,choices=[1,2],default=1,help='Maximum investigations per local calendar day.')
+    parser.add_argument('--publish',action='store_true',help='Commit accepted public guides and push to origin/main.')
+    parser.add_argument('--topic',choices=['light-bending','gravity-clocks'],default='light-bending')
     parser.add_argument('--port',type=int,default=8765)
     args=parser.parse_args()
     if not 1<=args.rounds<=4:
@@ -31,9 +35,17 @@ def main():
         if args.provider=='fixture':
             return FixtureProvider()
         if args.provider=='openai':
-            return OpenAIProvider(args.model or os.environ.get('OPENAI_MODEL'),max_calls=2+3*args.rounds)
+            return OpenAIProvider(args.model or os.environ.get('OPENAI_MODEL'),max_calls=(3 if args.command=='daily' else 2)+3*args.rounds)
         return CLIProvider(args.provider,args.model or os.environ.get(f'COUNCIL_{args.provider.upper()}_MODEL'),
-                           max_calls=2+3*args.rounds,timeout=args.timeout,minutes=args.minutes)
+                           max_calls=(3 if args.command=='daily' else 2)+3*args.rounds,timeout=args.timeout,minutes=args.minutes)
+    if args.command=='schedule':
+        from .schedule import write_schedule
+        print(write_schedule(args.hour,args.count,args.provider))
+        return
+    if args.command=='daily':
+        from .daily import daily
+        daily(provider,args.count,args.rounds,args.publish)
+        return
     if args.command=='check':
         if args.provider not in ('codex','claude'):
             parser.error('check supports codex or claude; it makes one live model call.')
@@ -53,7 +65,15 @@ def main():
             adapter=provider()
         except ValueError as error:
             parser.exit(2, f'Setup needed: {error}\nSee README.md → Run locally.\n')
-        state=run(adapter,args.rounds)
+        from .dashboard import Dashboard
+        from .daily import export_accepted, publish
+        dashboard=Dashboard(ROOT,publish if args.publish else None)
+        callback=dashboard.update if args.provider!='fixture' else None
+        state=run(adapter,args.rounds,on_update=callback,topic=args.topic)
+        if args.publish and state['status']=='reviewed':
+            export_accepted(state)
+        if callback:
+            dashboard.update(state,force=True)
         # Publish only fixture examples or outputs that pass all gates; drafts remain in runs/.
         if state['status'] in ('reviewed','fixture_complete'):
             write_json(ROOT/'web'/'latest.json',state)

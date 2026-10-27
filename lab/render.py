@@ -40,6 +40,7 @@ def capture(scene, directory, research=None, provider='fixture'):
             errors = []
             page.on('pageerror', lambda error: errors.append(str(error)))
             page.goto(url, wait_until='networkidle')
+            page.add_style_tag(content='html {scroll-behavior:auto!important}')
             page.wait_for_function('window.CouncilScene && document.getElementById("beat-title").textContent.length > 0')
             if research:
                 page.evaluate('(record)=>show(record)', {'id':'capture', 'scene':scene, 'research':research,
@@ -49,7 +50,7 @@ def capture(scene, directory, research=None, provider='fixture'):
             interaction = page.evaluate('''() => {
                 const slider=document.getElementById('mass'); slider.value='0';
                 slider.dispatchEvent(new Event('input'));
-                const zero=CouncilScene.getState().mass===0 && document.getElementById('bend-value').textContent==='0.00°';
+                const zero=CouncilScene.getState().mass===0 && parseFloat(document.getElementById('bend-value').textContent)===0;
                 slider.value='1'; slider.dispatchEvent(new Event('input'));
                 const full=CouncilScene.getState().mass===1 && parseFloat(document.getElementById('bend-value').textContent)>0;
                 CouncilScene.seek(1,0);
@@ -59,7 +60,7 @@ def capture(scene, directory, research=None, provider='fixture'):
                 return {zero,full,noMass:noMass && !slider.disabled && slider.value==='1',deterministic:first===document.getElementById('universe').toDataURL()};
             }''')
             checks.extend({'name':name,'pass':value} for name,value in [
-                ('Zero-mass control removes deflection',interaction['zero']),
+                ('Zero-mass control removes the modeled effect',interaction['zero']),
                 ('Mass control updates the rendered model',interaction['full']),
                 ('No-mass step shows zero and restores the chosen mass afterward',interaction['noMass']),
                 ('Seeking reproduces identical canvas pixels',interaction['deterministic'])])
@@ -68,15 +69,24 @@ def capture(scene, directory, research=None, provider='fixture'):
             # Ordered samples include within-beat motion and a mobile frame.
             samples = [(1,0),(9,1),(11,1),(18,2)]
             for i,(time,beat) in enumerate(samples):
+                if i==3 and scene.get('kind')=='gravity-clocks':
+                    page.evaluate("() => {const s=document.getElementById('distance');s.value='2.5';s.dispatchEvent(new Event('input'));}")
                 page.evaluate('([t,b])=>CouncilScene.seek(t,b)', [time,beat])
                 path = directory/f'frame-{i+1}.png'
                 page.locator('.workspace').screenshot(path=str(path))
                 frames.append(path)
             page.set_viewport_size({'width':390,'height':844})
             page.evaluate('CouncilScene.seek(18,2)')
+            # A single viewport avoids Chromium full-page compositor tiling artifacts.
+            page.set_viewport_size({'width':390,'height':1800})
             path=directory/'mobile.png'
-            page.screenshot(path=str(path), full_page=True)
+            page.locator('.workspace').screenshot(path=str(path),animations='disabled')
             frames.append(path)
+            page.set_viewport_size({'width':390,'height':844})
+            page.evaluate('window.scrollTo(0,0)')
+            overview=directory/'mobile-overview.png'
+            page.screenshot(path=str(overview),animations='disabled')
+            frames.append(overview)
             checks.append({'name':'Mobile page fits viewport', 'pass': page.evaluate('document.documentElement.scrollWidth <= innerWidth')})
             checks.append({'name':'Renderer has no JavaScript errors', 'pass':not errors})
             if errors:

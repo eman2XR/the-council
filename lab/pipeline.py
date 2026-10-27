@@ -5,10 +5,9 @@ import uuid
 from pathlib import Path
 from datetime import datetime, timezone
 from concurrent.futures import ThreadPoolExecutor, as_completed
-from .contracts import MODEL_NOTES, RESEARCH_SCHEMA, SCENE_SCHEMA, REVIEW_SCHEMA, validate, validate_scene
+from .contracts import RESEARCH_SCHEMA, SCENE_SCHEMA, REVIEW_SCHEMA, validate, validate_scene
 from .render import capture, ROOT
-
-QUESTION = 'Explain general relativity to a beginner through the question: why does gravity bend light?'
+from .topics import TOPICS
 
 
 def write_json(path, value):
@@ -22,14 +21,17 @@ def approved(review):
     return review['pass'] is True and 7 <= review['score'] <= 10 and not review['blocking_issues']
 
 
-def run(provider, rounds=3, on_update=None):
+def run(provider, rounds=3, on_update=None, topic="light-bending", question=None):
+    model = TOPICS[topic]
+    question = question or model["question"]
+    model_notes = model["notes"]
     if not 1 <= rounds <= 4:
         raise ValueError('Revision limit must be 1–4.')
     run_id = datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%S')+'-'+uuid.uuid4().hex[:8]
     directory = ROOT/'web'/'runs'/run_id
     directory.mkdir(parents=True)
     state = {'id':run_id, 'provider':provider.name, 'model':getattr(provider,'model',None),
-             'status':'running', 'question':QUESTION, 'created':datetime.now(timezone.utc).isoformat(),
+             'status':'running', 'question':question, 'topic':topic, 'created':datetime.now(timezone.utc).isoformat(),
              'events':[], 'revisions':[], 'research':None, 'scene':None, 'checks':[]}
 
     def save(message):
@@ -44,10 +46,10 @@ def run(provider, rounds=3, on_update=None):
 
     try:
         save('Researcher is gathering sources and constraints.')
-        notes=provider.generate('researcher', QUESTION+' Search primary or university sources for weak-field gravitational light deflection. Include URLs, physical assumptions, tests, and common misleading visual metaphors. Use web search, do not invent citations.', research=True)
+        notes=provider.generate('researcher', question+' Search primary or university sources for this question. Include URLs, physical assumptions, tests, and common misleading visual metaphors. Use web search, do not invent citations.', research=True)
         (directory/'source-notes.txt').write_text(notes,encoding='utf-8')
         save('Sources retrieved. Scientist is preparing the research record.')
-        research=provider.generate('scientist', QUESTION+'\nProduce a precise, beginner-friendly research record from these retrieved notes. Only cite URLs in the notes. No new-discovery claims.\n'+MODEL_NOTES+'\n'+notes, RESEARCH_SCHEMA)
+        research=provider.generate('scientist', question+'\nProduce a precise, beginner-friendly research record from these retrieved notes. Only cite URLs in the notes. No new-discovery claims.\n'+model_notes+'\n'+notes, RESEARCH_SCHEMA)
         validate(research,RESEARCH_SCHEMA)
         if not research['sources'] or any(not s['url'].startswith(('https://','http://')) for s in research['sources']):
             raise ValueError('Research must include valid HTTP source URLs.')
@@ -58,22 +60,23 @@ def run(provider, rounds=3, on_update=None):
         feedback=''
         previous=None
         for index in range(1,rounds+1):
-            prompt=QUESTION+'\n'+MODEL_NOTES+'\nResearch:\n'+json.dumps(research)+'\nDesign an elegant, legible visual explanation. Return three short beats (title <=90 chars, body <=380), title <=100, subtitle <=250. mass 0..1, distance 1..2.5, ray_count 1..5, line_width 1..5, duration 15..45 seconds. Strong comparison and clear labels matter more than decoration.'
+            prompt=question+'\n'+model_notes+'\nResearch:\n'+json.dumps(research)+'\nDesign an elegant, legible visual explanation. Return three short beats (title <=90 chars, body <=380), title <=100, subtitle <=250. mass 0..1, distance 1..2.5, ray_count 1..5, line_width 1..5, duration 15..45 seconds. Strong comparison and clear labels matter more than decoration.'
             if previous:
                 prompt+='\nPrevious scene:\n'+json.dumps(previous)+'\nReviewer change requests:\n'+feedback
             prompt+='\nAudience: a curious beginner building visual intuition. Keep equations, symbolic variables, numerical implementation details and technical jargon OUT of title, subtitle, beats and takeaway. Describe changes physically in plain language. Keep technical details in the research record. Each beat should ask the viewer to notice one clear thing.'
             scene=validate_scene(provider.generate('director',prompt,SCENE_SCHEMA))
+            scene['kind']=topic
             state['scene']=scene
             save(f'Revision {index}: rendering desktop and mobile frames.')
             frames,checks=capture(scene,directory/f'revision-{index}',research=research,provider=provider.name)
             state['checks']=checks
-            revision={'number':index,'scene':scene,'frames':['/'+str(p.relative_to(ROOT/'web')) for p in frames], 'checks':checks,'accepted':False}
+            revision={'number':index,'scene':scene,'frames':[str(p.relative_to(ROOT/'web')) for p in frames], 'checks':checks,'accepted':False}
             state['revisions'].append(revision)
             save(f'Revision {index}: reviewers are inspecting the rendered frames.')
-            context=MODEL_NOTES+'\nResearch: '+json.dumps(research)+'\nScene: '+json.dumps(scene)+'\nChecks: '+json.dumps(checks)
+            context=model_notes+'\nResearch: '+json.dumps(research)+'\nScene: '+json.dumps(scene)+'\nChecks: '+json.dumps(checks)
             reviews = {
                 'physics_review': ('physics_reviewer', context+'\nInspect the attached frames AND claims. Look for incorrect physics, misleading metaphors, omitted assumptions and claims beyond the sources. Score 0..10. Pass only if scientifically appropriate as a teaching approximation; otherwise provide actionable changes. Review is not scientific proof.', frames[:4]),
-                'visual_review': ('visual_reviewer', context+'\nInspect these actual frames in order: no mass at t=1, mass at t=9 and t=11, comparison at t=18, then full mobile page. Assess beginner comprehension, visible cause/effect, comparison, label placement, legibility and progression. Scores 0..10; pass requires >=7 and no blockers. Give concrete changes to the available scene fields. Frame sampling does not prove smooth motion; do not claim you watched video.', frames),
+                'visual_review': ('visual_reviewer', context+'\nInspect these actual frames in order: zero-mass reference at t=1, mass added at t=9 and t=11, interactive comparison at t=18 (clock radius moved to 2.5), then mobile workspace and top-of-page overview. Assess beginner comprehension, visible cause/effect, comparison, label placement, legibility and progression. Scores 0..10; pass requires >=7 and no blockers. Give concrete changes to the available scene fields. Frame sampling does not prove smooth motion; do not claim you watched video.', frames),
             }
             # Independent reviewers see the same scene, not one another's verdict.
             with ThreadPoolExecutor(max_workers=2) as workers:

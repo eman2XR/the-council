@@ -1,0 +1,40 @@
+{
+  "status": "running",
+  "question": "Why do clocks at different heights tick at different rates?",
+  "topic": "gravity-clocks",
+  "id": "20261027T041411-61589ffe",
+  "revision": 0,
+  "updated": "2026-10-27T04:15:05.280138+00:00",
+  "events": [
+    {
+      "at": "2026-10-27T04:14:11.455141+00:00",
+      "message": "Researcher is gathering sources and constraints."
+    },
+    {
+      "at": "2026-10-27T04:14:48.501532+00:00",
+      "message": "Sources retrieved. Scientist is preparing the research record."
+    }
+  ],
+  "schedule": {
+    "enabled": true,
+    "hour": 9,
+    "count": 1,
+    "timezone": "America/Los_Angeles",
+    "provider": "claude",
+    "requires": "Awake Mac, logged-in user, VPN, and available CLI quota"
+  },
+  "delivery": "Static status snapshot. Deployment and refresh can take several minutes.",
+  "attempts": [
+    {
+      "day": "2026-10-26",
+      "status": "failed"
+    },
+    {
+      "day": "2026-10-26",
+      "question": "If two clocks keep the same height gap, how does moving the pair farther from the mass change how much slower the lower clock ticks?",
+      "topic": "gravity-clocks",
+      "status": "needs_review",
+      "run_id": "20261027T040910-6d813087"
+    }
+  ]
+}

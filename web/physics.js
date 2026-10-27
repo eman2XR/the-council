@@ -5,6 +5,18 @@
     deflection(mass, b) { return 4 * this.m(mass) / b; },
     deviation(x, mass, b) { return -2 * this.m(mass) / b * (Math.hypot(x, b) + x); },
     slope(x, mass, b) { return -2 * this.m(mass) / b * (x / Math.hypot(x, b) + 1); },
+    clockRatio(mass,r) { return Math.sqrt((1-2*this.m(mass)/r)/(1-2*this.m(mass)/(r+2))); },
+    clockChecks() {
+      const q=(m,r)=>this.clockRatio(m,r), near=(a,b)=>Math.abs(a-b)<1e-12;
+      return Object.entries({
+        'Zero mass gives equal clock rates':near(q(0,1),1),
+        'Lower stationary clock accumulates less time':q(1,1)<1 && q(1,1)>0,
+        'More mass increases the clock difference':q(1,1)<q(.5,1),
+        'Moving both clocks outward reduces the difference':q(1,2.5)>q(1,1),
+        'Ratio matches analytic Schwarzschild value':near(q(1,1),Math.sqrt(57/59)),
+        'Magnified clock motion stays positive':1-12*(1-q(1,1))>0,
+      }).map(([name,pass])=>({name,pass}));
+    },
     checks() {
       const near = (a,b) => Math.abs(a-b) < 1e-10;
       const cases = {
