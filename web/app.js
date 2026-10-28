@@ -170,7 +170,7 @@ async function getRecord(id){
  if(id==='example')return example||(example=await (await fetch('example.json')).json());
  if(records.has(id))return records.get(id);
  if(!/^[A-Za-z0-9-]+$/.test(id))throw Error('Invalid guide');
- const response=await fetch('published/'+id+'/record.json');if(!response.ok)throw Error('Missing guide');
+ const response=await fetch('published/'+id+'/record.json',{cache:'no-cache'});if(!response.ok)throw Error('Missing guide');
  const record=await response.json();records.set(id,record);return record;
 }
 async function openGuide(id,{autoplay=false}={}){
