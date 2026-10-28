@@ -996,9 +996,9 @@ const ENGINES={
   fa:a=>a<.005?'closed':Math.round(a*100)+'% open',fb:b=>b.toFixed(2)+'×',
   measure:['Stripe contrast',a=>(Physics.visibility(a)*100).toFixed(0)+'%'],scale:'',disclosure:'Arrivals are pseudo-random samples from the predicted pattern; the ripples show possibilities, not paths.',demoEnd:()=>2.5,
   try:'Close the second slit: do the stripes survive? Open it again, then move the slits apart.',aria:'Particles arrive one at a time on a screen behind two slits and slowly build up stripes.'},
- 'standing-waves':{draw:drawRope,sound:({mass,distance})=>({freq:110*Physics.harmonic(distance),level:Physics.stillness(mass)}),a:['Reflection','how much of the wave bounces back'],b:['Pattern','whole loops between hand and wall',''],
+ 'standing-waves':{draw:drawRope,sound:({mass,distance})=>({freq:220*Physics.harmonic(distance),level:.3+.7*Physics.stillness(mass)}),a:['Reflection','how much of the wave bounces back'],b:['Pattern','whole loops between hand and wall',''],
   fa:a=>Math.round(a*100)+'%',fb:b=>{const n=Physics.harmonic(b);return n+' loop'+(n>1?'s':'');},
-  measure:['Still points',a=>(Physics.stillness(a)*100).toFixed(0)+'% still'],scale:'',disclosure:'Wave height is exaggerated for visibility. The sound is the note of each pattern on a string whose lowest note is 110 Hz: 1 loop 110 Hz, 2 loops 220 Hz and so on, as loud as the standing wave is strong. A real string’s pitch also depends on its length, tension and weight.',demoEnd:()=>2.5,
+  measure:['Still points',a=>(Physics.stillness(a)*100).toFixed(0)+'% still'],scale:'',disclosure:'Wave height is exaggerated for visibility. The sound is the note of each pattern on a string whose lowest note is 220 Hz: 1 loop 220 Hz, 2 loops 440 Hz and so on. A wave that only travels gives a weak tone; a standing wave rings loudly. A real string’s pitch also depends on its length, tension and weight.',demoEnd:()=>2.5,
   try:'Turn Reflection to zero: are there still points? Turn it up, then step the Pattern slider.',aria:'A rope shaken at one end and tied to a wall at the other, forming a standing wave.'},
  'tunneling':{draw:drawTunnel,a:['Barrier height','compared with the particle’s energy'],b:['Barrier width','how thick the barrier is',''],
   fa:a=>a<.005?'none':(2*a).toFixed(1)+'× energy',fb:b=>(.6*b/(2*Math.PI)).toFixed(2)+' wavelengths',
@@ -1096,9 +1096,9 @@ function audioStart(){
  if(SOUND.ctx||!engineOf(spec).sound)return SOUND.ctx?.resume?.();
  const AC=window.AudioContext||window.webkitAudioContext;if(!AC)return;
  const a=SOUND.ctx=new AC(), master=SOUND.master=a.createGain(), tone=a.createBiquadFilter();
- master.gain.value=0;tone.type='lowpass';tone.frequency.value=2400;master.connect(tone);tone.connect(a.destination);
- // A soft string-like tone: the note with two quieter overtones.
- SOUND.oscs=[[1,.13],[2,.035],[3,.015]].map(([k,g])=>{const o=a.createOscillator(), gain=a.createGain();o.type='sine';gain.gain.value=g;o.connect(gain);gain.connect(master);o.start();return [o,k];});
+ a.resume?.();master.gain.value=0;tone.type='lowpass';tone.frequency.value=3200;master.connect(tone);tone.connect(a.destination);
+ // A string-like tone: the note with fading overtones, loud enough for laptop speakers.
+ SOUND.oscs=[[1,.24],[2,.12],[3,.07],[4,.035]].map(([k,g])=>{const o=a.createOscillator(), gain=a.createGain();o.type='sine';gain.gain.value=g;o.connect(gain);gain.connect(master);o.start();return [o,k];});
 }
 function voice(){
  const e=engineOf(spec);if(!e.sound||!SOUND.ctx)return;
@@ -1196,7 +1196,7 @@ function restore(){mass=spec.mass;distance=spec.distance;demoed=false;}
 function play(){
  if(!spec)return;
  if(!started||ended||time>=timeline.total){time=0;restore();setStage(0);shown=0;}
- audioStart();started=true;ended=false;mode='playing';exploreOpen=null;last=0;emit('play');paint();
+ audioStart();if(SOUND.ctx)SOUND.plucked=SOUND.ctx.currentTime;started=true;ended=false;mode='playing';exploreOpen=null;last=0;emit('play');paint();
 }
 function pause(){if(mode==='playing'){mode='paused';paint();}}
 function toggle(){mode==='playing'?pause():play();}
