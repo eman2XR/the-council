@@ -40,7 +40,7 @@ class CLIProvider:
         self._lock = threading.Lock()
         self._processes = set()
         self._cancelled = False
-        self._slots = threading.BoundedSemaphore(2)
+        self._slots = threading.BoundedSemaphore(3)  # the three reviewers run together
 
     def remaining(self):
         with self._lock:

@@ -238,7 +238,7 @@
     // Which checks belong to each visual model; light bending uses checks().
     checkSets() {
       return {'gravity-clocks':this.clockChecks,'spacetime':this.spacetimeChecks,'interference':this.waveChecks,
-        'two-slit-particles':this.waveChecks,'standing-waves':this.ropeChecks,'tunneling':this.tunnelChecks,'wave-packet':this.packetChecks,'quantum-well':this.wellChecks,'falling-time':this.fallChecks,'diffraction':this.gapChecks,'twin-trip':this.spacetimeChecks,'spacetime-paths':this.pathChecks,'river':this.riverChecks,'fall-views':this.viewsChecks,'tides':this.tidesChecks,'lift':this.liftChecks,'moon-tides':this.moonChecks};
+        'two-slit-particles':this.waveChecks,'standing-waves':this.ropeChecks,'tunneling':this.tunnelChecks,'wave-packet':this.packetChecks,'quantum-well':this.wellChecks,'falling-time':this.fallChecks,'diffraction':this.gapChecks,'twin-trip':this.spacetimeChecks,'spacetime-paths':this.pathChecks,'light-clock':this.lightClockChecks,'river':this.riverChecks,'fall-views':this.viewsChecks,'tides':this.tidesChecks,'lift':this.liftChecks,'moon-tides':this.moonChecks};
     },
     checksFor(kind) { return this.checkSets()[kind]?.call(this) || this.checks(); },
     // Every model's checks, run in CI.
@@ -252,6 +252,15 @@
         'Traveller worldline stays inside the light cone':this.speed(1)<1,
         'Round-trip traveller time is home time divided by the factor':near(2*this.turnaround(2.5)/g,2*this.turnaround(2.5)*(1-this.agingGap(1))),
         'Trip length does not change the percentage gap':near(1-1/this.gamma(this.speed(.7)),this.agingGap(.7)),
+      }).map(([name,pass])=>({name,pass}));
+    },
+    lightClockChecks() {
+      const v=this.speed(1);
+      return Object.entries({
+        'At rest the two light clocks agree':this.lightTick(0)===1,
+        'A faster rocket clock ticks less often':this.lightTick(this.speed(.9))>this.lightTick(this.speed(.4)),
+        'The slanted path at light speed fits exactly one tick':[.3,.6,.8].every(u=>Math.abs(Math.hypot(1,u*this.lightTick(u))-this.lightTick(u))<1e-12),
+        'The readout is one minus the tick ratio':Math.abs(this.agingGap(1)-(1-1/this.lightTick(v)))<1e-12,
       }).map(([name,pass])=>({name,pass}));
     },
     pathChecks() {

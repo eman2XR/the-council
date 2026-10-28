@@ -1,53 +1,18 @@
 {
-  "status": "reviewed",
-  "question": "Why does a moving clock tick slowly?",
-  "topic": "twin-trip",
-  "id": "20261027T160039-39e9e79b",
-  "revision": 1,
-  "updated": "2026-10-27T16:06:00.357936+00:00",
-  "events": [
-    {
-      "at": "2026-10-27T16:03:09.227539+00:00",
-      "message": "Sources retrieved. Scientist is preparing the research record."
-    },
-    {
-      "at": "2026-10-27T16:04:20.181416+00:00",
-      "message": "Research recorded. Director is designing the visual explanation."
-    },
-    {
-      "at": "2026-10-27T16:04:52.215213+00:00",
-      "message": "Revision 1: rendering desktop and mobile frames."
-    },
-    {
-      "at": "2026-10-27T16:05:05.327689+00:00",
-      "message": "Revision 1: reviewers are inspecting the rendered frames."
-    },
-    {
-      "at": "2026-10-27T16:05:53.084103+00:00",
-      "message": "Revision 1: physics_review saved."
-    },
-    {
-      "at": "2026-10-27T16:06:00.320814+00:00",
-      "message": "Revision 1: visual_review saved."
-    },
-    {
-      "at": "2026-10-27T16:06:00.333897+00:00",
-      "message": "Revision 1: review gates passed."
-    },
-    {
-      "at": "2026-10-27T16:06:00.339015+00:00",
-      "message": "Investigation reviewed. Artifact is ready for human inspection; no new-discovery claim."
-    }
-  ],
+  "status": "idle",
+  "question": "Choosing the next question",
+  "topic": null,
+  "id": null,
+  "revision": 0,
+  "updated": "2026-10-28T07:19:53.448465+00:00",
+  "events": [],
   "schedule": {
-    "enabled": false,
+    "enabled": true,
     "hour": 9,
     "count": 1,
     "timezone": "America/Los_Angeles",
     "provider": "claude",
-    "requires": "Awake Mac, logged-in user, VPN, and available CLI quota",
-    "state": "paused",
-    "reason": "Paused by the owner while the investigation format is improved."
+    "requires": "Awake Mac, logged-in user, VPN, and available CLI quota"
   },
   "delivery": "Static status snapshot. Deployment and refresh can take several minutes.",
   "attempts": [

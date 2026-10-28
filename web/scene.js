@@ -608,36 +608,43 @@ function pathsLayout(w,h,st){
 }
 // Why a moving clock ticks slowly: light crosses a light clock at the same speed for everyone, so on the moving
 // rocket (seen from Earth) it must zigzag farther between the mirrors and each tick takes longer.
-function drawLightClocks(ctx,w,h,spec,st){
+function drawLightClocks(ctx,w,h,spec,st,{vplan}={}){
  const accent=ACCENT[spec.accent]||ACCENT.blue, dark='#14171c', light='#d97706', small=w<520, v=Physics.speed(st.mass), since=Math.max(0,(st.since??st.t)-1);
- const L=small?h*.13:Math.min(h*.24,130), c=L/1.1, slow=1/Physics.lightTick(v), lanes=small?[h*.32,h*.66]:[h*.26,h*.66], xa=w*(small?.16:.12), xb=w*(small?.9:.86);
- const bounce=y=>{const f=((y%2)+2)%2;return f<1?f:2-f;};
- const clock=(x,y0,phase)=>{ctx.lineCap='round';for(const y of [y0-L/2,y0+L/2]){trace(ctx,[[x-18,y],[x+18,y]]);ctx.strokeStyle='rgba(20,23,28,.7)';ctx.lineWidth=3;ctx.stroke();}
-  const py=y0+L/2-bounce(phase)*L, glow=ctx.createRadialGradient(x,py,0,x,py,12);glow.addColorStop(0,rgba(light,.5));glow.addColorStop(1,rgba(light,0));ctx.fillStyle=glow;ctx.fillRect(x-12,py-12,24,24);
-  ctx.beginPath();ctx.arc(x,py,4,0,TAU);ctx.fillStyle=light;ctx.fill();};
- // Earth clock: light goes straight up and down.
- const homeTicks=since*c/L;
- trace(ctx,[[xa,lanes[0]+L/2],[xa,lanes[0]-L/2]]);ctx.setLineDash([3,4]);ctx.strokeStyle=rgba(light,.35);ctx.lineWidth=1.4;ctx.stroke();ctx.setLineDash([]);
- drawEarth(ctx,xa,lanes[0]+L/2+(small?16:22),small?9:12);clock(xa,lanes[0],homeTicks);
- // Rocket clock: it moves right at v; its light keeps light speed, so it rises only at sqrt(1 - v²) of it.
- const lap=(xb-xa)/(Math.max(v,.05)*c), s0=Math.floor(since/lap)*lap, x=xa+v*c*(since-s0), rocketTicks=since*c*slow/L;
- const pts=[];for(let i=0;i<=160;i++){const t=s0+(since-s0)*i/160;pts.push([xa+v*c*(t-s0),lanes[1]+L/2-bounce(t*c*slow/L)*L]);}
- trace(ctx,pts);ctx.setLineDash([3,4]);ctx.strokeStyle=rgba(light,.55);ctx.lineWidth=1.4;ctx.stroke();ctx.setLineDash([]);
- drawRocket(ctx,x,lanes[1]+L/2+(small?16:22),small?12:16,1,true,st.t);clock(x,lanes[1],rocketTicks);
+ const L=small?h*.13:Math.min(h*.24,130), lanes=small?[h*.33,h*.7]:[h*.3,h*.7], xa=w*(small?.16:.12), xb=w*(small?.9:.88);
+ // Light's speed on screen is chosen so the rocket crosses the stage about once per chapter: its slanted trail stays visible.
+ const ch=timeline?.chapters?.[st.stage], span=ch?Math.max(6,ch.end-ch.start+1):18;
+ const c=Math.min(L/1.1,(xb-xa)/(Math.max(vplan??Physics.speed(spec.mass),.2)*span)), slow=1/Physics.lightTick(v), moving=v>.01;
+ const bounce=y=>{const f=((y%2)+2)%2;return f<1?f:2-f;}, step=L/c/5;
+ const mirrors=(x,y0)=>{ctx.lineCap='round';for(const y of [y0-L/2,y0+L/2]){trace(ctx,[[x-18,y],[x+18,y]]);ctx.strokeStyle='rgba(20,23,28,.7)';ctx.lineWidth=3;ctx.stroke();}};
+ const photon=(x,y)=>{const glow=ctx.createRadialGradient(x,y,0,x,y,12);glow.addColorStop(0,rgba(light,.5));glow.addColorStop(1,rgba(light,0));ctx.fillStyle=glow;ctx.fillRect(x-12,y-12,24,24);
+  ctx.beginPath();ctx.arc(x,y,4,0,TAU);ctx.fillStyle=light;ctx.fill();};
+ const dots=pts=>{ctx.fillStyle=rgba(light,.65);for(const [x,y] of pts){ctx.beginPath();ctx.arc(x,y,1.9,0,TAU);ctx.fill();}};
+ const path=pts=>{trace(ctx,pts);ctx.setLineDash([3,4]);ctx.strokeStyle=rgba(light,.5);ctx.lineWidth=1.4;ctx.stroke();ctx.setLineDash([]);};
+ // Earth clock: light goes straight up and down. Dots mark equal steps of time along its path.
+ const homeTicks=since*c/L, ey=lanes[0];
+ path([[xa,ey+L/2],[xa,ey-L/2]]);dots(Array.from({length:6},(_,k)=>[xa,ey-L/2+k*L/5]));
+ drawEarth(ctx,xa,ey+L/2+(small?16:22),small?9:12);mirrors(xa,ey);photon(xa,ey+L/2-bounce(homeTicks)*L);
+ // Rocket clock: it moves right at v; its light keeps light speed, so it climbs only at sqrt(1 - v^2) of it and
+ // needs more equal time steps per crossing. A viewer pushing the speed past the plan sees the rocket start again at the left.
+ const ry=lanes[1], lap=(xb-xa)/(Math.max(v,.01)*c), s0=moving?Math.floor(since/lap)*lap:0, x=xa+v*c*(since-s0), rocketTicks=since*c*slow/L;
+ const at=t=>[xa+v*c*(t-s0),ry+L/2-bounce(t*c*slow/L)*L];
+ if(moving){path(Array.from({length:161},(_,i)=>at(s0+(since-s0)*i/160)));dots(Array.from({length:Math.floor((since-s0)/step)+1},(_,k)=>at(s0+k*step)));}
+ else{path([[xa,ry+L/2],[xa,ry-L/2]]);dots(Array.from({length:6},(_,k)=>[xa,ry-L/2+k*L/5]));}
+ drawRocket(ctx,x,ry+L/2+(small?16:22),small?12:16,1,moving,st.t);mirrors(x,ry);photon(...at(since));
  if(!st.labels)return;
- const size=small?11:13, big=small?15:20;
- text(ctx,'Clock on Earth',xa+40,lanes[0]-L/2+4,{size,weight:600,color:dark});
- text(ctx,'light goes straight up and down',xa+40,lanes[0]-L/2+24,{size:small?10:12});
- text(ctx,small?`Clock on the rocket, ${Math.round(v*100)}% of light speed`:`Clock on the rocket, ${Math.round(v*100)}% of light speed, seen from Earth`,xa,lanes[1]-L/2-(small?30:36),{size,weight:600,color:accent});
- text(ctx,small?'same light speed, longer slanted path':'same light speed, longer slanted path: each tick takes longer',xa,lanes[1]-L/2-(small?13:16),{size:small?10:12});
- const tx=small?w*.92:w*.95;
- text(ctx,`${Math.floor(homeTicks)} ticks`,tx,lanes[0],{align:'right',size:big,weight:700,color:dark});
- text(ctx,`${Math.floor(rocketTicks)} ticks`,tx,small?lanes[1]-L*.75:lanes[1],{align:'right',size:big,weight:700,color:accent});
- if(since>6)pill(ctx,`The rocket clock ticks ${Math.round(slow*10)} times for every 10 on Earth`,w/2,small?h*.93:h*.9,{align:'center',size:small?11:13,weight:600});
+ const size=small?11:13, note=small?10:12, ticks=n=>`${n} tick${n===1?'':'s'}`;
+ text(ctx,`Clock on Earth: ${ticks(Math.floor(homeTicks))}`,xa+40,ey-L/2+4,{size,weight:600,color:dark});
+ text(ctx,'light goes straight up and down',xa+40,ey-L/2+(small?20:24),{size:note});
+ const head=moving?(small?`Rocket, ${Math.round(v*100)}% of light speed: ${ticks(Math.floor(rocketTicks))}`:`Clock on the rocket, ${Math.round(v*100)}% of light speed, seen from Earth: ${ticks(Math.floor(rocketTicks))}`)
+  :`Clock on the rocket, parked: ${ticks(Math.floor(rocketTicks))}`;
+ text(ctx,head,xa,ry-L/2-(small?34:42),{size,weight:600,color:accent});
+ text(ctx,moving?(small?'same light speed, longer slanted path':'same light speed, longer slanted path: each tick takes longer'):'light goes straight up and down',xa,ry-L/2-(small?18:22),{size:note});
+ if(moving&&!small)text(ctx,'dots: equal steps of time, so light covers the same distance between dots on both clocks',w/2,h*.97,{align:'center',size:10,color:'rgba(20,23,28,.5)'});
+ if(moving&&since>6)pill(ctx,`The rocket clock ticks ${Math.round(slow*10)} times for every 10 on Earth`,w/2,small?h*.94:h*.9,{align:'center',size:small?11:13,weight:600});
 }
 
 function drawPaths(ctx,w,h,spec,st){
- if(st.stage===1&&st.labels!==false)return drawLightClocks(ctx,w,h,spec,st);
+ if(st.stage===1&&st.labels!==false)return drawLightClocks(ctx,w,h,spec,st,{vplan:Physics.speed(spec.mass)});
  const accent=ACCENT[spec.accent]||ACCENT.blue, L=pathsLayout(w,h,st), {small,v,T,H,map,x0,bottom}=L, g=Physics.gamma(v);
  // The trip plays once per chapter, in step with Earth time, then waits at the reunion.
  const tc=st.stage===3?H:Math.min(H,(st.since??st.t)*.5*Math.max(1,H/5)), xAt=t=>t<=T?v*t:v*(H-t), own=Math.min(tc,H)/g;
@@ -1018,6 +1025,12 @@ const ENGINES={
   measure:['Traveller comes home younger by',a=>(Physics.agingGap(a)*100).toFixed(1)+'%'],scale:'',demoEnd:()=>2.5,
   disclosure:'Ages and speeds are exact special relativity; the rocket turns around instantly, and the drawing is not to scale.',
   try:'Set Speed to zero: do the twins still agree? Speed up, then make the trip longer and compare the two bars.',aria:'Twins: one stays on Earth while the other flies to a star and back. Two bars show how much each twin has aged.'},
+ 'light-clock':{draw:(ctx,w,h,spec,st)=>drawLightClocks(ctx,w,h,spec,st,{vplan:Physics.speed(st.stage===timeline?.chapters?.length-1?1:spec.mass)}),
+  demo:(p,spec)=>({mass:spec.mass+(1-spec.mass)*smooth(p/.12),distance:spec.distance}),a:['Speed','how fast the rocket flies'],b:['Unused','',''],
+  fa:a=>Math.round(Physics.speed(a)*100)+'% of light',fb:b=>'',
+  measure:['Rocket clock ticks slower by',a=>(Physics.agingGap(a)*100).toFixed(0)+'%'],scale:'Seen from Earth',demoEnd:s=>s.distance,
+  disclosure:'Exact special relativity: light moves at the same speed for every observer. The clocks are slowed down for viewing and not to scale; the rocket clock ticks normally for its crew.',
+  try:'Slide the speed down to zero: the clocks agree. Push it toward light speed: the slanted path grows and the rocket clock nearly stops.',aria:'Two light clocks: one on Earth with light going straight up and down, one on a moving rocket whose light must slant to hit the moving mirrors, so it ticks less often.'},
  'spacetime-paths':{draw:drawPaths,drag:dragPaths,demo:false,a:['Speed','how fast the traveller flies'],b:['Trip','time out before turning back',''],
   fa:a=>Math.round(Physics.speed(a)*100)+'% of light',fb:b=>Physics.turnaround(b).toFixed(1)+' years out',
   measure:['Traveller’s clock counts less by',a=>(Physics.agingGap(a)*100).toFixed(1)+'%'],scale:'',demoEnd:()=>2.5,

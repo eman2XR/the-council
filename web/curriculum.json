@@ -10,12 +10,14 @@
     {
      "id": "1.1",
      "question": "Why do clocks at different heights tick at different rates?",
-     "model": "gravity-clocks"
+     "model": "gravity-clocks",
+     "ready": true
     },
     {
      "id": "1.2",
      "question": "Why does gravity bend light?",
-     "model": "light-bending"
+     "model": "light-bending",
+     "ready": true
     }
    ]
   },
@@ -27,7 +29,8 @@
     {
      "id": "2.1",
      "question": "Why does a moving clock tick slowly?",
-     "model": "twin-trip"
+     "model": "light-clock",
+     "ready": true
     },
     {
      "id": "2.2",
@@ -37,7 +40,8 @@
     {
      "id": "2.3",
      "question": "Why is the travelling twin younger?",
-     "model": "spacetime-paths"
+     "model": "spacetime-paths",
+     "ready": true
     },
     {
      "id": "2.4",
@@ -59,22 +63,26 @@
     {
      "id": "3.1",
      "question": "What happens when two waves meet?",
-     "model": "interference"
+     "model": "interference",
+     "ready": true
     },
     {
      "id": "3.2",
      "question": "Why does a guitar string only play certain notes?",
-     "model": "standing-waves"
+     "model": "standing-waves",
+     "ready": true
     },
     {
      "id": "3.3",
      "question": "How do two slits turn waves into stripes?",
-     "model": "interference"
+     "model": "interference",
+     "ready": true
     },
     {
      "id": "3.4",
      "question": "Why do waves spread out after passing a narrow gap?",
-     "model": "diffraction"
+     "model": "diffraction",
+     "ready": true
     }
    ]
   },
@@ -91,12 +99,14 @@
     {
      "id": "4.2",
      "question": "Why can a trapped particle only have certain energies?",
-     "model": "quantum-well"
+     "model": "quantum-well",
+     "ready": true
     },
     {
      "id": "4.3",
      "question": "Why can't you pin down both where a particle is and how it moves?",
-     "model": "wave-packet"
+     "model": "wave-packet",
+     "ready": true
     },
     {
      "id": "4.4",

@@ -1,4 +1,4 @@
-"""Opt-in coordinator-side source retrieval (COUNCIL_COORDINATOR_FETCH=1).
+"""Coordinator-side source retrieval, used when a CLI researcher cannot reach the web (off with COUNCIL_COORDINATOR_FETCH=0).
 
 When a CLI researcher cannot reach the web, the model proposes candidate URLs as data and the
 coordinator fetches them with bounded size and time. Only pages that actually load become source
@@ -19,7 +19,7 @@ EXCERPT = 3500
 
 
 def enabled():
-    return os.environ.get('COUNCIL_COORDINATOR_FETCH') == '1'
+    return os.environ.get('COUNCIL_COORDINATOR_FETCH', '1') != '0'
 
 
 class _Text(HTMLParser):

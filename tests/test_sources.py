@@ -38,9 +38,9 @@ class SourceTests(unittest.TestCase):
         with self.assertRaises(RuntimeError):
             sources.retrieve(Finder(),'Q?',lambda r,timeout:(_ for _ in ()).throw(OSError('down')))
 
-    def test_fallback_is_opt_in(self):
-        with patch.dict(os.environ,{},clear=True):self.assertFalse(sources.enabled())
-        with patch.dict(os.environ,{'COUNCIL_COORDINATOR_FETCH':'1'}):self.assertTrue(sources.enabled())
+    def test_fallback_is_on_unless_turned_off(self):
+        with patch.dict(os.environ,{},clear=True):self.assertTrue(sources.enabled())
+        with patch.dict(os.environ,{'COUNCIL_COORDINATOR_FETCH':'0'}):self.assertFalse(sources.enabled())
 
 if __name__=='__main__':unittest.main()
 

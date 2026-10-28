@@ -34,9 +34,9 @@ def main():
         if args.provider=='fixture':
             return FixtureProvider()
         if args.provider=='openai':
-            return OpenAIProvider(args.model or os.environ.get('OPENAI_MODEL'),max_calls=(4 if args.command=='daily' else 3)+3*args.rounds)
+            return OpenAIProvider(args.model or os.environ.get('OPENAI_MODEL'),max_calls=(4 if args.command=='daily' else 3)+4*args.rounds)
         return CLIProvider(args.provider,args.model or os.environ.get(f'COUNCIL_{args.provider.upper()}_MODEL'),
-                           max_calls=(4 if args.command=='daily' else 3)+3*args.rounds,timeout=args.timeout,minutes=args.minutes)
+                           max_calls=(4 if args.command=='daily' else 3)+4*args.rounds,timeout=args.timeout,minutes=args.minutes)
     if args.command=='schedule':
         from .schedule import write_schedule
         print(write_schedule(args.hour,args.count,args.provider))

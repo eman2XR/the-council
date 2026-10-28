@@ -22,6 +22,8 @@ SCENE_SCHEMA = obj({
 RESEARCH_SCHEMA = obj({
     'claim': STR, 'explanation': STR, 'assumptions': STRINGS,
     'prediction': STR, 'falsifier': STR, 'limitations': STRINGS,
+    'misconceptions': STRINGS,
+    'questions': {'type': 'array', 'items': obj({'q': STR, 'a': STR})},
     'sources': {'type': 'array', 'items': obj({'title': STR, 'url': STR, 'supports': STR})},
 })
 REVIEW_SCHEMA = obj({
@@ -63,8 +65,8 @@ def validate_scene(scene):
                         ('line_width', 1, 5), ('duration', 15, 45)]:
         if not lo <= scene[key] <= hi:
             raise ValueError(f'{key} must be between {lo} and {hi}')
-    if len(scene['beats']) != 3:
-        raise ValueError('Exactly three teaching beats required')
+    if not 3 <= len(scene['beats']) <= 4:
+        raise ValueError('Three or four teaching beats required')
     for beat in scene['beats']:
         if len(beat['title']) > 90 or len(beat['body']) > 380:
             raise ValueError('Teaching beat exceeds layout limits')

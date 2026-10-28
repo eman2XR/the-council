@@ -52,17 +52,23 @@ class InboxTests(unittest.TestCase):
 
     def test_unknown_request_numbers_from_planner_are_ignored(self):
         with tempfile.TemporaryDirectory() as tmp:
-            root=Path(tmp)
+            root=Path(tmp);(root/'web').mkdir()
+            (root/'web'/'curriculum.json').write_text(json.dumps({'chapters':[{'items':ITEMS}]}))
             class Planner(FixtureProvider):
                 def generate(self,role,prompt,schema=None,**kw):
                     if role=='planner':
                         self.calls+=1
-                        return {'topic':'gravity-clocks','question':'A fresh clock question?','reason':'r','request':99}
+                        return {'topic':'light-bending','question':'A fresh light question?','reason':'r','request':99}
                     return super().generate(role,prompt,schema,**kw)
             with patch('lab.daily.run',return_value={'status':'needs_review','id':'draft'}),\
                  patch('lab.daily.publish'),patch('lab.inbox.comment') as comment:
-                ledger=daily(Planner,push=True,root=root,requests=[])
+                ledger=daily(Planner,push=True,root=root,requests=[{'number':7,'kind':'question','title':'Why?','body':'Ask about clocks.'}])
             self.assertEqual(ledger[-1]['request'],0)
             comment.assert_not_called()
+
+    def test_curriculum_ready_flags_match_the_planner(self):
+        from lab.topics import READY
+        for item in inbox.curriculum():
+            self.assertEqual(bool(item.get('ready')),item.get('model') in READY,item['id'])
 
 if __name__=='__main__':unittest.main()

@@ -57,7 +57,7 @@ Both CLI runners have the same bounds:
 - At most `2 + 3 × rounds` CLI requests per investigation (11 by default).
 - Default **300 seconds per CLI request**, configurable with `--timeout`.
 - Default **30-minute deadline for model work**, configurable with `--minutes`. The renderer can finish its current capture before the next deadline check; this is not a hard wall-clock limit on the entire application.
-- On macOS/Linux, a timed-out worker's entire process group is stopped. If one parallel reviewer fails, the other is cancelled. On Windows, process termination covers the direct CLI process only.
+- On macOS/Linux, a timed-out worker's entire process group is stopped. If one parallel reviewer fails, the others are cancelled. On Windows, process termination covers the direct CLI process only.
 - Drafts and completed reviews survive failures; failed or unreviewed work never replaces the latest accepted artifact.
 
 These limits bound work, not dollar cost. A CLI request may contain several model turns. The direct OpenAI API remains available explicitly:
@@ -83,10 +83,10 @@ The fixture intentionally fails the first visual review (missing comparison and 
 2. Scientist turns the evidence into a scoped claim, assumptions, prediction, falsifier and limitations.
 3. Director creates a validated scene specification: narrative, visual density, reference paths, labels, stroke weight, parameters and pacing.
 4. Renderer captures four ordered desktop frames and a mobile page from the actual interactive renderer.
-5. Two reviewers run in parallel: physics checks claims and visual implications; visual review checks clarity, comparison and beginner comprehension. Each completed review is saved immediately.
+5. Three reviewers run in parallel: physics checks claims and visual implications; visual review checks layout, legibility and progression; a beginner reviewer answers the research's transfer questions from the frames and subtitles alone, checks that every subtitle matches its frame, and copy-edits the text. Each completed review is saved immediately.
 6. Director receives both reviews and the previous scene, then revises. All versions remain inspectable.
 
-Both reviewers must pass with scores ≥7, no blocking issues, and passing numerical/layout checks. Failure or budget exhaustion retains a draft. Passing model review is **not** proof of scientific correctness or novelty.
+All three reviewers must pass with scores ≥7, no blocking issues, and passing numerical/layout checks. Failure or budget exhaustion retains a draft. Passing model review is **not** proof of scientific correctness or novelty.
 
 Runs are saved in `web/runs/<id>/record.json` with scenes, frames, source notes, review findings, timestamps and provider-reported usage. Only runs that pass every gate can be exported to `web/published/`.
 
@@ -111,7 +111,7 @@ Run one daily cycle using existing Claude Code authentication:
 python3 -m lab daily --provider claude --count 1 --rounds 3 --publish
 ```
 
-Use `--provider codex` for Codex. Omit `--publish` to export accepted guides locally without committing or pushing. `--count 2` permits up to two attempts per local calendar day, not two guaranteed publications. Each investigation uses one planner call plus at most `2 + 3 × rounds` research/director/reviewer calls (12 total at three rounds), with the same 30-minute model-work deadline and two concurrent reviewers. Failed planning, crashes, and rejected investigations consume a daily slot to prevent retry loops.
+Use `--provider codex` for Codex. Omit `--publish` to export accepted guides locally without committing or pushing. `--count 2` permits up to two attempts per local calendar day, not two guaranteed publications. The daily run plans without a model call unless the owner left questions or feedback: it takes the next curriculum item whose model is marked ready in `lab/topics.py` and not already used by a published guide or draft; when none qualifies it starts nothing and uses no slot. Each investigation then uses at most `3 + 4 × rounds` research/director/reviewer calls (16 with the planner at three rounds), with the same 30-minute model-work deadline and three concurrent reviewers. Failed planning, crashes, and rejected investigations consume a daily slot to prevent retry loops.
 
 The coordinator uses an OS file lock and persistent `.council-state/history.json` to prevent overlapping daily jobs and duplicate attempts on repeated triggers. It retains draft records in `web/runs/`. Only live runs that pass both reviews and all render checks enter `web/published/`; fixtures are never published as research. The public record includes sources, assumptions, checks, and visual revision history. Passing automated review is not proof of scientific correctness.
 

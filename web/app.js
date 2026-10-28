@@ -1,7 +1,7 @@
 const $=id=>document.getElementById(id);
 const put=(id,text)=>{const el=$(id);if(el)el.textContent=text??'';};
 const el=(tag,props={},...children)=>{const node=Object.assign(document.createElement(tag),props);node.append(...children);return node;};
-const TOPICS={'gravity-clocks':'Gravity and time','light-bending':'Gravity and light','spacetime':'Space and time','twin-trip':'Space and time','interference':'Waves','standing-waves':'Waves','two-slit-particles':'Quanta','tunneling':'Quanta','wave-packet':'Quanta','quantum-well':'Quanta','falling-time':'Gravity and time','diffraction':'Waves','spacetime-paths':'Space and time','river':'Black holes','fall-views':'Gravity and time','tides':'Curved spacetime','lift':'Gravity and time','moon-tides':'Gravity and time'};
+const TOPICS={'gravity-clocks':'Gravity and time','light-bending':'Gravity and light','spacetime':'Space and time','twin-trip':'Space and time','interference':'Waves','standing-waves':'Waves','two-slit-particles':'Quanta','tunneling':'Quanta','wave-packet':'Quanta','quantum-well':'Quanta','falling-time':'Gravity and time','diffraction':'Waves','spacetime-paths':'Space and time','light-clock':'Space and time','river':'Black holes','fall-views':'Gravity and time','tides':'Curved spacetime','lift':'Gravity and time','moon-tides':'Gravity and time'};
 const STATUS={planning:'Choosing a question',running:'Investigating now',reviewed:'Passed review',needs_review:'Draft, not published',failed:'Attempt stopped',interrupted:'Run interrupted',idle:'Resting'};
 const STEPS=['Question','Research','Design','Render','Review','Publish'];
 const reduceMotion=matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -53,7 +53,7 @@ function show(data,{autoplay=false}={}){
 function renderBehind(data){
  const r=data.research, fixture=data.provider==='fixture', revisions=data.revisions||[], final=revisions.at(-1);
  const chips=[];
- if(final?.physics_review&&final?.visual_review)chips.push(final.accepted?(final.text_review?'Passed physics, visual and text review':'Passed physics and visual review'):'Reviews requested changes');
+ if(final?.physics_review&&final?.visual_review)chips.push(final.accepted?(final.learner_review?'Passed physics, visual and beginner review':'Passed physics and visual review'):'Reviews requested changes');
  if(revisions.length>1)chips.push(`${revisions.length} drafts`);
  const checks=data.checks||[];if(checks.length)chips.push(`${checks.filter(c=>c.pass).length} of ${checks.length} checks`);
  if(fixture)chips.unshift('Scripted example');
@@ -68,7 +68,7 @@ function renderBehind(data){
   const card=el('article',{className:'revision'});
   if(rev.frames?.length)card.append(el('img',{src:rev.frames[0],alt:`Rendered frame from draft ${i+1}`}));
   const verdict=rev.accepted?(fixture?'Fixture passed':'Passed review'):'Changes requested';
-  const notes=[rev.visual_review?.summary,rev.physics_review?.summary,rev.text_review?.summary].filter(Boolean).join(' ');
+  const notes=[rev.visual_review?.summary,rev.physics_review?.summary,rev.learner_review?.summary].filter(Boolean).join(' ');
   const view=el('button',{type:'button',className:'pill',textContent:'View this draft'});
   view.onclick=()=>{CouncilScene.load(rev.scene);heading(rev.scene);
    put('run-banner',`Draft ${i+1} · ${verdict.toLowerCase()}`);scrollTo({top:0,behavior:reduceMotion?'auto':'smooth'});};
@@ -193,7 +193,7 @@ function stepOf(state){
  if(message.includes('rendering'))return 3;
  return 1;
 }
-function plain(message){return (message||'').replace('physics_review','physics review').replace('visual_review','visual review').replace('text_review','text review').replace(/^Revision (\d+)/,'Draft $1');}
+function plain(message){return (message||'').replace('physics_review','physics review').replace('visual_review','visual review').replace('learner_review','beginner review').replace(/^Revision (\d+)/,'Draft $1');}
 function nextRun(s){
  const parts=Object.fromEntries(new Intl.DateTimeFormat('en-US',{timeZone:s.timezone,hour:'numeric',minute:'numeric',second:'numeric',hourCycle:'h23'}).formatToParts(new Date()).map(p=>[p.type,p.value]));
  const now=+parts.hour*3600+ +parts.minute*60+ +parts.second, at=s.hour*3600;
@@ -256,7 +256,8 @@ function doneItem(item){return entries.find(e=>e.curriculum===item.id||norm(e.qu
 function requestFor(item){
  if(document.body.dataset.paused!=='no')return el('span',{className:'state wait',textContent:'Not yet'});
  if(picks.has(item.id))return el('a',{className:'state picked',href:picks.get(item.id),target:'_blank',rel:'noopener noreferrer',textContent:'Picked'});
- if(item.model)return el('a',{className:'state pill pick',target:'_blank',rel:'noopener noreferrer',textContent:'Pick for tomorrow',
+ // Only items whose picture meets the quality bar can be picked; the rest wait for a redesign.
+ if(item.ready)return el('a',{className:'state pill pick',target:'_blank',rel:'noopener noreferrer',textContent:'Pick for tomorrow',
   href:issueURL('council:choose',`Pick next: ${item.id} ${item.question}`.slice(0,120),`curriculum: ${item.id}\n\n${item.question}\n\nPicked on the website. The next morning's run investigates this.`)});
  return el('span',{className:'state wait',textContent:'Later'});
 }

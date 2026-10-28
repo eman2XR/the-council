@@ -11,23 +11,57 @@ from lab.schedule import write_schedule
 import plistlib
 
 
+def curriculum(root, items):
+    (root/'web').mkdir(parents=True, exist_ok=True)
+    (root/'web'/'curriculum.json').write_text(json.dumps({'chapters':[{'items':items}]}))
+
+
+READY_ITEMS=[{'id':'1.1','question':'Why do clocks at different heights tick at different rates?','model':'gravity-clocks'},
+             {'id':'1.2','question':'Why does gravity bend light?','model':'light-bending'}]
+
+
 class DailyTests(unittest.TestCase):
     def test_daily_budget_persists_and_failed_slots_are_not_retried(self):
         with tempfile.TemporaryDirectory() as tmp:
-            root=Path(tmp)
+            root=Path(tmp);curriculum(root,READY_ITEMS)
             with patch('lab.daily.run',return_value={'status':'needs_review','id':'draft'}) as runner:
                 daily(FixtureProvider,root=root)
                 daily(FixtureProvider,root=root)
                 self.assertEqual(runner.call_count,1)
                 self.assertFalse((root/'web'/'published').exists())
 
-    def test_duplicate_questions_are_rejected_before_second_run(self):
+    def test_second_daily_slot_takes_the_next_ready_item_without_a_planner_call(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root=Path(tmp);curriculum(root,READY_ITEMS);provider=FixtureProvider()
+            with patch('lab.daily.run',return_value={'status':'needs_review','id':'draft'}) as runner:
+                ledger=daily(lambda:provider,count=2,root=root)
+            self.assertEqual([c.kwargs['topic'] for c in runner.call_args_list],['gravity-clocks','light-bending'])
+            self.assertEqual([a['curriculum'] for a in ledger],['1.1','1.2'])
+            self.assertEqual(provider.calls,0)
+
+    def test_nothing_ready_uses_no_slot(self):
         with tempfile.TemporaryDirectory() as tmp:
             root=Path(tmp)
-            with patch('lab.daily.run',return_value={'status':'needs_review','id':'draft'}) as runner:
-                ledger=daily(FixtureProvider,count=2,root=root)
-                self.assertEqual(runner.call_count,1)
-                self.assertEqual(ledger[-1]['status'],'failed')
+            curriculum(root,[{'id':'2.2','question':'Can two events be simultaneous for one person but not another?','model':'spacetime'},
+                             {'id':'1.2','question':'Why does gravity bend light?','model':'light-bending'}])
+            (root/'web'/'published').mkdir()
+            (root/'web'/'published'/'index.json').write_text(json.dumps([{'id':'x','question':'Another light question?','topic':'light-bending'}]))
+            with patch('lab.daily.run') as runner:
+                self.assertEqual(daily(FixtureProvider,root=root),[])
+            runner.assert_not_called()
+
+    def test_plannable_needs_a_ready_unused_model_and_a_fresh_question(self):
+        from lab.daily import plannable
+        items=READY_ITEMS+[{'id':'2.1','question':'Why does a moving clock tick slowly?','model':'light-clock'},
+                           {'id':'2.4','question':'Why can nothing travel faster than light?','model':'twin-trip'}]
+        guides=[{'question':'Why does gravity bend light?','topic':'light-bending'}]
+        ledger=[{'question':'Why does a moving clock tick slowly?','topic':'twin-trip','status':'reviewed'},
+                {'question':'Why do clocks at different heights tick at different rates?','topic':'gravity-clocks','status':'failed'}]
+        same=lambda e,q: (e.get('question') or '')==q
+        explored=lambda q,model=None: any(same(g,q) for g in guides) or any(same(a,q) and model in (None,a.get('topic')) for a in ledger)
+        # Light bending is used, the clocks question failed with the same model, twin trip is not ready;
+        # the moving clock question is open again because its earlier attempt used another model.
+        self.assertEqual([i['id'] for i in plannable(items,guides,explored)],['2.1'])
 
     def test_lock_prevents_overlap(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -62,8 +96,8 @@ class DailyTests(unittest.TestCase):
             for mutate in [lambda s:s.update(provider='fixture'),
                            lambda s:s['revisions'][-1]['checks'][0].update({'pass':False}),
                            lambda s:s['revisions'][-1]['physics_review'].update({'pass':False}),
-                           lambda s:s['revisions'][-1]['text_review'].update({'pass':False}),
-                           lambda s:s['revisions'][-1].pop('text_review'),
+                           lambda s:s['revisions'][-1]['learner_review'].update({'pass':False}),
+                           lambda s:s['revisions'][-1].pop('learner_review'),
                            lambda s:s['revisions'][0].update(frames=['../secret.png'])]:
                 bad=copy.deepcopy(state);mutate(bad)
                 with self.assertRaises(ValueError):export_accepted(bad,root)

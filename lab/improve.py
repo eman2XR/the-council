@@ -46,7 +46,7 @@ def recent_reviews(root, limit=8):
         if record.get('provider') == 'fixture' or not record.get('revisions'):
             continue
         last = record['revisions'][-1]
-        issues = [text[:220] for key in ('physics_review', 'visual_review') if last.get(key)
+        issues = [text[:220] for key in ('physics_review', 'visual_review', 'learner_review') if last.get(key)
                   for text in last[key].get('blocking_issues', [])[:2] + last[key].get('changes', [])[:1]]
         notes.append({'topic': record.get('topic'), 'status': record.get('status'), 'issues': issues})
         if len(notes) >= limit:

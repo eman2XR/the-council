@@ -39,6 +39,25 @@ def keep_retrieved(research, notes):
     return research
 
 
+# The quality bar every guide is judged on; the director writes to it and the learner reviewer checks it.
+STANDARD = ('Quality bar: explain WHY, not only what happens. Start from something the viewer can see, feel or measure. '
+    'Name the everyday belief a beginner holds and confront it. Define every term in plain words the first time it appears. '
+    'Every sentence must match what is on screen while it plays; the model notes say what each chapter shows. '
+    'Change one thing at a time. Answer the likely objections listed in the research. Keep it short: two or three '
+    'sentences per chapter, each under 110 characters, and let the first chapter make its point in one or two short '
+    'sentences. Never refer to other guides.')
+
+LEARNER = ('You are a curious adult with school-level science who has never studied this topic. Use ONLY what these '
+    'frames and texts show: each frame includes the subtitle on screen at that moment. Frames come in order, an early and '
+    'a late frame for each chapter, then the phone view of the last chapter and the phone page top. First answer each '
+    'transfer question from the guide alone, writing "not covered" when it does not answer it; put the answers in the '
+    'summary. Then, as the copy editor, list in changes: undefined words, sentences hard to follow on one read, objections '
+    'left unanswered, any subtitle that does not match its frame, and text that could be shorter; quote the field, the '
+    'current text and a replacement no longer than the original. Pass only if a beginner could answer all but at most one '
+    'question correctly from the guide, nothing on screen contradicts its subtitle, and no confusion blocks the main idea. '
+    'Score 0..10 for how well a beginner would understand why.')
+
+
 def run(provider, rounds=3, on_update=None, topic="light-bending", question=None):
     model = TOPICS[topic]
     question = question or model["question"]
@@ -68,7 +87,7 @@ def run(provider, rounds=3, on_update=None, topic="light-bending", question=None
         try:
             notes=provider.generate('researcher', question+' Search primary or university sources for this question. Include URLs, physical assumptions, tests, and common misleading visual metaphors. Use web search, do not invent citations.', research=True)
         except RuntimeError as error:
-            # Opt-in fallback: the coordinator fetches candidate pages itself; only pages that load become notes.
+            # Fallback: the coordinator fetches candidate pages itself; only pages that load become notes.
             if not (sources.enabled() and 'retrieved no source content' in str(error)):
                 raise
             save('The researcher could not reach the web; the coordinator is retrieving candidate sources.')
@@ -76,7 +95,7 @@ def run(provider, rounds=3, on_update=None, topic="light-bending", question=None
             retrieved_by='coordinator'
         (directory/'source-notes.txt').write_text(notes,encoding='utf-8')
         save('Sources retrieved. Scientist is preparing the research record.')
-        research=provider.generate('scientist', question+'\nProduce a precise, beginner-friendly research record from these retrieved notes. Only cite URLs in the notes. No new-discovery claims.\n'+model_notes+'\n'+notes, RESEARCH_SCHEMA)
+        research=provider.generate('scientist', question+'\nProduce a precise, beginner-friendly research record from these retrieved notes. Only cite URLs in the notes. No new-discovery claims. In misconceptions, list the everyday beliefs and "wait, but..." objections a beginner would bring. In questions, write 3 to 5 transfer questions with short answers that a good guide must let a beginner answer, at least one aimed at a misconception.\n'+model_notes+'\n'+notes, RESEARCH_SCHEMA)
         validate(research,RESEARCH_SCHEMA)
         research=keep_retrieved(research,notes)
         if not research['sources'] or any(not s['url'].startswith(('https://','http://')) for s in research['sources']):
@@ -89,10 +108,10 @@ def run(provider, rounds=3, on_update=None, topic="light-bending", question=None
         feedback=''
         previous=None
         for index in range(1,rounds+1):
-            prompt=question+'\n'+model_notes+'\nResearch:\n'+json.dumps(research)+'\nDesign an elegant, legible visual explanation. Return three short beats (title <=90 chars, body <=380), title <=100, subtitle <=250, why <=220. mass 0..1, distance 1..2.5, ray_count 1..5, line_width 1..5, duration 15..45 seconds. Strong comparison and clear labels matter more than decoration.'
+            prompt=question+'\n'+model_notes+'\nResearch:\n'+json.dumps(research)+'\nDesign an elegant, legible visual explanation. Return three or four short beats, matching the chapters the model notes describe (title <=90 chars, body <=380), title <=100, subtitle <=250, why <=220. mass 0..1, distance 1..2.5, ray_count 1..5, line_width 1..5, duration 15..45 seconds. Strong comparison and clear labels matter more than decoration.'
             if previous:
                 prompt+='\nPrevious scene:\n'+json.dumps(previous)+'\nReviewer change requests:\n'+feedback
-            prompt+='\nAudience: a curious beginner building visual intuition. Keep equations, symbolic variables, numerical implementation details and technical jargon OUT of title, subtitle, beats and takeaway. Describe changes physically in plain language. Keep technical details in the research record. Each beat should ask the viewer to notice one clear thing. Beat bodies play as subtitles, one sentence at a time at reading pace: write two or three short sentences per beat, each under 110 characters, in plain words. Open chapter 1 on the comparison quickly. Set controls to the sliders that genuinely help (often none or one). The takeaway is one memorable sentence under 140 characters. The why field appears above the player for a viewer who knows no physics: one or two sentences on why this is worth understanding, tied to something they have seen or felt or to what it explains. Leave why empty only when the subtitle already makes the reason obvious. The beats themselves must define, in plain words, any idea a beginner would not know (for example what a crest or wavelength is, or what adding and cancelling means). Each investigation must stand on its own: never refer to other investigations, earlier guides or anything the viewer may have watched before, and explain every idea it uses.'
+            prompt+='\nAudience: a curious beginner building visual intuition. Keep equations, symbolic variables, numerical implementation details and technical jargon OUT of title, subtitle, beats and takeaway. Describe changes physically in plain language. Keep technical details in the research record. Each beat should ask the viewer to notice one clear thing. Beat bodies play as subtitles, one sentence at a time at reading pace: write two or three short sentences per beat, each under 110 characters, in plain words. Open chapter 1 on the comparison quickly. Set controls to the sliders that genuinely help (often none or one). The takeaway is one memorable sentence under 140 characters. The why field appears above the player for a viewer who knows no physics: one or two sentences on why this is worth understanding, tied to something they have seen or felt or to what it explains. Leave why empty only when the subtitle already makes the reason obvious. The beats themselves must define, in plain words, any idea a beginner would not know (for example what a crest or wavelength is, or what adding and cancelling means). Each investigation must stand on its own: never refer to other investigations, earlier guides or anything the viewer may have watched before, and explain every idea it uses. '+STANDARD
             scene=validate_scene(provider.generate('director',prompt,SCENE_SCHEMA))
             scene['kind']=topic
             state['scene']=scene
@@ -103,10 +122,15 @@ def run(provider, rounds=3, on_update=None, topic="light-bending", question=None
             state['revisions'].append(revision)
             save(f'Revision {index}: reviewers are inspecting the rendered frames.')
             context=model_notes+'\nResearch: '+json.dumps(research)+'\nScene: '+json.dumps(scene)+'\nChecks: '+json.dumps(checks)
+            # Frames: an early and a late frame per chapter, then the phone view and the phone page top.
+            late=frames[1:2*len(scene['beats']):2]
             reviews = {
-                'physics_review': ('physics_reviewer', context+'\nInspect the attached frames AND claims. Look for incorrect physics, misleading metaphors, omitted assumptions and claims beyond the sources. Score 0..10. Pass only if scientifically appropriate as a teaching approximation; otherwise provide actionable changes. Review is not scientific proof.', frames[:4]),
-                'text_review': ('text_reviewer', context+'\nYou are the copy editor. Read every word the viewer sees: title, subtitle, why, beat titles, beat bodies (played as subtitles one sentence at a time) and takeaway. The audience knows no physics. Flag only real problems: words a beginner would not know left undefined, sentences hard to parse on one read, a title that does not say what the guide is about, an inaccurate or confusing subtitle, filler or repetition, jumps in logic, wording that could mislead about the physics, or references to other guides. Do not rewrite for taste. Every proposed change must be as short as the original or shorter; never add jargon or equations. In changes, quote the field, the current text and the replacement. Score 0..10 for clarity without verbosity; pass requires >=7 and no blockers.', ()),
-                'visual_review': ('visual_reviewer', context+'\nInspect these actual frames in order: first-control-at-zero reference at t=1, first control restored at t=9 and t=11, interactive comparison at t=18 (for every model except light bending the second control is moved to its maximum, 2.5), then mobile workspace and top-of-page overview. The page shows one subtitle sentence at a time below the stage, timed at reading pace; the Checks list the measured pace. Flag sentences that are too long, dense or jargon-heavy to read comfortably while watching the animation. Judge whether the chosen sliders (scene field controls) help intuition; frames always show controls state as configured. Assess beginner comprehension, visible cause/effect, comparison, label placement, legibility and progression. Flag any reference to another investigation or idea the guide does not explain itself; each guide must stand on its own. The why field appears above the player before playback: judge whether a viewer who knows no physics would understand why the question matters and every idea and colour the guide then uses. Scores 0..10; pass requires >=7 and no blockers. Give concrete changes to the available scene fields. Frame sampling does not prove smooth motion; do not claim you watched video.', frames),
+                'physics_review': ('physics_reviewer', context+'\nThe attached frames show the end of each chapter. Inspect them AND the claims. Look for incorrect physics, misleading metaphors, omitted assumptions and claims beyond the sources. Score 0..10. Pass only if scientifically appropriate as a teaching approximation; otherwise provide actionable changes. Review is not scientific proof.', late),
+                # The learner sees only what a viewer sees, and the questions without their answers.
+                'learner_review': ('learner', 'Guide text: '+json.dumps({k:scene.get(k) for k in ('title','subtitle','why','beats','takeaway')})
+                    +'\nTransfer questions: '+json.dumps([q['q'] for q in research.get('questions',[])])
+                    +'\nObjections a beginner may raise: '+json.dumps(research.get('misconceptions',[]))+'\n'+LEARNER, frames),
+                'visual_review': ('visual_reviewer', context+'\nInspect these actual frames in order: an early and a late frame for each chapter (the first chapter has the first control at zero; the last chapter shows the playback demo), then the phone view of the last chapter and the phone page top. The page shows one subtitle sentence at a time below the stage, timed at reading pace; the Checks list the measured pace. Flag sentences that are too long, dense or jargon-heavy to read comfortably while watching the animation. Judge whether the chosen sliders (scene field controls) help intuition; frames always show controls state as configured. Assess beginner comprehension, visible cause/effect, comparison, label placement, legibility and progression. Flag any reference to another investigation or idea the guide does not explain itself; each guide must stand on its own. The why field appears above the player before playback: judge whether a viewer who knows no physics would understand why the question matters and every idea and colour the guide then uses. Scores 0..10; pass requires >=7 and no blockers. Give concrete changes to the available scene fields. Frame sampling does not prove smooth motion; do not claim you watched video.', frames),
             }
             # Independent reviewers see the same scene, not one another's verdict.
             with ThreadPoolExecutor(max_workers=3) as workers:
@@ -124,7 +148,7 @@ def run(provider, rounds=3, on_update=None, topic="light-bending", question=None
                     for future in futures:
                         future.cancel()
                     raise
-            physics, visual, wording = revision['physics_review'], revision['visual_review'], revision['text_review']
+            physics, visual, wording = revision['physics_review'], revision['visual_review'], revision['learner_review']
             revision['accepted']=all(c['pass'] for c in checks) and approved(physics) and approved(visual) and approved(wording)
             write_json(directory/f'revision-{index}'/'scene.json',scene)
             save(f'Revision {index}: '+('review gates passed.' if revision['accepted'] else 'changes requested; feedback saved.'))
@@ -133,7 +157,7 @@ def run(provider, rounds=3, on_update=None, topic="light-bending", question=None
                 save('Offline fixture complete.' if provider.name=='fixture' else 'Investigation reviewed. Artifact is ready for human inspection; no new-discovery claim.')
                 break
             previous=scene
-            feedback=json.dumps({'physics':physics,'visual':visual,'text':wording,'checks':checks})
+            feedback=json.dumps({'physics':physics,'visual':visual,'learner':wording,'checks':checks})
         else:
             state['status']='needs_review'
             save('Revision limit reached. Artifact retained as a draft, not promoted.')

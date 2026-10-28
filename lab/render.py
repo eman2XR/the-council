@@ -88,17 +88,18 @@ def capture(scene, directory, research=None, provider='fixture'):
                 ('Seeking reproduces identical canvas pixels',interaction['deterministic'])])
             page.evaluate('(s)=>CouncilScene.load(s)',scene)
             frames = []
-            # Ordered samples include within-beat motion and a mobile frame.
-            samples = [(1,0),(9,1),(11,1),(18,2)]
-            for i,(time,beat) in enumerate(samples):
-                if i==3 and scene.get('kind','light-bending')!='light-bending':
-                    page.evaluate("() => {const s=document.getElementById('distance');s.value='2.5';s.dispatchEvent(new Event('input'));}")
-                page.evaluate('([t,b])=>CouncilScene.seek(t,b)', [time,beat])
+            # An early and a late frame in every chapter, timed from the subtitles, so each frame shows what
+            # playback shows while that chapter's sentences are on screen (seeking includes the last chapter's demo).
+            chapters = page.evaluate('CouncilScene.timeline().chapters.map(c=>[c.start,c.end])')
+            samples = [(start + (end - start) * f, i) for i, (start, end) in enumerate(chapters) for f in (.3, .92)]
+            for i, (time, beat) in enumerate(samples):
+                page.evaluate('([t,b])=>CouncilScene.seek(t,b)', [time, beat])
                 path = directory/f'frame-{i+1}.png'
                 page.locator('.workspace').screenshot(path=str(path))
                 frames.append(path)
+            last = samples[-1]
             page.set_viewport_size({'width':390,'height':844})
-            page.evaluate('CouncilScene.seek(18,2)')
+            page.evaluate('([t,b])=>CouncilScene.seek(t,b)', [last[0], last[1]])
             # A single viewport avoids Chromium full-page compositor tiling artifacts.
             page.set_viewport_size({'width':390,'height':1800})
             path=directory/'mobile.png'

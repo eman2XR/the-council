@@ -17,11 +17,13 @@ Explain gravitational time dilation intuitively without saying a clock is malfun
 The lag is determined by the gravitational potential difference, not by the gradient of gravity (tidal forces). For a small fixed gap, the lag scales with local gravitational acceleration times the gap. Never say the lag is independent of gravity strength. No new-discovery claims; checks validate implementation only.'''
 
 COMMON = '''
-Shared player behavior: chapter 1 automatically sets the first control (field "mass") to zero; chapter 2 restores
-the scene value; during chapter 3 playback the first control dips and returns, then the second control (field "distance")
-sweeps to its maximum 2.5. The viewer reads one subtitle sentence at a time below the stage. ray_count is unused.
-The stage carries no scale or magnification disclaimers: drawings are illustrations, and each model's caveats are
-shown once in the investigation details. Do not ask for on-stage "not to scale" or "magnified" labels.
+Shared player behaviour: a scene has three or four chapters. Chapter 1 automatically sets the first control (field
+"mass") to zero; later chapters use the scene values. In the last chapter, unless this model says otherwise, playback
+demonstrates the controls: during its first half the first control dips to about half and returns; during its second half
+the second control (field "distance") moves to 2.5. Write the last chapter's sentences to describe those changes in that
+order. The viewer reads one subtitle sentence at a time below the stage; screenshots show exactly what playback shows.
+ray_count is unused. The stage carries no scale or magnification disclaimers: drawings are illustrations, and each model's
+caveats are shown once in the investigation details. Do not ask for on-stage "not to scale" or "magnified" labels.
 Field controls chooses which sliders the viewer gets: none, first, second or both. Offer a slider only when moving
 it builds intuition beyond what playback already shows; otherwise choose none.'''
 
@@ -133,27 +135,53 @@ ticks slowly, why the travelling twin is younger, why nothing can be pushed past
 limit as v approaches 1). Each clock ticks normally for its owner; do not say the traveller feels time slow. The instant
 turnaround is an idealization; no acceleration physics, gravity or Doppler views. No new-discovery claims.'''+COMMON
 
-PATHS_NOTES = '''SPACETIME PATHS (WHY THE TRAVELLER IS YOUNGER). Special relativity in flat spacetime, years and light-years (light
-speed 1). The explanation is geometric: a clock measures the length of its own path through spacetime, and that length
-follows a rule with a minus sign, clock time = sqrt(time^2 - distance^2). Drawn: a spacetime diagram (time up, space right)
-with the goodbye and reunion events on Earth; the home twin's path straight up and the traveller's path out to the
-turnaround and back; one dot per year of each twin's own time (the traveller's dots sit farther apart on paper because
-fewer fit); a dotted light path from the goodbye (zero length); under the diagram the same trip as ordinary space (Earth,
-the star at v*T light-years, the rocket); beside it the rule and the worked lengths of each path (home H, each traveller
-leg sqrt(T^2 - (vT)^2)) and the traveller's total; at the reunion one line says how many years younger the traveller is.
-The viewer can drag the turnaround point (sideways sets speed, up sets the trip). Field mass sets v = 0.9*mass (UI
-"Speed"; 0 keeps both twins on one path); field distance sets T = 1.6*distance years (UI "Trip"). The readout is
-1 - 1/gamma, independent of trip length. Key ideas to explain: a path through spacetime is where you are at every
-moment; your clock reads its length; distance through space counts against time (the minus sign), so the straight path
-between two events holds the most time and any detour holds less; on paper the bent path looks longer, which is the
-opposite of its spacetime length; whether a path is bent is something everyone agrees on, which settles who is younger;
-light's path has zero length, which is why nothing reaches light speed. Each clock ticks normally for its owner. The
-turnaround is instant; no acceleration physics, gravity, Doppler views or what anyone sees. No new-discovery claims.'''+COMMON
+PATHS_NOTES = '''SPACETIME PATHS (WHY THE TRAVELLER IS YOUNGER). Special relativity in flat spacetime, years and light-years
+(light speed 1). Each chapter has its own drawing, and there is no slider demo. Chapter 1: a map of space and time (time up,
+distance from Earth sideways), light's dotted 45-degree path, one dot per year on each twin's path; the first control is
+zero, so both twins share one straight path. Chapter 2: two light clocks (light bouncing between two mirrors, one tick per
+crossing), one on Earth and one on a rocket moving at v, seen from Earth: the rocket's light must slant to hit the moving
+mirrors, a longer path at the same speed, so each tick takes longer; tick counters and a line "the rocket clock ticks N
+times for every 10 on Earth". Chapter 3: the trip on the map, out to a star v*T light-years away and back; the traveller's
+slow clock gives fewer dots; readouts "Home twin's clock" and "Traveller's clock" in years, "Each leg: T years pass on Earth,
+T/gamma on the traveller's slow clock", and at the reunion how many years younger the traveller is. An optional chapter 4
+holds the finished trip for discussion, for example why the home twin is not the younger one: while both coast each sees
+the other's clock run slow, but only the traveller turns around and feels it, so only their path bends; between two
+meetings the straight path holds the most time, though on the map the bent one looks longer. Field mass sets v = 0.9*mass
+(UI "Speed"); field distance sets T = 1.6*distance years (UI "Trip"); the viewer can drag the turnaround. Prefer speeds
+where the numbers do not coincide (for example mass 0.9623 gives 87% of light speed and exactly half the time). The
+readout is "Traveller's clock counts less by" 1 - 1/gamma, independent of trip length. Define a light-year when it is
+used. Each clock ticks normally for its owner. The turnaround is instant; no acceleration physics, gravity or Doppler views.
+No new-discovery claims.'''+COMMON
+LIGHT_CLOCK_NOTES = '''LIGHT CLOCK (WHY A MOVING CLOCK TICKS SLOWLY). Special relativity; light's speed is the same for every
+observer, as experiments since 1887 show. Drawn: two light clocks, each two mirrors with light bouncing between them, one
+tick per crossing. Top: a clock on Earth whose light goes straight up and down. Bottom: the same kind of clock on a rocket
+moving right at speed v, seen from Earth; its light must slant to hit the moving mirrors, tracing a dashed zigzag, a longer
+path at the same speed, so each tick takes longer; the rocket crosses the stage once per chapter. Dots along both light
+paths mark equal steps of time, so light visibly covers the same distance per step but needs more steps on the slant. Each
+clock's label carries its tick count, and after a few seconds a line says how many times the rocket clock ticks for every
+10 on Earth (10/gamma). In the last chapter playback speeds the rocket up to 90% of light speed (no dip), so write that
+chapter about approaching light speed. Field mass sets v = 0.9*mass (UI "Speed", shown as a percentage of light speed; 0 parks the rocket and
+the clocks agree); field distance is unused, so set controls to "first" or "none". The readout is how much slower the
+rocket clock ticks, 1 - 1/gamma. Supported questions: why a moving clock ticks slowly, why the effect only matters near
+light speed, why clocks agree again when the rocket stops. Honesty points: the rocket clock ticks normally for anyone on
+board; the slowing is how the moving clock runs as measured from Earth, and the crew would say the same of Earth's clocks
+while both coast; every kind of clock, and the crew's bodies, slow the same way, or the crew could tell they were moving.
+No twin-paradox resolution, acceleration, gravity or Doppler effects. Slowed down for viewing and not to scale.
+No new-discovery claims.'''+COMMON
+
+# Models whose picture explains why, not only what, and that passed owner review and beginner tests.
+# Only these are planned; the others wait for a redesign.
+READY = {'light-bending', 'gravity-clocks', 'spacetime-paths', 'light-clock', 'interference',
+         'standing-waves', 'wave-packet', 'diffraction', 'quantum-well'}
+# Not ready (2026-10-28): twin-trip shows what rather than why; spacetime, falling-time and tunneling are graph-style;
+# two-slit-particles failed a beginner test (faint ripples, slits read as one gap, unexplained screen marks, stripes
+# form before the narration says so).
 
 TOPICS = {
     'light-bending': {'label':'Light bending', 'question':'Why does gravity bend light?', 'notes':MODEL_NOTES},
     'gravity-clocks': {'label':'Gravity and clocks', 'question':'Why do clocks at different heights tick at different rates?', 'notes':CLOCK_NOTES},
     'twin-trip': {'label':'Twin trip', 'question':'Why is the travelling twin younger?', 'notes':TWIN_NOTES},
+    'light-clock': {'label':'Light clock', 'question':'Why does a moving clock tick slowly?', 'notes':LIGHT_CLOCK_NOTES},
     'spacetime-paths': {'label':'Paths through spacetime', 'question':'Why is the travelling twin younger?', 'notes':PATHS_NOTES},
     'spacetime': {'label':'Spacetime diagram', 'question':'Why is the travelling twin younger?', 'notes':SPACETIME_NOTES},
     'interference': {'label':'Wave interference', 'question':'What happens when two waves meet?', 'notes':INTERFERENCE_NOTES},

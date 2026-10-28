@@ -7,6 +7,10 @@ RESEARCH = {
     'assumptions': ['An isolated, spherical, non-rotating mass.', 'Light passes far outside the strong-gravity region.', 'A first-order weak-field approximation; source and observer are treated as distant.'],
     'prediction': 'At the same passing distance, doubling the mass doubles the small deflection angle. At the same mass, doubling the passing distance halves it.',
     'falsifier': 'A precise measurement of light deflection inconsistent with the predicted angle, after accounting for the mass, geometry and measurement uncertainty, would challenge this model in its stated regime.',
+    'misconceptions': ['Gravity pulls on light the way it pulls on a ball.', 'Light slows down near a mass.'],
+    'questions': [{'q': 'Does light slow down as it passes the mass?', 'a': 'No; measured right beside it, it still moves at light speed.'},
+                  {'q': 'Would a closer pass bend the light more or less?', 'a': 'More.'},
+                  {'q': 'Does light need to have weight to be bent?', 'a': 'No; it follows the straightest path the geometry allows.'}],
     'limitations': ['Bending is magnified six times in the drawing.', 'This is not a black-hole simulation or a literal picture of curved spacetime.', 'The moving dot illustrates a path; its screen speed is not a physical measurement.', 'Passing these checks does not establish a new scientific result.'],
     'sources': [
         {'title': 'Einstein Online · Gravitational deflection of light', 'url': 'https://www.einstein-online.info/en/spotlight/light_deflection/', 'supports': 'General relativity predicts gravitational light deflection, tested with astronomical observations.'},
@@ -37,7 +41,9 @@ class FixtureProvider:
     def generate(self, role, prompt, schema=None, images=(), research=False):
         self.calls += 1
         if role == 'planner':
-            return {'topic':'gravity-clocks','question':'Why does a lower clock accumulate less time?', 'reason':'Compare two stationary clocks.', 'request':0}
+            # Choose the first model the coordinator allows.
+            topic = (schema or {}).get('properties', {}).get('topic', {}).get('enum', ['gravity-clocks'])[0]
+            return {'topic':topic,'question':'Why does a lower clock accumulate less time?', 'reason':'Compare two stationary clocks.', 'request':0}
         if role == 'scout':
             return 'OFFLINE FIXTURE: no live search performed. https://example.org/fixture-note'
         if role == 'architect':
@@ -64,6 +70,10 @@ CLOCK_RESEARCH = {
     'assumptions':['Stationary, supported clocks outside a nonrotating spherical mass.', 'Comparison over the same coordinate-time interval.'],
     'prediction':'Increasing mass increases the relative rate difference; moving both clocks outward reduces it.',
     'falsifier':'A corrected comparison of stationary clocks inconsistent with this rate ratio would challenge the model.',
+    'misconceptions':['The lower clock is broken or badly made.'],
+    'questions':[{'q':'Is the lower clock faulty?','a':'No; each clock ticks normally where it is.'},
+                 {'q':'Does more mass make the difference bigger?','a':'Yes.'},
+                 {'q':'What happens with no mass?','a':'The clocks agree.'}],
     'limitations':['Animated rate differences are magnified 12 times.', 'Distances are schematic, in arbitrary units.', 'No velocity effects or Earth-specific predictions.'],
     'sources':[{'title':'NIST: Relativity and Optical Clocks','url':'https://www.nist.gov/publications/relativity-and-optical-clocks','supports':'Measurements of gravitational time dilation using optical clocks.'}],
 }
@@ -122,6 +132,10 @@ ENGINE_SCENES = {
         ('No barrier: straight on.', 'The wave keeps going in a straight band. Nothing spreads.'),
         ('Add a gap.', 'Past the gap the wave fans out. The screen shows bright and dark bands.'),
         ('Narrow the gap, lengthen the waves.', 'A narrower gap or longer waves make the spreading wider.')], 'blue', .6, 1.4),
+    'LIGHT CLOCK (WHY A MOVING': _engine_scene('Why a moving clock ticks slowly', [
+        ('A parked rocket: the clocks agree.', 'With the rocket at rest, both light clocks tick together.'),
+        ('The rocket moves.', 'Seen from Earth, the rocket clock\u2019s light must slant to hit its moving mirrors, so it ticks less often.'),
+        ('Slow down, then speed up.', 'At low speed the clocks nearly agree; near light speed the rocket clock nearly stops.')], 'blue', .9),
     'TWIN TRIP.': _engine_scene('Two twins, one trip', [
         ('Nobody leaves.', 'With the rocket on Earth, both clocks and both rows of birthdays keep pace.'),
         ('The traveller flies to a star and back.', 'The traveller’s clock turns more slowly. Fewer birthdays pile up.'),
