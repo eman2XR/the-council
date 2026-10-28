@@ -834,13 +834,15 @@ function drawPerson(ctx,x,feet,size,color){
 }
 function drawViews(ctx,w,h,spec,st){
  const accent=ACCENT[spec.accent]||ACCENT.blue, dark='#14171c', warm='#c2410c', small=w<520, V=Physics.views(st.mass,st.distance), full=Physics.views(1,st.distance), {s,u}=viewsStage(st), stage=st.stage;
- const apex=full.h(full.T/2), lo=-1.3*apex, hi=1.35*apex, grav=Math.min(1,st.mass), tn=u*V.T;
+ const apex=full.h(full.T/2), grav=Math.min(1,st.mass), tn=u*V.T, free=stage===0;
+ // With no gravity the ball rises steadily; that chapter gets its own height scale so the whole straight path fits.
+ const hi=free?Math.max(1.35*apex,1.08*V.h(V.T)):1.35*apex, lo=free?-.12*hi:-1.3*apex, top=free?hi*.92:apex*4/3;
  const M=small?{l:w*.3,r:w*.95,t:96,b:h*.8}:{l:w*.25,r:w*.88,t:70,b:h*.88};
  const X=t=>M.l+t/V.T*(M.r-M.l), Y=hh=>M.b-(hh-lo)/(hi-lo)*(M.b-M.t), shift=t=>s*V.h(t);
  ctx.save();ctx.beginPath();ctx.rect(M.l-10,M.t-6,M.r-M.l+20,M.b-M.t+12);ctx.clip();
  // The map: faint lines of equal height and of equal time. Changing the view bends them.
- for(let i=0;i<=4;i++){const hh=apex*i/3;trace(ctx,Array.from({length:61},(_,j)=>{const t=V.T*j/60;return [X(t),Y(hh-shift(t))];}));ctx.strokeStyle='rgba(20,23,28,.08)';ctx.lineWidth=1;ctx.stroke();}
- for(let j=0;j<=8;j++){const t=V.T*j/8;trace(ctx,[[X(t),Y(-shift(t))],[X(t),Y(apex*4/3-shift(t))]]);ctx.strokeStyle='rgba(20,23,28,.05)';ctx.lineWidth=1;ctx.stroke();}
+ for(let i=0;i<=4;i++){const hh=top*i/4;trace(ctx,Array.from({length:61},(_,j)=>{const t=V.T*j/60;return [X(t),Y(hh-shift(t))];}));ctx.strokeStyle='rgba(20,23,28,.08)';ctx.lineWidth=1;ctx.stroke();}
+ for(let j=0;j<=8;j++){const t=V.T*j/8;trace(ctx,[[X(t),Y(-shift(t))],[X(t),Y(top-shift(t))]]);ctx.strokeStyle='rgba(20,23,28,.05)';ctx.lineWidth=1;ctx.stroke();}
  const path=f=>Array.from({length:81},(_,j)=>{const t=V.T*j/80;return [X(t),Y(f(t)-shift(t))];});
  ctx.lineCap='round';ctx.lineJoin='round';
  trace(ctx,path(()=>0));ctx.strokeStyle=dark;ctx.lineWidth=2.6;ctx.stroke();
@@ -862,16 +864,16 @@ function drawViews(ctx,w,h,spec,st){
  ctx.restore();
  if(!st.labels)return;
  const size2=small?10:11, held=grav>.5&&u>=.999&&stage!==2;
- pill(ctx,stage===0?'In empty space':s<.5?'Seen from the ground':'Seen from the ball',M.l,M.t-30,{size:small?11:13,weight:700,color:dark});
+ pill(ctx,stage===0?'Far from any planet or star':s<.5?'From the ground':'From the ball’s perspective',M.l,M.t-30,{size:small?11:13,weight:700,color:dark});
  text(ctx,'height ↑',M.l-10,M.t+6,{align:'right',size:10});text(ctx,'time →',M.r,M.b+14,{align:'right',size:10});
  if(grav>0&&stage>=1&&feet+scaleH+size*2<h-6)text(ctx,'push',sx+8,feet+scaleH+size*2,{size:10,weight:600,color:warm});
  if(!held&&by>M.t&&by<h-8)pill(ctx,'scale: 0',sx+size*1.6,by-size*.6,{size:10,weight:600,color:accent});
  if(stage>=3){const mid=V.T/2;
   pill(ctx,'straight',X(mid),Y(V.h(mid)-shift(mid))-16,{align:'center',size:size2,weight:600,color:accent});
   pill(ctx,'pushed',X(mid),Y(-shift(mid))+18,{align:'center',size:size2,weight:600,color:dark});
-  // The clocks, compared when the ball is caught: the ball's is ahead.
-  const bx=M.r-(small?120:190), bw=small?90:150, y0=M.t+(small?8:14);
-  [[accent,'ball’s clock',1],[dark,'your clock',.82]].forEach(([c,a,f],i)=>{const y=y0+i*(small?16:20);text(ctx,a,bx-8,y,{align:'right',size:size2,weight:600,color:c});ctx.fillStyle=c;ctx.beginPath();ctx.roundRect(bx,y-4,bw*f,8,4);ctx.fill();});
+  // The measurement that decides: what a scale reads on the ball and under you.
+  const bx=M.r, y0=M.t+(small?8:14);
+  [[accent,'Ball’s scale: zero'],[dark,'Your scale: your weight']].forEach(([c,a],i)=>text(ctx,a,bx,y0+i*(small?16:20),{align:'right',size:size2,weight:600,color:c}));
  }
 }
 
@@ -910,7 +912,7 @@ function drawTides(ctx,w,h,spec,st){
   if(!st.labels)return;
   text(ctx,'their paths through time',(D.l+D.r)/2,D.t-26,{align:'center',size:small?10:12,weight:600,color:'rgba(20,23,28,.75)'});
   text(ctx,'time →',D.r,D.b+18,{align:'right',size:10});
-  text(ctx,'dashed: empty space',D.r,mid-half-12,{align:'right',size:10,color:'rgba(20,23,28,.5)'});
+  text(ctx,'dashed: far from any planet',D.r,mid-half-12,{align:'right',size:10,color:'rgba(20,23,28,.5)'});
   return;
  }
  if(stage===2){
@@ -1116,7 +1118,7 @@ const ENGINES={
   try:'Move the flash inside the horizon: can it get out? Shrink the black hole and try again.',aria:'Space flowing into a black hole like a river, with light flashes swimming outward against the current.'},
  'fall-views':{draw:drawViews,demo:false,measure:null,a:['Gravity','how strong gravity is'],b:['Time in the air','between the toss and the catch',''],
   fa:a=>a<.005?'none':Math.round(a*100)+'%',fb:b=>Physics.views(1,b).T.toFixed(1)+' units',scale:'',demoEnd:()=>1.6,
-  disclosure:'Schematic units; air resistance is ignored. The view from the ball is exact for a short toss. The clock difference is enormously enlarged: for a real three-second toss it is about a millionth of a billionth of a second.',
+  disclosure:'Schematic units; air resistance is ignored. The view from the ball’s perspective is exact for a short toss. The first chapter, with no gravity, uses its own height scale so the whole path fits.',
   try:'',aria:'A ball tossed up and caught, drawn on a map of height and time, first as seen from the ground and then as seen from the ball, where the ball stays still and the ground moves.'},
  'tides':{draw:drawTides,demo:false,measure:null,a:['Planet mass','how strongly it pulls'],b:['Unused','',''],
   fa:a=>Math.round(a*100)+'%',fb:b=>b.toFixed(2),scale:'',demoEnd:()=>1,

@@ -26,7 +26,7 @@
    },
    {
     "title": "Falling side by side",
-    "body": "Now let go of two balls side by side, high above the Earth. Neither is pushed, and both start at rest. In empty space they would stay the same distance apart forever. Near Earth they drift together as they fall, like the walkers: that is curved spacetime."
+    "body": "Now let go of two balls side by side, high above the Earth. Neither is pushed, and both start at rest. Far from any planet, they would stay the same distance apart forever. Near Earth they drift together as they fall, like the walkers: that is curved spacetime."
    },
    {
     "title": "Around the Earth",
@@ -41,7 +41,7 @@
   "opening": "Two balls are let go side by side, high above the Earth. Nothing pushes either one. Does the gap between them change?",
   "questions": [
    {
-    "q": "In empty space, two balls at rest side by side stay the same distance apart. What does it mean if they drift together?",
+    "q": "Far from any planet, two balls at rest side by side stay the same distance apart. What does it mean if they drift together?",
     "a": "Spacetime is curved there: straight paths that start parallel come together, like lines of longitude on a ball."
    },
    {

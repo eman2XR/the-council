@@ -13,28 +13,28 @@
   "duration": 24,
   "kind": "fall-views",
   "title": "Who is really falling?",
-  "subtitle": "One toss, seen from the ground and from the ball. A scale and a clock decide which view tells the truth.",
+  "subtitle": "One toss, seen from the ground and from the ball’s perspective. A bathroom scale decides which view tells the truth.",
   "accent": "blue",
   "mass": 1,
   "distance": 1.6,
   "controls": "none",
-  "takeaway": "Falling needs no push; staying put does. Near Earth, clocks run slower lower down, and that bends falling paths back to the ground.",
+  "takeaway": "Falling needs no push; staying put does. A scale on the falling ball reads zero, while yours reads your weight.",
   "beats": [
    {
     "title": "What straight means",
-    "body": "In empty space, a ball you let go of keeps going in a straight line at a steady speed. Nothing pushes it, and nothing pushes you: a scale on either would read zero."
+    "body": "Far from any planet or star, a ball you let go of keeps going in a straight line at a steady speed. Nothing pushes it, and nothing pushes you: a scale on either would read zero."
    },
    {
     "title": "From the ground",
     "body": "On the ground, the toss comes back in an arc. We say gravity pulls the ball, yet a scale riding on it reads zero. You feel the same weightlessness in mid-jump. Scales measure pushes, and only yours reads anything: the ground pushing up on you."
    },
    {
-    "title": "Float with the ball",
-    "body": "Now watch the same toss from the ball. It hangs still, just as in empty space. To float you need no empty space, only nothing pushing you. The ground first moves away, because of the toss, then the Earth beneath it pushes it back up to the ball."
+    "title": "From the ball’s perspective",
+    "body": "Now watch the same toss from the ball’s perspective. It hangs still, just as it would far from any planet. To float, you don’t need to be far away, only for nothing to push you. The ground first moves away, because of the toss, then the Earth beneath it pushes it back up to the ball."
    },
    {
     "title": "Which view is right?",
-    "body": "Both views show the same toss, so the readings must decide. The ball’s scale reads zero, and its clock ends up slightly ahead of yours. Relativity says that between two meetings, the clock nothing pushes counts the most time. So nothing needs to pull the ball: what needs a cause is you staying put."
+    "body": "Both views show the same toss, so a measurement must decide. A scale riding on the ball reads zero, while yours reads your weight. So the ball is the one nothing pushes, and you are the one being pushed. Nothing needs to pull the ball: what needs a cause is you staying put."
    }
   ],
   "why": "It turns the usual picture around: falling needs no force, and what you feel as your weight is the ground pushing you.",
