@@ -367,3 +367,4 @@ body[data-view=drafts] .section-head .muted{white-space:normal}
 #why p{margin:0}#why p+p{margin-top:8px}
 #why strong{color:var(--brown);font-weight:600;margin-right:4px}
 #why:empty{display:none}
+.card-draft{display:block;margin-top:4px;font-size:11px;letter-spacing:.04em;color:#9a4b0b}

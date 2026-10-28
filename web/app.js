@@ -107,7 +107,8 @@ function thumbCard(entry,record){
  if(!entry.draft)link.dataset.guide=entry.id;
  const canvas=el('canvas',{className:'thumb',ariaHidden:'true'});
  link.append(el('div',{className:'card-media'},canvas,el('span',{className:'mini-play',ariaHidden:'true'})),
-  el('span',{className:'card-cat',textContent:topicOf(record||entry)}),el('h3',{textContent:(entry.title||entry.question||'').replace(/\n/g,' ')}));
+  el('span',{className:'card-cat',textContent:topicOf(record||entry)}),el('h3',{textContent:(entry.title||entry.question||'').replace(/\n/g,' ')}),
+  ...(entry.draft?[el('span',{className:'card-draft',textContent:'Draft · not reviewed'})]:[]));
  if(record?.scene){canvas.scene=record.scene;thumbs.add(canvas);visible.observe(canvas);}
  return link;
 }
@@ -118,7 +119,7 @@ function renderCards(){
   const lead=entries.find(e=>e.id===featuredId)||entries[0];
   $('featured').replaceChildren(...(lead?[card(lead,records.get(lead.id))]:example?[card({id:'example',title:example.scene.title.replace(/\n/g,' ')},example)]:[]));
   $('featured').firstChild?.classList.add('featured-card');
-  put('past-title','Investigations');put('past-count',entries.length?`${entries.length} so far · by chapter`:'');
+  put('past-title','Investigations');put('past-count',entries.length?`${entries.length} reviewed${drafts.length?` · ${drafts.length} drafts`:''}`:'');
   $('chapters').replaceChildren(...chapterGroups(lead));
  }else if(VIEW==='drafts'){
   $('featured').replaceChildren();
@@ -284,18 +285,22 @@ function requestFor(item){
   href:issueURL('council:choose',`Pick next: ${item.id} ${item.question}`.slice(0,120),`curriculum: ${item.id}\n\n${item.question}\n\nPicked on the website. The next morning's run investigates this.`)});
  return el('span',{className:'state wait',textContent:'Later'});
 }
+// Drafts sit with the investigations: in the slot whose model they use, else in the chapter of their topic.
+function draftFor(item,used){const d=drafts.find(d=>!used.has(d.id)&&d.kind===item.model);if(d)used.add(d.id);return d;}
+const cardFor=e=>thumbCard(e,records.get((e.draft?'draft:':'')+e.id));
 function chapterGroups(lead){
- if(!curriculum)return [el('div',{className:'thumbs'},...entries.filter(e=>e!==lead).map(e=>thumbCard(e,records.get(e.id))))];
- const placed=new Set();
+ if(!curriculum)return [el('div',{className:'thumbs'},...[...entries.filter(e=>e!==lead),...drafts].map(cardFor))];
+ const placed=new Set(), used=new Set();
  const groups=curriculum.chapters.map(c=>{
-  const done=c.items.map(i=>[i,doneItem(i)]);done.forEach(([,e])=>e&&placed.add(e.id));
-  const cards=done.filter(([,e])=>e&&e!==lead).map(([,e])=>thumbCard(e,records.get(e.id)));
+  const done=c.items.map(i=>[i,doneItem(i)||draftFor(i,used)]);done.forEach(([,e])=>e&&!e.draft&&placed.add(e.id));
+  const extra=drafts.filter(d=>!used.has(d.id)&&TOPICS[d.kind]===c.title);extra.forEach(d=>used.add(d.id));
+  const cards=[...done.filter(([,e])=>e&&e!==lead).map(([,e])=>e),...extra].map(cardFor);
   const pending=done.filter(([,e])=>!e).map(([i])=>el('li',{},el('span',{className:'num',textContent:i.id}),el('span',{className:'q',textContent:i.question}),requestFor(i)));
   return el('section',{className:'chapter'},el('h3',{className:'chapter-title'},el('span',{textContent:`Chapter ${c.number}`}),c.title),
    ...(cards.length?[el('div',{className:'thumbs'},...cards)]:[]),...(pending.length?[el('ul',{className:'items pending'},...pending)]:[]));
  });
- const loose=entries.filter(e=>!placed.has(e.id)&&e!==lead);
- if(loose.length)groups.push(el('section',{className:'chapter'},el('h3',{className:'chapter-title'},'Other investigations'),el('div',{className:'thumbs'},...loose.map(e=>thumbCard(e,records.get(e.id))))));
+ const loose=[...entries.filter(e=>!placed.has(e.id)&&e!==lead),...drafts.filter(d=>!used.has(d.id))];
+ if(loose.length)groups.push(el('section',{className:'chapter'},el('h3',{className:'chapter-title'},'Other investigations'),el('div',{className:'thumbs'},...loose.map(cardFor))));
  return groups;
 }
 function renderPath(){
