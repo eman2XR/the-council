@@ -13,12 +13,12 @@
   "duration": 24,
   "kind": "tides",
   "title": "What curved spacetime really means",
-  "subtitle": "If the ground pushes up everywhere, why isn’t Earth growing? Because near Earth, straight paths that start side by side come together.",
+  "subtitle": "Straight paths that start side by side don’t stay side by side. That is what curved spacetime means, and it explains the tides.",
   "accent": "blue",
   "mass": 1,
   "distance": 1.6,
   "controls": "none",
-  "takeaway": "Spacetime is curved where floating paths that start side by side come together or spread apart. Mass makes the paths around it come together, so the ground can push outward everywhere while the Earth keeps its size.",
+  "takeaway": "Spacetime is curved where floating paths that start side by side come together or spread apart. Mass makes the paths around it come together.",
   "beats": [
    {
     "title": "Straight lines that meet",
@@ -30,7 +30,7 @@
    },
    {
     "title": "Around the Earth",
-    "body": "Now let go of a ring of balls all around the Earth. The whole ring shrinks: the Earth’s mass makes floating paths around it come together. So the ground can be pushed outward from them everywhere, and the Earth still keeps its size."
+    "body": "Now let go of a ring of balls all around the Earth. The whole ring shrinks: the Earth’s mass makes floating paths around it come together. Standing on the ground means being held off those paths: that is the push you feel as your weight."
    },
    {
     "title": "Tides",

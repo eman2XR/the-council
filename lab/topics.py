@@ -102,7 +102,7 @@ scale; wave heights are not. Not an atom model; no spin or 3D. No new-discovery 
 FALL_NOTES = '''MOST-TIME PATH (WHY THINGS FALL). Weak gravity, slow motion, schematic units with effects hugely exaggerated.
 Two clocks leave the ground together and meet again a time T later: one is held at the ground, one is thrown up and falls
 back. Between those same two events, a path's elapsed (proper) time is T plus the integral of (g h - v^2/2): height gains
-time because clocks run faster higher up, speed loses time (as for the travelling twin). Drawn: height against time with
+time because clocks run faster higher up, speed loses time. Drawn: height against time with
 warm shading where clocks run slower, a side view of the same throw straight up, four paths between the same two events
 (held at the ground, a low throw, the real throw with apex g T^2 / 8, a high throw at 1.75 times that), and a scoreboard
 that builds up each path's height gain and speed loss as the clocks travel, with a tick at the total; the real throw ends
