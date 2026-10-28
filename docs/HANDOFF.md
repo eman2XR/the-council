@@ -35,6 +35,8 @@ How a daily run now works (`lab/daily.py`, `lab/pipeline.py`):
 - Budget: `max_calls = (4 daily | 3 run) + 4 x rounds` (16 at three rounds); three concurrent CLI workers.
 
 Player and engines:
+- Sliders live inside the player (between captions and bar) and appear only when exploring: automatically once playback ends, or from the sliders button in the bar (`exploreOpen`: null follows playback, true/false is the viewer's choice); never during playback. Below the player is one quiet line: By The Council, date, status tag, and Ask/Feedback links (shown when the schedule is enabled).
+- Research falls back to coordinator sources when the researcher fails for any reason, including its time limit; web research gets twice the per-call limit (600 s). The 2026-10-28 run stopped when the researcher hit the old 300 s limit.
 - The last chapter's generic demo moves both controls (first dips and returns, second moves to its end value) whichever sliders are shown; engines may script their own with `demo:(p,spec)=>({mass,distance})` (river, light-clock) or set `demo:false` (spacetime-paths, drafts' engines).
 - `light-clock` engine (`drawLightClocks`, shared with the twin draft's chapter 2): light crosses the stage once per chapter, equal-time dots along both light paths, tick counts in the labels, last chapter speeds up to 90% of light speed. Checks in `Physics.lightClockChecks`.
 - Removed: `fall-fan` and `fall-cone` engines, the local `serve` command, the Run button and `/api/state` polling, `web/latest.json`. CI runs `Physics.allChecks()` (every model).

@@ -57,27 +57,26 @@
     <p id="beat-body" class="caption-line"></p>
     <p id="try-hint" class="try-hint"></p>
    </div>
-   <div class="bar">
-    <button id="play" class="round" type="button" aria-label="Play"><span class="icon" aria-hidden="true"></span></button>
-    <div id="scrub" class="scrub" role="slider" tabindex="0" aria-label="Playback position" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><i class="fill"></i><span id="ticks"></span></div>
-    <span id="clock-time" class="time">0:00 / 0:00</span>
-    <button id="reset" class="round quiet" type="button" aria-label="Start over"><span class="restart" aria-hidden="true">↺</span></button>
-   </div>
-   </div>
-
+   <!-- Sliders live inside the player and appear only when exploring: after playback or from the sliders button. -->
    <div class="controls">
     <label class="control"><span class="control-head"><span id="mass-label">Mass</span><output id="mass-value">0.70</output></span>
      <input id="mass" type="range" min="0" max="1" step="0.01" value="0.7"><small id="mass-hint">how much mass sits nearby</small></label>
     <label class="control"><span class="control-head"><span id="distance-label">Passing distance</span><output id="distance-value">1.25×</output></span>
      <input id="distance" type="range" min="1" max="2.5" step="0.01" value="1.25"><small id="distance-hint"></small></label>
    </div>
+   <div class="bar">
+    <button id="play" class="round" type="button" aria-label="Play"><span class="icon" aria-hidden="true"></span></button>
+    <div id="scrub" class="scrub" role="slider" tabindex="0" aria-label="Playback position" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><i class="fill"></i><span id="ticks"></span></div>
+    <span id="clock-time" class="time">0:00 / 0:00</span>
+    <button id="explore" class="round quiet" type="button" aria-label="Explore with the sliders" aria-pressed="false"><svg viewBox="0 0 20 20" width="18" height="18" aria-hidden="true"><path d="M3 6h14M3 14h14" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><circle cx="7" cy="6" r="2.2" fill="#fff" stroke="currentColor" stroke-width="1.6"/><circle cx="13" cy="14" r="2.2" fill="#fff" stroke="currentColor" stroke-width="1.6"/></svg></button>
+    <button id="reset" class="round quiet" type="button" aria-label="Start over"><span class="restart" aria-hidden="true">↺</span></button>
+   </div>
+   </div>
   </figure>
   <p id="draft-note" class="draft-note"></p>
-  <p class="credit">Interactive illustration · researched, rendered and reviewed by the Council’s agents</p>
 
   <div class="story"><p class="label">The idea</p><p id="takeaway"></p></div>
-  <div class="talk"><a id="ask" class="pill" target="_blank" rel="noopener noreferrer">Ask a question</a><a id="feedback" class="pill" target="_blank" rel="noopener noreferrer">Give feedback</a><span class="fine">Opens a public GitHub issue. The next morning's run reads it.</span></div>
-  <p class="byline"><em>By</em> <span class="author">The Council</span><span class="sep" aria-hidden="true"></span><span id="hero-kicker">Today’s investigation</span><span class="sep" aria-hidden="true"></span><span id="hero-date"></span><span id="run-banner" class="tag" role="status"></span></p>
+  <p class="byline"><span>By The Council</span><span class="sep" aria-hidden="true"></span><span id="hero-date"></span><span id="run-banner" class="tag" role="status"></span><span class="talk"><span class="sep" aria-hidden="true"></span><a id="ask" target="_blank" rel="noopener noreferrer" title="Opens a public GitHub issue; the next morning's run reads it">Ask a question</a><span class="sep" aria-hidden="true"></span><a id="feedback" target="_blank" rel="noopener noreferrer" title="Opens a public GitHub issue; the next morning's run reads it">Give feedback</a></span></p>
  </article>
 
 

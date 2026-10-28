@@ -1107,7 +1107,7 @@ function sentences(body){return body.match(/(?:[^.!?]|[.!?](?=[^\s.!?"”’)]))
 function captions(){
  let chapter, line, reveal=1, hint='';
  if(!started&&spec.opening){chapter=`Before you watch · ${fmt(timeline.total)}`;line=spec.opening;hint='Press play to find out.';}
- else if(!started){chapter=`${spec.beats.length} chapters · ${fmt(timeline.total)}`;line=(spec.controls||'both')==='none'?'Press play to watch the explanation.':'Press play, or move the sliders to explore on your own.';}
+ else if(!started){chapter=`${spec.beats.length} chapters · ${fmt(timeline.total)}`;line='Press play to watch the explanation.';}
  else if(ended&&mode!=='playing'){const c=spec.controls||'both', e=engineOf(spec);chapter='The idea';line=spec.takeaway||'';
   hint=spec.next||(c==='none'?'':c==='both'?'Now try it: '+e.try:`Now try it: move ${(c==='first'?e.a:e.b)[0]} and watch “${e.measure[0]}”.`);}
  else{
@@ -1134,7 +1134,13 @@ function transport(){
  document.querySelector('.workspace')?.classList.toggle('started',started);
  document.querySelector('.workspace')?.classList.toggle('ended',ended&&!playing);
  document.body.classList.toggle('idea-shown',ended&&!playing);
+ // The sliders show once playback has ended, or when the viewer opens them; never while it plays.
+ const exploring=!playing&&(exploreOpen??ended);
+ document.querySelector('.workspace')?.classList.toggle('exploring',exploring);
+ $('explore').setAttribute('aria-pressed',String(exploring));
 }
+// null: sliders follow playback (shown at the end); true or false: the viewer opened or closed them.
+let exploreOpen=null;
 function syncControls(){
  const control=$('mass');control.disabled=stage===0;control.value=stage===0?0:mass;
  $('distance').value=distance;
@@ -1158,6 +1164,7 @@ function configure(){
  canvas.setAttribute('aria-label',e.aria);
 }
 function load(scene){
+ exploreOpen=null;
  // Before playback the stage shows the opening frame of chapter 1.
  spec=scene;buildTimeline();
  $('ticks').replaceChildren(...timeline.chapters.slice(1).map((c,i)=>{const tick=document.createElement('button');tick.type='button';tick.dataset.beat=String(i+1);tick.style.left=`calc(12px + (100% - 24px) * ${c.start/timeline.total})`;tick.title=`Chapter ${i+2}: ${spec.beats[i+1].title}`;tick.setAttribute('aria-label',tick.title);tick.onclick=e=>{e.stopPropagation();chapter(i+1);};return tick;}));mass=scene.mass;distance=scene.distance;time=0;mode='live';started=false;ended=false;captionKey='';
@@ -1167,7 +1174,7 @@ function restore(){mass=spec.mass;distance=spec.distance;demoed=false;}
 function play(){
  if(!spec)return;
  if(!started||ended||time>=timeline.total){time=0;restore();setStage(0);shown=0;}
- started=true;ended=false;mode='playing';last=0;emit('play');paint();
+ started=true;ended=false;mode='playing';exploreOpen=null;last=0;emit('play');paint();
 }
 function pause(){if(mode==='playing'){mode='paused';paint();}}
 function toggle(){mode==='playing'?pause():play();}
@@ -1227,6 +1234,7 @@ window.CouncilScene={load,seek,play,pause,toggle,chapter,render:t=>{time=t;paint
  checks:()=>Physics.checksFor(spec?.kind)};
 $('play').onclick=toggle;$('poster').onclick=play;
 $('reset').onclick=()=>{started=false;play();};
+$('explore').onclick=()=>{exploreOpen=!document.querySelector('.workspace').classList.contains('exploring');pause();paint();};
 // Scrubbing: click or drag anywhere on the bar; playback continues if it was playing.
 function scrubTo(clientX){
  const box=$('scrub').getBoundingClientRect(), t=clamp((clientX-box.left-12)/(box.width-24))*timeline.total, n=chapterAt(t);

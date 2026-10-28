@@ -19,7 +19,6 @@ const records=new Map();
 function safeURL(url){try{const u=new URL(url);return ['http:','https:'].includes(u.protocol)?u.href:null;}catch{return null;}}
 function topicOf(data){return TOPICS[data?.scene?.kind]||TOPICS[data?.topic]||TOPICS['light-bending'];}
 function day(iso,opts={month:'short',day:'numeric'}){const d=new Date(iso);return isNaN(d)?'':d.toLocaleDateString(undefined,opts);}
-function isToday(iso){const d=new Date(iso);return !isNaN(d)&&d.toDateString()===new Date().toDateString();}
 
 const watched=(()=>{try{return new Set(JSON.parse(localStorage.getItem('council-watched')||'[]'));}catch{return new Set();}})();
 function markWatched(id){if(!id||watched.has(id))return;watched.add(id);try{localStorage.setItem('council-watched',JSON.stringify([...watched]));}catch{}renderCards();}
@@ -38,7 +37,6 @@ function show(data,{autoplay=false}={}){
  current=data;const scene=data.scene, fixture=data.provider==='fixture', draft=data.provider==='draft';
  document.body.dataset.draft=draft?'yes':'';
  if(scene){heading(scene);CouncilScene.load(scene);}
- put('hero-kicker',fixture?'Example':isToday(data.created)?'Today':'Investigation');
  put('hero-topic',topicOf(data));put('readbar-title',(scene?.title||'').replace(/\n/g,' '));
  put('hero-date',data.created?day(data.created,{weekday:'long',month:'long',day:'numeric'}):'');
  put('run-banner',fixture?'Hand-written example · scripted reviews':data.error?'Stopped · partial work kept as a draft':STATUS[data.status]||String(data.status||'').replaceAll('_',' '));
