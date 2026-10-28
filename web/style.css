@@ -350,7 +350,6 @@ body[data-draft=yes] .credit{display:none}
 .chapter-title span{font:600 11px var(--sans);letter-spacing:.2em;text-transform:uppercase;color:var(--faint)}
 .items.pending{margin-top:18px;border-bottom:none;padding:0}
 .items.pending li{font-size:16px;color:var(--muted);padding:9px 4px}
-body[data-view=drafts] .hero,body[data-view=drafts] .behind,body[data-view=drafts] #more,body[data-view=drafts] .readbar,body[data-view=drafts] #featured{display:none}
 .story{display:none}
 .talk{display:none}
 body[data-paused=no] .talk{display:flex}
@@ -358,8 +357,6 @@ body[data-paused=no] .talk{display:flex}
 .foot-links a{color:var(--muted);font-size:13px}
 .foot-links a:hover{color:var(--ink)}
 body[data-draft=yes] .behind{display:none}
-body[data-view=drafts] .section-head{flex-wrap:wrap;gap:4px 16px}
-body[data-view=drafts] .section-head .muted{white-space:normal}
 .chapter .card-cat{display:none}
 
 /* Why it matters. */
@@ -367,4 +364,3 @@ body[data-view=drafts] .section-head .muted{white-space:normal}
 #why p{margin:0}#why p+p{margin-top:8px}
 #why strong{color:var(--brown);font-weight:600;margin-right:4px}
 #why:empty{display:none}
-.card-draft{display:block;margin-top:4px;font-size:11px;letter-spacing:.04em;color:#9a4b0b}

@@ -8,8 +8,7 @@ const reduceMotion=matchMedia('(prefers-reduced-motion: reduce)').matches;
 let current=null, entries=[], busy=false, example=null;
 const requestedGuide=new URLSearchParams(location.search).get('guide');
 const requestedDraft=new URLSearchParams(location.search).get('draft');
-const listDrafts=new URLSearchParams(location.search).has('drafts');
-const VIEW=requestedGuide||requestedDraft?'article':listDrafts?'drafts':'home';
+const VIEW=requestedGuide||requestedDraft?'article':'home';
 let featuredId=null;
 let drafts=[];
 document.body.dataset.view=VIEW;
@@ -39,13 +38,13 @@ function show(data,{autoplay=false}={}){
  current=data;const scene=data.scene, fixture=data.provider==='fixture', draft=data.provider==='draft';
  document.body.dataset.draft=draft?'yes':'';
  if(scene){heading(scene);CouncilScene.load(scene);}
- put('hero-kicker',draft?'Draft':fixture?'Example':isToday(data.created)?'Today':'Investigation');
+ put('hero-kicker',fixture?'Example':isToday(data.created)?'Today':'Investigation');
  put('hero-topic',topicOf(data));put('readbar-title',(scene?.title||'').replace(/\n/g,' '));
  put('hero-date',data.created?day(data.created,{weekday:'long',month:'long',day:'numeric'}):'');
  put('run-banner',fixture?'Hand-written example · scripted reviews':data.error?'Stopped · partial work kept as a draft':STATUS[data.status]||String(data.status||'').replaceAll('_',' '));
  $('run-banner').dataset.status=fixture?'example':data.status||'';
  if(data.provenance?.sources_retrieved===false){put('run-banner','Reviewed · sources not retrieved');$('run-banner').dataset.status='unverified';}
- if(draft){put('run-banner','Draft visual · not reviewed');$('run-banner').dataset.status='draft';}
+ if(draft){put('run-banner','Not reviewed by the Council');$('run-banner').dataset.status='draft';}
  put('draft-note',draft&&scene?CouncilDraw.disclosure(scene):'');
  renderBehind(data);renderCards();updateTalk();renderPath();
  if(autoplay)CouncilScene.play();
@@ -96,9 +95,9 @@ function card(entry,record){
  if(current&&(current.id===id||(isExample&&current.provider==='fixture'))){badge.textContent='Now showing';badge.dataset.kind='now';}
  else if(!isExample&&!watched.has(id)&&Date.now()-new Date(entry.created).getTime()<36*3600*1000){badge.textContent='New';badge.dataset.kind='new';}
  else if(watched.has(id)){badge.textContent='Watched';badge.dataset.kind='seen';}
- const meta=el('p',{className:'card-meta'},el('em',{textContent:'By'}),' The Council',el('span',{className:'sep'}),entry.draft?'Draft · not reviewed':isExample?'Hand-written example':day(entry.created,{month:'long',day:'numeric'}),badge);
+ const meta=el('p',{className:'card-meta'},el('em',{textContent:'By'}),' The Council',el('span',{className:'sep'}),isExample?'Hand-written example':day(entry.created,{month:'long',day:'numeric'}),badge);
  const excerpt=el('p',{className:'card-excerpt',textContent:record?.scene?.subtitle||entry.question||''});
- link.append(media,el('div',{className:'card-body'},el('span',{className:'card-cat',textContent:entry.draft?'Draft':isExample?'Example':topicOf(record||entry)}),el('h3',{textContent:(entry.title||entry.question||'').replace(/\n/g,' ')}),meta,excerpt));
+ link.append(media,el('div',{className:'card-body'},el('span',{className:'card-cat',textContent:isExample?'Example':topicOf(record||entry)}),el('h3',{textContent:(entry.title||entry.question||'').replace(/\n/g,' ')}),meta,excerpt));
  if(record?.scene){canvas.scene=record.scene;thumbs.add(canvas);visible.observe(canvas);}
  return link;
 }
@@ -107,8 +106,7 @@ function thumbCard(entry,record){
  if(!entry.draft)link.dataset.guide=entry.id;
  const canvas=el('canvas',{className:'thumb',ariaHidden:'true'});
  link.append(el('div',{className:'card-media'},canvas,el('span',{className:'mini-play',ariaHidden:'true'})),
-  el('span',{className:'card-cat',textContent:topicOf(record||entry)}),el('h3',{textContent:(entry.title||entry.question||'').replace(/\n/g,' ')}),
-  ...(entry.draft?[el('span',{className:'card-draft',textContent:'Draft · not reviewed'})]:[]));
+  el('span',{className:'card-cat',textContent:topicOf(record||entry)}),el('h3',{textContent:(entry.title||entry.question||'').replace(/\n/g,' ')}));
  if(record?.scene){canvas.scene=record.scene;thumbs.add(canvas);visible.observe(canvas);}
  return link;
 }
@@ -119,18 +117,13 @@ function renderCards(){
   const lead=entries.find(e=>e.id===featuredId)||entries[0];
   $('featured').replaceChildren(...(lead?[card(lead,records.get(lead.id))]:example?[card({id:'example',title:example.scene.title.replace(/\n/g,' ')},example)]:[]));
   $('featured').firstChild?.classList.add('featured-card');
-  put('past-title','Investigations');put('past-count',entries.length?`${entries.length} reviewed${drafts.length?` · ${drafts.length} drafts`:''}`:'');
+  put('past-title','Investigations');put('past-count',entries.length+drafts.length?`${entries.length+drafts.length} investigations`:'');
   $('chapters').replaceChildren(...chapterGroups(lead));
- }else if(VIEW==='drafts'){
-  $('featured').replaceChildren();
-  put('past-title','Drafts');put('past-count','Visual prototypes for review · not checked or published by the Council');
-  $('chapters').replaceChildren(el('div',{className:'thumbs'},...drafts.map(d=>thumbCard(d,records.get('draft:'+d.id)))));
  }else{
   // Related first: investigations from the same chapter, then the rest.
   const chapterOf=e=>String(e?.curriculum||'').split('.')[0], here=chapterOf(current);
-  const pool=current?.provider==='draft'?drafts:[...entries].sort((a,b)=>(chapterOf(b)===here&&!!here)-(chapterOf(a)===here&&!!here));
-  const others=pool.filter(e=>e.id!==current?.id).slice(0,current?.provider==='draft'?8:4);
-  put('more-title',current?.provider==='draft'?'More drafts':'More investigations');
+  const pool=[...entries,...drafts].sort((a,b)=>(chapterOf(b)===here&&!!here)-(chapterOf(a)===here&&!!here));
+  const others=pool.filter(e=>e.id!==current?.id).slice(0,4);
   $('more-list').replaceChildren(...others.map(e=>thumbCard(e,records.get((e.draft?'draft:':'')+e.id))));
   $('more').hidden=!others.length;
  }
