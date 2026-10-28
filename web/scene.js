@@ -958,7 +958,12 @@ function drawLift(ctx,w,h,spec,st){
  let yc=1,a=0,snapped=false,fall=0,tf=0;
  if(stage===1){yc=1+climb(since);a=L.accelAt(since);}
  else if(stage>=2){tf=liftFallTime(stage,since);yc=topY;if(tf>0){snapped=true;fall=.5*L.g*tf*tf;a=-L.g;yc=topY-fall;}}
- const reading=L.reading(a), offset=snapped?fall:0, floorY=yw=>bot-(yw+offset)*k, cx=(sx0+sx1)/2;
+ // The dial's needle eases to each new reading instead of jumping: averaged over the last 0.7 s of the ride,
+ // and swinging down over 0.7 s once the cable snaps. Computed from time alone, so seeking stays exact.
+ const settle=.7, sinceSnap=stage===2?since-LIFT_SNAP:stage>2?99:-1;
+ const reading=stage===1?Array.from({length:15},(_,i)=>L.reading(L.accelAt(Math.max(0,since-settle*i/14)))).reduce((x,y)=>x+y)/15
+  :sinceSnap>0?1-smooth(sinceSnap/settle):1;
+ const offset=snapped?fall:0, floorY=yw=>bot-(yw+offset)*k, cx=(sx0+sx1)/2;
  // The shaft: walls with a mark at every floor. While falling, the view follows the car and the walls stream past.
  ctx.fillStyle='rgba(20,23,28,.03)';ctx.fillRect(sx0,0,sx1-sx0,h);
  for(const x of [sx0,sx1]){trace(ctx,[[x,0],[x,h]]);ctx.strokeStyle='rgba(20,23,28,.25)';ctx.lineWidth=1.5;ctx.stroke();}
@@ -973,8 +978,10 @@ function drawLift(ctx,w,h,spec,st){
  const size=carH/7.2, scaleH=size*.5, feet=floor-scaleH-3, px=cx-size*.6;
  ctx.fillStyle='#e9e4da';ctx.strokeStyle='rgba(20,23,28,.45)';ctx.lineWidth=1;ctx.beginPath();ctx.roundRect(px-size*1.2,feet,size*2.4,scaleH,3);ctx.fill();ctx.stroke();
  ctx.fillStyle=reading>.01?warm:'rgba(20,23,28,.25)';ctx.fillRect(px-size*.3,feet+scaleH*.25,size*.6,scaleH*.5);
- drawPerson(ctx,px,feet,size,dark);
- const ax=px+size*(snapped?1.25:.75), ay=feet-size*(snapped?2.35:2.75);
+ // Floating: once nothing pushes, you drift gently off the scale, bobbing and turning a little; so does the apple.
+ const drift=sinceSnap>0?smooth(sinceSnap/1.6):0, lift=size*drift*(.45+.12*Math.sin(since*1.3)), sway=.09*drift*Math.sin(since*.7);
+ ctx.save();ctx.translate(px,feet-lift-size*1.3);ctx.rotate(sway);drawPerson(ctx,0,size*1.3,size,dark);ctx.restore();
+ const ax=px+size*(snapped?1.25+.15*drift*Math.sin(since*.9):.75), ay=feet-size*(snapped?2.35+.35*drift+.1*drift*Math.cos(since*1.1):2.75);
  ctx.beginPath();ctx.arc(ax,ay,size*.38,0,TAU);ctx.fillStyle='#d6453d';ctx.fill();
  // Which way the lift is speeding up.
  if(Math.abs(a)>.01){const ux=cx+carW/2+16,dir=a>0?-1:1,y0=(roof+floor)/2,len=Math.min(60,10+Math.abs(a)*5);trace(ctx,[[ux,y0-dir*len/2],[ux,y0+dir*len/2]]);ctx.strokeStyle=accent;ctx.lineWidth=2.4;ctx.stroke();
@@ -1117,7 +1124,7 @@ const ENGINES={
   try:'',aria:'Two walkers heading north on a globe come together; a ring of falling balls around the Earth shrinks; a small falling ring stretches into an egg shape.'},
  'lift':{draw:drawLift,demo:false,measure:null,a:['Unused','',''],b:['Unused','',''],
   fa:a=>a.toFixed(2),fb:b=>b.toFixed(2),scale:'',demoEnd:()=>1.25,
-  disclosure:'Newtonian physics, exact for a lift on Earth: a scale reads the floor’s push, your weight times (g + a)/g. The ride’s speeds, the 70 kg reading and the shaft are illustrative; air resistance is ignored, and real lifts have safety brakes.',
+  disclosure:'Newtonian physics, exact for a lift on Earth: a scale reads the floor’s push, your weight times (g + a)/g. The ride’s speeds, the 70 kg reading and the shaft are illustrative; air resistance is ignored, and real lifts have safety brakes. The dial’s needle eases to each reading like a real scale’s; the push itself changes at once, and the fall is shown in slow motion.',
   try:'',aria:'A person stands on a bathroom scale in a lift. The dial reads their weight when parked, more or less while the lift speeds up or slows down, and zero when the cable snaps.'},
  'moon-tides':{draw:drawMoonTides,demo:false,measure:null,a:['Unused','',''],b:['Unused','',''],
   fa:a=>a.toFixed(2),fb:b=>b.toFixed(2),scale:'',demoEnd:()=>1.25,
