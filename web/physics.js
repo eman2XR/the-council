@@ -36,6 +36,8 @@
     gamma(v) { return 1 / Math.sqrt(1 - v * v); },
     turnaround: b => 1.6 * b,
     agingGap(a) { return 1 - 1 / this.gamma(this.speed(a)); },
+    // Light clock of height 1 moving sideways at v (light speed 1): one tick lasts T with T = hypot(1, v T).
+    lightTick(v) { return 1 / Math.sqrt(1 - v * v); },
     // Spacetime length of a straight step: the time a clock carried along it shows.
     properTime(t, x) { return Math.sqrt(t * t - x * x); },
     // Two coherent sources or slits with amplitudes 1 and a.
@@ -267,6 +269,8 @@
         'Light’s path has zero length':this.properTime(3,3)===0,
         'Every bent path holds less time than the straight one':kinks.every(([x,t])=>x===0||bent(x,t,8)<8),
         'A wider turnaround holds less time':bent(2,4,8)<bent(1,4,8),
+        'Moving light clock: the zigzag at light speed fits one tick':[.3,.6,.8].every(u=>Math.abs(Math.hypot(1,u*this.lightTick(u))-this.lightTick(u))<1e-12),
+        'Moving light clock ticks slower by the same factor as the trip':near(this.lightTick(v),this.gamma(v)),
       }).map(([name,pass])=>({name,pass}))];
     },
     fanChecks() {

@@ -600,10 +600,41 @@ function pathsLayout(w,h,st){
  const x0=w*(small?.2:.14), map=(x,t)=>[x0+x*k,bottom-t*k];
  return {small,v,T,H,k,x0,top,bottom,map,kink:map(v*T,T)};
 }
+// Why a moving clock ticks slowly: light crosses a light clock at the same speed for everyone, so on the moving
+// rocket (seen from Earth) it must zigzag farther between the mirrors and each tick takes longer.
+function drawLightClocks(ctx,w,h,spec,st){
+ const accent=ACCENT[spec.accent]||ACCENT.blue, dark='#14171c', light='#d97706', small=w<520, v=Physics.speed(st.mass), since=Math.max(0,(st.since??st.t)-1);
+ const L=small?h*.13:Math.min(h*.24,130), c=L/1.1, slow=1/Physics.lightTick(v), lanes=small?[h*.32,h*.66]:[h*.26,h*.66], xa=w*(small?.16:.12), xb=w*(small?.9:.86);
+ const bounce=y=>{const f=((y%2)+2)%2;return f<1?f:2-f;};
+ const clock=(x,y0,phase)=>{ctx.lineCap='round';for(const y of [y0-L/2,y0+L/2]){trace(ctx,[[x-18,y],[x+18,y]]);ctx.strokeStyle='rgba(20,23,28,.7)';ctx.lineWidth=3;ctx.stroke();}
+  const py=y0+L/2-bounce(phase)*L, glow=ctx.createRadialGradient(x,py,0,x,py,12);glow.addColorStop(0,rgba(light,.5));glow.addColorStop(1,rgba(light,0));ctx.fillStyle=glow;ctx.fillRect(x-12,py-12,24,24);
+  ctx.beginPath();ctx.arc(x,py,4,0,TAU);ctx.fillStyle=light;ctx.fill();};
+ // Earth clock: light goes straight up and down.
+ const homeTicks=since*c/L;
+ trace(ctx,[[xa,lanes[0]+L/2],[xa,lanes[0]-L/2]]);ctx.setLineDash([3,4]);ctx.strokeStyle=rgba(light,.35);ctx.lineWidth=1.4;ctx.stroke();ctx.setLineDash([]);
+ drawEarth(ctx,xa,lanes[0]+L/2+(small?16:22),small?9:12);clock(xa,lanes[0],homeTicks);
+ // Rocket clock: it moves right at v; its light keeps light speed, so it rises only at sqrt(1 - v²) of it.
+ const lap=(xb-xa)/(Math.max(v,.05)*c), s0=Math.floor(since/lap)*lap, x=xa+v*c*(since-s0), rocketTicks=since*c*slow/L;
+ const pts=[];for(let i=0;i<=160;i++){const t=s0+(since-s0)*i/160;pts.push([xa+v*c*(t-s0),lanes[1]+L/2-bounce(t*c*slow/L)*L]);}
+ trace(ctx,pts);ctx.setLineDash([3,4]);ctx.strokeStyle=rgba(light,.55);ctx.lineWidth=1.4;ctx.stroke();ctx.setLineDash([]);
+ drawRocket(ctx,x,lanes[1]+L/2+(small?16:22),small?12:16,1,true,st.t);clock(x,lanes[1],rocketTicks);
+ if(!st.labels)return;
+ const size=small?11:13, big=small?15:20;
+ text(ctx,'Clock on Earth',xa+40,lanes[0]-L/2+4,{size,weight:600,color:dark});
+ text(ctx,'light goes straight up and down',xa+40,lanes[0]-L/2+24,{size:small?10:12});
+ text(ctx,small?`Clock on the rocket, ${Math.round(v*100)}% of light speed`:`Clock on the rocket, ${Math.round(v*100)}% of light speed, seen from Earth`,xa,lanes[1]-L/2-(small?30:36),{size,weight:600,color:accent});
+ text(ctx,small?'same light speed, longer slanted path':'same light speed, longer slanted path: each tick takes longer',xa,lanes[1]-L/2-(small?13:16),{size:small?10:12});
+ const tx=small?w*.92:w*.95;
+ text(ctx,`${Math.floor(homeTicks)} ticks`,tx,lanes[0],{align:'right',size:big,weight:700,color:dark});
+ text(ctx,`${Math.floor(rocketTicks)} ticks`,tx,small?lanes[1]-L*.75:lanes[1],{align:'right',size:big,weight:700,color:accent});
+ if(since>6)pill(ctx,`The rocket clock ticks ${Math.round(slow*10)} times for every 10 on Earth`,w/2,small?h*.93:h*.9,{align:'center',size:small?11:13,weight:600});
+}
+
 function drawPaths(ctx,w,h,spec,st){
+ if(st.stage===1&&st.labels!==false)return drawLightClocks(ctx,w,h,spec,st);
  const accent=ACCENT[spec.accent]||ACCENT.blue, L=pathsLayout(w,h,st), {small,v,T,H,map,x0,bottom}=L, g=Physics.gamma(v);
  // The trip plays once per chapter, in step with Earth time, then waits at the reunion.
- const tc=Math.min(H,(st.since??st.t)*.5*Math.max(1,H/5)), xAt=t=>t<=T?v*t:v*(H-t), own=Math.min(tc,H)/g;
+ const tc=st.stage===3?H:Math.min(H,(st.since??st.t)*.5*Math.max(1,H/5)), xAt=t=>t<=T?v*t:v*(H-t), own=Math.min(tc,H)/g;
  // Light from the goodbye: its path has zero length, the edge no clock can cross.
  const reach=Math.min(H,(w*(small?.75:.46)-x0)/L.k);
  ctx.setLineDash([2,5]);trace(ctx,[map(0,0),map(reach,reach)]);ctx.strokeStyle=rgba('#d97706',.6);ctx.lineWidth=1.2;ctx.stroke();ctx.setLineDash([]);
@@ -629,35 +660,24 @@ function drawPaths(ctx,w,h,spec,st){
  if(!st.labels)return;
  const size=small?10:11, T2=n=>n.toFixed(1), leg=T/g;
  const ty0=(bottom+map(0,H)[1])/2;if(Math.abs(hy-ty0)>22)text(ctx,'time ↑',x0-14,ty0,{align:'right',size:10});
- text(ctx,'space →',x0+(small?70:120),bottom+14,{size:10});
+ text(ctx,'space →',x0+L.k*4.4,bottom+14,{size:10});
  text(ctx,'goodbye',x0,bottom+14,{align:'center',size,weight:600,color:'rgba(20,23,28,.75)'});
  text(ctx,'reunion',x0,map(0,H)[1]-14,{align:'center',size,weight:600,color:'rgba(20,23,28,.75)'});
- const [lx,ly]=map(Math.min(reach,H)*.82,Math.min(reach,H)*.82);if(!small)text(ctx,'light: zero time',lx+8,ly+4,{size:10,color:'rgba(180,83,9,.9)'});
- if(v>.001)pill(ctx,'turnaround',L.kink[0]+16,L.kink[1],{size:10,weight:600,color:accent});
+ const [lx,ly]=map(Math.min(reach,H)*.82,Math.min(reach,H)*.82);text(ctx,'light',lx+8,ly+4,{size:10,color:'rgba(180,83,9,.9)'});
+ if(v>.001)pill(ctx,'turnaround',L.kink[0]+14,L.kink[1]+22,{size:10,weight:600,color:accent});
  text(ctx,'EARTH',x0,sy+r+12,{align:'center',size:9,weight:600,spacing:'1.5px'});
  const sx=map(v*T,0)[0], close=sx-x0<(small?90:150);
  if(v>.001)text(ctx,small?`STAR · ${T2(v*T)} ly`:`STAR · ${T2(v*T)} light-years`,close?sx+r+8:sx,close?sy:sy+r+12,{align:close?'left':'center',size:9,weight:600,spacing:'1px'});
  pill(ctx,`${T2(tc)} yr`,hx-14,hy,{align:'right',size,weight:600,color:'rgba(20,23,28,.85)'});
  if(v>.001&&tc>0)pill(ctx,`${T2(own)} yr`,tx+14,ty,{size,weight:600,color:accent});
- // The rule: a clock measures the length of its path, with a minus sign for distance.
- const row=(s,y,opts)=>text(ctx,s,px,y,{size:small?11:14,...opts});
- const px=small?w*.06:w*.52, py=small?h*.76:h*.2, lh=small?19:27, dark='rgba(20,23,28,.85)';
- text(ctx,'Each clock measures the length of its path',px,py,{size:small?12:17,weight:700,color:'#14171c'});
- row('clock time = √( time² − distance² )',py+lh*(small?1:1.25),{weight:600,color:'rgba(180,83,9,.95)'});
- if(small){
-  row(`Home: √(${T2(H)}² − 0²) = ${T2(H)} yr`,py+lh*2.1,{weight:600,color:dark});
-  row(v>.001?`Traveller: 2 × √(${T2(T)}² − ${T2(v*T)}²) = ${T2(2*leg)} yr`:'Traveller: stays home, same path',py+lh*3.1,{weight:600,color:accent});
- }else{
-  const rows=[['Home, straight up',`√(${T2(H)}² − 0²)`,`${T2(H)} yr`,dark]];
-  if(v>.001)rows.push(['Traveller, out',`√(${T2(T)}² − ${T2(v*T)}²)`,`${T2(leg)} yr`,accent],['Traveller, back',`√(${T2(T)}² − ${T2(v*T)}²)`,`${T2(leg)} yr`,accent]);
-  else rows.push(['Traveller','stays home: same path',`${T2(H)} yr`,accent]);
-  rows.forEach(([a,b,c,col],i)=>{const y=py+lh*(2.6+i);text(ctx,a,px,y,{size:13,color:'rgba(20,23,28,.6)'});text(ctx,b,px+w*.15,y,{size:14,weight:500,color:col});text(ctx,c,w*.93,y,{align:'right',size:14,weight:700,color:col});});
-  const yt=py+lh*(2.6+rows.length)+6;trace(ctx,[[px,yt-lh*.5],[w*.93,yt-lh*.5]]);ctx.strokeStyle='rgba(20,23,28,.12)';ctx.lineWidth=1;ctx.stroke();
-  text(ctx,'Traveller in total',px,yt+4,{size:13,weight:600,color:'rgba(20,23,28,.7)'});text(ctx,`${T2(v>.001?2*leg:H)} yr`,w*.93,yt+4,{align:'right',size:15,weight:700,color:accent});
-  text(ctx,v>.001?'On paper the traveller’s path looks longer. The minus sign makes it shorter:':'With no trip, both twins share one straight path.',px,yt+lh*1.5,{size:12,color:'rgba(20,23,28,.6)'});
-  if(v>.001)text(ctx,'in spacetime, the straight path between two moments holds the most time.',px,yt+lh*1.5+18,{size:12,color:'rgba(20,23,28,.6)'});
- }
- if(tc>=H-1e-6&&v>.001)pill(ctx,`Together again: the traveller is ${T2(H-H/g)} years younger`,small?w/2:w*.52+(w*.41)/2,small?h*.95:h*.84,{align:'center',size:small?11:13,weight:600});
+ // Each twin's own clock so far: one dot per year on that twin's path.
+ const px=small?w*.08:w*.56, right=small?w*.92:w*.93, py=small?h*.775:h*.3, lh=small?23:40, dark='rgba(20,23,28,.85)';
+ text(ctx,'Home twin’s clock',px,py,{size:small?12:14,color:'rgba(20,23,28,.65)'});text(ctx,`${T2(Math.min(tc,H))} years`,right,py,{align:'right',size:small?16:22,weight:700,color:dark});
+ text(ctx,'Traveller’s clock',px,py+lh,{size:small?12:14,color:'rgba(20,23,28,.65)'});text(ctx,`${T2(v>.001?own:Math.min(tc,H))} years`,right,py+lh,{align:'right',size:small?16:22,weight:700,color:accent});
+ trace(ctx,[[px,py+lh*.5],[right,py+lh*.5]]);ctx.strokeStyle='rgba(20,23,28,.1)';ctx.lineWidth=1;ctx.stroke();
+ const note=v>.001?[`Each leg: ${T2(T)} years pass on Earth,`,`${T2(leg)} on the traveller’s slow clock.`]:['No trip: both twins share one path.'];
+ note.forEach((line,i)=>text(ctx,line,px,py+lh*1.8+i*(small?15:18),{size:small?11:12,color:'rgba(20,23,28,.6)'}));
+ if(tc>=H-1e-6&&v>.001)pill(ctx,`Together again: the traveller is ${T2(H-H/g)} years younger`,small?w/2:(px+right)/2,small?h*.95:py+lh*3.3,{align:'center',size:small?11:13,weight:600});
 }
 function dragPaths(w,h,spec,st,x,y,grab){
  const L=pathsLayout(w,h,st);
@@ -1056,11 +1076,11 @@ const ENGINES={
   measure:['Traveller comes home younger by',a=>(Physics.agingGap(a)*100).toFixed(1)+'%'],scale:'',demoEnd:()=>2.5,
   disclosure:'Ages and speeds are exact special relativity; the rocket turns around instantly, and the drawing is not to scale.',
   try:'Set Speed to zero: do the twins still agree? Speed up, then make the trip longer and compare the two bars.',aria:'Twins: one stays on Earth while the other flies to a star and back. Two bars show how much each twin has aged.'},
- 'spacetime-paths':{draw:drawPaths,drag:dragPaths,a:['Speed','how fast the traveller flies'],b:['Trip','time out before turning back',''],
+ 'spacetime-paths':{draw:drawPaths,drag:dragPaths,demo:false,a:['Speed','how fast the traveller flies'],b:['Trip','time out before turning back',''],
   fa:a=>Math.round(Physics.speed(a)*100)+'% of light',fb:b=>Physics.turnaround(b).toFixed(1)+' years out',
-  measure:['Traveller comes home younger by',a=>(Physics.agingGap(a)*100).toFixed(1)+'%'],scale:'',demoEnd:()=>2.5,
-  disclosure:'Exact special relativity in years and light-years; the turnaround is instant. Distances on the page are not spacetime lengths: tilted paths look longer than they are.',
-  try:'Drag the turnaround sideways: the faster the trip, the shorter the traveller’s path. Drag it straight down to the home path: the twins agree again.',aria:'A spacetime diagram: the home twin’s straight path and the traveller’s bent path between the same goodbye and reunion, with one dot per year of each twin’s own time.'},
+  measure:['Traveller’s clock counts less by',a=>(Physics.agingGap(a)*100).toFixed(1)+'%'],scale:'',demoEnd:()=>2.5,
+  disclosure:'Exact special relativity in years and light-years; the turnaround is instant. The light clocks are slowed down for viewing and not to scale. Distances on the page are not spacetime lengths: tilted paths look longer than they hold.',
+  try:'Drag the turnaround sideways: a faster trip leaves less time on the traveller’s clock. Drag it back to the home path: the twins agree again.',aria:'A spacetime diagram: the home twin’s straight path and the traveller’s bent path between the same goodbye and reunion, with one dot per year of each twin’s own time.'},
  'fall-fan':{draw:drawFan,a:['Gravity','how strong gravity is'],b:['Time in the air','between leaving and meeting again',''],
   fa:a=>a<.005?'none':Math.round(a*100)+'%',fb:b=>Physics.fan(1,b).T.toFixed(1)+' units',
   measure:['Map bent by',(a,b)=>(Physics.fan(a,b).g*Physics.fan(a,b).T*180/Math.PI).toFixed(0)+'°'],scale:'',demoEnd:()=>2.5,
@@ -1136,7 +1156,8 @@ function paint(){
  if(engineOf(spec).measure)$('bend-value').textContent=engineOf(spec).measure[1](value,distance);
  captions();transport();
 }
-function sentences(body){return body.match(/[^.!?]+[.!?]*["”’)]*\s*/g)?.map(s=>s.trim()).filter(Boolean)||[body];}
+// A sentence ends at . ! or ? followed by a space or the end, so decimals such as 4.8 stay whole.
+function sentences(body){return body.match(/(?:[^.!?]|[.!?](?=[^\s.!?"”’)]))+[.!?]*["”’)]*(?:\s+|$)/g)?.map(s=>s.trim()).filter(Boolean)||[body];}
 function captions(){
  let chapter, line, reveal=1, hint='';
  if(!started&&spec.opening){chapter=`Before you watch · ${fmt(timeline.total)}`;line=spec.opening;hint='Press play to find out.';}
@@ -1213,6 +1234,8 @@ function chapter(n){
 }
 function demo(p){
  // The last chapter moves the controls themselves so the viewer sees what each one does.
+ // An engine may script its own demo, returning both control values for progress p.
+ const own=engineOf(spec).demo;if(typeof own==='function'){({mass,distance}=own(p,spec));syncControls();return;}
  const end=engineOf(spec).demoEnd(spec), c=spec.controls||'both', moveA=c!=='second', moveB=c!=='first';
  mass=moveA&&p<.5?spec.mass*(1-.55*Math.sin(Math.PI*p/.5)):spec.mass;
  distance=moveB?spec.distance+(end-spec.distance)*smooth((moveA?p-.5:p)/(moveA?.42:.9)):spec.distance;
