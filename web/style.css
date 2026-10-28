@@ -354,9 +354,10 @@ body[data-view=drafts] .section-head .muted{white-space:normal}
 .chapter .card-cat{display:none}
 
 /* Why it matters, and the check-yourself questions. */
-.why{max-width:640px;margin:14px auto 12px;font-size:15px;line-height:1.55;color:var(--muted);text-align:center}
-.why strong{color:var(--brown);font-weight:600;margin-right:4px}
-.why:empty{display:none}
+#why{max-width:620px;margin:16px auto 14px;font-size:15px;line-height:1.55;color:var(--muted);text-align:left}
+#why p{margin:0}#why p+p{margin-top:8px}
+#why strong{color:var(--brown);font-weight:600;margin-right:4px}
+#why:empty{display:none}
 .check{max-width:760px;margin:34px auto 0;padding:0 24px}
 .check h3{font:700 22px/1.2 var(--serif);margin:0 0 4px}
 .check ol{margin:16px 0 0;padding-left:22px}

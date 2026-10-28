@@ -76,7 +76,9 @@
     "duration": 32,
     "takeaway": "The longer the wave compared with the gap, the wider it spreads: sound spreads through doorways, but light barely does.",
     "controls": "first",
-    "kind": "diffraction"
+    "kind": "diffraction",
+    "why": "It is why you can hear someone talking around a corner but cannot see them, and why no microscope or telescope can show details below a certain size, however perfect its lenses.",
+    "primer": "A wave is a travelling pattern of crests (high points) and troughs (low points), like ripples on water; the wavelength is the distance from one crest to the next. Seen from above, the blue stripes are crests moving down. Overlapping waves add: crest on crest makes a bigger crest, crest on trough cancels. The screen glows where waves arrive strongly."
   },
   "checks": [
     {
@@ -139,7 +141,8 @@
   "provider": "reviewed-agents",
   "provenance": {
     "sources_retrieved": true,
-    "retrieved_by": "agent"
+    "retrieved_by": "agent",
+    "intro_note": "The introduction above the player was written by hand after the agents\u2019 review and was not part of the reviewed scene."
   },
   "revisions": [
     {

@@ -11,7 +11,7 @@ BOOL = {'type': 'boolean'}
 NUM = {'type': 'number'}
 STRINGS = {'type': 'array', 'items': STR}
 SCENE_SCHEMA = obj({
-    'title': STR, 'subtitle': STR,
+    'title': STR, 'subtitle': STR, 'why': STR, 'primer': STR,
     'beats': {'type': 'array', 'items': obj({'title': STR, 'body': STR})},
     'mass': NUM, 'distance': NUM, 'ray_count': {'type': 'integer'},
     'show_reference': BOOL, 'show_labels': BOOL,
@@ -70,6 +70,8 @@ def validate_scene(scene):
             raise ValueError('Teaching beat exceeds layout limits')
     if len(scene['title']) > 100 or len(scene['subtitle']) > 250:
         raise ValueError('Heading exceeds layout limits')
+    if len(scene['why']) > 220 or len(scene['primer']) > 420:
+        raise ValueError('Introduction exceeds layout limits')
     return scene
 
 

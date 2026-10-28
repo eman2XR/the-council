@@ -66,5 +66,9 @@ class LoopTests(unittest.TestCase):
         with self.assertRaises(ValueError):validate_scene(scene)
         scene=copy.deepcopy(SCENE);scene['beats']=[]
         with self.assertRaises(ValueError):validate_scene(scene)
+        scene=copy.deepcopy(SCENE);scene['primer']='x'*421
+        with self.assertRaises(ValueError):validate_scene(scene)
+        scene=copy.deepcopy(SCENE);del scene['why']
+        with self.assertRaises(ValueError):validate_scene(scene)
 
 if __name__=='__main__': unittest.main()

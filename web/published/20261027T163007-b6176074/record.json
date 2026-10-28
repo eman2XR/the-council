@@ -78,7 +78,9 @@
     "duration": 32,
     "takeaway": "Making a wave sit in one place takes many wavelengths, so a sharp place always comes with a blurry motion.",
     "controls": "first",
-    "kind": "wave-packet"
+    "kind": "wave-packet",
+    "why": "This is the uncertainty principle, a central rule of quantum physics. It is not a flaw in our instruments, and it is part of why atoms have a size at all instead of collapsing.",
+    "primer": "In quantum physics a particle such as an electron behaves like a wave. Its momentum, roughly how fast it moves, is set by its wavelength: shorter waves mean faster motion. The top panel shows the wave in space; where it bunches up is where the particle is likely to be found. Each bar below is one wavelength mixed in."
   },
   "checks": [
     {
@@ -141,7 +143,8 @@
   "provider": "reviewed-agents",
   "provenance": {
     "sources_retrieved": true,
-    "retrieved_by": "agent"
+    "retrieved_by": "agent",
+    "intro_note": "The introduction above the player was written by hand after the agents\u2019 review and was not part of the reviewed scene."
   },
   "revisions": [
     {

@@ -83,7 +83,9 @@
     "line_width": 2,
     "duration": 30,
     "takeaway": "Time passes more slowly deeper in gravity than for a clock higher up. Both clocks work perfectly, but the lower one counts less time. The lag grows with more mass and shrinks as the pair moves farther from the mass.",
-    "kind": "gravity-clocks"
+    "kind": "gravity-clocks",
+    "why": "Your phone’s map depends on it. Clocks on navigation satellites sit higher up and run slightly fast, and without correcting for that, positions would drift by kilometres every day.",
+    "primer": "The two dials are identical clocks held still, one closer to a heavy round mass than the other. Counting less time means that when the clocks are compared, the lower one shows fewer ticks. Lower radius is how far the lower clock sits from the centre of the mass. The hands are exaggerated; the readout gives the real size of the difference."
   },
   "checks": [
     {
@@ -394,6 +396,7 @@
   ],
   "provenance": {
     "sources_retrieved": false,
-    "note": "The agents could not retrieve any web sources during this run (every fetch was refused by the network proxy). The listed references were named from the agents' own knowledge and have not been checked. The physics passed independent physics and visual reviews, but treat the sources as unverified."
+    "note": "The agents could not retrieve any web sources during this run (every fetch was refused by the network proxy). The listed references were named from the agents' own knowledge and have not been checked. The physics passed independent physics and visual reviews, but treat the sources as unverified.",
+    "intro_note": "The introduction above the player was written by hand after the agents’ review and was not part of the reviewed scene."
   }
 }

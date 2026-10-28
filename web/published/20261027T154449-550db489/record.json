@@ -97,7 +97,9 @@
     "line_width": 2.5,
     "duration": 32,
     "takeaway": "Light isn't pulled off course. Mass warps space and time, and light's straightest path through them curves.",
-    "kind": "light-bending"
+    "kind": "light-bending",
+    "why": "In 1919, starlight bending around the Sun during an eclipse was the first test of Einstein\u2019s theory of gravity. Astronomers now use the same bending to weigh galaxies and map matter they cannot see.",
+    "primer": "Light is drawn as a ray seen from the side, with a dot travelling along it. The pale straight line marks where the light would go with nothing nearby. The grid is only a ruler for the eye, not a picture of space, and the bend is enlarged so you can see it."
   },
   "checks": [
     {
@@ -160,7 +162,8 @@
   "provider": "reviewed-agents",
   "provenance": {
     "sources_retrieved": true,
-    "retrieved_by": "agent"
+    "retrieved_by": "agent",
+    "intro_note": "The introduction above the player was written by hand after the agents\u2019 review and was not part of the reviewed scene."
   },
   "revisions": [
     {
