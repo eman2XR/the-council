@@ -17,7 +17,7 @@
   "kind": "lift",
   "accent": "blue",
   "title": "How much do you weigh in a falling lift?",
-  "subtitle": "Stand on a bathroom scale in a lift, then imagine the cable snaps. The answer explains why astronauts float.",
+  "subtitle": "Stand on a bathroom scale in a lift, then imagine the cable snaps. What does the scale read now?",
   "why": "It is why astronauts float and roller-coaster drops feel weightless, and it was the clue that led Einstein to his theory of gravity.",
   "opening": "A lift’s cable snaps. How much do you weigh on the way down?",
   "beats": [
@@ -27,7 +27,7 @@
    },
    {
     "title": "Riding up and down",
-    "body": "When the lift speeds up upward, the floor has to push harder, so you weigh more. When it slows down, you weigh less. A scale measures how hard it pushes, not gravity itself."
+    "body": "When the lift starts upward, the floor has to push harder, so you weigh more. As it slows to a stop, you weigh less. A scale measures how hard it pushes, not gravity itself."
    },
    {
     "title": "The cable snaps",
@@ -35,7 +35,7 @@
    },
    {
     "title": "Weightless, not gravity-free",
-    "body": "Gravity hasn’t switched off: the lift keeps falling faster and faster. It acts on everything inside equally, so nothing presses on anything. Astronauts float for the same reason: their station is always falling around the Earth."
+    "body": "Gravity hasn’t switched off: the lift keeps falling faster and faster. Everything inside falls at the same rate, so nothing presses on anything. Astronauts float for the same reason: their station is always falling around the Earth."
    }
   ],
   "takeaway": "Weighing measures how hard the floor pushes on you. In free fall nothing pushes, so you weigh nothing while gravity still pulls.",

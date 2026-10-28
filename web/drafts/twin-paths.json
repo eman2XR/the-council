@@ -3,7 +3,7 @@
  "provider": "draft",
  "status": "draft",
  "created": "2026-10-27T19:00:00-07:00",
- "question": "Two paths between one goodbye and one reunion",
+ "question": "Why the travelling twin comes home younger",
  "topic": "spacetime-paths",
  "scene": {
   "ray_count": 1,
@@ -13,8 +13,8 @@
   "duration": 24,
   "controls": "both",
   "kind": "spacetime-paths",
-  "title": "Two paths between one goodbye and one reunion",
-  "subtitle": "Your clock measures the length of your path through spacetime. The traveller’s path is bent, so it is shorter.",
+  "title": "Why the travelling twin comes home younger",
+  "subtitle": "Your clock measures the length of your path through spacetime. There, unlike on a map, a bent path is shorter, so the traveller ages less.",
   "accent": "blue",
   "mass": 0.8888888888888888,
   "distance": 2.5,
@@ -26,7 +26,7 @@
    },
    {
     "title": "The traveller takes a detour",
-    "body": "The traveller flies out to the star and back, so their path bends. Each clock measures the length of its own path. Spacetime’s rule has a minus sign: distance counts against time. So the bent path holds 4.8 years, and the straight one holds 8."
+    "body": "The traveller flies out to the star and back, so their path bends. Each clock measures the length of its own path. In spacetime, distance travelled takes away from time instead of adding to it. So the traveller’s clock shows 4.8 years, and the home clock 8."
    },
    {
     "title": "Move the turnaround",

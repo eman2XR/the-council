@@ -40,8 +40,8 @@ def export_accepted(state, root=ROOT):
     revision = state['revisions'][-1]
     if not revision['accepted'] or not revision['checks'] or not all(c['pass'] for c in revision['checks']):
         raise ValueError('Missing successful render checks.')
-    if not all(approved(revision[k]) for k in ('physics_review','visual_review')):
-        raise ValueError('Both reviews must pass.')
+    if not all(k in revision and approved(revision[k]) for k in ('physics_review','visual_review','text_review')):
+        raise ValueError('Physics, visual and text reviews must all pass.')
     run_id=state['id']
     if not re.fullmatch(r'[A-Za-z0-9-]+',run_id):
         raise ValueError('Invalid run ID.')
@@ -55,7 +55,7 @@ def export_accepted(state, root=ROOT):
     record['revisions']=[]
     run_dir=(root/'web'/'runs'/run_id).resolve()
     for rev in state['revisions']:
-        out={key:copy.deepcopy(rev[key]) for key in ('number','scene','checks','accepted','physics_review','visual_review')}
+        out={key:copy.deepcopy(rev[key]) for key in ('number','scene','checks','accepted','physics_review','visual_review','text_review') if key in rev}
         out['frames']=[]
         for i,frame in enumerate(rev['frames']):
             source=(root/'web'/frame.lstrip('/')).resolve()

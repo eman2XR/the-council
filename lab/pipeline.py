@@ -105,10 +105,11 @@ def run(provider, rounds=3, on_update=None, topic="light-bending", question=None
             context=model_notes+'\nResearch: '+json.dumps(research)+'\nScene: '+json.dumps(scene)+'\nChecks: '+json.dumps(checks)
             reviews = {
                 'physics_review': ('physics_reviewer', context+'\nInspect the attached frames AND claims. Look for incorrect physics, misleading metaphors, omitted assumptions and claims beyond the sources. Score 0..10. Pass only if scientifically appropriate as a teaching approximation; otherwise provide actionable changes. Review is not scientific proof.', frames[:4]),
+                'text_review': ('text_reviewer', context+'\nYou are the copy editor. Read every word the viewer sees: title, subtitle, why, beat titles, beat bodies (played as subtitles one sentence at a time) and takeaway. The audience knows no physics. Flag only real problems: words a beginner would not know left undefined, sentences hard to parse on one read, a title that does not say what the guide is about, an inaccurate or confusing subtitle, filler or repetition, jumps in logic, wording that could mislead about the physics, or references to other guides. Do not rewrite for taste. Every proposed change must be as short as the original or shorter; never add jargon or equations. In changes, quote the field, the current text and the replacement. Score 0..10 for clarity without verbosity; pass requires >=7 and no blockers.', ()),
                 'visual_review': ('visual_reviewer', context+'\nInspect these actual frames in order: first-control-at-zero reference at t=1, first control restored at t=9 and t=11, interactive comparison at t=18 (for every model except light bending the second control is moved to its maximum, 2.5), then mobile workspace and top-of-page overview. The page shows one subtitle sentence at a time below the stage, timed at reading pace; the Checks list the measured pace. Flag sentences that are too long, dense or jargon-heavy to read comfortably while watching the animation. Judge whether the chosen sliders (scene field controls) help intuition; frames always show controls state as configured. Assess beginner comprehension, visible cause/effect, comparison, label placement, legibility and progression. Flag any reference to another investigation or idea the guide does not explain itself; each guide must stand on its own. The why field appears above the player before playback: judge whether a viewer who knows no physics would understand why the question matters and every idea and colour the guide then uses. Scores 0..10; pass requires >=7 and no blockers. Give concrete changes to the available scene fields. Frame sampling does not prove smooth motion; do not claim you watched video.', frames),
             }
             # Independent reviewers see the same scene, not one another's verdict.
-            with ThreadPoolExecutor(max_workers=2) as workers:
+            with ThreadPoolExecutor(max_workers=3) as workers:
                 futures = {workers.submit(provider.generate, role, task, REVIEW_SCHEMA, images=images): key
                            for key, (role, task, images) in reviews.items()}
                 try:
@@ -123,8 +124,8 @@ def run(provider, rounds=3, on_update=None, topic="light-bending", question=None
                     for future in futures:
                         future.cancel()
                     raise
-            physics, visual = revision['physics_review'], revision['visual_review']
-            revision['accepted']=all(c['pass'] for c in checks) and approved(physics) and approved(visual)
+            physics, visual, wording = revision['physics_review'], revision['visual_review'], revision['text_review']
+            revision['accepted']=all(c['pass'] for c in checks) and approved(physics) and approved(visual) and approved(wording)
             write_json(directory/f'revision-{index}'/'scene.json',scene)
             save(f'Revision {index}: '+('review gates passed.' if revision['accepted'] else 'changes requested; feedback saved.'))
             if revision['accepted']:
@@ -132,7 +133,7 @@ def run(provider, rounds=3, on_update=None, topic="light-bending", question=None
                 save('Offline fixture complete.' if provider.name=='fixture' else 'Investigation reviewed. Artifact is ready for human inspection; no new-discovery claim.')
                 break
             previous=scene
-            feedback=json.dumps({'physics':physics,'visual':visual,'checks':checks})
+            feedback=json.dumps({'physics':physics,'visual':visual,'text':wording,'checks':checks})
         else:
             state['status']='needs_review'
             save('Revision limit reached. Artifact retained as a draft, not promoted.')

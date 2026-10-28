@@ -40,7 +40,7 @@
   },
   "scene": {
     "title": "Why a Guitar String Plays Only Certain Notes",
-    "subtitle": "Send a wave down a rope tied to a wall. It bounces back and overlaps the wave still coming in. At some points the two always cancel, so the rope there never moves. Only patterns with a whole number of loops between the ends keep going.",
+    "subtitle": "Send a wave down a rope tied to a wall. It bounces back and overlaps the wave still coming in. Where the two always cancel, the rope never moves. Only patterns that fit whole loops between the ends keep going.",
     "beats": [
       {
         "title": "No bounce: the wave just runs",
@@ -52,7 +52,7 @@
       },
       {
         "title": "Only whole loops fit, and higher notes have more",
-        "body": "Weaken the bounce and the still points start to wobble. Both ends must stay still, so only patterns of whole loops can fit. Each step up adds one loop and one still point, and the note gets higher."
+        "body": "Weaken the bounce and the still points start to wobble. Both ends must stay still, so only whole loops, the humps between still points, can fit. Each next pattern has one more loop and plays a higher note."
       }
     ],
     "mass": 1,
@@ -130,7 +130,7 @@
   "provenance": {
     "sources_retrieved": true,
     "retrieved_by": "agent",
-    "intro_note": "The introduction above the player and the subtitle were written by hand after the agents\u2019 review and were not part of the reviewed scene."
+    "intro_note": "The introduction above the player and some wording were edited by hand after the agents\u2019 review, after a separate copy-editing pass; the reviews below refer to the earlier text."
   },
   "revisions": [
     {

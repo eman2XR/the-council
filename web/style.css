@@ -35,6 +35,7 @@ p{margin:0}
 
 /* Sticky reading bar */
 .readbar{position:fixed;inset:0 0 auto 0;z-index:20;height:64px;display:flex;align-items:center;gap:18px;padding:0 28px;background:#fff;border-bottom:1px solid var(--line);transform:translateY(-100%);transition:transform .25s ease;box-shadow:0 6px 18px -14px rgba(0,0,0,.3)}
+.readbar:not(.on){box-shadow:none}
 .readbar.on{transform:none}
 .readbar .mark{width:28px;height:28px}
 .readbar a{display:flex;padding-right:18px;border-right:1px solid var(--line);height:36px;align-items:center}
@@ -131,7 +132,11 @@ body.idea-shown .story{display:none}
 .scrub:hover::before,.scrub:hover .fill{top:6px;height:6px}
 #ticks [data-beat]{position:absolute;top:3px;width:3px;height:12px;margin-left:-1.5px;background:var(--faint);border-radius:2px}
 #ticks [data-beat].passed{background:var(--brown)}
-.transport{display:flex;align-items:center;justify-content:center;gap:14px;max-width:860px;margin:0 auto;padding:18px 32px 16px}
+/* Play, timeline, time and restart share one bar at the bottom of the player. */
+.bar{display:flex;align-items:center;gap:10px;padding:2px 18px 14px}
+.bar .scrub{flex:1}
+.bar .round{width:36px;height:36px}
+.bar .round.quiet{width:32px;height:32px}
 .round{width:42px;height:42px;border-radius:50%;background:var(--ink);color:#fff;display:grid;place-items:center;flex:none;transition:background .2s,transform .2s}
 .round:hover{background:var(--orange)}
 .round:active{transform:scale(.94)}
@@ -292,7 +297,7 @@ footer{max-width:1240px;margin:90px auto 0;padding:28px 32px 44px;display:flex;j
  .captions{padding:4px 18px 16px;min-height:140px}
  .caption-line{font-size:21px}
  .caption-line{min-height:4.35em}
- .transport{padding:4px 16px 16px;gap:10px}
+ .bar{padding:2px 10px 12px;gap:6px}
  .time{min-width:0}
  .controls{grid-template-columns:1fr;gap:18px;padding:16px 18px 22px}
  .credit{padding:0 2px}
@@ -313,6 +318,9 @@ footer{max-width:1240px;margin:90px auto 0;padding:28px 32px 44px;display:flex;j
 /* Views: the home index and individual investigation pages. */
 body[data-view=home] .hero,body[data-view=home] .behind,body[data-view=home] #more,body[data-view=home] .readbar{display:none}
 body[data-view=article] #home{display:none}
+/* An investigation opens on its own heading: no site header or lab status above it. */
+body[data-view=article] .top,body[data-view=article] #lab{display:none}
+body[data-view=article] .hero{padding-top:48px}
 .home{margin:36px auto 0;max-width:1100px}
 .featured{margin-bottom:76px}
 .featured-card{grid-template-columns:minmax(0,1.5fr) minmax(0,1fr)!important;gap:48px!important}
@@ -354,17 +362,8 @@ body[data-view=drafts] .section-head{flex-wrap:wrap;gap:4px 16px}
 body[data-view=drafts] .section-head .muted{white-space:normal}
 .chapter .card-cat{display:none}
 
-/* Why it matters, and the check-yourself questions. */
+/* Why it matters. */
 #why{max-width:620px;margin:16px auto 14px;font-size:15px;line-height:1.55;color:var(--muted);text-align:left}
 #why p{margin:0}#why p+p{margin-top:8px}
 #why strong{color:var(--brown);font-weight:600;margin-right:4px}
 #why:empty{display:none}
-.check{max-width:760px;margin:34px auto 0;padding:0 24px}
-.check h3{font:700 22px/1.2 var(--serif);margin:0 0 4px}
-.check ol{margin:16px 0 0;padding-left:22px}
-.check li{margin:0 0 16px}
-.check .q{font:500 17px/1.45 var(--serif);margin:0 0 6px;color:var(--ink)}
-.check details summary{cursor:pointer;font-size:13px;font-weight:600;color:var(--orange);list-style:none}
-.check details summary::-webkit-details-marker{display:none}
-.check details[open] summary{color:var(--faint)}
-.check details p{margin:6px 0 0;font-size:15px;line-height:1.55;color:var(--muted)}

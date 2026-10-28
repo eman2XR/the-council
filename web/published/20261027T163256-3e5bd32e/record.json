@@ -51,11 +51,11 @@
   },
   "scene": {
     "title": "Why Waves Fan Out After a Narrow Gap",
-    "subtitle": "A flat wave squeezes through an opening. Watch how the size of the gap compared with the wave decides how widely it spreads.",
+    "subtitle": "A flat wave squeezes through an opening. Watch how the gap\u2019s width, compared with the spacing of the waves, decides how widely they spread.",
     "beats": [
       {
         "title": "No wall, no spreading",
-        "body": "With the wall gone, the flat wave rolls straight ahead. Nothing blocks any part of it, so nothing fans out. Keep this straight wave in mind for what comes next."
+        "body": "With the wall gone, the flat wave rolls straight ahead. Nothing blocks any part of it, so nothing fans out."
       },
       {
         "title": "A gap turns the wave into a fan",
@@ -63,7 +63,7 @@
       },
       {
         "title": "Longer waves spread wider",
-        "body": "Watch the gap open wide for a moment, then come back. Next the waves get longer while the gap stays the same. The fan widens and the dashed lines swing out, because each wave is now longer compared with the gap."
+        "body": "When the gap opens wide for a moment, the wave spreads less. Then the gap narrows again and the waves get longer. The fan widens and the dashed lines swing out, because each wave is now longer compared with the gap."
       }
     ],
     "mass": 0.6,
@@ -141,7 +141,7 @@
   "provenance": {
     "sources_retrieved": true,
     "retrieved_by": "agent",
-    "intro_note": "The introduction above the player was written by hand after the agents\u2019 review and was not part of the reviewed scene."
+    "intro_note": "The introduction above the player and some wording were edited by hand after the agents\u2019 review, after a separate copy-editing pass; the reviews below refer to the earlier text."
   },
   "revisions": [
     {

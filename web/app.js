@@ -13,6 +13,8 @@ const VIEW=requestedGuide||requestedDraft?'article':listDrafts?'drafts':'home';
 let featuredId=null;
 let drafts=[];
 document.body.dataset.view=VIEW;
+// With the header hidden on an investigation, the reading bar's mark leads home.
+if(VIEW==='article')document.querySelector('#readbar a').href='./';
 const records=new Map();
 
 function safeURL(url){try{const u=new URL(url);return ['http:','https:'].includes(u.protocol)?u.href:null;}catch{return null;}}
@@ -24,10 +26,6 @@ const watched=(()=>{try{return new Set(JSON.parse(localStorage.getItem('council-
 function markWatched(id){if(!id||watched.has(id))return;watched.add(id);try{localStorage.setItem('council-watched',JSON.stringify([...watched]));}catch{}renderCards();}
 CouncilScene.on(type=>{
  if(type==='ended')markWatched(current?.id);
- // Keep the stage and subtitles fully visible while an explanation plays.
- if(type==='play'){const box=document.querySelector('.workspace').getBoundingClientRect();
-  // Put the scene, bar and subtitle in view: the player's top just below the reading bar.
-  if(Math.abs(box.top-72)>24)scrollBy({top:box.top-72,behavior:reduceMotion?'auto':'smooth'});}
 });
 
 // Heading, why it matters and the idea for one scene.
@@ -49,9 +47,6 @@ function show(data,{autoplay=false}={}){
  if(data.provenance?.sources_retrieved===false){put('run-banner','Reviewed · sources not retrieved');$('run-banner').dataset.status='unverified';}
  if(draft){put('run-banner','Draft visual · not reviewed');$('run-banner').dataset.status='draft';}
  put('draft-note',draft&&scene?CouncilDraw.disclosure(scene):'');
- // Questions to answer in your own words, with answers to reveal.
- const questions=scene?.questions||[];$('check').hidden=!questions.length;
- $('check-list').replaceChildren(...questions.map(x=>el('li',{},el('p',{className:'q',textContent:x.q}),el('details',{},el('summary',{textContent:'Show answer'}),el('p',{textContent:x.a})))));
  renderBehind(data);renderCards();updateTalk();renderPath();
  if(autoplay)CouncilScene.play();
 }
@@ -59,7 +54,7 @@ function show(data,{autoplay=false}={}){
 function renderBehind(data){
  const r=data.research, fixture=data.provider==='fixture', revisions=data.revisions||[], final=revisions.at(-1);
  const chips=[];
- if(final?.physics_review&&final?.visual_review)chips.push(final.accepted?'Passed physics and visual review':'Reviews requested changes');
+ if(final?.physics_review&&final?.visual_review)chips.push(final.accepted?(final.text_review?'Passed physics, visual and text review':'Passed physics and visual review'):'Reviews requested changes');
  if(revisions.length>1)chips.push(`${revisions.length} drafts`);
  const checks=data.checks||[];if(checks.length)chips.push(`${checks.filter(c=>c.pass).length} of ${checks.length} checks`);
  if(fixture)chips.unshift('Scripted example');
@@ -74,7 +69,7 @@ function renderBehind(data){
   const card=el('article',{className:'revision'});
   if(rev.frames?.length)card.append(el('img',{src:rev.frames[0],alt:`Rendered frame from draft ${i+1}`}));
   const verdict=rev.accepted?(fixture?'Fixture passed':'Passed review'):'Changes requested';
-  const notes=[rev.visual_review?.summary,rev.physics_review?.summary].filter(Boolean).join(' ');
+  const notes=[rev.visual_review?.summary,rev.physics_review?.summary,rev.text_review?.summary].filter(Boolean).join(' ');
   const view=el('button',{type:'button',className:'pill',textContent:'View this draft'});
   view.onclick=()=>{CouncilScene.load(rev.scene);heading(rev.scene);
    put('run-banner',`Draft ${i+1} · ${verdict.toLowerCase()}`);scrollTo({top:0,behavior:reduceMotion?'auto':'smooth'});};
@@ -222,7 +217,7 @@ function stepOf(state){
  if(message.includes('rendering'))return 3;
  return 1;
 }
-function plain(message){return (message||'').replace('physics_review','physics review').replace('visual_review','visual review').replace(/^Revision (\d+)/,'Draft $1');}
+function plain(message){return (message||'').replace('physics_review','physics review').replace('visual_review','visual review').replace('text_review','text review').replace(/^Revision (\d+)/,'Draft $1');}
 function nextRun(s){
  const parts=Object.fromEntries(new Intl.DateTimeFormat('en-US',{timeZone:s.timezone,hour:'numeric',minute:'numeric',second:'numeric',hourCycle:'h23'}).formatToParts(new Date()).map(p=>[p.type,p.value]));
  const now=+parts.hour*3600+ +parts.minute*60+ +parts.second, at=s.hour*3600;

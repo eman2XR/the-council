@@ -17,7 +17,7 @@
   "kind": "moon-tides",
   "accent": "blue",
   "title": "Why the Moon raises two tides, not one",
-  "subtitle": "The Moon pulls the oceans toward it. So why is there also a high tide on the side of the Earth facing away from it?",
+  "subtitle": "Most coasts see two high tides a day, but there is only one Moon. Watch how it raises two.",
   "why": "Tides shape coastlines, harbours and sea life, and the same stretching, made extreme, tears apart stars that come too close to a black hole.",
   "opening": "The Moon pulls the oceans toward it. Why is there also a high tide on the far side of the Earth?",
   "beats": [
@@ -31,14 +31,14 @@
    },
    {
     "title": "The whole Earth falls toward the Moon",
-    "body": "The Earth and Moon circle each other, so the whole Earth is always falling toward the Moon. Compared with the centre, the near side is pulled ahead and the far side is left behind. The oceans bulge both ways."
+    "body": "The Earth and Moon circle each other, so the whole Earth is always falling toward the Moon. The near side falls a little faster than the centre, and the far side is left behind. So the oceans bulge both ways."
    },
    {
     "title": "Two tides a day",
     "body": "The Earth turns under the two bulges about once a day. So most places pass through both, and get two high tides and two low tides."
    }
   ],
-  "takeaway": "The Moon stretches the Earth: it pulls the near side more and the far side less than the centre, so the oceans bulge toward it and away from it.",
+  "takeaway": "The Moon pulls the Earth’s near side more than its centre, and the far side less, so the oceans bulge toward and away from it.",
   "questions": [
    {
     "q": "If the Moon were twice as far away, would tides be half as big, or smaller still?",

@@ -68,11 +68,11 @@
     "beats": [
       {
         "title": "No trap, no special energies",
-        "body": "With the trap flattened away, nothing holds the particle in. Its wave can have any energy at all. The counter reads zero allowed levels."
+        "body": "With the trap flattened away, nothing holds the particle in. Its wave can have any energy at all. Nothing is trapped, so the counter reads zero levels."
       },
       {
         "title": "A trap lets only fitting waves survive",
-        "body": "Bring the trap back and only a few energy lines appear. On each one, the wave fits the trap and fades out into both walls. Watch the edges: the wave leaks a little way into the walls before dying away."
+        "body": "Bring the trap back and only a few energy lines appear. On each one, the wave fits inside the trap. Watch the edges: the wave leaks a little way into the walls before dying away."
       },
       {
         "title": "Shallower traps hold fewer levels, wider traps hold more",
@@ -90,7 +90,7 @@
     "takeaway": "A trapped particle is a wave that has to fit its trap, and only a few waves fit, so only a few energies are allowed.",
     "controls": "none",
     "kind": "quantum-well",
-    "why": "It is why each kind of atom gives off light of only certain colours, which is how astronomers tell what distant stars are made of. The colours of LEDs and quantum-dot screens are chosen with the same rule."
+    "why": "It is why each kind of atom gives off light of only certain colours, which is how astronomers tell what distant stars are made of. Quantum-dot screens pick their colours with the same rule."
   },
   "checks": [
     {
@@ -154,7 +154,7 @@
   "provenance": {
     "sources_retrieved": true,
     "retrieved_by": "agent",
-    "intro_note": "The introduction above the player was written by hand after the agents\u2019 review and was not part of the reviewed scene."
+    "intro_note": "The introduction above the player and some wording were edited by hand after the agents\u2019 review, after a separate copy-editing pass; the reviews below refer to the earlier text."
   },
   "revisions": [
     {

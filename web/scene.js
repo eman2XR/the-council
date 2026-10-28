@@ -45,24 +45,25 @@ function drawLight(ctx,w,h,spec,st){
  const accent=ACCENT[spec.accent]||ACCENT.mint, s=Math.min(w/15,h/9), cx=w*.5, cy=h*.47, m=st.mass, small=w<520;
  // Tilted view of the optical mesh: distance on it is light travel time, its dip drawn for six times the model mass.
  const tilt=1.2, mu=6*Physics.m(m), lift=Math.sin(tilt), drop=Math.cos(tilt), rim=Physics.meshHeight(mu,9.5);
- const R=(9+m*9)*clamp(s/40,.6,1.4), core=R/s;
+ // The mesh opens to a circle of radius core + 2mu around the mass; the star is sized and placed to fill it.
+ const R=(9+m*9)*clamp(s/40,.6,1.4), core=Math.max(.2,R/s-2*mu);
  const at=(x,y)=>{const r=Math.max(Math.hypot(x,y),1e-6), f=(r+2*mu)/r, dip=Math.max(0,rim-Physics.meshHeight(mu,Math.max(r,core)));
   return [cx+x*f*s,cy-y*f*s*lift+dip*s*drop];};
+ const centre=[cx,cy+Math.max(0,rim-Physics.meshHeight(mu,core))*s*drop];
  // Mesh lines darken where the surface is steep, lit from the far side, so the dip's depth reads.
  const line=(pts)=>{let prev=null;for(const [x,y] of pts){const r=Math.hypot(x,y);if(m>.001&&r<core){prev=null;continue;}const q=at(x,y);
   if(prev){const steep=mu>1e-6?clamp(Math.sqrt(4*mu/r+4*mu*mu/(r*r))*.7):0, light=.5+.5*y/Math.max(r,1e-6);
    ctx.beginPath();ctx.moveTo(prev[0],prev[1]);ctx.lineTo(q[0],q[1]);ctx.strokeStyle=`rgba(20,23,28,${.12+steep*(.12+.22*(1-light))})`;ctx.stroke();}
   prev=q;}};
- if(mu>1e-6){const [sx,sy]=at(0,core*1.05), g=ctx.createRadialGradient(sx,sy,0,sx,sy,3*s);
+ if(mu>1e-6){const [sx,sy]=centre, g=ctx.createRadialGradient(sx,sy,0,sx,sy,3*s);
   g.addColorStop(0,`rgba(60,45,25,${.16*clamp(mu/.05)})`);g.addColorStop(1,'rgba(60,45,25,0)');ctx.fillStyle=g;
   ctx.beginPath();ctx.ellipse(sx,sy,3*s,3*s*lift,0,0,TAU);ctx.fill();}
  ctx.lineWidth=1;
  for(let i=-10;i<=10;i++){const x=i*.75;line(Array.from({length:81},(_,j)=>[x,-4+8.5*j/80]));}
  for(let j=0;j<=11;j++){const y=-4+j*.75;line(Array.from({length:121},(_,i)=>[-7.5+15*i/120,y]));}
- const centre=at(0,core);
  if(m>.001){
-  const r=drawStar(ctx,cx,centre[1]-R*.2,R,clamp(m/.25));
-  if(st.labels)text(ctx,'MASS',cx,centre[1]+r+14,{align:'center',size:10,weight:600,spacing:'1.5px'});
+  const r=drawStar(ctx,centre[0],centre[1],Math.max(R,(core+2*mu)*s),clamp(m/.25));
+  if(st.labels)text(ctx,'MASS',cx,centre[1]+r+16,{align:'center',size:10,weight:600,spacing:'1.5px'});
  }else{
   ctx.setLineDash([3,5]);ctx.beginPath();ctx.ellipse(cx,cy,R,R*lift,0,0,TAU);ctx.strokeStyle='rgba(20,23,28,.22)';ctx.lineWidth=1;ctx.stroke();ctx.setLineDash([]);
   if(st.labels)text(ctx,'no mass',cx,cy+R+18,{align:'center',size:10,weight:600,spacing:'1px'});

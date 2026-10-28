@@ -58,11 +58,11 @@
       },
       {
         "title": "Two sources: the waves add up",
-        "body": "Turn the second source on and steady lanes fan out across the water. Where crest meets crest, the water shakes hard. Where crest meets trough, it goes still, and the screen shows bright and dark stripes."
+        "body": "Turn the second source on and steady lanes of rough and calm water fan out. Where peak meets peak, the water shakes hard. Where peak meets dip, it goes still. The screen shows these as bright and dark stripes."
       },
       {
         "title": "Weaker partner, then wider spacing",
-        "body": "When the second source weakens, the dark stripes fill in and fade. Then the sources move apart. More lanes appear, and the stripes on the screen crowd closer together."
+        "body": "When the second source weakens, the dark stripes turn grey: a weak wave cannot fully cancel a strong one. Then the sources move apart. More lanes appear, and the stripes on the screen crowd closer together."
       }
     ],
     "mass": 1,
@@ -144,7 +144,7 @@
   "provenance": {
     "sources_retrieved": true,
     "retrieved_by": "agent",
-    "intro_note": "The introduction above the player was written by hand after the agents\u2019 review and was not part of the reviewed scene."
+    "intro_note": "The introduction above the player and some wording were edited by hand after the agents\u2019 review, after a separate copy-editing pass; the reviews below refer to the earlier text."
   },
   "revisions": [
     {

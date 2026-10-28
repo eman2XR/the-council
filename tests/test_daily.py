@@ -62,6 +62,8 @@ class DailyTests(unittest.TestCase):
             for mutate in [lambda s:s.update(provider='fixture'),
                            lambda s:s['revisions'][-1]['checks'][0].update({'pass':False}),
                            lambda s:s['revisions'][-1]['physics_review'].update({'pass':False}),
+                           lambda s:s['revisions'][-1]['text_review'].update({'pass':False}),
+                           lambda s:s['revisions'][-1].pop('text_review'),
                            lambda s:s['revisions'][0].update(frames=['../secret.png'])]:
                 bad=copy.deepcopy(state);mutate(bad)
                 with self.assertRaises(ValueError):export_accepted(bad,root)
