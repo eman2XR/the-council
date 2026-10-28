@@ -198,16 +198,6 @@ input[type=range]:disabled{opacity:.4;cursor:default}
 .badge[data-kind=seen]{background:#f1efe9;color:var(--muted)}
 
 /* The path */
-.path{margin:96px auto 0;max-width:1100px}
-.chapter-row{display:grid;grid-template-columns:repeat(4,1fr);gap:0;border:1px solid var(--line);border-radius:4px;overflow:hidden}
-.chapter-tile{text-align:left;padding:16px 18px 15px;display:flex;flex-direction:column;gap:3px;background:#fff;border-right:1px solid var(--line);transition:background .2s}
-.chapter-tile:last-child{border-right:0}
-.chapter-tile:hover{background:var(--paper)}
-.chapter-tile[aria-selected=true]{background:var(--beige)}
-.chapter-tile .tile-top{font-size:11px;color:var(--faint);font-weight:600;letter-spacing:.2em;text-transform:uppercase}
-.chapter-tile strong{font:700 18px/1.25 var(--serif)}
-.chapter-tile .tile-status{font-size:12px;color:var(--muted)}
-.chapter-tile i{display:block;height:2px;margin-top:10px;background:linear-gradient(90deg,var(--orange) calc(var(--done,0)*100%),var(--track) 0)}
 .items{list-style:none;margin:0;padding:6px 0;border-bottom:1px solid var(--line)}
 .items li{display:grid;grid-template-columns:44px 1fr auto;gap:12px;align-items:center;padding:13px 4px;font:400 18px/1.4 var(--serif)}
 .items li+li{border-top:1px solid #f0ece5}
@@ -282,9 +272,6 @@ footer{max-width:1240px;margin:90px auto 0;padding:28px 32px 44px;display:flex;j
 @media (max-width:900px){
  .research-grid{grid-template-columns:1fr}
  .card{grid-template-columns:1fr;gap:18px}
- .chapter-row{grid-template-columns:1fr 1fr}
- .chapter-tile:nth-child(2){border-right:0}
- .chapter-tile:nth-child(-n+2){border-bottom:1px solid var(--line)}
 }
 @media (max-width:560px){
  .top{padding:14px 18px}
@@ -324,7 +311,7 @@ footer{max-width:1240px;margin:90px auto 0;padding:28px 32px 44px;display:flex;j
 
 /* Views: the home index and individual investigation pages. */
 body[data-view=home] .hero,body[data-view=home] .behind,body[data-view=home] #more,body[data-view=home] .readbar{display:none}
-body[data-view=article] #home,body[data-view=article] .path{display:none}
+body[data-view=article] #home{display:none}
 .home{margin:36px auto 0;max-width:1100px}
 .featured{margin-bottom:76px}
 .featured-card{grid-template-columns:minmax(0,1.5fr) minmax(0,1fr)!important;gap:48px!important}
@@ -340,12 +327,28 @@ body[data-view=article] #home,body[data-view=article] .path{display:none}
 @media (max-width:900px){.featured-card{grid-template-columns:1fr!important;gap:18px!important}}
 
 /* Drafts: owner review only; the checking story and path do not apply. */
-body[data-draft=yes] .behind,body[data-draft=yes] .path{display:none}
 #run-banner[data-status=draft]{background:#fdf2e3;color:#9a4b0b}
-#drafts-head{margin-top:40px}
-#drafts-head{flex-wrap:wrap;gap:4px 16px}
-#drafts-head .muted{white-space:normal}
 .stage-note[hidden]{display:none}
 .draft-note{display:none}
 body[data-draft=yes] .draft-note:not(:empty){display:block;max-width:760px;margin:14px auto 0;padding:0 24px;font-size:13px;line-height:1.5;color:var(--muted);text-align:center}
 body[data-draft=yes] .credit{display:none}
+
+/* Home index by chapter; drafts page; request buttons only while the daily run is on. */
+.chapters{display:block}
+.chapter{margin-top:46px}
+.chapter:first-child{margin-top:8px}
+.chapter-title{display:flex;align-items:baseline;gap:14px;font:700 24px/1.2 var(--serif);margin:0 0 20px}
+.chapter-title span{font:600 11px var(--sans);letter-spacing:.2em;text-transform:uppercase;color:var(--faint)}
+.items.pending{margin-top:18px;border-bottom:none;padding:0}
+.items.pending li{font-size:16px;color:var(--muted);padding:9px 4px}
+body[data-view=drafts] .hero,body[data-view=drafts] .behind,body[data-view=drafts] #more,body[data-view=drafts] .readbar,body[data-view=drafts] #featured{display:none}
+.story{display:none}
+.talk{display:none}
+body[data-paused=no] .talk{display:flex}
+.foot-links{display:flex;gap:18px}
+.foot-links a{color:var(--muted);font-size:13px}
+.foot-links a:hover{color:var(--ink)}
+body[data-draft=yes] .behind{display:none}
+body[data-view=drafts] .section-head{flex-wrap:wrap;gap:4px 16px}
+body[data-view=drafts] .section-head .muted{white-space:normal}
+.chapter .card-cat{display:none}

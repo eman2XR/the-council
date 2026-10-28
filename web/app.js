@@ -8,7 +8,9 @@ const reduceMotion=matchMedia('(prefers-reduced-motion: reduce)').matches;
 let current=null, entries=[], busy=false, example=null;
 const requestedGuide=new URLSearchParams(location.search).get('guide');
 const requestedDraft=new URLSearchParams(location.search).get('draft');
-const VIEW=requestedGuide||requestedDraft?'article':'home';
+const listDrafts=new URLSearchParams(location.search).has('drafts');
+const VIEW=requestedGuide||requestedDraft?'article':listDrafts?'drafts':'home';
+let featuredId=null;
 let drafts=[];
 document.body.dataset.view=VIEW;
 const records=new Map();
@@ -97,6 +99,7 @@ function card(entry,record){
 }
 function thumbCard(entry,record){
  const link=el('a',{href:(entry.draft?'?draft=':'?guide=')+encodeURIComponent(entry.id),className:'thumb-card'});
+ if(!entry.draft)link.dataset.guide=entry.id;
  const canvas=el('canvas',{className:'thumb',ariaHidden:'true'});
  link.append(el('div',{className:'card-media'},canvas,el('span',{className:'mini-play',ariaHidden:'true'})),
   el('span',{className:'card-cat',textContent:topicOf(record||entry)}),el('h3',{textContent:(entry.title||entry.question||'').replace(/\n/g,' ')}));
@@ -106,16 +109,21 @@ function thumbCard(entry,record){
 function renderCards(){
  thumbs.forEach(c=>visible.unobserve(c));thumbs.clear();
  if(VIEW==='home'){
-  // Today's investigation is featured; the list below holds only the earlier ones.
-  const [lead,...rest]=entries;
+  // One featured investigation, then every other one grouped by chapter of the path.
+  const lead=entries.find(e=>e.id===featuredId)||entries[0];
   $('featured').replaceChildren(...(lead?[card(lead,records.get(lead.id))]:example?[card({id:'example',title:example.scene.title.replace(/\n/g,' ')},example)]:[]));
   $('featured').firstChild?.classList.add('featured-card');
-  $('archive').replaceChildren(...rest.map(e=>card(e,records.get(e.id))));
-  put('past-count',rest.length?`${rest.length} earlier`:'');
-  $('past-title').closest('.section-head').hidden=!rest.length;
-  $('drafts').replaceChildren(...drafts.map(d=>card(d,records.get('draft:'+d.id))));$('drafts-head').hidden=!drafts.length;
+  put('past-title','Investigations');put('past-count',entries.length?`${entries.length} so far · by chapter`:'');
+  $('chapters').replaceChildren(...chapterGroups(lead));
+ }else if(VIEW==='drafts'){
+  $('featured').replaceChildren();
+  put('past-title','Drafts');put('past-count','Visual prototypes for review · not checked or published by the Council');
+  $('chapters').replaceChildren(el('div',{className:'thumbs'},...drafts.map(d=>thumbCard(d,records.get('draft:'+d.id)))));
  }else{
-  const pool=current?.provider==='draft'?drafts:entries, others=pool.filter(e=>e.id!==current?.id).slice(0,current?.provider==='draft'?8:4);
+  // Related first: investigations from the same chapter, then the rest.
+  const chapterOf=e=>String(e?.curriculum||'').split('.')[0], here=chapterOf(current);
+  const pool=current?.provider==='draft'?drafts:[...entries].sort((a,b)=>(chapterOf(b)===here&&!!here)-(chapterOf(a)===here&&!!here));
+  const others=pool.filter(e=>e.id!==current?.id).slice(0,current?.provider==='draft'?8:4);
   put('more-title',current?.provider==='draft'?'More drafts':'More investigations');
   $('more-list').replaceChildren(...others.map(e=>thumbCard(e,records.get((e.draft?'draft:':'')+e.id))));
   $('more').hidden=!others.length;
@@ -163,6 +171,7 @@ async function openGuide(id,{autoplay=false}={}){
 async function loadPublished(){
  try{const response=await fetch('published/index.json',{cache:'no-store'});entries=response.ok?await response.json():[];}catch{entries=[];}
  try{example=await (await fetch('example.json')).json();}catch{example=null;}
+ try{featuredId=(await (await fetch('featured.json',{cache:'no-store'})).json()).id;}catch{featuredId=null;}
  try{const r=await fetch('drafts/index.json',{cache:'no-store'});drafts=r.ok?(await r.json()).map(d=>({...d,draft:true})):[];}catch{drafts=[];}
  if(requestedDraft){try{show(await getDraft(requestedDraft));}catch{await openGuide('example');}}
  else if(VIEW==='article')await openGuide(entries.find(e=>e.id===requestedGuide)?.id||(requestedGuide==='example'||!entries.length?'example':requestedGuide));
@@ -241,8 +250,10 @@ async function refreshDashboard(){
   const drafts=[...new Map((state.attempts||[]).filter(a=>a.status==='needs_review'&&a.question).map(a=>[a.question,a])).values()].slice(-3).reverse();
   $('bench').hidden=!drafts.length;
   $('bench-list').replaceChildren(...drafts.map(a=>el('li',{textContent:a.question})));
-  renderNext();renderPath();
+  document.body.dataset.paused=schedule?.enabled?'no':'yes';
+  renderNext();renderPath();renderCards();
  }catch{
+  document.body.dataset.paused='yes';
   put('dashboard-status','No status yet');put('now-title','No status published yet');put('next-title','—');
  }
 }
@@ -260,42 +271,31 @@ function updateTalk(){
  $('feedback').href=issueURL('council:feedback',`Feedback: ${title}`.slice(0,120),`guide: ${guide}\n\nWhat worked:\n\nWhat was confusing:\n\n`);
 }
 function doneItem(item){return entries.find(e=>e.curriculum===item.id||norm(e.question)===norm(item.question));}
-let selectedChapter=null;
+// Requests only make sense while the daily run is on; while paused, unexplored items just say so.
+function requestFor(item){
+ if(document.body.dataset.paused!=='no')return el('span',{className:'state wait',textContent:'Not yet'});
+ if(picks.has(item.id))return el('a',{className:'state picked',href:picks.get(item.id),target:'_blank',rel:'noopener noreferrer',textContent:'Picked'});
+ if(item.model)return el('a',{className:'state pill pick',target:'_blank',rel:'noopener noreferrer',textContent:'Pick for tomorrow',
+  href:issueURL('council:choose',`Pick next: ${item.id} ${item.question}`.slice(0,120),`curriculum: ${item.id}\n\n${item.question}\n\nPicked on the website. The next morning's run investigates this.`)});
+ return el('span',{className:'state wait',textContent:'Later'});
+}
+function chapterGroups(lead){
+ if(!curriculum)return [el('div',{className:'thumbs'},...entries.filter(e=>e!==lead).map(e=>thumbCard(e,records.get(e.id))))];
+ const placed=new Set();
+ const groups=curriculum.chapters.map(c=>{
+  const done=c.items.map(i=>[i,doneItem(i)]);done.forEach(([,e])=>e&&placed.add(e.id));
+  const cards=done.filter(([,e])=>e&&e!==lead).map(([,e])=>thumbCard(e,records.get(e.id)));
+  const pending=done.filter(([,e])=>!e).map(([i])=>el('li',{},el('span',{className:'num',textContent:i.id}),el('span',{className:'q',textContent:i.question}),requestFor(i)));
+  return el('section',{className:'chapter'},el('h3',{className:'chapter-title'},el('span',{textContent:`Chapter ${c.number}`}),c.title),
+   ...(cards.length?[el('div',{className:'thumbs'},...cards)]:[]),...(pending.length?[el('ul',{className:'items pending'},...pending)]:[]));
+ });
+ const loose=entries.filter(e=>!placed.has(e.id)&&e!==lead);
+ if(loose.length)groups.push(el('section',{className:'chapter'},el('h3',{className:'chapter-title'},'Other investigations'),el('div',{className:'thumbs'},...loose.map(e=>thumbCard(e,records.get(e.id))))));
+ return groups;
+}
 function renderPath(){
  if(!curriculum)return;
- const chapters=curriculum.chapters, all=chapters.flatMap(c=>c.items);
- const next=all.find(i=>i.model&&!doneItem(i)&&!picks.has(i.id));
- put('path-progress',`${all.filter(doneItem).length} of ${all.length} explored`);
- put('path-horizon',curriculum.horizon);
- const current=chapters.find(c=>c.items.includes(next))||chapters.find(c=>c.items.some(i=>!doneItem(i)))||chapters[0];
- const chapter=chapters.find(c=>c.number===selectedChapter)||current;
- $('chapter-row').replaceChildren(...chapters.map(c=>{
-  const done=c.items.filter(doneItem).length;
-  const tile=el('button',{type:'button',className:'chapter-tile',role:'tab'},
-   el('span',{className:'tile-top',textContent:`Chapter ${c.number}`}),el('strong',{textContent:c.title}),
-   el('span',{className:'tile-status',textContent:done===c.items.length?`Complete · ${done}/${c.items.length}`:`${c.items.some(i=>i.model)?'Ready':'Later'} · ${done}/${c.items.length}`}),el('i'));
-  tile.dataset.status=c.items.some(i=>i.model)?'ready':'later';tile.style.setProperty('--done',done/c.items.length);
-  tile.setAttribute('aria-selected',String(c===chapter));
-  tile.onclick=()=>{selectedChapter=c.number;renderPath();};
-  return tile;
- }));
- const rows=chapter.items.map(item=>{
-  const published=doneItem(item);let state;
-  if(published){state=el('a',{className:'state pill',href:'?guide='+encodeURIComponent(published.id),textContent:'Watch'});
-}
-  else if(picks.has(item.id))state=el('a',{className:'state picked',href:picks.get(item.id),target:'_blank',rel:'noopener noreferrer',textContent:'Picked'});
-  else if(item.model)state=el('a',{className:'state pill pick',target:'_blank',rel:'noopener noreferrer',textContent:'Pick for tomorrow',
-   href:issueURL('council:choose',`Pick next: ${item.id} ${item.question}`.slice(0,120),`curriculum: ${item.id}\n\n${item.question}\n\nPicked on the website. The next morning's run investigates this.`)});
-  else state=el('span',{className:'state wait',textContent:'Later'});
-  const li=el('li',{className:item===next?'next':''},el('span',{className:'num',textContent:item.id}),el('span',{className:'q',textContent:item.question}),state);
-  li.dataset.state=published?'done':'';return li;
- });
- if(chapter.items.some(i=>!i.model)){
-  const vote=el('a',{target:'_blank',rel:'noopener noreferrer',textContent:'Vote for it',
-   href:issueURL('council:choose',`Vote: ${chapter.engine} visual`,`chapter: ${chapter.number}\n\nI'd like the ${chapter.engine} visual built so the rest of this chapter can run.`)});
-  rows.push(el('li',{className:'note'},`Items marked Later need a ${chapter.engine} visual. `,vote));
- }
- $('chapter-items').replaceChildren(...rows);
+ const all=curriculum.chapters.flatMap(c=>c.items), next=all.find(i=>i.model&&!doneItem(i)&&!picks.has(i.id));
  if(schedule?.enabled){
   const pick=[...picks.keys()].map(id=>all.find(i=>i.id===id)).find(i=>i&&i.model&&!doneItem(i));
   const upcoming=pick||next;
@@ -308,7 +308,7 @@ async function loadPath(){
   const response=await fetch(`https://api.github.com/repos/${OWNER}/the-council/issues?state=open&creator=${OWNER}&labels=council:choose&per_page=50`);
   if(response.ok)for(const issue of await response.json()){const id=/curriculum:\s*([0-9]+\.[0-9]+)/.exec(issue.body||'')?.[1];if(id&&!picks.has(id))picks.set(id,issue.html_url);}
  }catch{}
- renderPath();
+ renderPath();renderCards();
 }
 loadPath();
 

@@ -29,10 +29,8 @@
  </details>
  <section id="home" class="home" aria-labelledby="past-title">
   <div id="featured" class="featured"></div>
-  <div class="section-head"><h2 id="past-title">Previous investigations</h2><span id="past-count" class="muted"></span></div>
-  <nav id="archive" class="cards" aria-label="Investigations"></nav>
-  <div id="drafts-head" class="section-head" hidden><h2 id="drafts-title">Drafts</h2><span class="muted">Visual prototypes for the owner to review · not checked or published by the Council</span></div>
-  <nav id="drafts" class="cards" aria-label="Draft visuals"></nav>
+  <div class="section-head"><h2 id="past-title">Investigations</h2><span id="past-count" class="muted"></span></div>
+  <nav id="chapters" class="chapters" aria-label="Investigations by chapter"></nav>
  </section>
 
  <article class="hero" aria-labelledby="title">
@@ -82,12 +80,6 @@
   <div class="talk"><a id="ask" class="pill" target="_blank" rel="noopener noreferrer">Ask a question</a><a id="feedback" class="pill" target="_blank" rel="noopener noreferrer">Give feedback</a><span class="fine">Opens a public GitHub issue. The next morning's run reads it.</span></div>
  </article>
 
- <section id="path" class="path" aria-labelledby="path-title">
-  <div class="section-head"><h2 id="path-title">The path</h2><span id="path-progress" class="muted"></span></div>
-  <div id="chapter-row" class="chapter-row" role="tablist" aria-label="Chapters"></div>
-  <ul id="chapter-items" class="items"></ul>
-  <p id="path-horizon" class="fine horizon"></p>
- </section>
 
  <details id="investigation" class="behind">
   <summary><span>How the Council checked this</span><span id="review-summary" class="chips"></span></summary>
@@ -114,7 +106,7 @@
  <div class="sheet-head"><div><h2 id="proposals-title">Proposals</h2><p class="muted">Ideas from the Council's daily project review. Approve the ones you want built. Nothing changes until you do.</p></div><button id="proposals-close" class="round quiet" type="button" aria-label="Close">×</button></div>
  <div id="proposals-list" class="proposals"></div>
 </dialog>
-<footer><span class="wordmark small">The Council</span><span>Curiosity first. Evidence always.</span></footer>
+<footer><span class="wordmark small">The Council</span><nav class="foot-links"><a href="./">Investigations</a><a href="?drafts">Drafts</a></nav><span>Curiosity first. Evidence always.</span></footer>
 <script src="physics.js?v=dev"></script><script src="scene.js?v=dev"></script><script src="app.js?v=dev"></script>
 </body>
 </html>

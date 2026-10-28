@@ -525,8 +525,9 @@ function drawTwinTrip(ctx,w,h,spec,st){
 
 // Twin paths: one layout shared by drawing and dragging, so the handle sits exactly on the turnaround.
 function pathsLayout(w,h,st){
- const small=w<520, v=Physics.speed(st.mass), T=Physics.turnaround(st.distance), H=2*T, Hmax=2*Physics.turnaround(2.5);
- const top=small?104:64, bottom=h*(small?.58:.74), k=Math.min((bottom-top)/Hmax,(w*(small?.62:.32))/(.9*Hmax/2+.6));
+ // Previews (no labels) use the wide layout with small margins, whatever their size.
+ const small=w<520&&st.labels!==false, v=Physics.speed(st.mass), T=Physics.turnaround(st.distance), H=2*T, Hmax=2*Physics.turnaround(2.5);
+ const top=st.labels===false?12:small?104:64, bottom=h*(small?.58:.74), k=Math.min((bottom-top)/Hmax,(w*(small?.62:.32))/(.9*Hmax/2+.6));
  const x0=w*(small?.2:.14), map=(x,t)=>[x0+x*k,bottom-t*k];
  return {small,v,T,H,k,x0,top,bottom,map,kink:map(v*T,T)};
 }

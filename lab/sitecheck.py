@@ -19,10 +19,14 @@ def main():
             index=ROOT/'web'/'published'/'index.json'
             entries=json.loads(index.read_text()) if index.exists() else []
             if entries:
-                # Home: the newest investigation is featured once; the list holds the rest.
+                # Home: one featured investigation; every other one appears once in the chapter index.
+                pinned=ROOT/'web'/'featured.json'
+                lead=json.loads(pinned.read_text()).get('id') if pinned.exists() else None
+                lead=lead if any(e['id']==lead for e in entries) else entries[0]['id']
+                page.wait_for_function('n=>document.querySelectorAll("#chapters a[data-guide]").length>=n',arg=len(entries)-1)
                 assert page.locator('#featured a[data-guide]').count()==1
-                assert page.locator('#archive a[data-guide]').count()==len(entries)-1
-                assert page.locator(f'#archive a[data-guide="{entries[0]["id"]}"]').count()==0, 'Featured investigation repeated in the list'
+                assert page.locator('#chapters a[data-guide]').count()==len(entries)-1
+                assert page.locator(f'#chapters a[data-guide="{lead}"]').count()==0, 'Featured investigation repeated in the index'
             for entry in entries or [{'id':'example'}]:
                 page.goto(url+'?guide='+entry['id'],wait_until='networkidle')
                 page.wait_for_function('(id)=>{const r=document.getElementById("record").textContent;return r&&(id==="example"||JSON.parse(r).id===id)}',arg=entry['id'])

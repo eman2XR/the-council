@@ -28,17 +28,5 @@
   "title": "A black hole as a river of space",
   "created": "2026-10-27T19:00:00-07:00",
   "kind": "river"
- },
- {
-  "id": "bend-the-map",
-  "title": "Bend the map, and falling is straight",
-  "created": "2026-10-27T19:00:00-07:00",
-  "kind": "fall-fan"
- },
- {
-  "id": "roll-the-paper",
-  "title": "Roll the paper: straight lines stay straight",
-  "created": "2026-10-27T19:00:00-07:00",
-  "kind": "fall-cone"
  }
 ]

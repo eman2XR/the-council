@@ -31,9 +31,10 @@ def main():
                 page.goto(ORIGIN + '/web/', wait_until='networkidle'); page.wait_for_timeout(600)
                 shot('home', True); overflow('home')
                 page.click('#lab summary'); page.wait_for_timeout(200); shot('home-status'); page.click('#lab summary')
-                for i in range(page.locator('.chapter-tile').count()):
-                    page.locator('.chapter-tile').nth(i).click(); page.wait_for_timeout(150)
-                    page.locator('#path').screenshot(path=str(out / f'{size}-path-{i+1}.png'))
+                page.locator('#chapters').screenshot(path=str(out / f'{size}-chapters.png'))
+                page.goto(ORIGIN + '/web/?drafts', wait_until='networkidle'); page.wait_for_timeout(500)
+                shot('drafts', True); overflow('drafts')
+                page.goto(ORIGIN + '/web/', wait_until='networkidle'); page.wait_for_timeout(300)
                 if page.locator('#proposals-open').is_visible():
                     page.click('#proposals-open'); page.wait_for_timeout(300); shot('proposals'); page.keyboard.press('Escape')
                 for n, entry in enumerate(entries, 1):
