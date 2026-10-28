@@ -153,6 +153,7 @@ body.idea-shown .story{display:none}
 .workspace.exploring .controls{display:grid}
 .workspace[data-controls=none] #explore{display:none}
 #explore[aria-pressed=true]{background:#efe9df;color:var(--ink)}
+#sound .off{display:none}#sound[aria-pressed=false] .waves{display:none}#sound[aria-pressed=false] .off{display:inline}
 .workspace[data-controls=first] .controls,.workspace[data-controls=second] .controls{grid-template-columns:1fr;max-width:520px}
 .workspace[data-controls=none] .controls{display:none}
 .control{display:block;font-size:13px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}

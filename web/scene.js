@@ -996,9 +996,9 @@ const ENGINES={
   fa:a=>a<.005?'closed':Math.round(a*100)+'% open',fb:b=>b.toFixed(2)+'×',
   measure:['Stripe contrast',a=>(Physics.visibility(a)*100).toFixed(0)+'%'],scale:'',disclosure:'Arrivals are pseudo-random samples from the predicted pattern; the ripples show possibilities, not paths.',demoEnd:()=>2.5,
   try:'Close the second slit: do the stripes survive? Open it again, then move the slits apart.',aria:'Particles arrive one at a time on a screen behind two slits and slowly build up stripes.'},
- 'standing-waves':{draw:drawRope,a:['Reflection','how much of the wave bounces back'],b:['Pattern','whole loops between hand and wall',''],
+ 'standing-waves':{draw:drawRope,sound:({mass,distance})=>({freq:110*Physics.harmonic(distance),level:Physics.stillness(mass)}),a:['Reflection','how much of the wave bounces back'],b:['Pattern','whole loops between hand and wall',''],
   fa:a=>Math.round(a*100)+'%',fb:b=>{const n=Physics.harmonic(b);return n+' loop'+(n>1?'s':'');},
-  measure:['Still points',a=>(Physics.stillness(a)*100).toFixed(0)+'% still'],scale:'',disclosure:'Wave height is exaggerated for visibility.',demoEnd:()=>2.5,
+  measure:['Still points',a=>(Physics.stillness(a)*100).toFixed(0)+'% still'],scale:'',disclosure:'Wave height is exaggerated for visibility. The sound is the note of each pattern on a string whose lowest note is 110 Hz: 1 loop 110 Hz, 2 loops 220 Hz and so on, as loud as the standing wave is strong. A real string’s pitch also depends on its length, tension and weight.',demoEnd:()=>2.5,
   try:'Turn Reflection to zero: are there still points? Turn it up, then step the Pattern slider.',aria:'A rope shaken at one end and tied to a wall at the other, forming a standing wave.'},
  'tunneling':{draw:drawTunnel,a:['Barrier height','compared with the particle’s energy'],b:['Barrier width','how thick the barrier is',''],
   fa:a=>a<.005?'none':(2*a).toFixed(1)+'× energy',fb:b=>(.6*b/(2*Math.PI)).toFixed(2)+' wavelengths',
@@ -1089,6 +1089,26 @@ const chapterAt=t=>{const i=timeline.chapters.findIndex(c=>t<c.end);return i<0?t
 const target=()=>stage===0?0:mass;
 const fmt=s=>`${Math.floor(s/60)}:${String(Math.floor(s%60)).padStart(2,'0')}`;
 
+// Sound: an engine may give a note for the current state. It plays while the explanation plays and, after that,
+// as a short pluck when the viewer moves a control. Nothing sounds before the viewer presses play.
+const SOUND={ctx:null,master:null,oscs:[],freq:0,plucked:-9,on:(()=>{try{return localStorage.getItem('council-sound')!=='off';}catch{return true;}})()};
+function audioStart(){
+ if(SOUND.ctx||!engineOf(spec).sound)return SOUND.ctx?.resume?.();
+ const AC=window.AudioContext||window.webkitAudioContext;if(!AC)return;
+ const a=SOUND.ctx=new AC(), master=SOUND.master=a.createGain(), tone=a.createBiquadFilter();
+ master.gain.value=0;tone.type='lowpass';tone.frequency.value=2400;master.connect(tone);tone.connect(a.destination);
+ // A soft string-like tone: the note with two quieter overtones.
+ SOUND.oscs=[[1,.13],[2,.035],[3,.015]].map(([k,g])=>{const o=a.createOscillator(), gain=a.createGain();o.type='sine';gain.gain.value=g;o.connect(gain);gain.connect(master);o.start();return [o,k];});
+}
+function voice(){
+ const e=engineOf(spec);if(!e.sound||!SOUND.ctx)return;
+ const {freq,level}=e.sound({mass:shown,distance}), now=SOUND.ctx.currentTime, g=SOUND.master.gain, playing=mode==='playing';
+ // A new note is plucked: a brighter start that settles to the steady level.
+ if(Math.abs(freq-SOUND.freq)>.5){SOUND.freq=freq;for(const [o,k] of SOUND.oscs)o.frequency.setValueAtTime(freq*k,now);if(SOUND.on&&level>.02){g.cancelScheduledValues(now);g.setValueAtTime(level*1.5,now);}}
+ const pluck=now-SOUND.plucked<.05;
+ if(pluck&&SOUND.on&&level>.02){g.cancelScheduledValues(now);g.setValueAtTime(level*1.4,now);}
+ g.setTargetAtTime(SOUND.on&&playing?level:0,now,playing?.35:.7);
+}
 function paint(){
  if(!spec)return;
  const box=canvas.getBoundingClientRect(), w=box.width, h=box.height, dpr=window.devicePixelRatio||1;
@@ -1098,6 +1118,7 @@ function paint(){
  if(ctx.reset)ctx.reset();ctx.setTransform(dpr,0,0,dpr,0,0);ctx.clearRect(0,0,w,h);
  const since=started&&timeline?Math.max(0,time-timeline.chapters[stage].start):time;
  draw(ctx,w,h,spec,{t:time,since,stage,mass:shown,distance,labels:spec.show_labels});
+ voice();
  const value=target();
  if(engineOf(spec).measure)$('bend-value').textContent=engineOf(spec).measure[1](value,distance);
  captions();transport();
@@ -1150,6 +1171,7 @@ function syncControls(){
 }
 function setStage(n){stage=n;syncControls();}
 function configure(){
+ soundButton();
  const e=engineOf(spec), controls=spec.controls||'both';
  const ws=document.querySelector('.workspace');
  ws?.setAttribute('data-controls',controls);
@@ -1164,7 +1186,7 @@ function configure(){
  canvas.setAttribute('aria-label',e.aria);
 }
 function load(scene){
- exploreOpen=null;
+ exploreOpen=null;SOUND.freq=0;if(SOUND.master)SOUND.master.gain.setTargetAtTime(0,SOUND.ctx.currentTime,.05);
  // Before playback the stage shows the opening frame of chapter 1.
  spec=scene;buildTimeline();
  $('ticks').replaceChildren(...timeline.chapters.slice(1).map((c,i)=>{const tick=document.createElement('button');tick.type='button';tick.dataset.beat=String(i+1);tick.style.left=`calc(12px + (100% - 24px) * ${c.start/timeline.total})`;tick.title=`Chapter ${i+2}: ${spec.beats[i+1].title}`;tick.setAttribute('aria-label',tick.title);tick.onclick=e=>{e.stopPropagation();chapter(i+1);};return tick;}));mass=scene.mass;distance=scene.distance;time=0;mode='live';started=false;ended=false;captionKey='';
@@ -1174,7 +1196,7 @@ function restore(){mass=spec.mass;distance=spec.distance;demoed=false;}
 function play(){
  if(!spec)return;
  if(!started||ended||time>=timeline.total){time=0;restore();setStage(0);shown=0;}
- started=true;ended=false;mode='playing';exploreOpen=null;last=0;emit('play');paint();
+ audioStart();started=true;ended=false;mode='playing';exploreOpen=null;last=0;emit('play');paint();
 }
 function pause(){if(mode==='playing'){mode='paused';paint();}}
 function toggle(){mode==='playing'?pause():play();}
@@ -1225,15 +1247,19 @@ function explore(){if(!started){started=true;ended=true;}mode='live';const last=
 function input(id,value){
  // Touching a control before playing means exploring; during playback it hands control to the viewer.
  if(id==='mass')mass=value;else distance=value;
+ audioStart();if(SOUND.ctx)SOUND.plucked=SOUND.ctx.currentTime;
  explore();paint();
 }
 
 window.CouncilScene={load,seek,play,pause,toggle,chapter,render:t=>{time=t;paint();},
  getState:()=>({time,mass,distance,stage,mode,ended}),
+ sound:()=>({on:SOUND.on,state:SOUND.ctx?.state||null,freq:Math.round(SOUND.freq),gain:SOUND.master?+SOUND.master.gain.value.toFixed(3):null}),
  timeline:()=>timeline&&JSON.parse(JSON.stringify(timeline)),on:fn=>listeners.add(fn),
  checks:()=>Physics.checksFor(spec?.kind)};
 $('play').onclick=toggle;$('poster').onclick=play;
 $('reset').onclick=()=>{started=false;play();};
+$('sound').onclick=()=>{SOUND.on=!SOUND.on;try{localStorage.setItem('council-sound',SOUND.on?'on':'off');}catch{}audioStart();soundButton();paint();};
+function soundButton(){const b=$('sound');b.hidden=!engineOf(spec)?.sound;b.setAttribute('aria-pressed',String(SOUND.on));b.setAttribute('aria-label',SOUND.on?'Mute the sound':'Turn the sound on');}
 $('explore').onclick=()=>{exploreOpen=!document.querySelector('.workspace').classList.contains('exploring');pause();paint();};
 // Scrubbing: click or drag anywhere on the bar; playback continues if it was playing.
 function scrubTo(clientX){
