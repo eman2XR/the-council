@@ -30,11 +30,11 @@ CouncilScene.on(type=>{
   if(Math.abs(box.top-72)>24)scrollBy({top:box.top-72,behavior:reduceMotion?'auto':'smooth'});}
 });
 
-// Heading, introduction and idea for one scene; the introduction prepares a viewer who knows no physics.
+// Heading, why it matters and the idea for one scene.
 function heading(scene){
  put('title',scene.title);put('subtitle',scene.subtitle);put('takeaway',scene.takeaway);
  const part=(label,text)=>text?[el('p',{},el('strong',{textContent:label}),' '+text)]:[];
- $('why').replaceChildren(...part('Why it matters',scene.why),...part('Before you start',scene.primer));
+ $('why').replaceChildren(...part('Why it matters',scene.why));
 }
 
 function show(data,{autoplay=false}={}){

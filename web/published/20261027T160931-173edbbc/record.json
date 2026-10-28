@@ -66,8 +66,7 @@
     "takeaway": "A string held at both ends can only keep up patterns of whole loops, so it rings only certain notes.",
     "controls": "first",
     "kind": "standing-waves",
-    "why": "It is why a plucked guitar string, a violin or a flute sounds a clear note rather than a noise, and why pressing a string against a fret, which shortens it, raises the note.",
-    "primer": "A wave on a rope is a shape that travels along it while each bit of rope only moves up and down. When two waves overlap they add: hump on hump makes a bigger hump, and hump on dip cancels. Faster shaking is heard as a higher note."
+    "why": "It is why a plucked guitar string, a violin or a flute sounds a clear note rather than a noise, and why pressing a string against a fret, which shortens it, raises the note."
   },
   "checks": [
     {
