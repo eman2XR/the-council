@@ -290,7 +290,11 @@ function drawParticles(ctx,w,h,spec,st){
 function drawRope(ctx,w,h,spec,st){
  const accent=ACCENT[spec.accent]||ACCENT.gold, A=st.mass, n=Physics.harmonic(st.distance), small=w<520;
  const x0=w*.1, x1=w*.9, y=h*.48, amp=Math.min(h*.13,(x1-x0)/(n*3.2)+h*.04), phase=st.t*TAU*.5, N=320;
- const pts=f=>Array.from({length:N+1},(_,i)=>{const u=i/N;return [x0+u*(x1-x0),y-f(u)*amp];});
+ const E=st.energy??1, pts=f=>Array.from({length:N+1},(_,i)=>{const u=i/N;return [x0+u*(x1-x0),y-f(u)*amp*E];});
+ // As the rope settles, a faint outline of how far each point swings keeps the pattern visible.
+ if(E<.98&&A>.001){const env=u=>Math.hypot((1-A)*Math.cos(n*Math.PI*u),(1+A)*Math.sin(n*Math.PI*u));
+  for(const sgn of [1,-1]){trace(ctx,Array.from({length:N+1},(_,i)=>{const u=i/N;return [x0+u*(x1-x0),y-sgn*env(u)*amp];}));
+   ctx.setLineDash([2,4]);ctx.strokeStyle=rgba(accent,.35*(1-E));ctx.lineWidth=1.2;ctx.stroke();ctx.setLineDash([]);}}
  trace(ctx,[[x0,y],[x1,y]]);ctx.strokeStyle='rgba(20,23,28,.1)';ctx.lineWidth=1;ctx.stroke();
  if(spec.show_reference){
   trace(ctx,pts(u=>Math.sin(phase-n*Math.PI*u)));ctx.setLineDash([4,5]);ctx.strokeStyle=rgba(accent,.45);ctx.lineWidth=1.2;ctx.stroke();
@@ -312,7 +316,7 @@ function drawRope(ctx,w,h,spec,st){
   text(ctx,'WALL',x1+6,base,{align:'center',size,weight:600,spacing:'1.5px'});
   if(A>.5)text(ctx,`${n} loop${n>1?'s':''} fit`,(x0+x1)/2,base,{align:'center',size:small?11:12,weight:600,color:accent});
   if(A>.5&&n>1)pill(ctx,'still points',x0+(x1-x0)/n,y+18,{align:'center',size:10,weight:600,color:'rgba(194,65,12,1)'});
-  text(ctx,A>.001?(spec.show_reference?'dashed: the wave going right and its reflection coming back':''):'the wave travels right; nothing comes back',(x0+x1)/2,h*.93,{align:'center',size:10});
+  text(ctx,E<.5&&A>.001?'the hand has stopped; dotted: how far each point swung':A>.001?(spec.show_reference?'dashed: the wave going right and its reflection coming back':''):'the wave travels right; nothing comes back',(x0+x1)/2,h*.93,{align:'center',size:10});
  }
 }
 
@@ -996,9 +1000,9 @@ const ENGINES={
   fa:a=>a<.005?'closed':Math.round(a*100)+'% open',fb:b=>b.toFixed(2)+'×',
   measure:['Stripe contrast',a=>(Physics.visibility(a)*100).toFixed(0)+'%'],scale:'',disclosure:'Arrivals are pseudo-random samples from the predicted pattern; the ripples show possibilities, not paths.',demoEnd:()=>2.5,
   try:'Close the second slit: do the stripes survive? Open it again, then move the slits apart.',aria:'Particles arrive one at a time on a screen behind two slits and slowly build up stripes.'},
- 'standing-waves':{draw:drawRope,sound:({mass,distance})=>({freq:165*Physics.harmonic(distance),level:.3+.7*Physics.stillness(mass)}),a:['Reflection','how much of the wave bounces back'],b:['Pattern','whole loops between hand and wall',''],
+ 'standing-waves':{draw:drawRope,sound:({mass,distance})=>({freq:165*Physics.harmonic(distance),level:Math.sqrt((1+mass*mass)/2)}),a:['Reflection','how much of the wave bounces back'],b:['Pattern','whole loops between hand and wall',''],
   fa:a=>Math.round(a*100)+'%',fb:b=>{const n=Physics.harmonic(b);return n+' loop'+(n>1?'s':'');},
-  measure:['Still points',a=>(Physics.stillness(a)*100).toFixed(0)+'% still'],scale:'',disclosure:'Wave height is exaggerated for visibility. The sound is a plucked string playing each pattern’s note, on a string whose lowest note is 165 Hz: 1 loop 165 Hz, 2 loops 330 Hz and so on. A wave that only travels gives a short, muted pluck; a standing wave rings on. A real string’s pitch also depends on its length, tension and weight.',demoEnd:()=>2.5,
+  measure:['Still points',a=>(Physics.stillness(a)*100).toFixed(0)+'% still'],scale:'',disclosure:'Wave height is exaggerated for visibility. The sound is the rope’s motion as a note: 165 Hz times the number of loops, as loud as the rope moves. When playback ends the hand stops and friction settles the rope and the sound together; moving a slider shakes it again. A real string’s pitch also depends on its length, tension and weight. A real string’s pitch also depends on its length, tension and weight.',demoEnd:()=>2.5,
   try:'Turn Reflection to zero: are there still points? Turn it up, then step the Pattern slider.',aria:'A rope shaken at one end and tied to a wall at the other, forming a standing wave.'},
  'tunneling':{draw:drawTunnel,a:['Barrier height','compared with the particle’s energy'],b:['Barrier width','how thick the barrier is',''],
   fa:a=>a<.005?'none':(2*a).toFixed(1)+'× energy',fb:b=>(.6*b/(2*Math.PI)).toFixed(2)+' wavelengths',
@@ -1089,40 +1093,31 @@ const chapterAt=t=>{const i=timeline.chapters.findIndex(c=>t<c.end);return i<0?t
 const target=()=>stage===0?0:mass;
 const fmt=s=>`${Math.floor(s/60)}:${String(Math.floor(s%60)).padStart(2,'0')}`;
 
-// Sound: an engine may give a note for the current state. It is played as a plucked string that rings and fades:
-// when playback starts, at each chapter, whenever the note changes, every few seconds while a pattern holds, and when
-// the viewer moves a control. Nothing sounds before the viewer presses play.
-const SOUND={ctx:null,out:null,buffers:new Map(),freq:0,stage:-1,last:-9,plucked:-9,on:(()=>{try{return localStorage.getItem('council-sound')!=='off';}catch{return true;}})()};
+// Sound: an engine may give a note for the current state; it sounds exactly while the picture moves.
+// Pitch is the pattern's note, loudness how much the rope moves, and it settles with the picture after playback.
+// Nothing sounds before the viewer presses play, or while playback is paused.
+const SOUND={ctx:null,out:null,oscs:[],freq:0,on:(()=>{try{return localStorage.getItem('council-sound')!=='off';}catch{return true;}})()};
 function audioStart(){
  if(SOUND.ctx||!engineOf(spec).sound)return SOUND.ctx?.resume?.();
  const AC=window.AudioContext||window.webkitAudioContext;if(!AC)return;
- const a=SOUND.ctx=new AC(), out=SOUND.out=a.createGain(), soft=a.createBiquadFilter();
- a.resume?.();out.gain.value=.22;soft.type='lowpass';soft.frequency.value=2600;out.connect(soft);soft.connect(a.destination);
+ const a=SOUND.ctx=new AC(), out=SOUND.out=a.createGain(), warm=a.createBiquadFilter();
+ a.resume?.();out.gain.value=0;warm.type='lowpass';warm.frequency.value=1400;out.connect(warm);warm.connect(a.destination);
+ // A soft, warm tone: the note with two faint overtones.
+ SOUND.oscs=[[1,.15],[2,.04],[3,.015]].map(([k,g])=>{const o=a.createOscillator(), gain=a.createGain();o.type='sine';gain.gain.value=g;o.connect(gain);gain.connect(out);o.start();return [o,k];});
 }
-// Karplus-Strong plucked string: a short burst of softened noise circulating in a delay line one period long,
-// averaged on every pass so it mellows and fades like a real string. ring sets how long it sustains.
-function stringBuffer(freq,ring){
- const key=`${Math.round(freq)}|${ring.toFixed(2)}`;if(SOUND.buffers.has(key))return SOUND.buffers.get(key);
- const a=SOUND.ctx, rate=a.sampleRate, seconds=.6+2.2*ring, n=Math.floor(rate*seconds), y=new Float32Array(n), period=rate/freq, N=Math.floor(period);
- const decay=.982+.0155*ring;let prev=0;
- for(let i=0;i<N&&i<n;i++){const noise=hash(i*1.37+freq)*2-1;prev=.5*prev+.5*noise;y[i]=prev;}
- for(let i=N;i<n;i++)y[i]=decay*.5*(y[i-N]+y[i-N-1]);
- let peak=0;for(const v of y)peak=Math.max(peak,Math.abs(v));const fade=Math.floor(rate*.05);
- for(let i=0;i<n;i++)y[i]=y[i]/(peak||1)*(i>n-fade?(n-i)/fade:1);
- const buffer=a.createBuffer(1,n,rate);buffer.copyToChannel(y,0);SOUND.buffers.set(key,buffer);return buffer;
-}
-function pluck(freq,level){
- if(!SOUND.on||!SOUND.ctx||level<.02)return;
- const a=SOUND.ctx, src=a.createBufferSource(), gain=a.createGain();
- src.buffer=stringBuffer(freq,Math.min(1,level));gain.gain.value=.35+.65*level;src.connect(gain);gain.connect(SOUND.out);src.start();
- SOUND.last=a.currentTime;
-}
-function voice(){
+function voice(energy){
  const e=engineOf(spec);if(!e.sound||!SOUND.ctx)return;
- const {freq,level}=e.sound({mass:shown,distance}), now=SOUND.ctx.currentTime, playing=mode==='playing';
- const changed=Math.abs(freq-SOUND.freq)>.5, newChapter=playing&&stage!==SOUND.stage, moved=now-SOUND.plucked<.05;
- SOUND.freq=freq;if(playing)SOUND.stage=stage;
- if((playing&&(changed||newChapter||now-SOUND.last>4.5))||moved)pluck(freq,level);
+ const {freq,level}=e.sound({mass:shown,distance}), now=SOUND.ctx.currentTime;
+ // A new note steps in within a few milliseconds: no slide between notes, and no click.
+ if(Math.abs(freq-SOUND.freq)>.5){SOUND.freq=freq;for(const [o,k] of SOUND.oscs)o.frequency.setTargetAtTime(freq*k,now,.01);}
+ const moving=started&&(mode==='playing'||mode==='live');
+ SOUND.out.gain.setTargetAtTime(SOUND.on&&moving?level*energy:0,now,.08);
+}
+// The hand shakes during playback and for a few seconds after a slider move; then the rope settles, as friction would.
+let driveUntil=0;
+function energy(){
+ if(!started||mode!=='live'||time<=driveUntil)return 1;
+ return Math.exp(-(time-driveUntil)/1.3);
 }
 function paint(){
  if(!spec)return;
@@ -1132,8 +1127,9 @@ function paint(){
  // Reset drawing state as well as pixels so seeking never inherits a prior frame.
  if(ctx.reset)ctx.reset();ctx.setTransform(dpr,0,0,dpr,0,0);ctx.clearRect(0,0,w,h);
  const since=started&&timeline?Math.max(0,time-timeline.chapters[stage].start):time;
- draw(ctx,w,h,spec,{t:time,since,stage,mass:shown,distance,labels:spec.show_labels});
- voice();
+ const drive=energy();
+ draw(ctx,w,h,spec,{t:time,since,stage,mass:shown,distance,labels:spec.show_labels,energy:drive});
+ voice(drive);
  const value=target();
  if(engineOf(spec).measure)$('bend-value').textContent=engineOf(spec).measure[1](value,distance);
  captions();transport();
@@ -1201,7 +1197,7 @@ function configure(){
  canvas.setAttribute('aria-label',e.aria);
 }
 function load(scene){
- exploreOpen=null;SOUND.freq=0;SOUND.stage=-1;
+ exploreOpen=null;SOUND.freq=0;driveUntil=0;
  // Before playback the stage shows the opening frame of chapter 1.
  spec=scene;buildTimeline();
  $('ticks').replaceChildren(...timeline.chapters.slice(1).map((c,i)=>{const tick=document.createElement('button');tick.type='button';tick.dataset.beat=String(i+1);tick.style.left=`calc(12px + (100% - 24px) * ${c.start/timeline.total})`;tick.title=`Chapter ${i+2}: ${spec.beats[i+1].title}`;tick.setAttribute('aria-label',tick.title);tick.onclick=e=>{e.stopPropagation();chapter(i+1);};return tick;}));mass=scene.mass;distance=scene.distance;time=0;mode='live';started=false;ended=false;captionKey='';
@@ -1211,7 +1207,7 @@ function restore(){mass=spec.mass;distance=spec.distance;demoed=false;}
 function play(){
  if(!spec)return;
  if(!started||ended||time>=timeline.total){time=0;restore();setStage(0);shown=0;}
- audioStart();SOUND.stage=-1;started=true;ended=false;mode='playing';exploreOpen=null;last=0;emit('play');paint();
+ audioStart();started=true;ended=false;mode='playing';exploreOpen=null;last=0;emit('play');paint();
 }
 function pause(){if(mode==='playing'){mode='paused';paint();}}
 function toggle(){mode==='playing'?pause():play();}
@@ -1250,7 +1246,7 @@ function tick(stamp){
    const next=chapterAt(time), last=timeline.chapters.length-1, c=timeline.chapters[last];
    if(next!==stage)setStage(next);
    if(stage===last&&engineOf(spec).demo!==false)demo(clamp((time-c.start)/(c.end-c.start)));
-   if(time>=timeline.total){time=timeline.total;mode='live';ended=true;emit('ended');}
+   if(time>=timeline.total){time=timeline.total;mode='live';ended=true;driveUntil=time;emit('ended');}
   }
   shown+=(target()-shown)*(1-Math.exp(-dt*(mode==='playing'?1.6:7)));
   paint();
@@ -1262,13 +1258,13 @@ function explore(){if(!started){started=true;ended=true;}mode='live';const last=
 function input(id,value){
  // Touching a control before playing means exploring; during playback it hands control to the viewer.
  if(id==='mass')mass=value;else distance=value;
- audioStart();if(SOUND.ctx)SOUND.plucked=SOUND.ctx.currentTime;
- explore();paint();
+ audioStart();
+ explore();driveUntil=time+4;paint();
 }
 
 window.CouncilScene={load,seek,play,pause,toggle,chapter,render:t=>{time=t;paint();},
  getState:()=>({time,mass,distance,stage,mode,ended}),
- sound:()=>({on:SOUND.on,state:SOUND.ctx?.state||null,freq:Math.round(SOUND.freq),last:SOUND.last}),
+ sound:()=>({on:SOUND.on,state:SOUND.ctx?.state||null,freq:Math.round(SOUND.freq),gain:SOUND.out?+SOUND.out.gain.value.toFixed(3):null,energy:+energy().toFixed(3)}),
  timeline:()=>timeline&&JSON.parse(JSON.stringify(timeline)),on:fn=>listeners.add(fn),
  checks:()=>Physics.checksFor(spec?.kind)};
 $('play').onclick=toggle;$('poster').onclick=play;
