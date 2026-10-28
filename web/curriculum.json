@@ -37,7 +37,7 @@
     {
      "id": "2.3",
      "question": "Why is the travelling twin younger?",
-     "model": "twin-trip"
+     "model": "spacetime-paths"
     },
     {
      "id": "2.4",

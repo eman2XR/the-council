@@ -853,6 +853,90 @@ function drawTides(ctx,w,h,spec,st){
  text(ctx,'stretched ↕',ix+Ri*.9,iy-Ri*1.25,{size:small?10:11,weight:600,color:warm});text(ctx,'squeezed ↔',ix+Ri*1.05,iy+Ri*.3,{size:small?10:11,weight:600,color:warm});
 }
 
+// A person on a bathroom scale in a lift: parked, riding, and with the cable snapped. The dial shows what the scale reads.
+function drawLift(ctx,w,h,spec,st){
+ const accent=ACCENT[spec.accent]||ACCENT.blue, dark='#14171c', warm='#c2410c', small=w<520, since=st.since??st.t, stage=st.stage, L=Physics.lift();
+ const sx0=small?w*.08:w*.28, sx1=small?w*.56:w*.5, top=small?40:30, bot=h*(small?.66:.94), carH=Math.min((bot-top)*.45,small?150:210), carW=(sx1-sx0)*.74, k=(bot-top-carH)/24;
+ // Where the car is (metres above the lowest stop), its upward acceleration, and whether the cable still holds.
+ let yc=12,a=0,snapped=false,fall=0,tf=0;
+ if(stage===1){const P=11,c=Math.floor(since/P),t=since-c*P,dir=c%2?-1:1;let v=0,s=0;for(let q=0;q<t;q+=.02){v+=L.accelAt(q)*dir*.02;s+=v*.02;}a=L.accelAt(t)*dir;yc=dir>0?1+s:23+s;}
+ else if(stage>=2){const snapAt=stage===2?1.8:.4,P=snapAt+3.2+1.2,t=since%P;if(t>snapAt){snapped=true;tf=Math.min(t-snapAt,3.2);fall=.5*L.g*tf*tf;a=-L.g;yc=12-fall;}}
+ const reading=L.reading(a), offset=snapped?fall:0, floorY=yw=>bot-(yw+offset)*k, cx=(sx0+sx1)/2;
+ // The shaft: walls with a mark at every floor. While falling, the view follows the car and the walls stream past.
+ ctx.fillStyle='rgba(20,23,28,.03)';ctx.fillRect(sx0,0,sx1-sx0,h);
+ for(const x of [sx0,sx1]){trace(ctx,[[x,0],[x,h]]);ctx.strokeStyle='rgba(20,23,28,.25)';ctx.lineWidth=1.5;ctx.stroke();}
+ for(let m=Math.floor((-offset-4)/3)*3;m<=-offset+30;m+=3){const y=floorY(m);if(y<-10||y>h+10)continue;
+  for(const x of [sx0,sx1]){trace(ctx,[[x,y],[x+(x===sx0?10:-10),y]]);ctx.strokeStyle='rgba(20,23,28,.3)';ctx.lineWidth=1.2;ctx.stroke();}}
+ const floor=floorY(yc), roof=floor-carH;
+ // The cable: attached to the roof, or snapped and left behind in the shaft.
+ if(!snapped){trace(ctx,[[cx,0],[cx,roof]]);ctx.strokeStyle='rgba(20,23,28,.55)';ctx.lineWidth=2;ctx.stroke();}
+ else{const end=floorY(12)-carH-8;trace(ctx,Array.from({length:12},(_,i)=>[cx+Math.sin(i*1.3)*3*(i/11),end-i*6]));ctx.strokeStyle='rgba(20,23,28,.5)';ctx.lineWidth=2;ctx.stroke();}
+ ctx.fillStyle='#fffdf8';ctx.strokeStyle='rgba(20,23,28,.55)';ctx.lineWidth=1.6;ctx.beginPath();ctx.roundRect(cx-carW/2,roof,carW,carH,6);ctx.fill();ctx.stroke();
+ // You, standing on a bathroom scale, holding an apple; after the snap the apple is let go and stays where it was.
+ const size=carH/7.2, scaleH=size*.5, feet=floor-scaleH-3, px=cx-size*.6;
+ ctx.fillStyle='#e9e4da';ctx.strokeStyle='rgba(20,23,28,.45)';ctx.lineWidth=1;ctx.beginPath();ctx.roundRect(px-size*1.2,feet,size*2.4,scaleH,3);ctx.fill();ctx.stroke();
+ ctx.fillStyle=reading>.01?warm:'rgba(20,23,28,.25)';ctx.fillRect(px-size*.3,feet+scaleH*.25,size*.6,scaleH*.5);
+ drawPerson(ctx,px,feet,size,dark);
+ const ax=px+size*(snapped?1.25:.75), ay=feet-size*(snapped?2.35:2.75);
+ ctx.beginPath();ctx.arc(ax,ay,size*.38,0,TAU);ctx.fillStyle='#d6453d';ctx.fill();
+ // Which way the lift is speeding up.
+ if(Math.abs(a)>.01){const ux=cx+carW/2+16,dir=a>0?-1:1,y0=(roof+floor)/2,len=Math.min(60,10+Math.abs(a)*5);trace(ctx,[[ux,y0-dir*len/2],[ux,y0+dir*len/2]]);ctx.strokeStyle=accent;ctx.lineWidth=2.4;ctx.stroke();
+  trace(ctx,[[ux-5,y0+dir*(len/2-7)],[ux,y0+dir*len/2],[ux+5,y0+dir*(len/2-7)]]);ctx.stroke();}
+ // The dial: what the scale reads, from zero to twice your weight.
+ const dx=small?w*.79:w*.73, dy=small?h*.36:h*.5, R=Math.min(small?w*.17:w*.12,small?h*.16:h*.26);
+ ctx.beginPath();ctx.arc(dx,dy,R,Math.PI*.9,Math.PI*2.1);ctx.strokeStyle='rgba(20,23,28,.15)';ctx.lineWidth=R*.14;ctx.lineCap='round';ctx.stroke();
+ const ang=f=>Math.PI*.9+Math.PI*1.2*Math.min(1,f/2);
+ ctx.beginPath();ctx.arc(dx,dy,R,Math.PI*.9,ang(reading));ctx.strokeStyle=reading>.01?warm:'rgba(20,23,28,.15)';ctx.stroke();ctx.lineCap='butt';
+ for(const f of [0,1,2]){const t=ang(f);trace(ctx,[[dx+Math.cos(t)*R*.78,dy+Math.sin(t)*R*.78],[dx+Math.cos(t)*R*.9,dy+Math.sin(t)*R*.9]]);ctx.strokeStyle='rgba(20,23,28,.4)';ctx.lineWidth=1.5;ctx.stroke();}
+ const na=ang(reading);trace(ctx,[[dx,dy],[dx+Math.cos(na)*R*.72,dy+Math.sin(na)*R*.72]]);ctx.strokeStyle=dark;ctx.lineWidth=3;ctx.lineCap='round';ctx.stroke();ctx.beginPath();ctx.arc(dx,dy,5,0,TAU);ctx.fillStyle=dark;ctx.fill();
+ if(stage>=3&&!small){const ex=w*.88,ey=h*.16,er=16,ang2=st.t*.6;drawEarth(ctx,ex,ey,er);ctx.beginPath();ctx.arc(ex,ey,er*2.1,0,TAU);ctx.setLineDash([2,4]);ctx.strokeStyle='rgba(20,23,28,.3)';ctx.lineWidth=1;ctx.stroke();ctx.setLineDash([]);
+  ctx.beginPath();ctx.arc(ex+Math.cos(ang2)*er*2.1,ey+Math.sin(ang2)*er*2.1,3.5,0,TAU);ctx.fillStyle=dark;ctx.fill();}
+ if(!st.labels)return;
+ text(ctx,'the scale reads',dx,dy-R-(small?34:40),{align:'center',size:small?11:12,weight:600,color:'rgba(20,23,28,.6)'});
+ text(ctx,`${Math.round(reading*70)} kg`,dx,dy+R*.35,{align:'center',size:small?22:30,weight:700,color:reading>.01?dark:accent});
+ text(ctx,'0',dx+Math.cos(ang(0))*R*1.2,dy+Math.sin(ang(0))*R*1.2,{align:'center',size:10});
+ text(ctx,'your weight',dx,dy-R-(small?16:18),{align:'center',size:10,color:'rgba(20,23,28,.5)'});
+ if(snapped&&stage===2)pill(ctx,'apple let go',ax+size*.6,ay-size*.5,{size:10,weight:600,color:'#b3362f'});
+ if(stage>=3&&!small)text(ctx,'falling around the Earth',w*.88,h*.16+40,{align:'center',size:10,color:'rgba(20,23,28,.6)'});
+}
+
+// The Moon stretches the Earth: it pulls the near side more and the far side less than the centre, so the oceans bulge both ways.
+function drawMoonTides(ctx,w,h,spec,st){
+ const accent=ACCENT[spec.accent]||ACCENT.blue, dark='#14171c', warm='#c2410c', small=w<520, since=st.since??st.t, stage=st.stage, M=Physics.moonTides();
+ const ex=small?w*.36:w*.36, ey=small?h*.36:h*.5, Re=Math.min(small?w*.2:w*.15,small?h*.17:h*.27), mx=small?w*.9:w*.8, mr=Re*.27;
+ // How much of the stretch to show: none while the pulls are compared, growing as the Earth's own fall is taken away.
+ const morph=stage===0?1:stage===1?0:stage===2?smooth((since-2.5)/4):1, b=.11*morph;
+ const spin=stage>=3?since*.35:0;
+ const ocean=ctx.createRadialGradient(ex,ey,Re*.9,ex,ey,Re*1.3);ocean.addColorStop(0,'rgba(59,130,246,.35)');ocean.addColorStop(1,'rgba(59,130,246,.2)');
+ ctx.beginPath();for(let i=0;i<=120;i++){const th=TAU*i/120,r=Re*(1.08+b*M.shape(th));const x=ex+Math.cos(th)*r,y=ey+Math.sin(th)*r;i?ctx.lineTo(x,y):ctx.moveTo(x,y);}ctx.closePath();ctx.fillStyle=ocean;ctx.fill();ctx.strokeStyle='rgba(37,99,235,.45)';ctx.lineWidth=1;ctx.stroke();
+ ctx.save();ctx.translate(ex,ey);ctx.rotate(spin);drawEarth(ctx,0,0,Re);ctx.restore();
+ ctx.beginPath();ctx.arc(mx,ey,mr,0,TAU);const moon=ctx.createRadialGradient(mx-mr*.3,ey-mr*.3,mr*.1,mx,ey,mr);moon.addColorStop(0,'#f4f1ea');moon.addColorStop(1,'#a9a39a');ctx.fillStyle=moon;ctx.fill();
+ // Arrows: the Moon's pull at the near side, centre and far side (differences enlarged), or the stretch left after the Earth's own fall.
+ if(stage===1||stage===2){const c=M.centre[0], E=.45/(M.tide(1,0)[0]/c), Lc=Re*.55;
+  const pts=[[1,0],[0,0],[-1,0],[0,1],[0,-1]];
+  for(const [x,y] of pts){const t=M.tide(x,y), pull=[c+E*t[0],E*t[1]], keep=[E*t[0],E*t[1]], v=stage===1?pull:[pull[0]+(keep[0]-pull[0])*morph,pull[1]+(keep[1]-pull[1])*morph];
+   if(stage===1&&(y!==0))continue;
+   const sx=ex+x*Re*(x?1.08:0), sy=ey+y*Re*1.08, L=Lc/c, vx=v[0]*L, vy=v[1]*L, len=Math.hypot(vx,vy);if(len<3)continue;
+   trace(ctx,[[sx,sy],[sx+vx,sy+vy]]);ctx.strokeStyle=x===0&&y===0?dark:warm;ctx.lineWidth=2.6;ctx.lineCap='round';ctx.stroke();
+   const ux=vx/len,uy=vy/len;trace(ctx,[[sx+vx-ux*8-uy*5,sy+vy-uy*8+ux*5],[sx+vx,sy+vy],[sx+vx-ux*8+uy*5,sy+vy-uy*8-ux*5]]);ctx.stroke();}}
+ // Two tides a day: a place on the coast turns through both bulges; its water level is traced below.
+ let mark=null;
+ if(stage>=3){const ang=Math.PI*.75+spin;mark=[ex+Math.cos(ang)*Re,ey+Math.sin(ang)*Re];ctx.beginPath();ctx.arc(...mark,5,0,TAU);ctx.fillStyle=dark;ctx.fill();ctx.strokeStyle='#fff';ctx.lineWidth=1.5;ctx.stroke();
+  const gx=small?w*.1:w*.6, gw=small?w*.8:w*.32, gy=small?h*.7:h*.72, gh=small?h*.12:h*.14;
+  trace(ctx,[[gx,gy+gh/2],[gx+gw,gy+gh/2]]);ctx.strokeStyle='rgba(20,23,28,.15)';ctx.lineWidth=1;ctx.stroke();
+  trace(ctx,Array.from({length:121},(_,i)=>{const f=i/120;return [gx+f*gw,gy+gh/2-M.shape(Math.PI*.75+f*TAU)*gh*.45];}));ctx.strokeStyle=accent;ctx.lineWidth=2;ctx.stroke();
+  const f=((spin%TAU)+TAU)%TAU/TAU;ctx.beginPath();ctx.arc(gx+f*gw,gy+gh/2-M.shape(Math.PI*.75+spin)*gh*.45,4.5,0,TAU);ctx.fillStyle=dark;ctx.fill();
+  if(st.labels){text(ctx,'water level where you are, over one day',gx,gy-12,{size:small?10:11,weight:600,color:'rgba(20,23,28,.65)'});}}
+ if(!st.labels)return;
+ const size=small?10:11;
+ text(ctx,'Moon (not to scale)',mx,ey+mr+16,{align:'center',size:10,color:'rgba(20,23,28,.55)'});
+ if(stage===0||stage>=3){pill(ctx,'high tide',ex+Re*1.25,ey-Re*.28,{size,weight:600,color:accent});pill(ctx,'high tide',ex-Re*1.25,ey-Re*.28,{align:'right',size,weight:600,color:accent});
+  if(stage===0){pill(ctx,'low tide',ex,ey-Re*1.12-14,{align:'center',size,color:'rgba(20,23,28,.6)'});}}
+ if(stage===1){text(ctx,'pulled most',ex+Re*1.08,ey+22,{align:'center',size,color:warm});text(ctx,'centre',ex,ey+22,{align:'center',size,color:dark});text(ctx,'pulled least',ex-Re*1.08,ey+22,{align:'center',size,color:warm});
+  text(ctx,'differences enlarged',ex,ey+Re*1.08+24,{align:'center',size:10,color:'rgba(20,23,28,.5)'});}
+ if(stage===2&&morph>.6){text(ctx,'pulled ahead',ex+Re*1.3,ey+20,{size,color:warm});text(ctx,'left behind',ex-Re*1.3,ey+20,{align:'right',size,color:warm});text(ctx,'squeezed',ex+12,ey-Re*1.2,{size,color:warm});}
+}
+
 const ENGINES={
  'light-bending':{draw:drawLight,a:['Mass','how much mass sits nearby'],b:['Passing distance','how close the light passes','×'],
   fa:a=>a.toFixed(2),fb:b=>b.toFixed(2)+'×',
@@ -930,7 +1014,15 @@ const ENGINES={
  'tides':{draw:drawTides,demo:false,measure:null,a:['Planet mass','how strongly it pulls'],b:['Unused','',''],
   fa:a=>Math.round(a*100)+'%',fb:b=>b.toFixed(2),scale:'',demoEnd:()=>1,
   disclosure:'The ball is an analogy: a curved surface in space. Spacetime curvature also makes straight paths come together or spread apart, but it involves time and cannot be drawn exactly. The balls follow exact Newtonian free fall, accurate for weak gravity; sizes are not to scale. In three dimensions, a small floating ring away from the Earth stretches one way and squeezes in the other two, so its volume stays the same.',
-  try:'',aria:'Two walkers heading north on a globe come together; a ring of falling balls around the Earth shrinks; a small falling ring stretches into an egg shape.'}
+  try:'',aria:'Two walkers heading north on a globe come together; a ring of falling balls around the Earth shrinks; a small falling ring stretches into an egg shape.'},
+ 'lift':{draw:drawLift,demo:false,measure:null,a:['Unused','',''],b:['Unused','',''],
+  fa:a=>a.toFixed(2),fb:b=>b.toFixed(2),scale:'',demoEnd:()=>1.25,
+  disclosure:'Newtonian physics, exact for a lift on Earth: a scale reads the floor’s push, your weight times (g + a)/g. The ride’s speeds, the 70 kg reading and the shaft are illustrative; air resistance is ignored, and real lifts have safety brakes.',
+  try:'',aria:'A person stands on a bathroom scale in a lift. The dial reads their weight when parked, more or less while the lift speeds up or slows down, and zero when the cable snaps.'},
+ 'moon-tides':{draw:drawMoonTides,demo:false,measure:null,a:['Unused','',''],b:['Unused','',''],
+  fa:a=>a.toFixed(2),fb:b=>b.toFixed(2),scale:'',demoEnd:()=>1.25,
+  disclosure:'The arrows come from the exact Newtonian pull at the real Earth–Moon distance, with differences enlarged; the bulges are hugely exaggerated, and the Moon is drawn far too close and too big. Real tides are also shaped by coastlines and ocean depth.',
+  try:'',aria:'The Earth with its oceans and the Moon. The Moon pulls the near side most and the far side least, so the oceans bulge toward and away from the Moon, and a place on the coast passes two high tides a day.'}
 };
 const engineOf=spec=>ENGINES[spec?.kind]||ENGINES['light-bending'];
 
@@ -978,7 +1070,8 @@ function paint(){
 function sentences(body){return body.match(/[^.!?]+[.!?]*["”’)]*\s*/g)?.map(s=>s.trim()).filter(Boolean)||[body];}
 function captions(){
  let chapter, line, reveal=1, hint='';
- if(!started){chapter=`${spec.beats.length} chapters · ${fmt(timeline.total)}`;line=(spec.controls||'both')==='none'?'Press play to watch the explanation.':'Press play, or move the sliders to explore on your own.';}
+ if(!started&&spec.opening){chapter=`Before you watch · ${fmt(timeline.total)}`;line=spec.opening;hint='Press play to find out.';}
+ else if(!started){chapter=`${spec.beats.length} chapters · ${fmt(timeline.total)}`;line=(spec.controls||'both')==='none'?'Press play to watch the explanation.':'Press play, or move the sliders to explore on your own.';}
  else if(ended&&mode!=='playing'){const c=spec.controls||'both', e=engineOf(spec);chapter='The idea';line=spec.takeaway||'';
   hint=spec.next||(c==='none'?'':c==='both'?'Now try it: '+e.try:`Now try it: move ${(c==='first'?e.a:e.b)[0]} and watch “${e.measure[0]}”.`);}
  else{

@@ -32,6 +32,22 @@
     "title": "The best trade",
     "body": "The path that keeps the most time is exactly the arc a thrown ball follows. Change the gravity and the best arc changes with it."
    }
+  ],
+  "why": "It links falling to time: the arc a thrown ball follows is exactly the path along which its clock gains the most time.",
+  "opening": "Of all the paths a ball could take between the throw and the catch, why does it follow that particular arc?",
+  "questions": [
+   {
+    "q": "A clock is tossed up and caught. Does it show more or less time than an identical clock held still?",
+    "a": "More. It spends time higher up, where clocks run faster, which outweighs what it loses by moving."
+   },
+   {
+    "q": "If higher clocks run faster, why doesn’t the ball fly much higher?",
+    "a": "Going higher means moving faster on the way, and speed loses time. The real arc is the best balance."
+   },
+   {
+    "q": "With no gravity at all, which path keeps the most time?",
+    "a": "Staying put: without height to gain, any movement only loses time."
+   }
   ]
  },
  "note": "Owner review draft: hand-written subtitles, no research or review. Not published as an investigation."

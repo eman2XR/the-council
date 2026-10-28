@@ -127,6 +127,23 @@
       const fallTime=(r0,r)=>GM>0?Math.sqrt(r0**3/(2*GM))*(Math.sqrt((r/r0)*(1-r/r0))+Math.acos(Math.sqrt(r/r0))):Infinity;
       return {GM,fall,fallTime};
     },
+    // A bathroom scale in a lift reads the floor's push: your weight times (g + a)/g, a being the lift's upward acceleration.
+    lift() {
+      const g=9.8, reading=a=>Math.max(0,(g+a)/g);
+      // One ride in seconds and metres per second squared: rest, speed up, cruise, slow down, rest.
+      const ride=[[1.5,0],[2,1.6],[4,0],[2,-1.6],[1.5,0]];
+      const accelAt=t=>{let s=0;for(const [d,a] of ride){if(t<s+d)return a;s+=d;}return 0;};
+      return {g,reading,ride,accelAt};
+    },
+    // The Moon's tidal stretch (Newtonian, exact): its pull at a point minus its pull at the Earth's centre.
+    // Units: Earth radius 1, the Moon's GM = 1, the Moon on the +x axis at distance D (real distance about 60 Earth radii).
+    moonTides(D = 60.3) {
+      const pull=(x,y)=>{const dx=D-x,dy=-y,r=Math.hypot(dx,dy);return [dx/r**3,dy/r**3];};
+      const centre=pull(0,0), tide=(x,y)=>{const p=pull(x,y);return [p[0]-centre[0],p[1]-centre[1]];};
+      // Ocean height along the surface (equilibrium tide shape), with the angle measured from the Earth-Moon line.
+      const shape=angle=>(3*Math.cos(angle)**2-1)/2;
+      return {D,pull,centre,tide,shape};
+    },
     fallGain(a,b){const f=this.fall(a,b);return f.gain(f.best)/f.T;},
     fallChecks() {
       const f=this.fall(1,1.6), scan=Array.from({length:2001},(_,i)=>i/2000*2*f.ref), top=scan.reduce((m,x)=>f.gain(x)>f.gain(m)?x:m,0);
@@ -202,7 +219,7 @@
     },
     checksFor(kind) {
       return {'gravity-clocks':this.clockChecks,'spacetime':this.spacetimeChecks,'interference':this.waveChecks,
-        'two-slit-particles':this.waveChecks,'standing-waves':this.ropeChecks,'tunneling':this.tunnelChecks,'wave-packet':this.packetChecks,'quantum-well':this.wellChecks,'falling-time':this.fallChecks,'diffraction':this.gapChecks,'twin-trip':this.spacetimeChecks,'spacetime-paths':this.pathChecks,'fall-fan':this.fanChecks,'fall-cone':this.fanChecks,'river':this.riverChecks,'fall-views':this.viewsChecks,'tides':this.tidesChecks}[kind]?.call(this) || this.checks();
+        'two-slit-particles':this.waveChecks,'standing-waves':this.ropeChecks,'tunneling':this.tunnelChecks,'wave-packet':this.packetChecks,'quantum-well':this.wellChecks,'falling-time':this.fallChecks,'diffraction':this.gapChecks,'twin-trip':this.spacetimeChecks,'spacetime-paths':this.pathChecks,'fall-fan':this.fanChecks,'fall-cone':this.fanChecks,'river':this.riverChecks,'fall-views':this.viewsChecks,'tides':this.tidesChecks,'lift':this.liftChecks,'moon-tides':this.moonChecks}[kind]?.call(this) || this.checks();
     },
     spacetimeChecks() {
       const near=(a,b)=>Math.abs(a-b)<1e-12, g=this.gamma(this.speed(1));
@@ -275,6 +292,34 @@
         'Stretching starts at twice the squeezing':Math.abs(st/sq+2)<.05,
         'Without the planet nothing drifts':this.tides(0).fall(.1,3,2)[0]===.1&&this.tides(0).fall(.1,3,2)[1]===3,
         'Fall time from the formula matches the simulation':Math.abs(Math.hypot(...P.fall(0,2.3,P.fallTime(2.3,1.5)))-1.5)<1e-3,
+      }).map(([name,pass])=>({name,pass}));
+    },
+    liftChecks() {
+      const L=this.lift(), near=(x,y,e=1e-9)=>Math.abs(x-y)<e;
+      const net=L.ride.reduce((s,[d,a])=>s+d*a,0);
+      // In free fall you and a released apple speed up together, so the gap between you stays the same.
+      const gap=t=>(1.2-.5*L.g*t*t)-(0-.5*L.g*t*t);
+      return Object.entries({
+        'Parked, the scale reads your weight':near(L.reading(0),1),
+        'Speeding up upward, it reads more':L.reading(2.5)>1,
+        'Slowing on the way up, it reads less':L.reading(-2.5)<1,
+        'With the cable snapped, it reads zero':L.reading(-L.g)===0,
+        'A released apple keeps its place beside you':near(gap(0),gap(2.5)),
+        'The ride starts and ends at rest':near(net,0),
+      }).map(([name,pass])=>({name,pass}));
+    },
+    moonChecks() {
+      const M=this.moonTides(), far=this.moonTides(2*M.D), near=(x,y,e)=>Math.abs(x-y)<e;
+      const a=M.tide(1,0)[0], b=-M.tide(-1,0)[0], side=-M.tide(0,1)[1];
+      const peaks=Array.from({length:360},(_,i)=>M.shape(i*Math.PI/180)).filter((v,i,arr)=>v>arr[(i+359)%360]&&v>=arr[(i+1)%360]).length;
+      return Object.entries({
+        'The near side is pulled toward the Moon more than the centre':a>0,
+        'The far side is pulled less than the centre, so it is left behind':b>0,
+        'The sides are squeezed inward':side>0,
+        'Near and far bulges are almost equal at the real distance':near(a/b,1,.06),
+        'The squeeze is about half the stretch':near(side/((a+b)/2),.5,.03),
+        'Twice as far away, the stretch is about eight times weaker':near(far.tide(1,0)[0]*8/a,1,.03),
+        'Two high tides in one turn of the Earth':peaks===2,
       }).map(([name,pass])=>({name,pass}));
     },
     waveChecks() {

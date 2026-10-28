@@ -1,0 +1,58 @@
+{
+ "id": "moon-two-tides",
+ "provider": "draft",
+ "status": "draft",
+ "created": "2026-10-28T00:30:00-07:00",
+ "question": "Why the Moon raises two tides, not one",
+ "topic": "moon-tides",
+ "scene": {
+  "ray_count": 1,
+  "show_reference": true,
+  "show_labels": true,
+  "line_width": 2.5,
+  "duration": 24,
+  "controls": "none",
+  "mass": 1,
+  "distance": 1.6,
+  "kind": "moon-tides",
+  "accent": "blue",
+  "title": "Why the Moon raises two tides, not one",
+  "subtitle": "The Moon pulls the oceans toward it. So why is there also a high tide on the side of the Earth facing away from it?",
+  "why": "Tides shape coastlines, harbours and sea life, and the same stretching, made extreme, tears apart stars that come too close to a black hole.",
+  "opening": "The Moon pulls the oceans toward it. Why is there also a high tide on the far side of the Earth?",
+  "beats": [
+   {
+    "title": "The puzzle",
+    "body": "Most coasts get two high tides a day, about twelve and a half hours apart. One bulge of water faces the Moon. The other faces away from it."
+   },
+   {
+    "title": "Pulled by different amounts",
+    "body": "The Moon’s pull gets weaker with distance. It pulls the near side of the Earth hardest, the centre a little less, and the far side least of all."
+   },
+   {
+    "title": "The whole Earth falls toward the Moon",
+    "body": "The Earth and Moon circle each other, so the whole Earth is always falling toward the Moon. Compared with the centre, the near side is pulled ahead and the far side is left behind. The oceans bulge both ways."
+   },
+   {
+    "title": "Two tides a day",
+    "body": "The Earth turns under the two bulges about once a day. So most places pass through both, and get two high tides and two low tides."
+   }
+  ],
+  "takeaway": "The Moon stretches the Earth: it pulls the near side more and the far side less than the centre, so the oceans bulge toward it and away from it.",
+  "questions": [
+   {
+    "q": "If the Moon were twice as far away, would tides be half as big, or smaller still?",
+    "a": "Much smaller: about one eighth. Tides come from the difference in pull across the Earth, and that difference shrinks with the cube of the distance."
+   },
+   {
+    "q": "Does the Moon push the far-side water away?",
+    "a": "No. Everything is pulled toward the Moon. The far side bulges because it is pulled less than the Earth’s centre, so it is left behind as the Earth falls toward the Moon."
+   },
+   {
+    "q": "Why are the biggest tides at new moon and full moon?",
+    "a": "The Sun stretches the Earth too, about half as strongly. At new and full moon, the Sun, Earth and Moon line up and the two stretches add."
+   }
+  ]
+ },
+ "note": "Owner review draft: hand-written subtitles, no research or review. Not published as an investigation."
+}

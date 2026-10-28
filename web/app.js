@@ -1,7 +1,7 @@
 const $=id=>document.getElementById(id);
 const put=(id,text)=>{const el=$(id);if(el)el.textContent=text??'';};
 const el=(tag,props={},...children)=>{const node=Object.assign(document.createElement(tag),props);node.append(...children);return node;};
-const TOPICS={'gravity-clocks':'Gravity and time','light-bending':'Gravity and light','spacetime':'Space and time','twin-trip':'Space and time','interference':'Waves','standing-waves':'Waves','two-slit-particles':'Quanta','tunneling':'Quanta','wave-packet':'Quanta','quantum-well':'Quanta','falling-time':'Gravity and time','diffraction':'Waves','spacetime-paths':'Space and time','fall-fan':'Gravity and time','fall-cone':'Gravity and time','river':'Black holes','fall-views':'Gravity and time','tides':'Curved spacetime'};
+const TOPICS={'gravity-clocks':'Gravity and time','light-bending':'Gravity and light','spacetime':'Space and time','twin-trip':'Space and time','interference':'Waves','standing-waves':'Waves','two-slit-particles':'Quanta','tunneling':'Quanta','wave-packet':'Quanta','quantum-well':'Quanta','falling-time':'Gravity and time','diffraction':'Waves','spacetime-paths':'Space and time','fall-fan':'Gravity and time','fall-cone':'Gravity and time','river':'Black holes','fall-views':'Gravity and time','tides':'Curved spacetime','lift':'Gravity and time','moon-tides':'Gravity and time'};
 const STATUS={planning:'Choosing a question',running:'Investigating now',reviewed:'Passed review',needs_review:'Draft, not published',failed:'Attempt stopped',interrupted:'Run interrupted',idle:'Resting'};
 const STEPS=['Question','Research','Design','Render','Review','Publish'];
 const reduceMotion=matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -42,6 +42,10 @@ function show(data,{autoplay=false}={}){
  if(data.provenance?.sources_retrieved===false){put('run-banner','Reviewed · sources not retrieved');$('run-banner').dataset.status='unverified';}
  if(draft){put('run-banner','Draft visual · not reviewed');$('run-banner').dataset.status='draft';}
  put('draft-note',draft&&scene?CouncilDraw.disclosure(scene):'');
+ // Why it matters, and questions to answer in your own words with answers to reveal.
+ $('why').replaceChildren(...(scene?.why?[el('strong',{textContent:'Why it matters'}),' '+scene.why]:[]));
+ const questions=scene?.questions||[];$('check').hidden=!questions.length;
+ $('check-list').replaceChildren(...questions.map(x=>el('li',{},el('p',{className:'q',textContent:x.q}),el('details',{},el('summary',{textContent:'Show answer'}),el('p',{textContent:x.a})))));
  renderBehind(data);renderCards();updateTalk();renderPath();
  if(autoplay)CouncilScene.play();
 }

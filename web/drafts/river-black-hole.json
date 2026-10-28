@@ -32,6 +32,22 @@
     "title": "Past the horizon",
     "body": "At the horizon the flow equals light speed: an outward flash stands still. Inside, the flow is faster than light and sweeps every flash inward."
    }
+  ],
+  "why": "It explains a black hole’s edge, the event horizon, without equations: the place where space flows inward as fast as light can swim.",
+  "opening": "Light always moves at light speed. So why can’t it escape from inside a black hole?",
+  "questions": [
+   {
+    "q": "Just outside the horizon, can a flash sent outward escape?",
+    "a": "Yes, slowly: the inflow there is a little slower than light."
+   },
+   {
+    "q": "What happens to a flash sent outward exactly at the horizon?",
+    "a": "It stays where it is: the inflow equals light speed."
+   },
+   {
+    "q": "If the black hole were heavier, would its horizon be bigger or smaller?",
+    "a": "Bigger: the place where the inflow reaches light speed is farther out."
+   }
   ]
  },
  "note": "Owner review draft: hand-written subtitles, no research or review. Not published as an investigation."

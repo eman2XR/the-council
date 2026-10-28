@@ -32,9 +32,9 @@ Open design work the owner raised: illustrations must be concrete and intuitive 
 - Drafts live on their own page (`?drafts`, linked in the footer), not on the home page. Draft pages hide the review section and the agent credit line and show the illustration note under the player.
 - While `body[data-paused=yes]` (schedule not enabled in `dashboard.json`), Ask/Feedback and pick buttons are hidden. The idea box under the player was removed (the end card shows the idea); `#takeaway` stays in the DOM because `lab/render.py` writes it.
 - "More investigations" lists the same chapter first.
-- Removed with owner approval: published `20261027T060526-17d8ad17` (old twin diagram) and `20261027T160508-98dddabc` (duplicate interference look), drafts `bend-the-map` and `roll-the-paper` (files in Git history). Nine investigations remain published.
+- Removed with owner approval: published `20261027T060526-17d8ad17` (old twin diagram) and `20261027T160508-98dddabc` (duplicate interference look), drafts `bend-the-map` and `roll-the-paper` (files in Git history). Later the same night, with owner approval, both twin-trip guides (`20261027T160039-39e9e79b`, `20261027T163733-b49c8bee`) were unpublished too: identical pictures, and they showed what happens rather than why. Seven investigations remain published; curriculum 2.3 now uses `spacetime-paths`.
 - Every investigation must stand on its own: no references to other guides in narration or on-screen text. The director prompt and the visual reviewer now enforce this for agent runs.
-- Still to replace once runs resume: both twin-trip guides (show what, not why) and the clocks guide (sources not retrieved).
+- Still to do once runs resume: new guides for 2.1 and 2.3 (2.3 via `spacetime-paths`; 2.1 still maps to `twin-trip`, which shows what rather than why), and a re-run of the clocks guide (sources not retrieved).
 
 ### Drafts and intuition testing (2026-10-27 evening)
 

@@ -32,6 +32,22 @@
     "title": "Move the turnaround",
     "body": "A faster trip bends the path more and leaves less time on it. Drag the turnaround back to the home path, and the twins agree again."
    }
+  ],
+  "why": "It is the clearest case of time being personal: clocks that take different paths really do show different times, as atomic clocks flown around the world in 1971 confirmed.",
+  "opening": "Two twins say goodbye. One stays home and one flies to a star and back. Why is the traveller younger when they meet again?",
+  "questions": [
+   {
+    "q": "If the traveller flew faster, would the age gap grow or shrink?",
+    "a": "Grow. A faster trip bends the path more, and a more bent path holds less time."
+   },
+   {
+    "q": "From the rocket, the Earth is the one moving away. Why isn’t the home twin the younger one?",
+    "a": "Only the traveller’s path is bent: they turn around, and everyone agrees on that. The straight path between the two meetings holds the most time."
+   },
+   {
+    "q": "What would a clock riding on a beam of light show?",
+    "a": "No time at all: light’s path has zero length in spacetime."
+   }
   ]
  },
  "note": "Owner review draft: hand-written subtitles, no research or review. Not published as an investigation."

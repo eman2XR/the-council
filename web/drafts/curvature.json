@@ -36,6 +36,22 @@
     "title": "Tides",
     "body": "Away from the Earth, float with one ball inside a small ring. The nearest ball speeds up a little more and the farthest a little less. So the ring stretches, while its sides draw in. With no mass inside, it doesn’t simply shrink. The Moon stretches Earth’s oceans the same way, into two bulges."
    }
+  ],
+  "why": "Curvature is the heart of Einstein’s gravity, and tides are the part of it you can see: the same stretching that raises the oceans.",
+  "opening": "Two balls are let go side by side, high above the Earth. Nothing pushes either one. Does the gap between them change?",
+  "questions": [
+   {
+    "q": "In empty space, two balls at rest side by side stay the same distance apart. What does it mean if they drift together?",
+    "a": "Spacetime is curved there: straight paths that start parallel come together, like lines of longitude on a ball."
+   },
+   {
+    "q": "A small ring of floating balls falls toward the Earth. Which way does it stretch?",
+    "a": "Toward and away from the Earth, while its sides draw in."
+   },
+   {
+    "q": "What makes floating paths around the Earth come together?",
+    "a": "The Earth’s mass."
+   }
   ]
  },
  "note": "Owner review draft: hand-written subtitles, no research or review. Not published as an investigation."
