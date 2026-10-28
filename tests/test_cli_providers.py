@@ -21,7 +21,7 @@ class CLIAdapterTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp, patch('lab.cli_providers.ROOT',Path(tmp)):
             image=Path(tmp)/'frame.png';image.write_bytes(b'image')
             provider=self.adapter()
-            def execute(argv,stdin,cwd):
+            def execute(argv,stdin,cwd,*rest):
                 self.assertIn('--image',argv)
                 self.assertEqual(argv[argv.index('--image')+1],str(image.resolve()))
                 self.assertEqual(argv[argv.index('--sandbox')+1],'read-only')
@@ -38,7 +38,7 @@ class CLIAdapterTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp, patch('lab.cli_providers.ROOT',Path(tmp)):
             image=Path(tmp)/'frame.png';image.write_bytes(b'image')
             provider=self.adapter('claude')
-            def execute(argv,stdin,cwd):
+            def execute(argv,stdin,cwd,*rest):
                 content=json.loads(stdin)['message']['content']
                 self.assertEqual(content[1]['type'],'image')
                 self.assertEqual(content[1]['source']['data'],'aW1hZ2U=')

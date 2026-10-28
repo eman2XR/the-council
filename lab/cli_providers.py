@@ -68,8 +68,8 @@ class CLIProvider:
         for process in processes:
             self._kill(process)
 
-    def _execute(self, argv, stdin, cwd):
-        limit = min(self.timeout, self.remaining())
+    def _execute(self, argv, stdin, cwd, research=False):
+        limit = min(self.timeout * (2 if research else 1), self.remaining())
         with self._lock:
             if self._cancelled:
                 raise WorkerLimitError('Worker group cancelled.')
@@ -139,7 +139,7 @@ class CLIProvider:
         for path in images:
             argv += ['--image', str(Path(path).resolve())]
         argv += ['-']
-        stdout = self._execute(argv, prompt, folder)
+        stdout = self._execute(argv, prompt, folder, research)
         events = parse_events(stdout)
         if any(e.get('type') in ('turn.failed', 'error') for e in events):
             raise RuntimeError('Codex reported a failed turn; no result accepted.')
@@ -172,7 +172,7 @@ class CLIProvider:
             argv += ['--model',self.model]
         if schema:
             argv += ['--json-schema',json.dumps(schema)]
-        stdout = self._execute(argv, json.dumps(message)+'\n', folder)
+        stdout = self._execute(argv, json.dumps(message)+'\n', folder, research)
         events = parse_events(stdout)
         results = [e for e in events if e.get('type')=='result']
         if not results:

@@ -87,10 +87,11 @@ def run(provider, rounds=3, on_update=None, topic="light-bending", question=None
         try:
             notes=provider.generate('researcher', question+' Search primary or university sources for this question. Include URLs, physical assumptions, tests, and common misleading visual metaphors. Use web search, do not invent citations.', research=True)
         except RuntimeError as error:
-            # Fallback: the coordinator fetches candidate pages itself; only pages that load become notes.
-            if not (sources.enabled() and 'retrieved no source content' in str(error)):
+            # Fallback when the researcher fails for any reason, including running out of time: the coordinator
+            # fetches candidate pages itself, and only pages that load become notes.
+            if not sources.enabled():
                 raise
-            save('The researcher could not reach the web; the coordinator is retrieving candidate sources.')
+            save(f'The researcher did not finish ({str(error)[:120]}); the coordinator is retrieving candidate sources.')
             notes,_=sources.retrieve(provider,question)
             retrieved_by='coordinator'
         (directory/'source-notes.txt').write_text(notes,encoding='utf-8')

@@ -59,6 +59,19 @@ class LoopTests(unittest.TestCase):
         state=self.execute(Parallel())
         self.assertEqual(state['status'],'fixture_complete')
 
+    def test_researcher_timeout_falls_back_to_coordinator_sources(self):
+        from lab.cli_providers import WorkerLimitError
+        class Slow(FixtureProvider):
+            def generate(self,role,*args,**kwargs):
+                if role=='researcher':raise WorkerLimitError('claude worker exceeded its 600s time limit')
+                if role=='source_finder':return {'urls':[{'url':'https://example.edu/page','why':'w'}]}
+                return super().generate(role,*args,**kwargs)
+        page=('Clocks','word '*200)
+        with patch('lab.sources.fetch',return_value=page):
+            state=self.execute(Slow())
+        self.assertEqual(state['provenance']['retrieved_by'],'coordinator')
+        self.assertTrue(any('coordinator is retrieving' in e['message'] for e in state['events']))
+
     def test_invalid_scene_cannot_reach_renderer(self):
         scene=copy.deepcopy(SCENE);scene['mass']=float('nan')
         with self.assertRaises(ValueError):validate_scene(scene)
