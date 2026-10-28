@@ -157,8 +157,8 @@
     // A bathroom scale in a lift reads the floor's push: your weight times (g + a)/g, a being the lift's upward acceleration.
     lift() {
       const g=9.8, reading=a=>Math.max(0,(g+a)/g);
-      // One ride in seconds and metres per second squared: rest, speed up, cruise, slow down, rest.
-      const ride=[[1.5,0],[2,1.6],[4,0],[2,-1.6],[1.5,0]];
+      // One ride up in seconds and metres per second squared, timed to the narration: rest, speed up, cruise, slow down, rest.
+      const ride=[[1,0],[2.5,1.4],[3.7,0],[2.5,-1.4],[1.5,0]];
       const accelAt=t=>{let s=0;for(const [d,a] of ride){if(t<s+d)return a;s+=d;}return 0;};
       return {g,reading,ride,accelAt};
     },

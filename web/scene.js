@@ -942,14 +942,22 @@ function drawTides(ctx,w,h,spec,st){
  text(ctx,'stretched ↕',ix+Ri*.9,iy-Ri*1.25,{size:small?10:11,weight:600,color:warm});text(ctx,'squeezed ↔',ix+Ri*1.05,iy+Ri*.3,{size:small?10:11,weight:600,color:warm});
 }
 
-// A person on a bathroom scale in a lift: parked, riding, and with the cable snapped. The dial shows what the scale reads.
+// A person on a bathroom scale in a lift: parked at the bottom, one ride to the top, then the cable snaps and the lift
+// falls freely for the rest of the guide. Each chapter continues where the last one ended; nothing loops.
+const LIFT_SLOW=.35, LIFT_SNAP=1;
+function liftFallTime(stage,since){
+ // Seconds of free fall, slowed down for viewing; the last chapter carries on from the end of the previous one.
+ const ch=timeline?.chapters?.[2], before=ch?Math.max(0,ch.end-ch.start-LIFT_SNAP):0;
+ return stage===2?Math.max(0,since-LIFT_SNAP)*LIFT_SLOW:(before+since)*LIFT_SLOW;
+}
 function drawLift(ctx,w,h,spec,st){
  const accent=ACCENT[spec.accent]||ACCENT.blue, dark='#14171c', warm='#c2410c', small=w<520, since=st.since??st.t, stage=st.stage, L=Physics.lift();
  const sx0=small?w*.08:w*.28, sx1=small?w*.56:w*.5, top=small?40:30, bot=h*(small?.66:.94), carH=Math.min((bot-top)*.45,small?150:210), carW=(sx1-sx0)*.74, k=(bot-top-carH)/24;
  // Where the car is (metres above the lowest stop), its upward acceleration, and whether the cable still holds.
- let yc=12,a=0,snapped=false,fall=0,tf=0;
- if(stage===1){const P=11,c=Math.floor(since/P),t=since-c*P,dir=c%2?-1:1;let v=0,s=0;for(let q=0;q<t;q+=.02){v+=L.accelAt(q)*dir*.02;s+=v*.02;}a=L.accelAt(t)*dir;yc=dir>0?1+s:23+s;}
- else if(stage>=2){const snapAt=stage===2?1.8:.4,P=snapAt+3.2+1.2,t=since%P;if(t>snapAt){snapped=true;tf=Math.min(t-snapAt,3.2);fall=.5*L.g*tf*tf;a=-L.g;yc=12-fall;}}
+ const climb=t=>{let v=0,y=0;for(let q=0;q<t;q+=.02){v+=L.accelAt(q)*.02;y+=v*.02;}return y;}, topY=1+climb(30);
+ let yc=1,a=0,snapped=false,fall=0,tf=0;
+ if(stage===1){yc=1+climb(since);a=L.accelAt(since);}
+ else if(stage>=2){tf=liftFallTime(stage,since);yc=topY;if(tf>0){snapped=true;fall=.5*L.g*tf*tf;a=-L.g;yc=topY-fall;}}
  const reading=L.reading(a), offset=snapped?fall:0, floorY=yw=>bot-(yw+offset)*k, cx=(sx0+sx1)/2;
  // The shaft: walls with a mark at every floor. While falling, the view follows the car and the walls stream past.
  ctx.fillStyle='rgba(20,23,28,.03)';ctx.fillRect(sx0,0,sx1-sx0,h);
@@ -959,7 +967,7 @@ function drawLift(ctx,w,h,spec,st){
  const floor=floorY(yc), roof=floor-carH;
  // The cable: attached to the roof, or snapped and left behind in the shaft.
  if(!snapped){trace(ctx,[[cx,0],[cx,roof]]);ctx.strokeStyle='rgba(20,23,28,.55)';ctx.lineWidth=2;ctx.stroke();}
- else{const end=floorY(12)-carH-8;trace(ctx,Array.from({length:12},(_,i)=>[cx+Math.sin(i*1.3)*3*(i/11),end-i*6]));ctx.strokeStyle='rgba(20,23,28,.5)';ctx.lineWidth=2;ctx.stroke();}
+ else{const end=floorY(topY)-carH-8;trace(ctx,Array.from({length:12},(_,i)=>[cx+Math.sin(i*1.3)*3*(i/11),end-i*6]));ctx.strokeStyle='rgba(20,23,28,.5)';ctx.lineWidth=2;ctx.stroke();}
  ctx.fillStyle='#fffdf8';ctx.strokeStyle='rgba(20,23,28,.55)';ctx.lineWidth=1.6;ctx.beginPath();ctx.roundRect(cx-carW/2,roof,carW,carH,6);ctx.fill();ctx.stroke();
  // You, standing on a bathroom scale, holding an apple; after the snap the apple is let go and stays where it was.
  const size=carH/7.2, scaleH=size*.5, feet=floor-scaleH-3, px=cx-size*.6;
@@ -986,6 +994,9 @@ function drawLift(ctx,w,h,spec,st){
  text(ctx,'0',dx+Math.cos(ang(0))*R*1.2,dy+Math.sin(ang(0))*R*1.2,{align:'center',size:10});
  text(ctx,'standing still: 70 kg',dx,dy-R-(small?16:18),{align:'center',size:10,color:'rgba(20,23,28,.5)'});
  if(snapped&&stage===2)pill(ctx,'apple let go',ax+size*.6,ay-size*.5,{size:10,weight:600,color:'#b3362f'});
+ // While falling: how fast, so "faster and faster" can be seen; the fall is shown in slow motion.
+ if(snapped){text(ctx,`falling at ${Math.round(L.g*tf*3.6)} km/h`,cx,small?bot+18:h*.06,{align:'center',size:small?11:12,weight:600,color:accent});
+  text(ctx,'slow motion · no air',cx,small?bot+34:h*.06+16,{align:'center',size:10,color:'rgba(20,23,28,.5)'});}
  if(stage>=3&&!small)text(ctx,'falling around the Earth',w*.88,h*.16+40,{align:'center',size:10,color:'rgba(20,23,28,.6)'});
 }
 
