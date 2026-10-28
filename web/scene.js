@@ -289,7 +289,7 @@ function drawParticles(ctx,w,h,spec,st){
 
 function drawRope(ctx,w,h,spec,st){
  const accent=ACCENT[spec.accent]||ACCENT.gold, A=st.mass, n=Physics.harmonic(st.distance), small=w<520;
- const x0=w*.1, x1=w*.9, y=h*.48, amp=Math.min(h*.13,(x1-x0)/(n*3.2)+h*.04), phase=st.t*TAU*.5, N=320;
+ const x0=w*.1, x1=w*.9, y=h*.48, amp=Math.min(h*.13,(x1-x0)/(n*3.2)+h*.04), phase=st.t*TAU*Physics.ropeSwing(n), N=320;
  const E=st.energy??1, pts=f=>Array.from({length:N+1},(_,i)=>{const u=i/N;return [x0+u*(x1-x0),y-f(u)*amp*E];});
  // As the rope settles, a faint outline of how far each point swings keeps the pattern visible.
  if(E<.98&&A>.001){const env=u=>Math.hypot((1-A)*Math.cos(n*Math.PI*u),(1+A)*Math.sin(n*Math.PI*u));
@@ -1000,9 +1000,9 @@ const ENGINES={
   fa:a=>a<.005?'closed':Math.round(a*100)+'% open',fb:b=>b.toFixed(2)+'×',
   measure:['Stripe contrast',a=>(Physics.visibility(a)*100).toFixed(0)+'%'],scale:'',disclosure:'Arrivals are pseudo-random samples from the predicted pattern; the ripples show possibilities, not paths.',demoEnd:()=>2.5,
   try:'Close the second slit: do the stripes survive? Open it again, then move the slits apart.',aria:'Particles arrive one at a time on a screen behind two slits and slowly build up stripes.'},
- 'standing-waves':{draw:drawRope,sound:({mass,distance})=>({freq:165*Physics.harmonic(distance),level:Math.sqrt((1+mass*mass)/2)}),a:['Reflection','how much of the wave bounces back'],b:['Pattern','whole loops between hand and wall',''],
+ 'standing-waves':{draw:drawRope,sound:({mass,distance})=>({freq:880*Physics.ropeSwing(Physics.harmonic(distance)),level:Math.sqrt((1+mass*mass)/2)}),a:['Reflection','how much of the wave bounces back'],b:['Pattern','whole loops between hand and wall',''],
   fa:a=>Math.round(a*100)+'%',fb:b=>{const n=Physics.harmonic(b);return n+' loop'+(n>1?'s':'');},
-  measure:['Still points',a=>(Physics.stillness(a)*100).toFixed(0)+'% still'],scale:'',disclosure:'Wave height is exaggerated for visibility. The sound is the rope’s motion as a note: 165 Hz times the number of loops, as loud as the rope moves. When playback ends the hand stops and friction settles the rope and the sound together; moving a slider shakes it again. A real string’s pitch also depends on its length, tension and weight. A real string’s pitch also depends on its length, tension and weight.',demoEnd:()=>2.5,
+  measure:['Still points',a=>(Physics.stillness(a)*100).toFixed(0)+'% still'],scale:'',disclosure:'Wave height is exaggerated for visibility. The drawing is slowed down about 900 times; the sound is the real swing rate. A string like this would swing 440 times a second in the 2-loop pattern, and that is the note you hear; more loops swing faster and sound higher. The sound is as loud as the rope moves. When playback ends the hand stops and friction settles the rope and the sound together; moving a slider shakes it again. A real string’s pitch also depends on its length, tension and weight. A real string’s pitch also depends on its length, tension and weight.',demoEnd:()=>2.5,
   try:'Turn Reflection to zero: are there still points? Turn it up, then step the Pattern slider.',aria:'A rope shaken at one end and tied to a wall at the other, forming a standing wave.'},
  'tunneling':{draw:drawTunnel,a:['Barrier height','compared with the particle’s energy'],b:['Barrier width','how thick the barrier is',''],
   fa:a=>a<.005?'none':(2*a).toFixed(1)+'× energy',fb:b=>(.6*b/(2*Math.PI)).toFixed(2)+' wavelengths',
@@ -1096,14 +1096,15 @@ const fmt=s=>`${Math.floor(s/60)}:${String(Math.floor(s%60)).padStart(2,'0')}`;
 // Sound: an engine may give a note for the current state; it sounds exactly while the picture moves.
 // Pitch is the pattern's note, loudness how much the rope moves, and it settles with the picture after playback.
 // Nothing sounds before the viewer presses play, or while playback is paused.
-const SOUND={ctx:null,out:null,oscs:[],freq:0,on:(()=>{try{return localStorage.getItem('council-sound')!=='off';}catch{return true;}})()};
+const TONE={partials:[[1,.2],[2,.07],[3,.03]],lowpass:2600};
+const SOUND={ctx:null,out:null,oscs:[],freq:0,target:-1,on:(()=>{try{return localStorage.getItem('council-sound')!=='off';}catch{return true;}})()};
 function audioStart(){
  if(SOUND.ctx||!engineOf(spec).sound)return SOUND.ctx?.resume?.();
  const AC=window.AudioContext||window.webkitAudioContext;if(!AC)return;
  const a=SOUND.ctx=new AC(), out=SOUND.out=a.createGain(), warm=a.createBiquadFilter();
- a.resume?.();out.gain.value=0;warm.type='lowpass';warm.frequency.value=1400;out.connect(warm);warm.connect(a.destination);
- // A soft, warm tone: the note with two faint overtones.
- SOUND.oscs=[[1,.15],[2,.04],[3,.015]].map(([k,g])=>{const o=a.createOscillator(), gain=a.createGain();o.type='sine';gain.gain.value=g;o.connect(gain);gain.connect(out);o.start();return [o,k];});
+ a.resume?.();out.gain.value=0;warm.type='lowpass';warm.frequency.value=TONE.lowpass;out.connect(warm);warm.connect(a.destination);
+ // A warm tone: the note with two quieter overtones.
+ SOUND.oscs=TONE.partials.map(([k,g])=>{const o=a.createOscillator(), gain=a.createGain();o.type='sine';gain.gain.value=g;o.connect(gain);gain.connect(out);o.start();return [o,k];});
 }
 function voice(energy){
  const e=engineOf(spec);if(!e.sound||!SOUND.ctx)return;
@@ -1111,10 +1112,13 @@ function voice(energy){
  // A new note steps in within a few milliseconds: no slide between notes, and no click.
  if(Math.abs(freq-SOUND.freq)>.5){SOUND.freq=freq;for(const [o,k] of SOUND.oscs)o.frequency.setTargetAtTime(freq*k,now,.01);}
  const moving=started&&(mode==='playing'||mode==='live');
- SOUND.out.gain.setTargetAtTime(SOUND.on&&moving?level*energy:0,now,.08);
+ const target=SOUND.on&&moving?Math.round(level*energy*50)/50:0;
+ if(target!==SOUND.target){SOUND.target=target;SOUND.out.gain.setTargetAtTime(target,now,.08);}
 }
 // The hand shakes during playback and for a few seconds after a slider move; then the rope settles, as friction would.
 let driveUntil=0;
+// A hidden tab freezes the picture, so its sound pauses too.
+document.addEventListener('visibilitychange',()=>{if(!SOUND.ctx)return;if(document.hidden)SOUND.ctx.suspend?.();else SOUND.ctx.resume?.();});
 function energy(){
  if(!started||mode!=='live'||time<=driveUntil)return 1;
  return Math.exp(-(time-driveUntil)/1.3);
@@ -1197,7 +1201,7 @@ function configure(){
  canvas.setAttribute('aria-label',e.aria);
 }
 function load(scene){
- exploreOpen=null;SOUND.freq=0;driveUntil=0;
+ exploreOpen=null;SOUND.freq=0;SOUND.target=-1;driveUntil=0;
  // Before playback the stage shows the opening frame of chapter 1.
  spec=scene;buildTimeline();
  $('ticks').replaceChildren(...timeline.chapters.slice(1).map((c,i)=>{const tick=document.createElement('button');tick.type='button';tick.dataset.beat=String(i+1);tick.style.left=`calc(12px + (100% - 24px) * ${c.start/timeline.total})`;tick.title=`Chapter ${i+2}: ${spec.beats[i+1].title}`;tick.setAttribute('aria-label',tick.title);tick.onclick=e=>{e.stopPropagation();chapter(i+1);};return tick;}));mass=scene.mass;distance=scene.distance;time=0;mode='live';started=false;ended=false;captionKey='';

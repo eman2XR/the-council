@@ -49,6 +49,9 @@
     // A wave travelling right plus a reflection of strength a travelling left.
     harmonic: b => 1 + Math.round((b - 1) / 1.5 * 4),
     rope(x, t, a, n) { const k = n * Math.PI; return Math.sin(t - k * x) - a * Math.sin(t + k * x); },
+    // How many times a second the drawn rope swings in pattern n: proportional to n, so waves on the same rope travel
+    // at one speed whatever the pattern. The sound plays the same swing rate 880 times faster (220 Hz per loop).
+    ropeSwing: n => .25 * n,
     stillness: a => 2 * a / (1 + a),
     // Quantum models in units where hbar = 1 and 2m = 1, so energy E = k^2.
     cx: {
@@ -363,6 +366,7 @@
         'Full reflection makes still points':ts.every(t=>[0,1/3,2/3,1].every(x=>Math.abs(this.rope(x,t,1,n))<1e-12)),
         'No reflection leaves no still points':ts.some(t=>Math.abs(this.rope(1/6,t,0,n))>.5)&&ts.some(t=>Math.abs(this.rope(1/3,t,0,n))>.5),
         'Slider steps through whole-number patterns 1 to 5':this.harmonic(1)===1&&this.harmonic(2.5)===5,
+        'More loops swing faster, at the same wave speed':[1,2,3,4,5].every(m=>Math.abs(2*Math.PI*this.ropeSwing(m)/(m*Math.PI)-.5)<1e-12)&&this.ropeSwing(5)>this.ropeSwing(2),
         'Node stillness is zero without reflection':near(this.stillness(0),0),
         'Node stillness is complete with full reflection':near(this.stillness(1),1),
         'Antinodes reach the sum of both amplitudes':Math.abs(Math.max(...Array.from({length:400},(_,i)=>Math.abs(this.rope(1/6,i/20,1,n))))-2)<1e-3,
