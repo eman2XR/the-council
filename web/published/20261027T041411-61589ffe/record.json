@@ -84,8 +84,8 @@
     "duration": 30,
     "takeaway": "Time passes more slowly deeper in gravity than for a clock higher up. Both clocks work perfectly, but the lower one counts less time. The lag grows with more mass and shrinks as the pair moves farther from the mass.",
     "kind": "gravity-clocks",
-    "why": "Your phone’s map depends on it. Clocks on navigation satellites sit higher up and run slightly fast, and without correcting for that, positions would drift by kilometres every day.",
-    "primer": "The two dials are identical clocks held still, one closer to a heavy round mass than the other. Counting less time means that when the clocks are compared, the lower one shows fewer ticks. Lower radius is how far the lower clock sits from the centre of the mass. The hands are exaggerated; the readout gives the real size of the difference."
+    "why": "It is a core idea of Einstein’s spacetime: gravity changes how fast time passes. Atomic clocks flown on airliners in 1971 confirmed it, and GPS satellites must correct for it every day.",
+    "primer": "Counting less time means that when the two clocks are compared, the lower one has fewer ticks, even though each ticked normally where it was."
   },
   "checks": [
     {

@@ -1,7 +1,7 @@
 [
  {
   "id": "falling-lift",
-  "title": "What does a scale read in a falling lift?",
+  "title": "How much do you weigh in a falling lift?",
   "created": "2026-10-28T00:30:00-07:00",
   "kind": "lift"
  },
@@ -10,12 +10,6 @@
   "title": "Who is really falling?",
   "created": "2026-10-27T21:00:00-07:00",
   "kind": "fall-views"
- },
- {
-  "id": "falling-scoreboard",
-  "title": "The path that keeps the most time",
-  "created": "2026-10-27T19:00:00-07:00",
-  "kind": "falling-time"
  },
  {
   "id": "twin-paths",

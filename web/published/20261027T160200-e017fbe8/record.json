@@ -77,7 +77,7 @@
     "controls": "none",
     "kind": "interference",
     "why": "It is how noise-cancelling headphones silence sound, why soap bubbles shimmer with colour, and the experiment that showed light is a wave.",
-    "primer": "A wave is a travelling pattern of high points, called crests, and low points, called troughs, like ripples on a pond. Seen from above, the blue rings are crests spreading out from each source. The strip at the bottom is a screen: bright where the water there shakes hard, dark where it stays calm."
+    "primer": "A wave is a travelling pattern of high points, called crests, and low points, called troughs, like ripples on a pond. Two waves can pass through the same spot, and there they add: two crests make a bigger crest, and a crest meeting a trough cancels."
   },
   "checks": [
     {

@@ -42,44 +42,56 @@ function drawPlanet(ctx,w,h,horizon,presence){
 }
 
 function drawLight(ctx,w,h,spec,st){
- const accent=ACCENT[spec.accent]||ACCENT.mint, s=Math.min(w/15,h/9), cx=w*.5, cy=h*.56, map=(x,y)=>[cx+x*s,cy-y*s];
- const m=st.mass, small=w<520;
- // Flat coordinate dots: a reference frame, not a picture of curved spacetime.
- const step=Math.max(18,s*.55);ctx.fillStyle='rgba(20,23,28,.075)';
- for(let x=(w%step)/2;x<w;x+=step)for(let y=(h%step)/2;y<h;y+=step)ctx.fillRect(x-.75,y-.75,1.5,1.5);
- const R=(14+m*14)*clamp(s/40,.6,1.4);
+ const accent=ACCENT[spec.accent]||ACCENT.mint, s=Math.min(w/15,h/9), cx=w*.5, cy=h*.47, m=st.mass, small=w<520;
+ // Tilted view of the optical mesh: distance on it is light travel time, its dip drawn for six times the model mass.
+ const tilt=1.2, mu=6*Physics.m(m), lift=Math.sin(tilt), drop=Math.cos(tilt), rim=Physics.meshHeight(mu,9.5);
+ const R=(9+m*9)*clamp(s/40,.6,1.4), core=R/s;
+ const at=(x,y)=>{const r=Math.max(Math.hypot(x,y),1e-6), f=(r+2*mu)/r, dip=Math.max(0,rim-Physics.meshHeight(mu,Math.max(r,core)));
+  return [cx+x*f*s,cy-y*f*s*lift+dip*s*drop];};
+ // Mesh lines darken where the surface is steep, lit from the far side, so the dip's depth reads.
+ const line=(pts)=>{let prev=null;for(const [x,y] of pts){const r=Math.hypot(x,y);if(m>.001&&r<core){prev=null;continue;}const q=at(x,y);
+  if(prev){const steep=mu>1e-6?clamp(Math.sqrt(4*mu/r+4*mu*mu/(r*r))*.7):0, light=.5+.5*y/Math.max(r,1e-6);
+   ctx.beginPath();ctx.moveTo(prev[0],prev[1]);ctx.lineTo(q[0],q[1]);ctx.strokeStyle=`rgba(20,23,28,${.12+steep*(.12+.22*(1-light))})`;ctx.stroke();}
+  prev=q;}};
+ if(mu>1e-6){const [sx,sy]=at(0,core*1.05), g=ctx.createRadialGradient(sx,sy,0,sx,sy,3*s);
+  g.addColorStop(0,`rgba(60,45,25,${.16*clamp(mu/.05)})`);g.addColorStop(1,'rgba(60,45,25,0)');ctx.fillStyle=g;
+  ctx.beginPath();ctx.ellipse(sx,sy,3*s,3*s*lift,0,0,TAU);ctx.fill();}
+ ctx.lineWidth=1;
+ for(let i=-10;i<=10;i++){const x=i*.75;line(Array.from({length:81},(_,j)=>[x,-4+8.5*j/80]));}
+ for(let j=0;j<=11;j++){const y=-4+j*.75;line(Array.from({length:121},(_,i)=>[-7.5+15*i/120,y]));}
+ const centre=at(0,core);
  if(m>.001){
-  const r=drawStar(ctx,cx,cy,R,clamp(m/.25));
-  if(st.labels)text(ctx,'MASS',cx,cy+r+18,{align:'center',size:10,weight:600,spacing:'1.5px'});
+  const r=drawStar(ctx,cx,centre[1]-R*.2,R,clamp(m/.25));
+  if(st.labels)text(ctx,'MASS',cx,centre[1]+r+14,{align:'center',size:10,weight:600,spacing:'1.5px'});
  }else{
-  ctx.setLineDash([3,5]);ctx.beginPath();ctx.arc(cx,cy,R,0,TAU);ctx.strokeStyle='rgba(20,23,28,.22)';ctx.lineWidth=1;ctx.stroke();ctx.setLineDash([]);
+  ctx.setLineDash([3,5]);ctx.beginPath();ctx.ellipse(cx,cy,R,R*lift,0,0,TAU);ctx.strokeStyle='rgba(20,23,28,.22)';ctx.lineWidth=1;ctx.stroke();ctx.setLineDash([]);
   if(st.labels)text(ctx,'no mass',cx,cy+R+18,{align:'center',size:10,weight:600,spacing:'1px'});
  }
  const count=spec.ray_count||1, N=240;
  for(let r=count-1;r>=0;r--){
-  const b=st.distance+r*.4, main=r===0, points=[];
-  for(let j=0;j<=N;j++){const x=-7.5+15*j/N;points.push(map(x,b+6*Physics.deviation(x,m,b)));}
-  if(spec.show_reference){ctx.setLineDash([4,6]);trace(ctx,[map(-7.5,b),map(7.5,b)]);ctx.strokeStyle='rgba(20,23,28,.2)';ctx.lineWidth=1;ctx.stroke();ctx.setLineDash([]);}
+  const b=st.distance+r*.4, main=r===0, path=Physics.lightPath(mu,b), points=path.filter((_,i)=>i%Math.max(1,Math.floor(path.length/N))===0).concat([path.at(-1)]).map(([x,y])=>at(x,y));
+  const n=points.length-1;
+  if(spec.show_reference){ctx.setLineDash([4,6]);trace(ctx,[[cx-7.5*s,cy-b*s*lift],[cx+7.5*s,cy-b*s*lift]]);ctx.strokeStyle='rgba(20,23,28,.25)';ctx.lineWidth=1;ctx.stroke();ctx.setLineDash([]);}
   ctx.lineCap='round';ctx.lineJoin='round';
   trace(ctx,points);ctx.strokeStyle=rgba(accent,main?.14:.06);ctx.lineWidth=(main?spec.line_width:1.2)*5;ctx.stroke();
   trace(ctx,points);ctx.strokeStyle=rgba(accent,main?.95:.4);ctx.lineWidth=main?spec.line_width:1.2;ctx.stroke();
   // Pulses are moving markers along the path, not a measurement of coordinate speed.
   for(let k=0;k<3;k++){
    const phase=((st.t/6+k/3+r*.13)%1+1)%1, fade=smooth(phase/.06)*smooth((1-phase)/.06);
-   for(let i=14;i>=1;i--){const p=phase-i*.0055;if(p<0)continue;const [x,y]=points[Math.floor(p*N)];
+   for(let i=14;i>=1;i--){const p=phase-i*.0055;if(p<0)continue;const [x,y]=points[Math.floor(p*n)];
     ctx.beginPath();ctx.arc(x,y,(main?3.2:2)*(1-i/16),0,TAU);ctx.fillStyle=rgba(accent,.4*(1-i/15)*fade);ctx.fill();}
-   const [x,y]=points[Math.floor(phase*N)];
+   const [x,y]=points[Math.floor(phase*n)];
    const glow=ctx.createRadialGradient(x,y,0,x,y,main?16:9);glow.addColorStop(0,rgba(accent,.38*fade));glow.addColorStop(1,rgba(accent,0));
    ctx.fillStyle=glow;ctx.fillRect(x-16,y-16,32,32);
    ctx.beginPath();ctx.arc(x,y,main?4:2.6,0,TAU);ctx.fillStyle=rgba(accent,fade);ctx.fill();
    ctx.beginPath();ctx.arc(x,y,main?1.6:1,0,TAU);ctx.fillStyle=`rgba(255,255,255,${fade})`;ctx.fill();
   }
   if(st.labels&&main){
-   const end=points[N], ref=map(7.5,b)[1], size=small?10:11, x=Math.min(w-16,end[0]);
-   text(ctx,'LIGHT',Math.max(16,map(-7.5,b)[0]),ref+16,{size:10,weight:600,spacing:'1.5px'});
-   if(m>.001){text(ctx,'with gravity',x,end[1]+16,{align:'right',size,weight:600,color:accent});
-    if(spec.show_reference)text(ctx,'dashed: without the mass',x,map(7.5,st.distance+(count-1)*.4)[1]-16,{align:'right',size});}
-   else text(ctx,'straight: no mass to bend it',x,end[1]+16,{align:'right',size,weight:600,color:accent});
+   const end=points[n], ref=cy-b*s*lift, size=small?10:11, x=Math.min(w-16,end[0]);
+   text(ctx,'LIGHT',Math.max(16,cx-7.5*s),ref-14,{size:10,weight:600,spacing:'1.5px'});
+   if(m>.001){text(ctx,'straightest line across the mesh',x,Math.min(h-14,end[1]+16),{align:'right',size,weight:600,color:accent});
+    if(spec.show_reference)text(ctx,'dashed: without the mass',Math.min(w-16,cx+7.5*s),cy-(st.distance+(count-1)*.4)*s*lift-14,{align:'right',size});}
+   else text(ctx,'flat mesh: light goes straight',x,end[1]+16,{align:'right',size,weight:600,color:accent});
   }
  }
 }
@@ -475,13 +487,69 @@ function clockDial(ctx,cx,cy,r,angle,accent){
  ctx.lineCap='round';trace(ctx,[[cx,cy],[cx+Math.sin(angle)*r*.72,cy-Math.cos(angle)*r*.72]]);ctx.strokeStyle=accent;ctx.lineWidth=Math.max(2,r*.07);ctx.stroke();
  ctx.beginPath();ctx.arc(cx,cy,Math.max(2.5,r*.08),0,TAU);ctx.fillStyle=accent;ctx.fill();
 }
-function drawEarth(ctx,x,y,r){
+// Coastlines as [longitude, latitude] pairs, simplified to about a degree; inland seas are drawn back as water.
+const LAND=[
+ [[-166,68],[-156,71],[-141,70],[-128,70],[-117,68.5],[-108,68],[-95,72],[-85,70],[-82,66],[-90,63.5],[-94,59],[-92,57],[-85,55],[-80,52],[-79,55],[-77,60],[-78,62.5],[-72,61],[-65,60],[-61,56],[-56,52],[-60,47],[-66,45],[-70,42],[-74,40.5],[-76,37],[-75.5,35],[-81,31.5],[-80,27],[-80.5,25.2],[-82,26.5],[-83,29.8],[-89,30.2],[-94,29.6],[-97.4,27.5],[-97.5,22],[-95.5,18.8],[-91,19],[-90.5,21],[-87,21.5],[-88,17],[-83.5,15],[-83.5,11],[-79.5,9],[-77.5,8.5],[-80,7.3],[-85.5,10],[-87.5,13],[-91.5,14],[-95,16],[-105.5,20],[-105.5,22.5],[-109,26.5],[-112.5,29.5],[-114.7,31.7],[-114,30],[-112,27.8],[-110,24],[-111,24.3],[-114,28],[-115.7,30.5],[-117.1,32.5],[-120.5,34.5],[-122.5,37.8],[-124.2,40.4],[-124,46],[-124.7,48.4],[-123,49],[-127,50.5],[-131,54],[-133,57],[-137.5,58.5],[-141,60],[-146,61],[-150,59.5],[-154,57.5],[-158,56.5],[-163,54.8],[-158,58.5],[-162,60],[-165,62],[-164.5,64.5],[-168,65.6]],
+ [[-80,73.5],[-72,71],[-62,66.5],[-65,63],[-71,62.5],[-78,64.5],[-81,68],[-88,70]],
+ [[-118,73],[-102,73],[-101,69],[-117,69]],
+ [[-90,77],[-80,76.5],[-63,82],[-80,83],[-92,81]],
+ [[-73,78],[-60,82],[-35,83.5],[-20,82],[-18,77],[-22,70.5],[-32,68],[-40,65],[-43,60],[-48,61],[-52,65],[-54,69.5],[-58,75.5],[-66,76.5]],
+ [[-22.7,64],[-21.9,65.4],[-22.4,66.4],[-16,66.5],[-14.5,65.8],[-13.6,65],[-14.9,64.3],[-18.7,63.4],[-21,63.8]],
+ [[-77.5,8.5],[-75.5,10.8],[-71.5,12.4],[-68,10.6],[-62,10.7],[-60,8.5],[-57,6],[-52,5],[-50,1.8],[-48.5,-1],[-44,-2.5],[-39,-3.5],[-35,-5.5],[-35,-9],[-38.5,-13],[-39,-17.8],[-40.5,-22],[-44.5,-23.2],[-48.5,-26],[-49,-28.6],[-53,-33.5],[-58.5,-34.5],[-57,-36.5],[-58,-38.5],[-62,-39],[-65,-41],[-64,-42.5],[-67.5,-46],[-66,-47.8],[-69,-50.5],[-68.5,-52.5],[-71,-54],[-74.5,-52],[-75.5,-47],[-73.5,-42],[-73.5,-37],[-71.5,-32],[-71.3,-28],[-70.3,-18.5],[-75,-15.3],[-79,-8],[-81.2,-5.5],[-80,-2],[-80,1],[-78.8,1.8],[-77.5,4],[-77.3,7]],
+ [[-9.5,43],[-8.8,37],[-6,36.2],[-2,36.7],[.2,38.8],[3.2,41.9],[4,43.5],[7.5,43.8],[10,44],[12.3,41.7],[15.7,38],[16.6,39],[18.5,40.1],[16,41.9],[12.4,44.5],[12.3,45.4],[13.7,45.6],[15.5,43.5],[19.5,42],[19.4,40.2],[21,38],[22.8,36.5],[24,38.2],[23,40.5],[26.2,40.8],[26.2,40],[27,38.5],[28,36.7],[32,36.1],[36,36.6],[35.9,34.5],[34.5,31.5],[34.9,29.5],[36.9,25.5],[39,21.5],[42.8,16],[43.4,12.7],[45,12.8],[49,14.1],[52.2,15.6],[55.5,17.8],[57.8,19],[59.8,22.5],[58.5,23.6],[56.4,24.9],[56.3,26.3],[55.5,25.5],[54,24.2],[51.6,24.3],[51.2,26.1],[50.1,26.2],[48.5,28.5],[48,30],[50.2,30.2],[51.5,27.9],[54.5,26.6],[56.5,27.1],[57.3,25.7],[61.5,25.2],[66.5,25.4],[67.5,24],[70,21],[72.8,21.5],[73,19],[74.9,13.5],[76.5,8.6],[77.6,8.1],[78.3,9],[80.3,13.3],[80.2,15.8],[83.3,17.6],[86.9,20.8],[88.5,21.7],[91.8,22.4],[92.6,21],[94.3,16],[97.5,16.8],[98.5,13],[98.3,8.5],[100.2,5.6],[101.4,2.8],[103.5,1.3],[104.2,1.6],[103.4,4.2],[102.4,6.2],[100.3,8.4],[99.2,10.8],[100.5,13.5],[102.5,12],[105,8.6],[106.8,10.4],[109.2,11.6],[108.8,15.5],[106.6,17.5],[105.7,19],[107.5,21.5],[109.7,21.5],[110.3,20.3],[113.5,22.2],[117,23.5],[119.6,26],[121.9,30.8],[120.5,33.5],[119.2,35],[122.5,37],[118,38],[117.8,39.2],[121.5,40.9],[121.3,39],[124.3,39.9],[126.5,37.5],[126.5,34.5],[129.3,35.2],[129.5,37],[128,39.5],[129.7,41],[131,42.6],[135.5,43.8],[140.5,48.5],[141.4,52.2],[137,54],[135.3,54.8],[141,59],[149,59.4],[155,59.4],[157,57.8],[156.5,51],[158.5,52.8],[162,56.2],[163.5,59.9],[170,60],[179,62.3],[180,65],[190,66],[185,67.5],[180,69],[170,70],[161,69.5],[150,71.5],[140,72.5],[130,71],[127,73.5],[113,73.7],[106,77],[100,79.5],[95,76],[88,75.5],[80,73.5],[73,73],[69,73],[69,68.5],[60,69.8],[54,68.3],[44,68.4],[43.5,66.3],[40,66.4],[36.5,64.5],[34.7,66],[32.5,67],[41,67.8],[38,69],[33,69.4],[28,71],[23,70.6],[18.5,69.8],[14.5,67.9],[12.5,65.5],[10,64],[5.1,62],[5,59.5],[6.5,58],[8,58],[10.6,59.4],[11.5,58.3],[12.7,56],[14.3,55.6],[16.4,56.6],[18,59.2],[17.5,61],[21.3,64.5],[25.3,65.6],[22.5,63],[21.3,61],[21.5,60.6],[25,60.2],[28.5,60.5],[24,59.3],[23.5,58.4],[21.1,57],[21.3,55.2],[19.8,54.4],[18.4,54.8],[14.5,53.9],[12.5,54.4],[10.9,54],[9.9,54.8],[10.5,57.5],[8.6,57.1],[8.1,55.5],[8.6,53.9],[5,53.4],[4.2,52],[3.3,51.3],[1.6,50.9],[-1.4,49.6],[-1.9,48.7],[-4.7,48.4],[-2.2,47.2],[-1.2,46],[-1.5,43.5],[-4,43.5],[-8,43.7],[-9.3,43.1]],
+ [[-5.7,50],[1.4,51.2],[1.7,52.7],[0,53.5],[-1.6,55.5],[-2,57.6],[-3,58.6],[-5,58.6],[-6.2,57.5],[-5.6,55.3],[-3,54.9],[-3.2,53.4],[-4.6,53.3],[-4.2,52.3],[-5.3,51.7],[-3.2,51.4]],
+ [[-6,52.2],[-6.2,54],[-5.5,54.9],[-7.3,55.3],[-10,54.2],[-9.8,52.1],[-8.4,51.6]],
+ [[-17,21],[-16.5,24],[-13,27.7],[-9.8,29.8],[-9.6,32.5],[-6.8,34],[-5.9,35.8],[-2,35.1],[3,36.8],[9.8,37.3],[11,36.9],[10.2,34.3],[11.5,33.1],[15.2,32.3],[19.5,30.3],[20.1,32.3],[23.5,32.4],[25.2,31.6],[29.5,31],[32.3,31.3],[34.2,31.2],[34.9,29.5],[34.2,27.8],[32.6,29.9],[33.6,27.3],[35.5,23.9],[37.2,21],[38.5,18],[39.7,15.1],[42.4,12.5],[43.4,11.6],[44.5,10.4],[47.5,11.2],[51.2,11.8],[51,10.4],[49.8,7],[47.9,4.5],[43.6,.6],[40.9,-2.1],[39.2,-4.7],[39.7,-7.9],[40.5,-10.5],[40.6,-15.5],[37,-17.9],[35.4,-22.1],[35.5,-24],[32.8,-25.8],[32.4,-28.6],[30,-31.3],[27.5,-33.5],[25.6,-34],[22,-34.2],[20,-34.8],[18.4,-34.2],[17.9,-31.5],[15.2,-27],[14.5,-22.9],[11.8,-17.3],[12.3,-13.5],[13.6,-11.5],[13.2,-8.8],[12.2,-6],[9.4,-1.5],[9.8,2.8],[9.7,3.8],[8.5,4.5],[6,4.3],[4.5,6.3],[2,6.3],[-2,4.8],[-4,5.2],[-7.5,4.4],[-9.7,5.6],[-11.4,6.9],[-13.2,8.9],[-15,10.9],[-16.8,13],[-17.5,14.7],[-16.3,19]],
+ [[49.3,-12],[50.5,-15.5],[49.8,-17],[47.1,-24.9],[45.2,-25.5],[43.7,-22.6],[43.3,-21],[44.3,-16.8],[46.3,-15.7],[48,-13.7]],
+ [[79.8,6.1],[80.3,9.8],[81.9,7.4],[81.2,6.2]],
+ [[95.3,5.6],[97.5,5.2],[100.4,2.3],[103.7,-1],[106,-3.2],[105.8,-5.8],[104.5,-5.9],[102.3,-4],[100.5,-1.2],[98.7,1.7],[96,4.2]],
+ [[105.2,-6.8],[108.5,-6.4],[111,-6.4],[114.5,-7.8],[114.4,-8.7],[111,-8.2],[108.3,-7.8],[106,-7.4]],
+ [[109,1.9],[110.4,1.7],[113,3.2],[115.4,5],[117,7],[119.2,5.2],[118.2,4.3],[117.8,1.8],[116.5,-1.6],[116,-3.9],[114.5,-3.9],[111.4,-3.2],[110.2,-1.7],[109,.4]],
+ [[119.5,-5.5],[120.5,-2.5],[121,1.2],[124.8,1.5],[121.5,-.8],[123.3,-4.8],[121,-3],[120.5,-5.6]],
+ [[131,-1.2],[134,-.9],[137.8,-1.5],[141,-2.6],[145.7,-4.8],[147.6,-6.1],[148,-8.1],[150.8,-10.3],[147,-10.1],[144,-7.8],[141,-9.1],[138.5,-8.3],[137.8,-5.5],[134.5,-4],[132,-2.9]],
+ [[120.6,18.5],[122.3,18.3],[122,16.2],[124,13],[121.5,13.7],[120,14.8],[119.9,16.4]],
+ [[122,7],[126.6,7.3],[125.4,9.8],[123.8,8.5]],
+ [[120.2,22.7],[121,25.3],[121.9,24.6],[120.8,21.9]],
+ [[130,31.3],[131.5,31.5],[132,33.8],[135,33.5],[137,34.6],[139.8,35],[141,37],[142,39.5],[141.5,41.4],[140,40.5],[139.5,38],[136.8,37.2],[133,35.5],[130.9,34.2],[129.6,33.2]],
+ [[140,41.5],[141.7,42.6],[145.5,43.3],[143,44.5],[141.7,45.4],[141.3,43.3],[140.3,42.6]],
+ [[113.5,-22.5],[114.1,-26],[115,-34.2],[117.9,-35.1],[123.5,-33.9],[126,-32.3],[131,-31.5],[134.5,-32.7],[137.8,-35.6],[138.5,-34.8],[140,-37.5],[143.5,-38.8],[146.3,-39.1],[150,-37.5],[151.3,-33.8],[153.6,-28.2],[153,-25.3],[150.8,-22.5],[146.3,-19],[145.4,-15],[143.5,-14],[142.5,-10.7],[141.6,-12.9],[141.5,-16.5],[139.3,-17.4],[135.9,-15],[136.7,-12.2],[132.6,-11.5],[130.1,-13.2],[129.3,-15],[127,-14],[125,-14.5],[122.2,-17.2],[121,-19.6],[117,-20.6],[114.2,-21.9]],
+ [[144.6,-40.7],[148.3,-40.9],[148,-43.2],[146,-43.6],[145.2,-42.2]],
+ [[172.7,-34.4],[174.6,-36.2],[178.5,-37.7],[177,-39.6],[175.2,-41.5],[174.6,-39.9],[173.8,-39.1],[174.4,-37]],
+ [[172.7,-40.5],[174.3,-41.7],[173.2,-43.4],[171.2,-44.4],[169,-46.6],[166.5,-46],[166.6,-45.2],[168.5,-44],[171.1,-42.3]],
+ [...Array.from({length:37},(_,i)=>{const lon=-180+i*10;return [lon,-70+3*Math.sin(lon*.05)+(lon>-75&&lon<-55?6:0)];}),[180,-90],[-180,-90]],
+];
+const SEAS=[
+ [[28,41.6],[28.6,43.5],[30.7,46.5],[33,45.8],[32.5,45.3],[33.5,44.5],[36.5,45.2],[38.2,46.6],[39.5,47.2],[37.7,44.6],[41.6,41.6],[36.7,41.3],[35,42],[31.5,41.2],[29,41.2]],
+ [[47,44.5],[49,46.5],[51.5,47],[53,45],[51.3,44.5],[52.8,41.5],[54,39],[53.9,37.3],[50.3,37.4],[49,38.5],[49.5,40.3],[47.5,42.9]],
+];
+const ICE=new Set([4,LAND.length-1]);
+const earthCache=new Map();
+// A globe in orthographic projection, centred on the given latitude and longitude; cached per size and view.
+function earthImage(r,lat,lon){
+ const key=`${Math.round(r)}|${lat}|${lon}`;if(earthCache.has(key))return earthCache.get(key);
+ const size=Math.ceil(2*r+4), c=document.createElement('canvas');c.width=c.height=size;const g=c.getContext('2d'), o=size/2;
+ const p0=lat*Math.PI/180, l0=lon*Math.PI/180;
+ const proj=([lo,la])=>{const p=la*Math.PI/180, l=lo*Math.PI/180-l0, x=Math.cos(p)*Math.sin(l), y=Math.cos(p0)*Math.sin(p)-Math.sin(p0)*Math.cos(p)*Math.cos(l), z=Math.sin(p0)*Math.sin(p)+Math.cos(p0)*Math.cos(p)*Math.cos(l);
+  // Points on the far side are pushed to the rim so shapes crossing the edge stay closed.
+  if(z<0){const k=Math.hypot(x,y)||1;return [o+x/k*r,o-y/k*r];}return [o+x*r,o-y*r];};
+ const sea=g.createRadialGradient(o-r*.35,o-r*.35,r*.1,o,o,r);sea.addColorStop(0,'#6fb2ee');sea.addColorStop(.6,'#2b6cc4');sea.addColorStop(1,'#163a7a');
+ g.beginPath();g.arc(o,o,r,0,TAU);g.fillStyle=sea;g.fill();g.save();g.clip();
+ const visible=([lo,la])=>{const p=la*Math.PI/180, l=lo*Math.PI/180-l0;return Math.sin(p0)*Math.sin(p)+Math.cos(p0)*Math.cos(p)*Math.cos(l)>0;};
+ const fill=(poly,color)=>{if(!poly.some(visible))return;const pts=[];for(let i=0;i<poly.length;i++){const a=poly[i],b=poly[(i+1)%poly.length];
+   const n=Math.max(1,Math.ceil(Math.hypot(b[0]-a[0],b[1]-a[1])/3));for(let k=0;k<n;k++)pts.push(proj([a[0]+(b[0]-a[0])*k/n,a[1]+(b[1]-a[1])*k/n]));}
+  g.beginPath();pts.forEach(([x,y],i)=>i?g.lineTo(x,y):g.moveTo(x,y));g.closePath();g.fillStyle=color;g.fill();};
+ // Antarctica wraps the pole, so it is drawn only when the view looks from the south.
+ LAND.forEach((poly,i)=>{if(i===LAND.length-1&&lat>=0)return;fill(poly,ICE.has(i)?'#eef2f4':'#6f9a58');});
+ SEAS.forEach(poly=>fill(poly,'#3577cf'));
+ const shade=g.createRadialGradient(o-r*.4,o-r*.4,r*.2,o,o,r*1.02);shade.addColorStop(0,'rgba(255,255,255,.12)');shade.addColorStop(.7,'rgba(10,20,40,0)');shade.addColorStop(1,'rgba(10,20,40,.35)');
+ g.fillStyle=shade;g.fillRect(0,0,size,size);g.restore();
+ earthCache.set(key,c);return c;
+}
+function drawEarth(ctx,x,y,r,{lat=20,lon=10}={}){
  const air=ctx.createRadialGradient(x,y,r*.9,x,y,r*1.5);air.addColorStop(0,'rgba(120,180,255,.35)');air.addColorStop(1,'rgba(120,180,255,0)');ctx.fillStyle=air;ctx.beginPath();ctx.arc(x,y,r*1.5,0,TAU);ctx.fill();
- const sea=ctx.createRadialGradient(x-r*.35,y-r*.35,r*.1,x,y,r);sea.addColorStop(0,'#7fc4ff');sea.addColorStop(.6,'#2f78d6');sea.addColorStop(1,'#163f86');
- ctx.beginPath();ctx.arc(x,y,r,0,TAU);ctx.fillStyle=sea;ctx.fill();
- ctx.save();ctx.beginPath();ctx.arc(x,y,r,0,TAU);ctx.clip();
- for(let i=0;i<7;i++){ctx.beginPath();ctx.ellipse(x+(hash(i*3.3)-.5)*r*1.6,y+(hash(i*5.1)-.5)*r*1.6,r*(.18+.22*hash(i)),r*(.1+.14*hash(i*2)),hash(i*9)*3,0,TAU);ctx.fillStyle='rgba(92,170,96,.85)';ctx.fill();}
- const night=ctx.createLinearGradient(x-r,0,x+r,0);night.addColorStop(.55,'rgba(10,20,40,0)');night.addColorStop(1,'rgba(10,20,40,.35)');ctx.fillStyle=night;ctx.fillRect(x-r,y-r,2*r,2*r);ctx.restore();
+ const img=earthImage(r,lat,lon);ctx.drawImage(img,x-img.width/2,y-img.height/2);
+ const night=ctx.createLinearGradient(x-r,0,x+r,0);night.addColorStop(.55,'rgba(10,20,40,0)');night.addColorStop(1,'rgba(10,20,40,.3)');
+ ctx.save();ctx.beginPath();ctx.arc(x,y,r,0,TAU);ctx.clip();ctx.fillStyle=night;ctx.fillRect(x-r,y-r,2*r,2*r);ctx.restore();
 }
 function drawRocket(ctx,x,y,size,dir,thrust,t){
  ctx.save();ctx.translate(x,y);ctx.scale(dir,1);
@@ -892,10 +960,10 @@ function drawLift(ctx,w,h,spec,st){
  if(stage>=3&&!small){const ex=w*.88,ey=h*.16,er=16,ang2=st.t*.6;drawEarth(ctx,ex,ey,er);ctx.beginPath();ctx.arc(ex,ey,er*2.1,0,TAU);ctx.setLineDash([2,4]);ctx.strokeStyle='rgba(20,23,28,.3)';ctx.lineWidth=1;ctx.stroke();ctx.setLineDash([]);
   ctx.beginPath();ctx.arc(ex+Math.cos(ang2)*er*2.1,ey+Math.sin(ang2)*er*2.1,3.5,0,TAU);ctx.fillStyle=dark;ctx.fill();}
  if(!st.labels)return;
- text(ctx,'the scale reads',dx,dy-R-(small?34:40),{align:'center',size:small?11:12,weight:600,color:'rgba(20,23,28,.6)'});
+ text(ctx,'you weigh',dx,dy-R-(small?34:40),{align:'center',size:small?11:12,weight:600,color:'rgba(20,23,28,.6)'});
  text(ctx,`${Math.round(reading*70)} kg`,dx,dy+R*.35,{align:'center',size:small?22:30,weight:700,color:reading>.01?dark:accent});
  text(ctx,'0',dx+Math.cos(ang(0))*R*1.2,dy+Math.sin(ang(0))*R*1.2,{align:'center',size:10});
- text(ctx,'your weight',dx,dy-R-(small?16:18),{align:'center',size:10,color:'rgba(20,23,28,.5)'});
+ text(ctx,'standing still: 70 kg',dx,dy-R-(small?16:18),{align:'center',size:10,color:'rgba(20,23,28,.5)'});
  if(snapped&&stage===2)pill(ctx,'apple let go',ax+size*.6,ay-size*.5,{size:10,weight:600,color:'#b3362f'});
  if(stage>=3&&!small)text(ctx,'falling around the Earth',w*.88,h*.16+40,{align:'center',size:10,color:'rgba(20,23,28,.6)'});
 }
@@ -909,7 +977,7 @@ function drawMoonTides(ctx,w,h,spec,st){
  const spin=stage>=3?since*.35:0;
  const ocean=ctx.createRadialGradient(ex,ey,Re*.9,ex,ey,Re*1.3);ocean.addColorStop(0,'rgba(59,130,246,.35)');ocean.addColorStop(1,'rgba(59,130,246,.2)');
  ctx.beginPath();for(let i=0;i<=120;i++){const th=TAU*i/120,r=Re*(1.08+b*M.shape(th));const x=ex+Math.cos(th)*r,y=ey+Math.sin(th)*r;i?ctx.lineTo(x,y):ctx.moveTo(x,y);}ctx.closePath();ctx.fillStyle=ocean;ctx.fill();ctx.strokeStyle='rgba(37,99,235,.45)';ctx.lineWidth=1;ctx.stroke();
- ctx.save();ctx.translate(ex,ey);ctx.rotate(spin);drawEarth(ctx,0,0,Re);ctx.restore();
+ ctx.save();ctx.translate(ex,ey);ctx.rotate(spin);drawEarth(ctx,0,0,Re,{lat:90,lon:-10});ctx.restore();
  ctx.beginPath();ctx.arc(mx,ey,mr,0,TAU);const moon=ctx.createRadialGradient(mx-mr*.3,ey-mr*.3,mr*.1,mx,ey,mr);moon.addColorStop(0,'#f4f1ea');moon.addColorStop(1,'#a9a39a');ctx.fillStyle=moon;ctx.fill();
  // Arrows: the Moon's pull at the near side, centre and far side (differences enlarged), or the stretch left after the Earth's own fall.
  if(stage===1||stage===2){const c=M.centre[0], E=.45/(M.tide(1,0)[0]/c), Lc=Re*.55;
@@ -940,7 +1008,7 @@ function drawMoonTides(ctx,w,h,spec,st){
 const ENGINES={
  'light-bending':{draw:drawLight,a:['Mass','how much mass sits nearby'],b:['Passing distance','how close the light passes','×'],
   fa:a=>a.toFixed(2),fb:b=>b.toFixed(2)+'×',
-  measure:['Bend',(a,b)=>(Physics.deflection(a,b)*180/Math.PI).toFixed(2)+'°'],scale:'',disclosure:'The bending is drawn six times larger than the model value; the readout is the model value for the nearest ray, in the model’s own units. The star is an illustration.',demoEnd:s=>Math.min(2.5,s.distance+1),
+  measure:['Bend',(a,b)=>(Physics.deflection(a,b)*180/Math.PI).toFixed(2)+'°'],scale:'',disclosure:'The mesh measures distance as the time light needs to cross it, timed far away; light’s straightest line across it is the drawn path. Its dip and the bending are drawn for six times the model mass; the readout is the model value for the nearest ray, in the model’s own units. The dip is not a slope, and the star is an illustration.',demoEnd:s=>Math.min(2.5,s.distance+1),
   try:'Slide Mass to zero, then back up. Now move the beam farther away. When does it bend most?',aria:'Light passing a massive object, compared with a straight path without the mass.'},
  'gravity-clocks':{draw:drawClocks,a:['Mass','how much mass sits nearby'],b:['Lower radius','gap stays 2 units',' units'],
   fa:a=>a.toFixed(2),fb:b=>b.toFixed(2)+' units',

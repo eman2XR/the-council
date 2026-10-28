@@ -79,10 +79,14 @@ MODEL_NOTES = '''Renderer is fixed: a 2D weak-field light-deflection diagram, no
 Coordinates use an arbitrary length unit, m=GM/c^2=0.025*mass, impact parameter b=distance.
 y(x)=b-2*m/b*(sqrt(x*x+b*b)+x), -7<=x<=7, to first order in m/b.
 Asymptotic deflection 4*m/b radians; m/b <=0.025. Vertical DEVIATION is magnified 6x
-for visibility; the site states this in the investigation details, not on the stage. No black hole, horizon, orbit, rubber sheet, or numerical
+for visibility; the site states this in the investigation details, not on the stage. No black hole, horizon, orbit, or numerical
 Einstein solver. A central sphere is a schematic compact mass (radius not to scale).
-Grid is a coordinate reference, NOT a drawing of spacetime curvature. The light pulse
-is a moving marker, not a measurement of coordinate speed. The three beats are:
+The background is a tilted mesh of the optical geometry: distance on it is light travel time
+timed by a distant clock (weak-field index n = 1 + 2m/r), embedded as a surface whose straightest
+lines are the drawn light paths; its dip is drawn for six times the model mass. Near the mass
+clocks run slow and space is stretched, so there is more distance for light there. The dip is
+not a downhill slope: never say light or anything rolls into it, and it is not a rubber sheet
+sagging under weight. The light pulse is a moving marker, not a measurement of coordinate speed. The three beats are:
 1 no mass/straight reference, 2 add mass/bending, 3 compare and experiment.
 All controls remain inside weak-field regime. Explain null geodesics in plain language;
 light has no rest mass and is locally measured at c. More mass or a closer pass increases

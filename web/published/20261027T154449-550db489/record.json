@@ -73,15 +73,15 @@
   },
   "scene": {
     "title": "Why Does Gravity Bend Light?",
-    "subtitle": "A side-by-side view of light passing empty space and passing a heavy mass. The bend is greatly exaggerated so you can see it.",
+    "subtitle": "Light crosses empty space, then passes a heavy mass. The bend is greatly exaggerated so you can see it.",
     "beats": [
       {
         "title": "With no mass, light goes straight",
-        "body": "Watch the pale ray: with nothing nearby, light travels in a perfectly straight line. Keep it in view, because every bent path gets compared with it. The grid is only a ruler for the eye, not a picture of space."
+        "body": "Watch the pale ray: with nothing nearby, the mesh is flat and light crosses it in a straight line. Keep it in view, because every bent path gets compared with it."
       },
       {
         "title": "Add a mass, and the path turns",
-        "body": "Now a heavy mass sits in the middle, and the ray leaves heading in a new direction. Nothing grabs the light, and it never slows down; it follows the straightest path that warped space and time allow. The bend is enlarged a lot here so you can see it."
+        "body": "Now a heavy mass sits in the middle, and the mesh dips around it. Nothing grabs the light: it takes the straightest line across the mesh. Seen from above, that line turns, so the ray leaves heading in a new direction."
       },
       {
         "title": "More mass or a closer pass means more bending",
@@ -99,7 +99,7 @@
     "takeaway": "Light isn't pulled off course. Mass warps space and time, and light's straightest path through them curves.",
     "kind": "light-bending",
     "why": "In 1919, starlight bending around the Sun during an eclipse was the first test of Einstein\u2019s theory of gravity. Astronomers now use the same bending to weigh galaxies and map matter they cannot see.",
-    "primer": "Light is drawn as a ray seen from the side, with a dot travelling along it. The pale straight line marks where the light would go with nothing nearby. The grid is only a ruler for the eye, not a picture of space, and the bend is enlarged so you can see it."
+    "primer": "On this mesh, distance means how long light takes to cross, timed by a clock far away. Near a mass, clocks run slow and space is stretched, so light needs longer for the same stretch, and the extra distance shows up as a dip. Light always takes the straightest line across the mesh. The dip is not a slope: nothing rolls down it."
   },
   "checks": [
     {
@@ -163,7 +163,7 @@
   "provenance": {
     "sources_retrieved": true,
     "retrieved_by": "agent",
-    "intro_note": "The introduction above the player was written by hand after the agents\u2019 review and was not part of the reviewed scene."
+    "intro_note": "The introduction above the player, the subtitle, the mesh drawing and the narration of the first two chapters were changed by hand after the agents\u2019 review (the reviewed version drew a flat grid); the reviews below refer to the earlier version."
   },
   "revisions": [
     {

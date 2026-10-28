@@ -3,7 +3,7 @@
  "provider": "draft",
  "status": "draft",
  "created": "2026-10-28T00:30:00-07:00",
- "question": "What does a scale read in a falling lift?",
+ "question": "How much do you weigh in a falling lift?",
  "topic": "lift",
  "scene": {
   "ray_count": 1,
@@ -16,29 +16,29 @@
   "distance": 1.6,
   "kind": "lift",
   "accent": "blue",
-  "title": "What does a scale read in a falling lift?",
+  "title": "How much do you weigh in a falling lift?",
   "subtitle": "Stand on a bathroom scale in a lift, then imagine the cable snaps. The answer explains why astronauts float.",
   "why": "It is why astronauts float and roller-coaster drops feel weightless, and it was the clue that led Einstein to his theory of gravity.",
-  "opening": "A lift’s cable snaps. What does the bathroom scale under your feet read as you fall?",
+  "opening": "A lift’s cable snaps. How much do you weigh on the way down?",
   "beats": [
    {
     "title": "Standing still",
-    "body": "In a parked lift, the scale reads your weight. The floor pushes up on the scale, and the scale pushes up on you."
+    "body": "In a parked lift, you weigh what you always do. Weighing yourself means reading how hard the scale pushes up on you. The floor pushes the scale, and the scale pushes you."
    },
    {
     "title": "Riding up and down",
-    "body": "When the lift speeds up upward, the floor has to push harder, so the scale reads more. When it slows down, it reads less. A scale measures how hard it is pushed, not gravity itself."
+    "body": "When the lift speeds up upward, the floor has to push harder, so you weigh more. When it slows down, you weigh less. A scale measures how hard it pushes, not gravity itself."
    },
    {
     "title": "The cable snaps",
-    "body": "Now the lift falls freely. You, the scale and the apple you let go of all fall together, so nothing has to push anything. The scale reads zero, and the apple stays beside you."
+    "body": "Now the lift falls freely. You, the scale and the apple you let go of all fall together, so nothing has to push anything. The scale reads zero: you weigh nothing, and the apple stays beside you."
    },
    {
     "title": "Weightless, not gravity-free",
     "body": "Gravity hasn’t switched off: the lift keeps falling faster and faster. It acts on everything inside equally, so nothing presses on anything. Astronauts float for the same reason: their station is always falling around the Earth."
    }
   ],
-  "takeaway": "A scale measures pushes, not gravity. In free fall nothing pushes, so you feel weightless while gravity is still there.",
+  "takeaway": "Weighing measures how hard the floor pushes on you. In free fall nothing pushes, so you weigh nothing while gravity still pulls.",
   "questions": [
    {
     "q": "Astronauts on the space station float. Is there no gravity up there?",

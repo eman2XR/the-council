@@ -5,6 +5,31 @@
     deflection(mass, b) { return 4 * this.m(mass) / b; },
     deviation(x, mass, b) { return -2 * this.m(mass) / b * (Math.hypot(x, b) + x); },
     slope(x, mass, b) { return -2 * this.m(mass) / b * (x / Math.hypot(x, b) + 1); },
+    // Optical geometry for the light mesh: distance is light travel time timed far away, n = 1 + 2mu/R
+    // (weak field, isotropic radius R). Embedded as a surface of revolution: circumference radius R + 2mu,
+    // height z with (dR)^2 + (dz)^2 = (n dR)^2, so straightest lines on the surface are light paths.
+    meshHeight(mu, R) {
+      if (mu < 1e-9) return 0;
+      const q = Math.sqrt(mu * (R + mu));
+      return 4 * (q + mu / 2 * Math.log((q - mu) / (q + mu)));
+    },
+    // Light path through n = 1 + 2mu/R, entering parallel to x at height b; returns [x, y] points.
+    lightPath(mu, b, x0 = -7.5, x1 = 7.5, steps = 360) {
+      const accel = (x, y) => { const r = Math.hypot(x, y), n = 1 + 2 * mu / r, g = -2 * mu / (r * r * r) * n; return [g * x, g * y]; };
+      let x = x0, y = b, n = 1 + 2 * mu / Math.hypot(x, y), px = n, py = 0;
+      const h = (x1 - x0) / steps, points = [[x, y]];
+      for (let i = 0; i < steps * 3 && x < x1; i++) {
+        // Hamiltonian ray tracing: dx/dt = p, dp/dt = n grad n, with |p| = n.
+        const f = (X, Y, PX, PY) => { const [ax, ay] = accel(X, Y); return [PX, PY, ax, ay]; };
+        const k1 = f(x, y, px, py), k2 = f(x + h / 2 * k1[0], y + h / 2 * k1[1], px + h / 2 * k1[2], py + h / 2 * k1[3]);
+        const k3 = f(x + h / 2 * k2[0], y + h / 2 * k2[1], px + h / 2 * k2[2], py + h / 2 * k2[3]);
+        const k4 = f(x + h * k3[0], y + h * k3[1], px + h * k3[2], py + h * k3[3]);
+        x += h / 6 * (k1[0] + 2 * k2[0] + 2 * k3[0] + k4[0]); y += h / 6 * (k1[1] + 2 * k2[1] + 2 * k3[1] + k4[1]);
+        px += h / 6 * (k1[2] + 2 * k2[2] + 2 * k3[2] + k4[2]); py += h / 6 * (k1[3] + 2 * k2[3] + 2 * k3[3] + k4[3]);
+        points.push([x, y]);
+      }
+      return points;
+    },
     clockRatio(mass,r) { return Math.sqrt((1-2*this.m(mass)/r)/(1-2*this.m(mass)/(r+2))); },
     // Special relativity in units where light speed is 1 (years and light-years).
     speed: a => 0.9 * a,
@@ -365,6 +390,12 @@
         'Far-field slope agrees with 4m/b': Math.abs(this.slope(1e6,.7,1.25)+this.deflection(.7,1.25))<1e-9,
         'Bending points toward the mass': this.deviation(3,.7,1.25)<0,
         'Controls remain in the weak-field regime': this.m(1)/1 <= .025,
+        'Flat mesh when there is no mass': this.meshHeight(0,3)===0 && this.lightPath(0,1).every(p=>p[1]===1),
+        'Mesh distances equal light travel time': [.5,1,3,7].every(R=>{const mu=.15,d=1e-5,dz=this.meshHeight(mu,R+d)-this.meshHeight(mu,R);
+          return Math.abs(Math.hypot(d,dz)-(1+2*mu/R)*d)<1e-8;}),
+        'Straightest mesh line bends by 4m/b for a light mass': (()=>{const mu=1e-4,b=1.25,X=7.5,p=this.lightPath(mu,b,-X,X,2000),
+          a=p.at(-1),c=p.at(-2),bend=-Math.atan2(a[1]-c[1],a[0]-c[0]);return Math.abs(bend/(4*mu/b*X/Math.hypot(X,b))-1)<.02;})(),
+        'Mesh light path bends toward the mass': this.lightPath(.15,1).at(-1)[1]<1,
       };
       return Object.entries(cases).map(([name,pass])=>({name,pass}));
     }

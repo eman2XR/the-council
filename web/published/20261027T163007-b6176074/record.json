@@ -80,7 +80,7 @@
     "controls": "first",
     "kind": "wave-packet",
     "why": "This is the uncertainty principle, a central rule of quantum physics. It is not a flaw in our instruments, and it is part of why atoms have a size at all instead of collapsing.",
-    "primer": "In quantum physics a particle such as an electron behaves like a wave. Its momentum, roughly how fast it moves, is set by its wavelength: shorter waves mean faster motion. The top panel shows the wave in space; where it bunches up is where the particle is likely to be found. Each bar below is one wavelength mixed in."
+    "primer": "In quantum physics a particle such as an electron behaves like a wave. Its momentum, roughly how fast it moves, is set by its wavelength: shorter waves mean faster motion. Where the wave bunches up is where the particle is likely to be found."
   },
   "checks": [
     {

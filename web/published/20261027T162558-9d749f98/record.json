@@ -91,7 +91,7 @@
     "controls": "none",
     "kind": "quantum-well",
     "why": "It is why each kind of atom gives off light of only certain colours, which is how astronomers tell what distant stars are made of. The colours of LEDs and quantum-dot screens are chosen with the same rule.",
-    "primer": "In quantum physics a small particle such as an electron behaves like a wave, and the more wiggles its wave packs in, the more energy it has. The trap, called a well, is drawn as a dip the particle is held in. Each horizontal line is one energy the particle is allowed to have there, drawn with its wave."
+    "primer": "In quantum physics a small particle such as an electron behaves like a wave, and the more wiggles its wave packs in, the more energy it has. A region that traps a particle is called a well."
   },
   "checks": [
     {

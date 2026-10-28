@@ -40,7 +40,7 @@
   },
   "scene": {
     "title": "Why a Guitar String Plays Only Certain Notes",
-    "subtitle": "A wave goes down a rope, bounces off a wall and comes back. Where the two waves meet, some points stay still, and only patterns that fit whole loops between the ends can last.",
+    "subtitle": "Send a wave down a rope tied to a wall. It bounces back and overlaps the wave still coming in. At some points the two always cancel, so the rope there never moves. Only patterns with a whole number of loops between the ends keep going.",
     "beats": [
       {
         "title": "No bounce: the wave just runs",
@@ -67,7 +67,7 @@
     "controls": "first",
     "kind": "standing-waves",
     "why": "It is why a plucked guitar string, a violin or a flute sounds a clear note rather than a noise, and why pressing a string against a fret, which shortens it, raises the note.",
-    "primer": "A wave on a rope is a shape that travels along it while each bit of rope only moves up and down. When two waves overlap they add: hump on hump makes a bigger hump, and hump on dip cancels. The dashed lines are the wave going out and the wave coming back; the solid line is the rope. Faster shaking is heard as a higher note."
+    "primer": "A wave on a rope is a shape that travels along it while each bit of rope only moves up and down. When two waves overlap they add: hump on hump makes a bigger hump, and hump on dip cancels. Faster shaking is heard as a higher note."
   },
   "checks": [
     {
@@ -131,7 +131,7 @@
   "provenance": {
     "sources_retrieved": true,
     "retrieved_by": "agent",
-    "intro_note": "The introduction above the player was written by hand after the agents\u2019 review and was not part of the reviewed scene."
+    "intro_note": "The introduction above the player and the subtitle were written by hand after the agents\u2019 review and were not part of the reviewed scene."
   },
   "revisions": [
     {

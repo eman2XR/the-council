@@ -17,7 +17,7 @@ SCENE = {
     'title': 'Light takes the natural path.\nGravity changes the geometry.',
     'subtitle': 'An introduction to general relativity, one beam of light at a time.',
     'why': 'Light bending around the Sun was the first test of Einstein’s gravity, and it lets telescopes weigh galaxies.',
-    'primer': 'The pale line is a beam of light seen from the side. The grid is a ruler for the eye, not a picture of space.',
+    'primer': 'On the mesh, distance means how long light takes to cross. Light always takes the straightest line across it.',
     'beats': [
         {'title': 'First, a universe without this mass.', 'body': 'Follow the beam. With no nearby mass in this model, its path is straight. The faint line is our reference: where the light would go without the object.'},
         {'title': 'Now put something massive in its way.', 'body': 'The mass changes the geometry of spacetime around it. Light follows a natural path through that geometry. From this distant view, the path bends toward the mass.'},
@@ -72,7 +72,7 @@ CLOCK_SCENE = {**deepcopy(SCENE),
     'title':'Same clocks. Different elapsed time.',
     'subtitle':'Compare two stationary clocks at different distances from a mass.',
     'why':'Satellite navigation corrects for this effect every day.',
-    'primer':'Each dial is a clock held still at a different height. The readout shows how much less time the lower clock counts.',
+    'primer':'Counting less time means that when the clocks are compared, the lower one has fewer ticks.',
     'beats':[
         {'title':'Start with matching clocks.', 'body':'Without this mass, both hands move together. We start them at the same position.'},
         {'title':'Add the mass. Watch the lower hand.', 'body':'The lower clock accumulates less time over the comparison. Each clock still ticks normally for someone right beside it.'},
