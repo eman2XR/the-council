@@ -116,15 +116,6 @@
       const costUntil=(apex,t)=>8*apex*apex/Math.pow(T,4)*(T**3-Math.pow(T-2*t,3))/6;
       return {g,T,ref,best,gain,height,bonusUntil,costUntil};
     },
-    // A map of height and time bent so straight lines are the paths of most time (weak gravity, schematic units):
-    // radius R = 1/g - h, angle g*t. Its flat geometry (1 - g h)^2 dt^2 + dh^2 has the same free-fall paths, h'' = -g.
-    fan(a, b) {
-      const g=.3*a, T=2+(b-1)*4/3, R0=g>1e-6?1/g:Infinity;
-      // The straight chord between the two events, written as a height against time.
-      const ball=t=>g>1e-6?R0-R0*Math.cos(g*T/2)/Math.cos(g*(t-T/2)):0;
-      const parabola=t=>g*t*(T-t)/2;
-      return {g,T,R0,ball,parabola,apex:ball(T/2)};
-    },
     // River model of a black hole (Painleve-Gullstrand, light speed 1): space flows inward at sqrt(rs/r).
     river(a, b) {
       const rs=a, re=.6+(b-1), flow=r=>rs>0?Math.sqrt(rs/r):0;
@@ -158,7 +149,7 @@
     lift() {
       const g=9.8, reading=a=>Math.max(0,(g+a)/g);
       // One ride up in seconds and metres per second squared, timed to the narration: rest, speed up, cruise, slow down, rest.
-      const ride=[[1,0],[2.5,1.4],[3.7,0],[2.5,-1.4],[1.5,0]];
+      const ride=[[1,0],[4,1],[2,0],[4,-1],[1.5,0]];
       const accelAt=t=>{let s=0;for(const [d,a] of ride){if(t<s+d)return a;s+=d;}return 0;};
       return {g,reading,ride,accelAt};
     },
@@ -244,10 +235,14 @@
         'Lowest level lies below the infinite-well value':(deep.levels[0].E+deep.V)<(Math.PI/deep.L)**2,
       }).map(([name,pass])=>({name,pass}));
     },
-    checksFor(kind) {
+    // Which checks belong to each visual model; light bending uses checks().
+    checkSets() {
       return {'gravity-clocks':this.clockChecks,'spacetime':this.spacetimeChecks,'interference':this.waveChecks,
-        'two-slit-particles':this.waveChecks,'standing-waves':this.ropeChecks,'tunneling':this.tunnelChecks,'wave-packet':this.packetChecks,'quantum-well':this.wellChecks,'falling-time':this.fallChecks,'diffraction':this.gapChecks,'twin-trip':this.spacetimeChecks,'spacetime-paths':this.pathChecks,'fall-fan':this.fanChecks,'fall-cone':this.fanChecks,'river':this.riverChecks,'fall-views':this.viewsChecks,'tides':this.tidesChecks,'lift':this.liftChecks,'moon-tides':this.moonChecks}[kind]?.call(this) || this.checks();
+        'two-slit-particles':this.waveChecks,'standing-waves':this.ropeChecks,'tunneling':this.tunnelChecks,'wave-packet':this.packetChecks,'quantum-well':this.wellChecks,'falling-time':this.fallChecks,'diffraction':this.gapChecks,'twin-trip':this.spacetimeChecks,'spacetime-paths':this.pathChecks,'river':this.riverChecks,'fall-views':this.viewsChecks,'tides':this.tidesChecks,'lift':this.liftChecks,'moon-tides':this.moonChecks};
     },
+    checksFor(kind) { return this.checkSets()[kind]?.call(this) || this.checks(); },
+    // Every model's checks, run in CI.
+    allChecks() { return [...this.checks(), ...Object.keys(this.checkSets()).flatMap(kind => this.checksFor(kind))]; },
     spacetimeChecks() {
       const near=(a,b)=>Math.abs(a-b)<1e-12, g=this.gamma(this.speed(1));
       return Object.entries({
@@ -273,17 +268,7 @@
         'Moving light clock ticks slower by the same factor as the trip':near(this.lightTick(v),this.gamma(v)),
       }).map(([name,pass])=>({name,pass}))];
     },
-    fanChecks() {
-      const f=this.fan(1,2.5), near=(x,y,e)=>Math.abs(x-y)<e, s=.002*f.T;
-      const curv=[.25,.5,.75].map(u=>{const t=u*f.T;return (f.ball(t+s)-2*f.ball(t)+f.ball(t-s))/(s*s);});
-      return Object.entries({
-        'Without gravity the map stays flat and the best path is staying put':this.fan(0,2).ball(1)===0&&this.fan(0,2).R0===Infinity,
-        'Straight line on the bent map starts and ends on the ground':near(f.ball(0),0,1e-12)&&near(f.ball(f.T),0,1e-12),
-        'Its height matches the free-fall arc to within 5 percent':near(f.apex,f.parabola(f.T/2),.05*f.parabola(f.T/2)),
-        'It falls with acceleration close to g':curv.every(c=>near(-c,f.g,.25*f.g)),
-        'Weaker gravity matches free fall more closely':Math.abs(this.fan(.2,2.5).apex/this.fan(.2,2.5).parabola(this.fan(.2,2.5).T/2)-1)<Math.abs(f.apex/f.parabola(f.T/2)-1),
-      }).map(([name,pass])=>({name,pass}));
-    },
+
     riverChecks() {
       const R=this.river(1,1.8), near=(x,y,e=1e-9)=>Math.abs(x-y)<e;
       return Object.entries({

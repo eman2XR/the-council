@@ -30,7 +30,7 @@ def main():
             for entry in entries or [{'id':'example'}]:
                 page.goto(url+'?guide='+entry['id'],wait_until='networkidle')
                 page.wait_for_function('(id)=>{const r=document.getElementById("record").textContent;return r&&(id==="example"||JSON.parse(r).id===id)}',arg=entry['id'])
-                assert page.locator('#run').is_disabled(), 'Static site must not expose a live run button'
+                assert page.locator('#run').count()==0, 'Static site must not expose a live run button'
                 assert page.evaluate('Array.from(document.querySelectorAll(".revision img")).every(i=>i.complete && i.naturalWidth>0)'), 'Revision images must resolve under a subpath'
                 assert page.locator(f'#more-list a[href="?guide={entry["id"]}"]').count()==0, 'An investigation lists itself under More'
             page.goto(url,wait_until='networkidle')

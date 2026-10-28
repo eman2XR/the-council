@@ -26,8 +26,8 @@
     "body": "In a parked lift, you weigh what you always do. Weighing yourself means reading how hard the scale pushes up on you. The floor pushes the scale, and the scale pushes you."
    },
    {
-    "title": "Riding up and down",
-    "body": "When the lift starts upward, the floor has to push harder, so you weigh more. As it slows to a stop, you weigh less. A scale measures how hard it pushes, not gravity itself."
+    "title": "Riding up",
+    "body": "Speeding you up takes an extra push, so as the lift starts up, you weigh more. As it slows, the floor eases off: you weigh less. A scale reads its push, not gravity."
    },
    {
     "title": "The cable snaps",
@@ -35,10 +35,10 @@
    },
    {
     "title": "Weightless, not gravity-free",
-    "body": "Gravity hasn’t switched off: the lift keeps falling faster and faster. Everything inside falls at the same rate, so nothing presses on anything. Astronauts float for the same reason: their station is always falling around the Earth."
+    "body": "Gravity hasn’t switched off: the lift keeps falling faster and faster. Everything inside falls at the same rate, so nothing presses. Astronauts float too: their station falls, but moves sideways so fast it keeps missing Earth."
    }
   ],
-  "takeaway": "Weighing measures how hard the floor pushes on you. In free fall nothing pushes, so you weigh nothing while gravity still pulls.",
+  "takeaway": "Weighing measures how hard the scale pushes on you. In free fall nothing pushes, so you weigh nothing while gravity still pulls.",
   "questions": [
    {
     "q": "Astronauts on the space station float. Is there no gravity up there?",

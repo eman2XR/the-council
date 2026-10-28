@@ -26,7 +26,7 @@ jobs:
       - name: Check coordinator and providers without live model calls
         run: python -m unittest discover -s tests -v
       - name: Check physics
-        run: node -e "const p=require('./web/physics.js'); const c=['light-bending','gravity-clocks','spacetime','interference','two-slit-particles','standing-waves','tunneling','wave-packet','quantum-well','falling-time','diffraction','twin-trip','spacetime-paths','fall-fan','fall-cone','river','fall-views','tides','lift','moon-tides'].flatMap(k=>p.checksFor(k)); if(c.some(x=>!x.pass))process.exit(1)"
+        run: node -e "const c=require('./web/physics.js').allChecks(); const bad=c.filter(x=>!x.pass); console.log(c.length+' checks'); if(bad.length){console.log(bad);process.exit(1)}"
       - name: Stage public demo only
         run: |
           mkdir _site

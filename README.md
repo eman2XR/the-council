@@ -19,10 +19,10 @@ python3 -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
 python3 -m playwright install chromium
-python3 -m lab serve
+python3 -m http.server 8765 --directory web
 ```
 
-Open **http://127.0.0.1:8765**. The default exploration is explicitly marked as an offline, hand-authored example. It does not claim that live agents have reviewed it.
+Open **http://127.0.0.1:8765** to browse the site locally. The site is static: investigations are made by the commands below and published as files.
 
 ## Choose Codex or Claude Code
 
@@ -40,14 +40,6 @@ Start an investigation with either runner:
 ```sh
 python3 -m lab run --provider codex --rounds 3
 python3 -m lab run --provider claude --rounds 3
-```
-
-Or select the runner behind the webpage's Run button:
-
-```sh
-python3 -m lab serve --provider codex
-# Alternatively, stop the first server and use:
-python3 -m lab serve --provider claude
 ```
 
 Use `--model` only to override your CLI's configured model. You can also set `COUNCIL_PROVIDER`, `COUNCIL_CODEX_MODEL`, or `COUNCIL_CLAUDE_MODEL`. Choose a model that supports images and structured output; research additionally requires the CLI's web tools.
@@ -96,7 +88,7 @@ The fixture intentionally fails the first visual review (missing comparison and 
 
 Both reviewers must pass with scores ≥7, no blocking issues, and passing numerical/layout checks. Failure or budget exhaustion retains a draft. Passing model review is **not** proof of scientific correctness or novelty.
 
-Runs are saved in `web/runs/<id>/record.json` with scenes, frames, source notes, review findings, timestamps and provider-reported usage. `web/latest.json` is updated only after gates pass. The local UI shows in-progress state; the full record is expandable. At most one run starts at a time through the local server.
+Runs are saved in `web/runs/<id>/record.json` with scenes, frames, source notes, review findings, timestamps and provider-reported usage. Only runs that pass every gate can be exported to `web/published/`.
 
 ## Boundaries of this milestone
 
@@ -108,7 +100,6 @@ Runs are saved in `web/runs/<id>/record.json` with scenes, frames, source notes,
 - Source URLs are checked against retrieved notes; source reliability and entailment still depend on model review and human inspection.
 - Codex, Claude Code, the direct OpenAI API, and the offline fixture share `generate(role, prompt, schema, images, research)`. The coordinator is independent of the model provider.
 - HyperFrames video export, voiceover, broader scene generation and notifications are follow-on work. The current artifact is an interactive webpage with a deterministic `CouncilScene.seek(time, beat)` capture interface.
-- Local loopback server only. No authentication or production deployment is provided. Do not expose it publicly without adding authentication and job isolation.
 
 ## Daily investigations
 

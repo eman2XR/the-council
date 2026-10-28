@@ -1,11 +1,11 @@
 const $=id=>document.getElementById(id);
 const put=(id,text)=>{const el=$(id);if(el)el.textContent=text??'';};
 const el=(tag,props={},...children)=>{const node=Object.assign(document.createElement(tag),props);node.append(...children);return node;};
-const TOPICS={'gravity-clocks':'Gravity and time','light-bending':'Gravity and light','spacetime':'Space and time','twin-trip':'Space and time','interference':'Waves','standing-waves':'Waves','two-slit-particles':'Quanta','tunneling':'Quanta','wave-packet':'Quanta','quantum-well':'Quanta','falling-time':'Gravity and time','diffraction':'Waves','spacetime-paths':'Space and time','fall-fan':'Gravity and time','fall-cone':'Gravity and time','river':'Black holes','fall-views':'Gravity and time','tides':'Curved spacetime','lift':'Gravity and time','moon-tides':'Gravity and time'};
+const TOPICS={'gravity-clocks':'Gravity and time','light-bending':'Gravity and light','spacetime':'Space and time','twin-trip':'Space and time','interference':'Waves','standing-waves':'Waves','two-slit-particles':'Quanta','tunneling':'Quanta','wave-packet':'Quanta','quantum-well':'Quanta','falling-time':'Gravity and time','diffraction':'Waves','spacetime-paths':'Space and time','river':'Black holes','fall-views':'Gravity and time','tides':'Curved spacetime','lift':'Gravity and time','moon-tides':'Gravity and time'};
 const STATUS={planning:'Choosing a question',running:'Investigating now',reviewed:'Passed review',needs_review:'Draft, not published',failed:'Attempt stopped',interrupted:'Run interrupted',idle:'Resting'};
 const STEPS=['Question','Research','Design','Render','Review','Publish'];
 const reduceMotion=matchMedia('(prefers-reduced-motion: reduce)').matches;
-let current=null, entries=[], busy=false, example=null;
+let current=null, entries=[], example=null;
 const requestedGuide=new URLSearchParams(location.search).get('guide');
 const requestedDraft=new URLSearchParams(location.search).get('draft');
 const VIEW=requestedGuide||requestedDraft?'article':'home';
@@ -179,25 +179,7 @@ async function loadPublished(){
  renderCards();
 }
 
-async function refresh(){
- try{
-  const response=await fetch('/api/state');if(!response.ok)throw Error('static');
-  const data=await response.json();
-  if(data.id!==current?.id||data.updated!==current?.updated)show(data);
-  busy=data.is_running===true||data.status==='running';
-  $('run').disabled=busy;
-  $('run').textContent=busy?'The Council is working…':`Run a live investigation with ${data.runner==='claude'?'Claude Code':data.runner==='codex'?'Codex':data.runner==='fixture'?'the offline fixture':'the OpenAI API'}`;
- }catch{
-  $('run').disabled=true;$('run').textContent='Read-only website';
-  if(!current&&!entries.length)await loadPublished();
- }
-}
-$('run').onclick=async()=>{
- try{const response=await fetch('/api/run',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({topic:'general-relativity'})});
-  const result=await response.json();if(!response.ok)throw Error(result.error||'Unable to start');busy=true;$('run').disabled=true;await refresh();}
- catch(error){put('run-banner',error.message.includes('JSON')?'Start the Python server to run agents':error.message);}
-};
-refresh();setInterval(()=>{if(busy)refresh();},1500);
+loadPublished();
 
 /* Lab status from the published snapshot. It is not a live heartbeat. */
 let schedule=null, labActive=false, labQuestion='';

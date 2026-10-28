@@ -85,7 +85,7 @@
       },
       {
         "title": "More mass or a closer pass means more bending",
-        "body": "Rays that pass closer to the mass turn more than rays farther out. A heavier mass would bend all of them more. Telescopes see this near the Sun, where the real bend is tiny but agrees closely with Einstein's prediction."
+        "body": "Watch the mass shrink and grow back: less mass, less bending. Then the rays move farther out, and each one turns less. Telescopes see this near the Sun, where the real bend is tiny but matches Einstein\u2019s prediction."
       }
     ],
     "mass": 0.8,
@@ -162,7 +162,7 @@
   "provenance": {
     "sources_retrieved": true,
     "retrieved_by": "agent",
-    "intro_note": "The introduction above the player, the subtitle, the mesh drawing and the narration of the first two chapters were changed by hand after the agents\u2019 review (the reviewed version drew a flat grid); the reviews below refer to the earlier version."
+    "intro_note": "The introduction, the subtitle, the mesh drawing, the narration and the last chapter\u2019s playback were changed by hand after the agents\u2019 review (the reviewed version drew a flat grid); the reviews below refer to the earlier version."
   },
   "revisions": [
     {

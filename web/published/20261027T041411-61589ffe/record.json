@@ -67,11 +67,11 @@
       },
       {
         "title": "Add mass: the lower clock falls behind",
-        "body": "Now the mass is switched on, with the clocks close to it. Each clock still ticks normally to someone standing beside it, so neither is broken. Notice the lower clock's hand trailing: deeper in the mass's gravity, it has counted less time. The motion is exaggerated so you can see it. The percentage shows the real size of the lag."
+        "body": "Now the mass is switched on, with the clocks close to it. Each clock still ticks normally to someone standing beside it, so neither is broken. Notice the lower clock's hand trailing: deeper in the mass's gravity, it has counted less time. The hands are sped up so you can see it. The percentage is the real lag for a mass far denser than Earth."
       },
       {
         "title": "More mass, then both clocks farther out",
-        "body": "More mass puts the lower clock even deeper in gravity than the upper one, so the lag grows. Now the Lower radius slider moves both clocks outward, keeping the same gap between them. Notice the lag shrink: farther out, gravity is gentler, so the same gap in height matters less."
+        "body": "Watch the mass shrink and grow back: less mass, less lag; more mass, more lag. Now both clocks move outward together, keeping the same gap between them. Notice the percentage shrink: farther out, the same gap in height matters less."
       }
     ],
     "mass": 1,
@@ -396,6 +396,6 @@
   "provenance": {
     "sources_retrieved": false,
     "note": "The agents could not retrieve any web sources during this run (every fetch was refused by the network proxy). The listed references were named from the agents' own knowledge and have not been checked. The physics passed independent physics and visual reviews, but treat the sources as unverified.",
-    "intro_note": "The introduction above the player and some wording were edited by hand after the agents’ review, after a separate copy-editing pass; the reviews below refer to the earlier text."
+    "intro_note": "The introduction, some wording and the playback (which controls move in the last chapter) were edited by hand after the agents’ review, following copy-editing and beginner tests; the reviews below refer to the earlier version."
   }
 }

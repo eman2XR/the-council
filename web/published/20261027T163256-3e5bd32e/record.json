@@ -59,7 +59,7 @@
       },
       {
         "title": "A gap turns the wave into a fan",
-        "body": "Now only the part of the wave inside the gap gets through. Every point across the gap sends out its own ripple, and the ripples overlap. Straight ahead they line up and add, but along the dashed lines they cancel."
+        "body": "Only the part of the wave inside the gap gets through. Each point in the gap sends out its own ripple. Straight ahead they all arrive in step and add. Along a dashed line, peaks from one half of the gap meet dips from the other half and cancel."
       },
       {
         "title": "Longer waves spread wider",
@@ -141,7 +141,7 @@
   "provenance": {
     "sources_retrieved": true,
     "retrieved_by": "agent",
-    "intro_note": "The introduction above the player and some wording were edited by hand after the agents\u2019 review, after a separate copy-editing pass; the reviews below refer to the earlier text."
+    "intro_note": "The introduction, some wording and the playback (which controls move in the last chapter) were edited by hand after the agents\u2019 review, following copy-editing and beginner tests; the reviews below refer to the earlier version."
   },
   "revisions": [
     {

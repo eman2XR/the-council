@@ -88,8 +88,9 @@ function drawLight(ctx,w,h,spec,st){
    ctx.beginPath();ctx.arc(x,y,main?1.6:1,0,TAU);ctx.fillStyle=`rgba(255,255,255,${fade})`;ctx.fill();
   }
   if(st.labels&&main){
-   const end=points[n], ref=cy-b*s*lift, size=small?10:11, x=Math.min(w-16,end[0]);
-   text(ctx,'LIGHT',Math.max(16,cx-7.5*s),ref-14,{size:10,weight:600,spacing:'1.5px'});
+   const end=points[n], size=small?10:11, x=Math.min(w-16,end[0]);
+   // Name the light where it enters: beside its start when there is room, else just above it.
+   const [lx0,ly0]=points[0];if(lx0>70)text(ctx,'LIGHT',lx0-10,ly0,{align:'right',size:10,weight:600,spacing:'1.5px'});else text(ctx,'LIGHT',lx0+6,ly0+16,{size:10,weight:600,spacing:'1.5px'});
    if(m>.001){text(ctx,'straightest line across the mesh',x,Math.min(h-14,end[1]+16),{align:'right',size,weight:600,color:accent});
     if(spec.show_reference)text(ctx,'dashed: without the mass',Math.min(w-16,cx+7.5*s),cy-(st.distance+(count-1)*.4)*s*lift-14,{align:'right',size});}
    else text(ctx,'flat mesh: light goes straight',x,end[1]+16,{align:'right',size,weight:600,color:accent});
@@ -203,6 +204,12 @@ function drawSpacetime(ctx,w,h,spec,st){
  }
 }
 
+// A screen lit by brightness samples [[x, 0..1], ...], drawn as one smooth gradient so no seams show.
+function screenStrip(ctx,pts,y,band){
+ const x0=pts[0][0], x1=pts.at(-1)[0], g=ctx.createLinearGradient(x0,0,x1,0);
+ for(const [x,I] of pts)g.addColorStop((x-x0)/(x1-x0),`rgba(255,244,214,${Math.min(1,Math.max(0,I))})`);
+ ctx.fillStyle=g;ctx.fillRect(x0,y,x1-x0,band);
+}
 let fieldBuffer=null;
 function drawInterference(ctx,w,h,spec,st){
  const accent=ACCENT[spec.accent]||ACCENT.blue, A=st.mass, lam=Math.max(22,Math.min(w,h)/9), k=TAU/lam, d=Physics.separation(st.distance)*lam;
@@ -225,7 +232,7 @@ function drawInterference(ctx,w,h,spec,st){
  const pts=[];for(let i=0;i<=200;i++){const x=sx0+(sx1-sx0)*i/200, dr=Math.hypot(x-s1[0],screen-s1[1])-Math.hypot(x-s2[0],screen-s2[1]);pts.push([x,Physics.brightness(A,k*dr)]);}
  ctx.fillStyle='rgba(255,255,255,.7)';ctx.fillRect(0,screen,w,h-screen);
  ctx.fillStyle='#1e1d1b';ctx.fillRect(sx0,screen+6,sx1-sx0,band);
- for(const [x,I] of pts){ctx.fillStyle=`rgba(255,244,214,${Math.min(1,I*1.05)})`;ctx.fillRect(x-1.5,screen+6,(sx1-sx0)/200+1,band);}
+ screenStrip(ctx,pts.map(([x,I])=>[x,I*1.05]),screen+6,band);
  }
  for(const [p,on] of [[s1,1],[s2,A]]){ctx.globalAlpha=on>0.001?.4+.6*Math.min(1,on):.25;ctx.beginPath();ctx.arc(p[0],p[1],6,0,TAU);ctx.fillStyle=on>0.001?accent:'#fff';ctx.fill();ctx.strokeStyle='rgba(20,23,28,.4)';ctx.lineWidth=1;ctx.stroke();ctx.globalAlpha=1;}
  if(st.labels){
@@ -303,7 +310,7 @@ function drawRope(ctx,w,h,spec,st){
   const base=y+h*.22;
   text(ctx,'HAND',x0,base,{align:'center',size,weight:600,spacing:'1.5px'});
   text(ctx,'WALL',x1+6,base,{align:'center',size,weight:600,spacing:'1.5px'});
-  if(A>.5)text(ctx,`${n} half-wave${n>1?'s':''} fit`,(x0+x1)/2,base,{align:'center',size:small?11:12,weight:600,color:accent});
+  if(A>.5)text(ctx,`${n} loop${n>1?'s':''} fit`,(x0+x1)/2,base,{align:'center',size:small?11:12,weight:600,color:accent});
   if(A>.5&&n>1)pill(ctx,'still points',x0+(x1-x0)/n,y+18,{align:'center',size:10,weight:600,color:'rgba(194,65,12,1)'});
   text(ctx,A>.001?(spec.show_reference?'dashed: the wave going right and its reflection coming back':''):'the wave travels right; nothing comes back',(x0+x1)/2,h*.93,{align:'center',size:10});
  }
@@ -355,8 +362,8 @@ function drawPacket(ctx,w,h,spec,st){
  if(st.labels){
   const size=small?10:11;
   text(ctx,'WHERE IT MIGHT BE',X(xmin),y0-amp-22,{size,weight:600,spacing:'1px'});
-  text(ctx,'WHICH MOMENTA ARE MIXED IN',K(kmin),by-bh-12,{size,weight:600,spacing:'1px'});
-  text(ctx,P.comps.length===1?'one pure wave: exact momentum, spread everywhere':`${P.comps.length} waves blended: narrower in place, wider in momentum`,w/2,by+16,{align:'center',size:small?9:10});
+  text(ctx,'WHICH SPEEDS ARE MIXED IN',K(kmin),by-bh-12,{size,weight:600,spacing:'1px'});
+  text(ctx,P.comps.length===1?'one pure wave: exact speed, spread everywhere':`${P.comps.length} waves blended: the more speeds mixed in, the narrower in place`,w/2,by+16,{align:'center',size:small?9:10});
  }
 }
 
@@ -465,8 +472,7 @@ function drawGap(ctx,w,h,spec,st){
  if(!st.labels)return;
  const band=h*.08;ctx.fillStyle='rgba(255,255,255,.7)';ctx.fillRect(0,screen,w,h-screen);
  ctx.fillStyle='#1e1d1b';ctx.fillRect(w*.04,screen+6,w*.92,band);
- for(let i=0;i<=200;i++){const x=w*.04+w*.92*i/200, dx=x-cx, s=dx/Math.hypot(dx,screen-yb), I=open?Physics.singleSlit(st.mass,st.distance,s):1;
-  ctx.fillStyle=`rgba(255,244,214,${Math.min(1,I)})`;ctx.fillRect(x-1.5,screen+6,w*.92/200+1,band);}
+ screenStrip(ctx,Array.from({length:201},(_,i)=>{const x=w*.04+w*.92*i/200, dx=x-cx, s=dx/Math.hypot(dx,screen-yb);return [x,open?Physics.singleSlit(st.mass,st.distance,s):1];}),screen+6,band);
  if(open&&G.sinMin<1&&(spec.show_reference||st.labels)){
   const L=screen-yb, tan=G.sinMin/Math.sqrt(1-G.sinMin*G.sinMin);
   ctx.setLineDash([4,5]);ctx.strokeStyle='rgba(20,23,28,.4)';ctx.lineWidth=1.2;
@@ -477,7 +483,7 @@ function drawGap(ctx,w,h,spec,st){
   pill(ctx,'WAVE COMING IN',cx,Math.max(16,yb-24),{align:'center',size,weight:600,spacing:'1px'});
   if(open)pill(ctx,`gap ${(G.width/G.lambda).toFixed(1)} wavelengths wide`,cx,yb+18,{align:'center',size:10,weight:500});
   else pill(ctx,'no barrier',cx,yb+18,{align:'center',size:10,weight:500});
-  text(ctx,open&&G.sinMin>=1?'SCREEN · gap narrower than the wave: it spreads to every side':'SCREEN · dashed lines: first dark directions',w*.04,screen+band+22,{size:10,weight:600,spacing:'.5px'});
+  text(ctx,!open?'SCREEN · no barrier: lit straight ahead':G.sinMin>=1?'SCREEN · gap narrower than the wave: it spreads to every side':'SCREEN · dashed lines: first dark directions',w*.04,screen+band+22,{size:10,weight:600,spacing:'.5px'});
  }
 }
 
@@ -686,105 +692,12 @@ function dragPaths(w,h,spec,st,x,y,grab){
  return {mass:Math.min(1,xs/t/.9),distance:Math.min(2.5,Math.max(1,t/1.6))};
 }
 
-// Bending the map of height and time so that the path of most time becomes a straight line.
-function fanPoint(F,t,hh,s){
- const flat=[t-F.T/2,hh];if(!(F.g>1e-6)||s<=0)return flat;
- const th=F.g*(t-F.T/2), R=F.R0-hh, bent=[R*Math.sin(th),F.R0-R*Math.cos(th)];
- return [flat[0]+(bent[0]-flat[0])*s,flat[1]+(bent[1]-flat[1])*s];
-}
-function fanPaths(F){
- // Held at the ground, the ball's real path, and a too-low and too-high throw between the same two events.
- const shape=F.g>1e-6?F.ball:(t=>.3*4*t*(F.T-t)/(F.T*F.T)/(1/1)), top=Math.max(.3,shape(F.T/2));
- return {top,list:[['held',t=>0],['low',t=>.45*shape(t)],['ball',shape],['high',t=>1.7*shape(t)]]};
-}
-function fanStage(st){
- // Chapter 1: flat, no gravity. Chapter 2: the throw, then the map bends. Chapter 3: bent, explore.
- const since=st.since??st.t;
- if(st.stage===0)return {s:0,u:Math.min(1,since*.22)};
- if(st.stage===1)return {s:smooth((since-5.5)/4),u:Math.min(1,since*.22)};
- return {s:1,u:Math.min(1,((since*.2)%1.35))};
-}
-function drawFan(ctx,w,h,spec,st){
- const accent=ACCENT[spec.accent]||ACCENT.blue, F=Physics.fan(st.mass,st.distance), small=w<520, {s,u}=fanStage(st), P=fanPaths(F);
- const hTop=Math.max(P.top*1.9,.55), Fmax=Physics.fan(1,st.distance);
- // A fixed scale for this trip length, so bending never changes the size of the drawing.
- const box=(()=>{let x0=1e9,x1=-1e9,y0=1e9,y1=-1e9;for(const ss of [0,1])for(const t of [0,F.T/2,F.T])for(const hh of [0,hTop]){const [x,y]=fanPoint(Fmax,t,hh,ss);x0=Math.min(x0,x);x1=Math.max(x1,x);y0=Math.min(y0,y);y1=Math.max(y1,y);}return {x0,x1,y0,y1};})();
- const area=small?{l:w*.08,r:w*.92,t:96,b:h*.56}:{l:w*.05,r:w*.56,t:60,b:h*.82};
- const k=Math.min((area.r-area.l)/(box.x1-box.x0),(area.b-area.t)/(box.y1-box.y0+.15)), cx=(area.l+area.r)/2-(box.x0+box.x1)/2*k, by=area.b-(-box.y0)*k;
- const S=([x,y])=>[cx+x*k,by-y*k], at=(t,hh)=>S(fanPoint(F,t,hh,s));
- // The map itself: lines of equal height and of equal time.
- for(let i=0;i<=6;i++){const hh=hTop*i/6;trace(ctx,Array.from({length:41},(_,j)=>at(F.T*j/40,hh)));ctx.strokeStyle=i===0?'rgba(122,84,52,.7)':'rgba(20,23,28,.09)';ctx.lineWidth=i===0?2:1;ctx.stroke();}
- for(let j=0;j<=8;j++){const t=F.T*j/8;trace(ctx,[at(t,0),at(t,hTop)]);ctx.strokeStyle='rgba(20,23,28,.07)';ctx.lineWidth=1;ctx.stroke();}
- if(F.g>1e-6){const shade=ctx.createLinearGradient(0,at(F.T/2,0)[1],0,at(F.T/2,hTop)[1]);shade.addColorStop(0,`rgba(245,158,66,${.2*Math.min(1,F.g/.3)})`);shade.addColorStop(1,'rgba(245,158,66,0)');
-  ctx.beginPath();Array.from({length:41},(_,j)=>at(F.T*j/40,0)).forEach(([x,y],i)=>i?ctx.lineTo(x,y):ctx.moveTo(x,y));Array.from({length:41},(_,j)=>at(F.T*(40-j)/40,hTop)).forEach(([x,y])=>ctx.lineTo(x,y));ctx.closePath();ctx.fillStyle=shade;ctx.fill();}
- // Paths between the same two events.
- const curve=f=>Array.from({length:81},(_,j)=>{const t=F.T*j/80;return at(t,f(t));});
- for(const [name,f] of P.list){if(name==='held')continue;if(name!=='ball'||F.g<=1e-6){trace(ctx,curve(f));ctx.setLineDash([4,5]);ctx.strokeStyle='rgba(20,23,28,.32)';ctx.lineWidth=1.2;ctx.stroke();ctx.setLineDash([]);}}
- if(F.g>1e-6){const c=curve(F.ball);
-  // A ruler laid along the ball's path once the map is bent: it is straight.
-  if(s>.85){const [a,b]=[c[0],c.at(-1)],len=Math.hypot(b[0]-a[0],b[1]-a[1]),nx=-(b[1]-a[1])/len,ny=(b[0]-a[0])/len,off=small?9:12;ctx.globalAlpha=(s-.85)/.15;
-   ctx.beginPath();ctx.moveTo(a[0]+nx*2,a[1]+ny*2);ctx.lineTo(b[0]+nx*2,b[1]+ny*2);ctx.lineTo(b[0]+nx*off,b[1]+ny*off);ctx.lineTo(a[0]+nx*off,a[1]+ny*off);ctx.closePath();ctx.fillStyle='rgba(234,214,170,.55)';ctx.fill();
-   for(let i=1;i<20;i++){const x=a[0]+(b[0]-a[0])*i/20,y=a[1]+(b[1]-a[1])*i/20,l=i%5?4:7;trace(ctx,[[x+nx*2,y+ny*2],[x+nx*(2+l),y+ny*(2+l)]]);ctx.strokeStyle='rgba(122,84,52,.5)';ctx.lineWidth=1;ctx.stroke();}ctx.globalAlpha=1;}
-  trace(ctx,c);ctx.strokeStyle=accent;ctx.lineWidth=2.8;ctx.lineCap='round';ctx.stroke();}
- const t=u*F.T, marks=[[at(t,0),'#14171c'],...(F.g>1e-6?[[at(t,F.ball(t)),accent]]:[])];
- for(const [[x,y],c] of marks){ctx.beginPath();ctx.arc(x,y,6,0,TAU);ctx.fillStyle=c;ctx.fill();ctx.beginPath();ctx.arc(x,y,2.2,0,TAU);ctx.fillStyle='#fff';ctx.fill();}
- if(!st.labels)return;
- const size=small?10:11;
- text(ctx,'leave',...at(0,0).map((v,i)=>i?v+16:v),{align:'center',size,weight:600,color:'rgba(20,23,28,.75)'});
- text(ctx,'meet again',...at(F.T,0).map((v,i)=>i?v+16:v),{align:small?'right':'center',size,weight:600,color:'rgba(20,23,28,.75)'});
- if(s<.2){text(ctx,'height ↑',at(0,hTop)[0],at(0,hTop)[1]-12,{size:10});text(ctx,'time →',at(F.T,0)[0],at(F.T,0)[1]+30,{align:'right',size:10});}
- const px=small?w*.06:w*.6, py=small?h*.64:h*.2, lh=small?17:24, wrap=small?52:46;
- const lines=F.g<=1e-6?['A map of height and time.','Without gravity it is flat, and the straight path,','staying put, keeps the most time.']
-  :s<.5?['A flat map of height and time.','The thrown ball’s path curves.','The held clock’s path is straight.']
-  :['The same map, bent so that straight lines','are the paths that keep the most time.','The ball’s path is now straight: nothing pushes it.','The held clock’s path curves:','the ground pushes it the whole time.'];
- text(ctx,lines[0],px,py,{size:small?12:16,weight:700,color:'#14171c'});
- lines.slice(1).forEach((l,i)=>text(ctx,l,px,py+lh*(i+1.2),{size:small?11:14,color:l.includes('ball')?accent:'rgba(20,23,28,.75)',weight:l.includes('ball')?600:500}));
- if(F.g>1e-6&&!small)text(ctx,'Higher up, clocks run faster. That is what bends the map.',px,py+lh*(lines.length+1),{size:12,color:'rgba(180,83,15,.9)'});
-}
-
-// The bent map rolled into a cone of paper: the ball's path is still a straight line on the paper.
-function drawCone(ctx,w,h,spec,st){
- const accent=ACCENT[spec.accent]||ACCENT.blue, F=Physics.fan(st.mass,st.distance), small=w<520, since=st.since??st.t;
- if(!(F.g>1e-6))return drawFan(ctx,w,h,spec,st);
- const roll=st.stage===1?smooth((since-7)/5):st.stage===0?0:1, P=fanPaths(F), hTop=Math.max(P.top*1.9,.55), Phi=F.g*F.T;
- const alpha=TAU+(Phi*1.3-TAU)*roll, sinB=Math.min(1,alpha/TAU), cosB=Math.sqrt(1-sinB*sinB), yaw=Math.sin(st.t*.35)*.5*roll, tilt=1.05*roll;
- // Roll the sector into a cone about its centre: flat when the cone's half-angle is 90 degrees.
- const P3=(t,hh)=>{const th=F.g*(t-F.T/2), R=F.R0-hh, psi=th*TAU/alpha;return [R*sinB*Math.sin(psi),F.R0-R*sinB*Math.cos(psi),R*cosB];};
- const mid=P3(F.T/2,hTop/2);
- const view=([X,Y,Z])=>{X-=mid[0];Y-=mid[1];Z-=mid[2];const c=Math.cos(yaw),s=Math.sin(yaw);[X,Z]=[X*c+Z*s,-X*s+Z*c];const ct=Math.cos(tilt),stt=Math.sin(tilt);[Y,Z]=[Y*ct-Z*stt,Y*stt+Z*ct];return [X,Y,Z];};
- const area=small?{l:w*.08,r:w*.92,t:96,b:h*.56}:{l:w*.05,r:w*.56,t:60,b:h*.82};
-  const flatW=2*F.R0*Math.sin(Phi/2)+.2, flatH=hTop+F.R0*(1-Math.cos(Phi/2))+.2, k=Math.min((area.r-area.l)/flatW,(area.b-area.t)/flatH), D=F.R0*4;
- const S=p=>{const [X,Y,Z]=view(p), f=D/(D+Z);return [(area.l+area.r)/2+X*k*f,(area.t+area.b)/2-Y*k*f,Z];};
- // Paper: quads drawn back to front, shaded by how squarely they face the viewer.
- const nt=24,nh=6,quads=[];
- for(let i=0;i<nt;i++)for(let j=0;j<nh;j++){const t0=F.T*i/nt,t1=F.T*(i+1)/nt,h0=hTop*j/nh,h1=hTop*(j+1)/nh;
-  const c=[S(P3(t0,h0)),S(P3(t1,h0)),S(P3(t1,h1)),S(P3(t0,h1))];
-  const ax=c[1][0]-c[0][0],ay=c[1][1]-c[0][1],bx=c[3][0]-c[0][0],byy=c[3][1]-c[0][1],area2=Math.abs(ax*byy-ay*bx), flatArea=(F.T/nt)*(hTop/nh)*k*k;
-  quads.push({c,z:(c[0][2]+c[2][2])/2,light:Math.min(1,area2/flatArea/1.1)});}
- quads.sort((a,b)=>b.z-a.z);
- for(const q of quads){ctx.beginPath();q.c.forEach(([x,y],i)=>i?ctx.lineTo(x,y):ctx.moveTo(x,y));ctx.closePath();const l=.82+.18*q.light;ctx.fillStyle=`rgb(${Math.round(252*l)},${Math.round(246*l)},${Math.round(234*l)})`;ctx.fill();ctx.strokeStyle='rgba(20,23,28,.06)';ctx.lineWidth=1;ctx.stroke();}
- const curve=f=>Array.from({length:81},(_,j)=>{const t=F.T*j/80;return S(P3(t,f(t)));});
- const drawCurve=(c,style,width,dash)=>{for(let i=1;i<c.length;i++){trace(ctx,[c[i-1],c[i]]);ctx.globalAlpha=c[i][2]>.05?.35:1;ctx.strokeStyle=style;ctx.lineWidth=width;if(dash)ctx.setLineDash(dash);ctx.stroke();ctx.setLineDash([]);}ctx.globalAlpha=1;};
- drawCurve(curve(t=>0),'rgba(122,84,52,.75)',2);
- for(const [name,f] of P.list)if(name==='low'||name==='high')drawCurve(curve(f),'rgba(20,23,28,.32)',1.2,[4,5]);
- drawCurve(curve(F.ball),accent,2.8);
- const u=Math.min(1,(since*.2)%1.35), t=u*F.T;
- for(const [p,c] of [[S(P3(t,0)),'#14171c'],[S(P3(t,F.ball(t))),accent]]){ctx.beginPath();ctx.arc(p[0],p[1],6,0,TAU);ctx.fillStyle=c;ctx.fill();ctx.beginPath();ctx.arc(p[0],p[1],2.2,0,TAU);ctx.fillStyle='#fff';ctx.fill();}
- if(!st.labels)return;
- const px=small?w*.06:w*.6, py=small?h*.64:h*.2, lh=small?17:24;
- const lines=roll<.03?['The bent map, still flat on the table.','The ball’s path is a straight line on it.','Now roll the paper up.']:roll<.97?['Rolling the paper up…','Nothing stretches, so the ball’s line','stays the straightest line on the paper.']
-  :['Rolled into a cone, the paper is curved,','but nothing on it has stretched.','The ball’s path is still the straightest line','you could draw on this paper.','Straightest paths keep the most time: that is falling.'];
- text(ctx,lines[0],px,py,{size:small?12:16,weight:700,color:'#14171c'});
- lines.slice(1).forEach((l,i)=>text(ctx,l,px,py+lh*(i+1.2),{size:small?11:14,color:'rgba(20,23,28,.75)'}));
- if(!small)text(ctx,'Uniform gravity needs no real curvature: the paper rolls without stretching.',px,py+lh*(lines.length+1),{size:12,color:'rgba(20,23,28,.55)'});
-}
-
 // River model of a black hole: space flows inward; light swims through it at light speed.
 function drawRiver(ctx,w,h,spec,st){
  const accent=ACCENT[spec.accent]||ACCENT.gold, R=Physics.river(st.mass,st.distance), small=w<520;
  const cx=small?w/2:w*.33, cy=small?h*.36:h*.5, rmax=3, k=Math.min(small?w*.46:w*.3,small?h*.3:h*.44)/rmax, since=st.since??st.t;
  // The inner region and the horizon, where the inflow reaches light speed.
- const bg=ctx.createRadialGradient(cx,cy,0,cx,cy,rmax*k);bg.addColorStop(0,'rgba(20,23,28,.12)');bg.addColorStop(1,'rgba(20,23,28,0)');ctx.fillStyle=bg;ctx.beginPath();ctx.arc(cx,cy,rmax*k,0,TAU);ctx.fill();
+ if(R.rs>1e-4){const bg=ctx.createRadialGradient(cx,cy,0,cx,cy,rmax*k);bg.addColorStop(0,'rgba(20,23,28,.12)');bg.addColorStop(1,'rgba(20,23,28,0)');ctx.fillStyle=bg;ctx.beginPath();ctx.arc(cx,cy,rmax*k,0,TAU);ctx.fill();}
  if(R.rs>1e-4){ctx.beginPath();ctx.arc(cx,cy,R.rs*k,0,TAU);ctx.fillStyle='rgba(20,23,28,.85)';ctx.fill();ctx.setLineDash([5,4]);ctx.strokeStyle='rgba(217,119,6,.9)';ctx.lineWidth=2;ctx.stroke();ctx.setLineDash([]);}
  // Flowing space: specks carried inward at the local flow speed, faster closer in.
  for(let i=0;i<90;i++){const a=hash(i*7.13)*TAU, r0=rmax*(.35+.65*hash(i*3.71)), phase=hash(i*1.9)*20;
@@ -801,7 +714,7 @@ function drawRiver(ctx,w,h,spec,st){
  if(!st.labels)return;
  const size=small?10:11, out=1-R.flow(R.re);
  if(R.rs>1e-4)pill(ctx,'horizon: inflow = light speed',cx,cy+R.rs*k+16,{align:'center',size:10,weight:600,color:'rgba(180,83,9,.95)'});
- pill(ctx,'flash sent outward',emitter[0]+10,emitter[1]-14,{size:10,weight:600,color:'rgba(20,23,28,.8)'});
+ pill(ctx,'flash starts here',emitter[0]+10,emitter[1]-14,{size:10,weight:600,color:'rgba(20,23,28,.8)'});
  const px=small?w*.06:w*.64, py=small?h*.72:h*.22, lh=small?17:24;
  const lines=R.rs<=1e-4?['No black hole: space is still.','Light swims outward at light speed and escapes.']
   :['Space flows inward, faster closer in.','Light always swims at light speed through it.',
@@ -811,9 +724,9 @@ function drawRiver(ctx,w,h,spec,st){
  // Flow speed against distance, with light speed marked.
  if(!small&&R.rs>1e-4){const gx=px,gy=py+lh*5.4,gw=w*.28,gh=h*.22;trace(ctx,[[gx,gy],[gx,gy+gh],[gx+gw,gy+gh]]);ctx.strokeStyle='rgba(20,23,28,.35)';ctx.lineWidth=1;ctx.stroke();
   const X=r=>gx+r/rmax*gw, Y=v=>gy+gh-Math.min(v,1.6)/1.6*gh;
-  trace(ctx,Array.from({length:120},(_,i)=>{const r=.12+i/119*(rmax-.12);return [X(r),Y(R.flow(r))];}));ctx.strokeStyle='rgba(37,99,235,.8)';ctx.lineWidth=2;ctx.stroke();
+  trace(ctx,Array.from({length:120},(_,i)=>{const r=.12+i/119*(rmax-.12);return [X(r),Y(R.flow(r))];}).filter((_,i)=>R.flow(.12+i/119*(rmax-.12))<=1.6));ctx.strokeStyle='rgba(37,99,235,.8)';ctx.lineWidth=2;ctx.stroke();
   ctx.setLineDash([4,4]);trace(ctx,[[gx,Y(1)],[gx+gw,Y(1)]]);ctx.strokeStyle='rgba(217,119,6,.8)';ctx.lineWidth=1.2;ctx.stroke();ctx.setLineDash([]);
-  text(ctx,'light speed',gx+gw,Y(1)-9,{align:'right',size:10,color:'rgba(180,83,9,.95)'});text(ctx,'inflow speed',gx+6,gy+4,{size:10,color:'rgba(37,99,235,.9)'});text(ctx,'distance from centre →',gx+gw,gy+gh+14,{align:'right',size:10});
+  text(ctx,'light speed',gx+gw,Y(1)-9,{align:'right',size:10,color:'rgba(180,83,9,.95)'});text(ctx,'inflow speed',gx+gw*.55,gy+gh*.62,{size:10,color:'rgba(37,99,235,.9)'});text(ctx,'distance from centre →',gx+gw,gy+gh+14,{align:'right',size:10});
   const ex=X(R.re);trace(ctx,[[ex,gy],[ex,gy+gh]]);ctx.strokeStyle=rgba(accent,.6);ctx.stroke();text(ctx,'flash',ex+4,gy+gh-10,{size:10,color:rgba(accent,.95)});
   const hx=X(R.rs);ctx.setLineDash([2,3]);trace(ctx,[[hx,Y(1)],[hx,gy+gh]]);ctx.strokeStyle='rgba(20,23,28,.4)';ctx.stroke();ctx.setLineDash([]);text(ctx,'horizon',hx,gy+gh+14,{align:'center',size:10});}
 }
@@ -878,6 +791,11 @@ function drawViews(ctx,w,h,spec,st){
 }
 
 // What curvature means: straight paths that start side by side come together or spread apart.
+// Progress 0..1 of a motion that plays once per chapter, finishing at three quarters of it, then holds.
+function onceInChapter(st,lead=.8){
+ const c=timeline?.chapters?.[st.stage], span=c?Math.max(3,(c.end-c.start)*.75-lead):10;
+ return clamp(((st.since??st.t)-lead)/span);
+}
 function drawTides(ctx,w,h,spec,st){
  const accent=ACCENT[spec.accent]||ACCENT.blue, dark='#14171c', warm='#c2410c', small=w<520, since=st.since??st.t, stage=st.stage, P=Physics.tides(Math.max(st.mass,1e-6));
  const dot=(x,y,r,c)=>{ctx.beginPath();ctx.arc(x,y,r,0,TAU);ctx.fillStyle=c;ctx.fill();};
@@ -889,7 +807,7 @@ function drawTides(ctx,w,h,spec,st){
   const arc=(f,n,style,width,dash)=>{let prev=null;for(let i=0;i<=n;i++){const p=f(i/n);if(prev&&p[2]>0&&prev[2]>0){trace(ctx,[prev,p]);ctx.strokeStyle=style;ctx.lineWidth=width;if(dash)ctx.setLineDash(dash);ctx.stroke();ctx.setLineDash([]);}prev=p;}};
   for(let k=-5;k<=6;k++)arc(q=>G(-Math.PI/2+Math.PI*q,k*Math.PI/6),60,'rgba(20,23,28,.06)',1);
   for(let k=-2;k<=2;k++)arc(q=>G(k*Math.PI/6,TAU*q),120,k===0?'rgba(20,23,28,.25)':'rgba(20,23,28,.06)',k===0?1.3:1);
-  const u=Math.min(1,(since*.15)%1.3), lat=u*Math.PI/2*.999, lons=[-.35,.35];
+  const u=onceInChapter(st), lat=u*Math.PI/2*.999, lons=[-.35,.35];
   for(const lon of lons){arc(q=>G(Math.PI/2*q,lon),60,rgba(accent,.28),1.6,[3,4]);arc(q=>G(lat*q,lon),60,accent,2.8);}
   const a=G(lat,lons[0]),b=G(lat,lons[1]);trace(ctx,[a,b]);ctx.setLineDash([2,3]);ctx.strokeStyle=warm;ctx.lineWidth=1.5;ctx.stroke();ctx.setLineDash([]);
   dot(...a.slice(0,2),6,accent);dot(...b.slice(0,2),6,accent);
@@ -901,7 +819,7 @@ function drawTides(ctx,w,h,spec,st){
  }
  if(stage===1){
   // Two balls let go side by side, at rest, high above the Earth; beside them, their paths through time.
-  const Re=small?h*.1:h*.14, ex=small?w*.24:w*.28, ey=small?h*.7:h*.8, r0=3, d=.3, tEnd=P.fallTime(r0,1.6), tt=Math.min(tEnd,((since*.6)%(tEnd+2.5)));
+  const Re=small?h*.1:h*.14, ex=small?w*.24:w*.28, ey=small?h*.7:h*.8, r0=3, d=.3, tEnd=P.fallTime(r0,1.6), tt=tEnd*onceInChapter(st);
   drawEarth(ctx,ex,ey,Re);
   const gap=t=>{const [a,b]=[P.fall(-d,r0,t),P.fall(d,r0,t)];return Math.hypot(a[0]-b[0],a[1]-b[1]);};
   [-d,d].map(x=>P.fall(x,r0,tt)).forEach(([x,y])=>dot(ex+x*Re,ey-y*Re,5.5,accent));
@@ -918,7 +836,7 @@ function drawTides(ctx,w,h,spec,st){
  if(stage===2){
   // A ring of balls let go all around the Earth shrinks; people on the ground are held off those paths.
   const cx=w/2, cy=small?h*.44:h*.5, r0=2.3, R=Math.min(small?w*.44:w*.26,small?h*.34:h*.42)/r0, n=12;
-  const tEnd=P.fallTime(r0,1), tt=Math.min(tEnd,((since*.6)%(tEnd+2.5)));
+  const tEnd=P.fallTime(r0,1), tt=tEnd*onceInChapter(st);
   ctx.beginPath();ctx.arc(cx,cy,r0*R,0,TAU);ctx.setLineDash([3,5]);ctx.strokeStyle='rgba(20,23,28,.2)';ctx.lineWidth=1;ctx.stroke();ctx.setLineDash([]);
   drawEarth(ctx,cx,cy,R);
   for(const ang of [-Math.PI/2,-Math.PI/2+TAU/3,-Math.PI/2-TAU/3]){ctx.save();ctx.translate(cx+Math.cos(ang)*R,cy+Math.sin(ang)*R);ctx.rotate(ang+Math.PI/2);drawPerson(ctx,0,0,small?4.5:6,dark);
@@ -928,7 +846,7 @@ function drawTides(ctx,w,h,spec,st){
   return;
  }
  // Tides: a small ring falling from high above, and the same ring seen floating with its middle ball.
- const r0=3, rho=.3, n=12, tEnd=P.fallTime(r0,2.3), tt=Math.min(tEnd,((since*.6)%(tEnd+2.5)));
+ const r0=3, rho=.3, n=12, tEnd=P.fallTime(r0,2.3), tt=tEnd*onceInChapter(st);
  const Re=small?h*.085:h*.14, ex=small?w*.26:w*.3, ey=small?h*.62:h*.82;
  drawEarth(ctx,ex,ey,Re);
  const start=[[0,r0],...Array.from({length:n},(_,i)=>{const a=TAU*i/n;return [rho*Math.cos(a),r0+rho*Math.sin(a)];})], now=start.map(([x,y])=>P.fall(x,y,tt));
@@ -946,7 +864,7 @@ function drawTides(ctx,w,h,spec,st){
 
 // A person on a bathroom scale in a lift: parked at the bottom, one ride to the top, then the cable snaps and the lift
 // falls freely for the rest of the guide. Each chapter continues where the last one ended; nothing loops.
-const LIFT_SLOW=.35, LIFT_SNAP=1;
+const LIFT_SLOW=.28, LIFT_SNAP=1;
 function liftFallTime(stage,since){
  // Seconds of free fall, slowed down for viewing; the last chapter carries on from the end of the previous one.
  const ch=timeline?.chapters?.[2], before=ch?Math.max(0,ch.end-ch.start-LIFT_SNAP):0;
@@ -983,7 +901,10 @@ function drawLift(ctx,w,h,spec,st){
  // Floating: once nothing pushes, you drift gently off the scale, bobbing and turning a little; so does the apple.
  const drift=sinceSnap>0?smooth(sinceSnap/1.6):0, lift=size*drift*(.45+.12*Math.sin(since*1.3)), sway=.09*drift*Math.sin(since*.7);
  ctx.save();ctx.translate(px,feet-lift-size*1.3);ctx.rotate(sway);drawPerson(ctx,0,size*1.3,size,dark);ctx.restore();
- const ax=px+size*(snapped?1.25+.15*drift*Math.sin(since*.9):.75), ay=feet-size*(snapped?2.35+.35*drift+.1*drift*Math.cos(since*1.1):2.75);
+ // The push: the scale pushing up on your feet, as long as the reading; gone once nothing pushes.
+ if(reading>.03){const ux=px-size*1.7, len=size*1.5*reading;trace(ctx,[[ux,feet],[ux,feet-len]]);ctx.strokeStyle=warm;ctx.lineWidth=2.2;ctx.lineCap='round';ctx.stroke();
+  trace(ctx,[[ux-4,feet-len+6],[ux,feet-len],[ux+4,feet-len+6]]);ctx.stroke();if(st.labels)text(ctx,'push',ux-6,feet-len/2,{align:'right',size:10,weight:600,color:warm});}
+ const ax=px+size*(snapped?1.3+.45*drift+.15*drift*Math.sin(since*.9):.75), ay=feet-size*(snapped?2.35+.8*drift+.1*drift*Math.cos(since*1.1):2.75);
  ctx.beginPath();ctx.arc(ax,ay,size*.38,0,TAU);ctx.fillStyle='#d6453d';ctx.fill();
  // Which way the lift is speeding up.
  if(Math.abs(a)>.01){const ux=cx+carW/2+16,dir=a>0?-1:1,y0=(roof+floor)/2,len=Math.min(60,10+Math.abs(a)*5);trace(ctx,[[ux,y0-dir*len/2],[ux,y0+dir*len/2]]);ctx.strokeStyle=accent;ctx.lineWidth=2.4;ctx.stroke();
@@ -1012,7 +933,8 @@ function drawLift(ctx,w,h,spec,st){
 // The Moon stretches the Earth: it pulls the near side more and the far side less than the centre, so the oceans bulge both ways.
 function drawMoonTides(ctx,w,h,spec,st){
  const accent=ACCENT[spec.accent]||ACCENT.blue, dark='#14171c', warm='#c2410c', small=w<520, since=st.since??st.t, stage=st.stage, M=Physics.moonTides();
- const ex=small?w*.36:w*.36, ey=small?h*.36:h*.5, Re=Math.min(small?w*.2:w*.15,small?h*.17:h*.27), mx=small?w*.9:w*.8, mr=Re*.27;
+ // On a phone the Earth sits nearer the middle and a little smaller, so every label stays on screen.
+ const ex=small?w*.42:w*.36, ey=small?h*.36:h*.5, Re=Math.min(small?w*.16:w*.15,small?h*.17:h*.27), mx=small?w*.88:w*.8, mr=Re*.27;
  // How much of the stretch to show: none while the pulls are compared, growing as the Earth's own fall is taken away.
  const morph=stage===0?1:stage===1?0:stage===2?smooth((since-2.5)/4):1, b=.11*morph;
  const spin=stage>=3?since*.35:0;
@@ -1038,22 +960,22 @@ function drawMoonTides(ctx,w,h,spec,st){
   if(st.labels){text(ctx,'water level where you are, over one day',gx,gy-12,{size:small?10:11,weight:600,color:'rgba(20,23,28,.65)'});}}
  if(!st.labels)return;
  const size=small?10:11;
- text(ctx,'Moon (not to scale)',mx,ey+mr+16,{align:'center',size:10,color:'rgba(20,23,28,.55)'});
+ text(ctx,'Moon (not to scale)',small?w-8:mx,ey+mr+16,{align:small?'right':'center',size:10,color:'rgba(20,23,28,.55)'});
  if(stage===0||stage>=3){pill(ctx,'high tide',ex+Re*1.25,ey-Re*.28,{size,weight:600,color:accent});pill(ctx,'high tide',ex-Re*1.25,ey-Re*.28,{align:'right',size,weight:600,color:accent});
   if(stage===0){pill(ctx,'low tide',ex,ey-Re*1.12-14,{align:'center',size,color:'rgba(20,23,28,.6)'});}}
- if(stage===1){text(ctx,'pulled most',ex+Re*1.08,ey+22,{align:'center',size,color:warm});text(ctx,'centre',ex,ey+22,{align:'center',size,color:dark});text(ctx,'pulled least',ex-Re*1.08,ey+22,{align:'center',size,color:warm});
+ if(stage===1){pill(ctx,'pulled most',ex+Re*1.08,ey+24,{align:'center',size,weight:600,color:warm});pill(ctx,'centre',ex,ey+24,{align:'center',size,weight:600,color:dark});pill(ctx,'pulled least',ex-Re*1.08,ey+24,{align:'center',size,weight:600,color:warm});
   text(ctx,'differences enlarged',ex,ey+Re*1.08+24,{align:'center',size:10,color:'rgba(20,23,28,.5)'});}
- if(stage===2&&morph>.6){text(ctx,'pulled ahead',ex+Re*1.3,ey+20,{size,color:warm});text(ctx,'left behind',ex-Re*1.3,ey+20,{align:'right',size,color:warm});text(ctx,'squeezed',ex+12,ey-Re*1.2,{size,color:warm});}
+ if(stage===2&&morph>.6){pill(ctx,'pulled ahead',ex+Re*1.3,ey+22,{size,weight:600,color:warm});pill(ctx,'left behind',ex-Re*1.3,ey+22,{align:'right',size,weight:600,color:warm});pill(ctx,'squeezed',ex+12,ey-Re*1.2,{size,weight:600,color:warm});}
 }
 
 const ENGINES={
  'light-bending':{draw:drawLight,a:['Mass','how much mass sits nearby'],b:['Passing distance','how close the light passes','×'],
   fa:a=>a.toFixed(2),fb:b=>b.toFixed(2)+'×',
-  measure:['Bend',(a,b)=>(Physics.deflection(a,b)*180/Math.PI).toFixed(2)+'°'],scale:'',disclosure:'The mesh measures distance as the time light needs to cross it, timed far away; light’s straightest line across it is the drawn path. Its dip and the bending are drawn for six times the model mass; the readout is the model value for the nearest ray, in the model’s own units. The dip is not a slope, and the star is an illustration.',demoEnd:s=>Math.min(2.5,s.distance+1),
+  measure:['Real bend of the nearest ray',(a,b)=>(Physics.deflection(a,b)*180/Math.PI).toFixed(2)+'°'],scale:'',disclosure:'The mesh measures distance as the time light needs to cross it, timed far away; light’s straightest line across it is the drawn path. Its dip and the bending are drawn for six times the model mass; the readout is the model value for the nearest ray, in the model’s own units. The dip is not a slope, and the star is an illustration.',demoEnd:s=>Math.min(2.5,s.distance+1),
   try:'Slide Mass to zero, then back up. Now move the beam farther away. When does it bend most?',aria:'Light passing a massive object, compared with a straight path without the mass.'},
  'gravity-clocks':{draw:drawClocks,a:['Mass','how much mass sits nearby'],b:['Lower radius','gap stays 2 units',' units'],
   fa:a=>a.toFixed(2),fb:b=>b.toFixed(2)+' units',
-  measure:['Slowdown',(a,b)=>((1-Physics.clockRatio(a,b))*100).toFixed(2)+'%'],scale:'',disclosure:'The difference between the clock hands is drawn twelve times larger; the slowdown readout is the model value in arbitrary units, not an Earth figure. The planet and distances are illustrations.',demoEnd:()=>2.5,
+  measure:['Lower clock runs slower by',(a,b)=>((1-Physics.clockRatio(a,b))*100).toFixed(2)+'%'],scale:'',disclosure:'The difference between the clock hands is drawn twelve times larger; the slowdown readout is the model value in arbitrary units, not an Earth figure. The planet and distances are illustrations.',demoEnd:()=>2.5,
   try:'Slide Mass to zero. Do the clocks agree? Bring it back, then move the Lower radius outward.',aria:'Two stationary clocks at different heights above a mass. The lower clock counts less time.'},
  'spacetime':{draw:drawSpacetime,a:['Speed','how fast the traveller flies'],b:['Trip','time out before turning back',''],
   fa:a=>Math.round(Physics.speed(a)*100)+'% of light',fb:b=>Physics.turnaround(b).toFixed(1)+' years out',
@@ -1067,21 +989,21 @@ const ENGINES={
   fa:a=>a<.005?'closed':Math.round(a*100)+'% open',fb:b=>b.toFixed(2)+'×',
   measure:['Stripe contrast',a=>(Physics.visibility(a)*100).toFixed(0)+'%'],scale:'',disclosure:'Arrivals are pseudo-random samples from the predicted pattern; the ripples show possibilities, not paths.',demoEnd:()=>2.5,
   try:'Close the second slit: do the stripes survive? Open it again, then move the slits apart.',aria:'Particles arrive one at a time on a screen behind two slits and slowly build up stripes.'},
- 'standing-waves':{draw:drawRope,a:['Reflection','how much of the wave bounces back'],b:['Pattern','whole half-waves between hand and wall',''],
-  fa:a=>Math.round(a*100)+'%',fb:b=>{const n=Physics.harmonic(b);return n+' half-wave'+(n>1?'s':'');},
+ 'standing-waves':{draw:drawRope,a:['Reflection','how much of the wave bounces back'],b:['Pattern','whole loops between hand and wall',''],
+  fa:a=>Math.round(a*100)+'%',fb:b=>{const n=Physics.harmonic(b);return n+' loop'+(n>1?'s':'');},
   measure:['Still points',a=>(Physics.stillness(a)*100).toFixed(0)+'% still'],scale:'',disclosure:'Wave height is exaggerated for visibility.',demoEnd:()=>2.5,
   try:'Turn Reflection to zero: are there still points? Turn it up, then step the Pattern slider.',aria:'A rope shaken at one end and tied to a wall at the other, forming a standing wave.'},
  'tunneling':{draw:drawTunnel,a:['Barrier height','compared with the particle’s energy'],b:['Barrier width','how thick the barrier is',''],
   fa:a=>a<.005?'none':(2*a).toFixed(1)+'× energy',fb:b=>(.6*b/(2*Math.PI)).toFixed(2)+' wavelengths',
   measure:['Bounces back',(a,b)=>(Physics.reflected(a,b)*100).toFixed(0)+'%'],scale:'A steady stream, shown at one instant',disclosure:'Exact steady-state solution in units where ħ = 1 and 2m = 1.',demoEnd:()=>2.5,
   try:'Remove the barrier: does anything bounce back? Raise it above the energy, then make it thicker.',aria:'A quantum wave meets a barrier: part bounces back, part leaks through.'},
- 'wave-packet':{draw:drawPacket,a:['Momentum mix','how many wavelengths are blended'],b:['Average momentum','sets the main wavelength',''],
+ 'wave-packet':{draw:drawPacket,a:['Speed mix','how many wavelengths are blended'],b:['Average speed','sets the main wavelength',''],
   fa:a=>a<.005?'one wave':(1.1*a).toFixed(2),fb:b=>(2+2*(b-1)).toFixed(1),
-  measure:['Momentum spread',a=>(1.1*a).toFixed(2)],scale:'',disclosure:'Time is slowed down; units where ħ = 1 and 2m = 1.',demoEnd:()=>2.5,
+  measure:['Spread of speeds',a=>(1.1*a).toFixed(2)],scale:'',disclosure:'Time is slowed down; units where ħ = 1 and 2m = 1.',demoEnd:()=>2.5,
   try:'Set the mix to one wave: where is the particle? Blend more wavelengths and watch the packet narrow.',aria:'A wave packet made by blending wavelengths, with a bar chart of the momenta mixed in.'},
  'quantum-well':{draw:drawWell,a:['Well depth','how strongly the particle is held'],b:['Well width','how much room it has',''],
   fa:a=>a<.005?'no well':Math.round(a*100)+'%',fb:b=>(1+(b-1)).toFixed(2)+'×',
-  measure:['Allowed energy levels',(a,b)=>String(Physics.levelCount(a,b))],scale:'',disclosure:'Energy levels are to scale. Each level’s wave is drawn vibrating like a plucked string; its probability pattern does not change over time, and wave heights are not to scale.',demoEnd:()=>2.5,
+  measure:['Trapped energy levels',(a,b)=>String(Physics.levelCount(a,b))],scale:'',disclosure:'Energy levels are to scale. Each level’s wave is drawn vibrating like a plucked string; its probability pattern does not change over time, and wave heights are not to scale.',demoEnd:()=>2.5,
   try:'Remove the well: are there any levels? Deepen it, then widen it. When does a new level appear?',aria:'A particle trapped in a well can only have certain energies, drawn as levels with their wave shapes.'},
  'falling-time':{draw:drawFall,a:['Gravity','how strong gravity is'],b:['Time in the air','between leaving and meeting again',''],
   fa:a=>a<.005?'none':Math.round(a*100)+'%',fb:b=>(2+2*(b-1)).toFixed(1)+' units',
@@ -1101,17 +1023,8 @@ const ENGINES={
   measure:['Traveller’s clock counts less by',a=>(Physics.agingGap(a)*100).toFixed(1)+'%'],scale:'',demoEnd:()=>2.5,
   disclosure:'Exact special relativity in years and light-years; the turnaround is instant. The light clocks are slowed down for viewing and not to scale. Distances on the page are not spacetime lengths: tilted paths look longer than they hold.',
   try:'Drag the turnaround sideways: a faster trip leaves less time on the traveller’s clock. Drag it back to the home path: the twins agree again.',aria:'A spacetime diagram: the home twin’s straight path and the traveller’s bent path between the same goodbye and reunion, with one dot per year of each twin’s own time.'},
- 'fall-fan':{draw:drawFan,a:['Gravity','how strong gravity is'],b:['Time in the air','between leaving and meeting again',''],
-  fa:a=>a<.005?'none':Math.round(a*100)+'%',fb:b=>Physics.fan(1,b).T.toFixed(1)+' units',
-  measure:['Map bent by',(a,b)=>(Physics.fan(a,b).g*Physics.fan(a,b).T*180/Math.PI).toFixed(0)+'°'],scale:'',demoEnd:()=>2.5,
-  disclosure:'Gravity is hugely exaggerated. The bent map is drawn so that straight lines are the paths of most time; for weak gravity they match free fall exactly. Real spacetime’s geometry, with its minus sign, cannot be drawn exactly on paper.',
-  try:'Turn gravity off: the map goes flat. Turn it up and watch the bend grow.',aria:'A map of height and time bends so that the thrown ball’s path becomes a straight line and the held clock’s path curves.'},
- 'fall-cone':{draw:drawCone,a:['Gravity','how strong gravity is'],b:['Time in the air','between leaving and meeting again',''],
-  fa:a=>a<.005?'none':Math.round(a*100)+'%',fb:b=>Physics.fan(1,b).T.toFixed(1)+' units',
-  measure:['Map bent by',(a,b)=>(Physics.fan(a,b).g*Physics.fan(a,b).T*180/Math.PI).toFixed(0)+'°'],scale:'',demoEnd:()=>2.5,
-  disclosure:'Gravity is hugely exaggerated. The paper is the bent map of height and time rolled into a cone; rolling does not stretch it, so straight lines stay straightest. Real spacetime’s minus-sign geometry cannot be built exactly from paper.',
-  try:'Change the gravity and watch the cone tighten or open up.',aria:'The bent map of height and time rolled into a paper cone, with the ball’s path drawn as a straight line on the paper.'},
- 'river':{draw:drawRiver,a:['Black hole mass','sets the size of the horizon'],b:['Flash position','where the light is sent from',''],
+ 'river':{draw:drawRiver,demo:(p,spec)=>{const at=spec.mass+.4, inside=Math.max(1,.6*spec.mass+.4);
+   return {mass:spec.mass,distance:p<.31?spec.distance+(at-spec.distance)*smooth(p/.06):at+(inside-at)*smooth((p-.31)/.06)};},a:['Black hole mass','sets the size of the horizon'],b:['Flash position','where the light is sent from',''],
   fa:a=>a<.005?'none':Math.round(a*100)+'%',fb:b=>(Physics.river(1,b).re).toFixed(2)+' horizon sizes',
   measure:['Inflow where the flash starts',(a,b)=>Math.round(Physics.river(a,b).flow(Physics.river(a,b).re)*100)+'% of light'],scale:'Seen from above',demoEnd:()=>1,
   disclosure:'Exact for a non-rotating black hole in the river (Painlevé–Gullstrand) picture; distances in horizon sizes, motion slowed down. The flowing specks show the inflow speed, not real particles.',
@@ -1237,7 +1150,7 @@ function load(scene){
  $('ticks').replaceChildren(...timeline.chapters.slice(1).map((c,i)=>{const tick=document.createElement('button');tick.type='button';tick.dataset.beat=String(i+1);tick.style.left=`calc(12px + (100% - 24px) * ${c.start/timeline.total})`;tick.title=`Chapter ${i+2}: ${spec.beats[i+1].title}`;tick.setAttribute('aria-label',tick.title);tick.onclick=e=>{e.stopPropagation();chapter(i+1);};return tick;}));mass=scene.mass;distance=scene.distance;time=0;mode='live';started=false;ended=false;captionKey='';
  configure();setStage(0);shown=target();paint();
 }
-function restore(){mass=spec.mass;distance=spec.distance;}
+function restore(){mass=spec.mass;distance=spec.distance;demoed=false;}
 function play(){
  if(!spec)return;
  if(!started||ended||time>=timeline.total){time=0;restore();setStage(0);shown=0;}
@@ -1245,7 +1158,14 @@ function play(){
 }
 function pause(){if(mode==='playing'){mode='paused';paint();}}
 function toggle(){mode==='playing'?pause():play();}
-function seek(t,beat=2){mode='paused';started=true;ended=false;time=t;setStage(beat);shown=target();paint();}
+// Seeking shows exactly what playback shows at that moment, including the last chapter's control demo.
+let demoed=false;
+function seek(t,beat=2){
+ mode='paused';started=true;ended=false;time=t;
+ const last=timeline.chapters.length-1, c=timeline.chapters[last];
+ if(beat===last&&engineOf(spec).demo!==false)demo(clamp((t-c.start)/(c.end-c.start)));else if(demoed)restore();
+ setStage(beat);shown=target();paint();
+}
 function chapter(n){
  if(!spec)return;n=clamp(n,0,spec.beats.length-1);
  const wasPlaying=mode==='playing';
@@ -1254,11 +1174,14 @@ function chapter(n){
 }
 function demo(p){
  // The last chapter moves the controls themselves so the viewer sees what each one does.
+ demoed=true;
  // An engine may script its own demo, returning both control values for progress p.
  const own=engineOf(spec).demo;if(typeof own==='function'){({mass,distance}=own(p,spec));syncControls();return;}
- const end=engineOf(spec).demoEnd(spec), c=spec.controls||'both', moveA=c!=='second', moveB=c!=='first';
- mass=moveA&&p<.5?spec.mass*(1-.55*Math.sin(Math.PI*p/.5)):spec.mass;
- distance=moveB?spec.distance+(end-spec.distance)*smooth((moveA?p-.5:p)/(moveA?.42:.9)):spec.distance;
+ // Otherwise: in the first half the first control dips and returns; in the second half the second control
+ // moves to its end value. Both move whichever sliders the viewer is given, because narrations describe both.
+ const end=engineOf(spec).demoEnd(spec);
+ mass=p<.5?spec.mass*(1-.55*Math.sin(Math.PI*p/.5)):spec.mass;
+ distance=spec.distance+(end-spec.distance)*smooth((p-.5)/.42);
  syncControls();
 }
 function tick(stamp){

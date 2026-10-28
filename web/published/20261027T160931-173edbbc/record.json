@@ -44,7 +44,7 @@
     "beats": [
       {
         "title": "No bounce: the wave just runs",
-        "body": "Here the wall soaks up the wave, so nothing comes back. One ripple runs along the rope. No point on the rope ever stays still."
+        "body": "Here the wall soaks up the wave, so nothing comes back. The wave just runs along the rope. No point on the rope ever stays still."
       },
       {
         "title": "Add the bounce: some points freeze",
@@ -52,11 +52,11 @@
       },
       {
         "title": "Only whole loops fit, and higher notes have more",
-        "body": "Weaken the bounce and the still points start to wobble. Both ends must stay still, so only whole loops, the humps between still points, can fit. Each next pattern has one more loop and plays a higher note."
+        "body": "Weaken the bounce and the still points start to wobble. Both ends must stay still, so only whole loops, the humps between still points, can fit. More loops means shorter loops, which swing faster, so the note is higher."
       }
     ],
     "mass": 1,
-    "distance": 1,
+    "distance": 1.4,
     "ray_count": 1,
     "show_reference": true,
     "show_labels": true,
@@ -130,7 +130,7 @@
   "provenance": {
     "sources_retrieved": true,
     "retrieved_by": "agent",
-    "intro_note": "The introduction above the player and some wording were edited by hand after the agents\u2019 review, after a separate copy-editing pass; the reviews below refer to the earlier text."
+    "intro_note": "The introduction, some wording and the playback (which controls move in the last chapter) were edited by hand after the agents\u2019 review, following copy-editing and beginner tests; the reviews below refer to the earlier version."
   },
   "revisions": [
     {
