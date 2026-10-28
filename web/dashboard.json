@@ -1,10 +1,10 @@
 {
-  "status": "idle",
+  "status": "planning",
   "question": "Choosing the next question",
   "topic": null,
   "id": null,
   "revision": 0,
-  "updated": "2026-10-28T07:19:53.448465+00:00",
+  "updated": "2026-10-28T16:00:03.327295+00:00",
   "events": [],
   "schedule": {
     "enabled": true,
@@ -33,6 +33,10 @@
       "topic": "twin-trip",
       "status": "reviewed",
       "run_id": "20261027T160039-39e9e79b"
+    },
+    {
+      "day": "2026-10-28",
+      "status": "planning"
     }
   ]
 }
