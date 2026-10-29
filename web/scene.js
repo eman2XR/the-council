@@ -1463,45 +1463,113 @@ function drawAttention(ctx,w,h,spec,st){
  ctx.restore();
 }
 
-// The Council at work, for the home page: a thin wave like the logo's runs across the top with one point per step of an
-// investigation. A small light, the investigation, glides along it, rippling at each step, where that step's name
-// shows; at publish it lifts off the wave, and a new light starts. During a run it rests at the current step and the
-// earlier points are filled; when paused only the wave shows. still: one frame, no motion.
+// The Council at work, for the home page: a small workshop where robot agents build the next investigation, a framed
+// picture on an easel under a hanging lamp. A courier carries research papers to a tray, a welder fixes the frame in a
+// spray of sparks, a painter with a long brush paints the wave, a hammerer drives a nail into the easel, a camera
+// flashes, and an inspector checks the work off on a clipboard. During a run the agent for the current step works in a
+// soft spotlight and the picture shows how far the run has got; when paused they rest. still: one frame, no motion.
 const LAB_STEPS=[['research','#0e9f7a'],['design','#d97706'],['render','#2563eb'],['review','#64748b'],['publish','#c2410c']];
 function drawLab(ctx,w,h,{t=0,active=false,step=1,paused=false,still=false}={}){
- const small=w<520, n=LAB_STEPS.length, x0=w*(small?.08:.1), x1=w*(small?.92:.9), mid=h*.4, A=h*.16, warm='#e07a2e';
- const node=i=>x0+(x1-x0)*i/(n-1), Y=x=>mid+A*Math.sin((x-x0)/(x1-x0)*TAU*1.25+.3);
- // Where the light is: at the current step during a run; otherwise gliding through all five steps on a loop.
- const dwell=2.4, move=1.7, loop=n*(dwell+move);
- let at=0, x=node(0), p=.6, lift=0, fade=1;
- if(active){at=clamp(step-1,0,n-1);x=node(at);p=still?.6:(t%dwell)/dwell;}
- else if(!paused&&!still){const u=t%loop, k=Math.floor(u/(dwell+move)), r=u-k*(dwell+move);at=k;
-  if(r<dwell){x=node(k);p=r/dwell;if(k===0)fade=smooth(r/.6);}
-  else if(k<n-1){x=node(k)+(node(k+1)-node(k))*smooth((r-dwell)/move);p=1;at=k;}
-  else{x=node(k);p=1;lift=smooth((r-dwell)/move);fade=1-lift;}}
- // The wave, fading out at both ends.
- const ends=ctx.createLinearGradient(0,0,w,0);ends.addColorStop(0,'rgba(20,23,28,0)');ends.addColorStop(.12,'rgba(20,23,28,.14)');ends.addColorStop(.88,'rgba(20,23,28,.14)');ends.addColorStop(1,'rgba(20,23,28,0)');
- const pts=[];for(let i=0;i<=200;i++){const xx=w*.02+w*.96*i/200;pts.push([xx,Y(xx)]);}
- trace(ctx,pts);ctx.strokeStyle=ends;ctx.lineWidth=1.5;ctx.stroke();
- // The steps: hollow until reached, then filled with their colour.
- const moving=!active&&!paused&&!still&&p>=1;
- LAB_STEPS.forEach(([name,col],i)=>{const nx=node(i), ny=Y(nx), reached=!paused&&(active?i<at:i<at||(i===at&&!moving));
-  ctx.beginPath();ctx.arc(nx,ny,small?3.4:4,0,TAU);
-  if(reached){ctx.fillStyle=rgba(col,.85);ctx.fill();}else{ctx.fillStyle='#fff';ctx.fill();ctx.strokeStyle='rgba(20,23,28,.28)';ctx.lineWidth=1.2;ctx.stroke();}});
- if(paused)return;
- const [name,col]=LAB_STEPS[at], y=Y(x)-lift*h*.5;
- // A ripple at each step, once on arrival (and again every few seconds while a run waits there).
- if(!still&&!moving&&!lift){const q=active?((t%2.4)/1.2):p/.45;if(q<1){ctx.beginPath();ctx.arc(x,Y(x),4+q*(small?12:16),0,TAU);ctx.strokeStyle=rgba(col,.55*(1-q));ctx.lineWidth=1.5;ctx.stroke();}}
- // The light, with a short trail along the wave behind it.
- ctx.globalAlpha=fade;
- if(moving&&!lift){const trail=[];for(let i=0;i<=24;i++){const xx=x-(small?36:60)*i/24;if(xx<x0-2)break;trail.push([xx,Y(xx)]);}
-  for(let i=1;i<trail.length;i++){trace(ctx,[trail[i-1],trail[i]]);ctx.strokeStyle=`rgba(224,122,46,${.5*(1-i/trail.length)})`;ctx.lineWidth=2.4;ctx.lineCap='round';ctx.stroke();}}
- const glow=ctx.createRadialGradient(x,y,0,x,y,small?12:16);glow.addColorStop(0,'rgba(255,196,80,.55)');glow.addColorStop(1,'rgba(255,196,80,0)');ctx.fillStyle=glow;ctx.beginPath();ctx.arc(x,y,small?12:16,0,TAU);ctx.fill();
- ctx.beginPath();ctx.arc(x,y,small?3.6:4.5,0,TAU);ctx.fillStyle=warm;ctx.fill();ctx.strokeStyle='#fff';ctx.lineWidth=1.5;ctx.stroke();
- ctx.globalAlpha=1;
- // Only the current step is named.
- if(!moving&&!lift){const show=active||still?1:smooth(p/.15)*(1-smooth((p-.88)/.12));
-  ctx.globalAlpha=show;text(ctx,name,x,Y(x)+(small?20:24),{align:'center',size:small?10:11,weight:600,color:col});ctx.globalAlpha=1;}
+ const phone=w<520, VW=phone?640:1100, VH=190, k=Math.min(w/VW,h/VH);
+ ctx.save();ctx.translate((w-VW*k)/2,(h-VH*k));ctx.scale(k,k);
+ const T=still?2.1:t, idle=paused, floor=176, cx=VW/2, frame={x:cx-88,y:30,w:176,h:84};
+ const now=active?clamp(step-1,0,4):-1;
+ // A robot: rounded head with a visor and an antenna, a body, two arms reaching to the given hands, and legs that
+ // swing when walking. dir turns the visor left or right.
+ const bot=(x,feet,col,{walk=null,hands=[],dir=1,mask=false,sz=1.3}={})=>{
+  const u=sz, dark='#1f2937', limb='rgba(31,41,55,.85)';
+  const swing=walk===null?0:Math.sin(walk)*5*u;
+  ctx.lineCap='round';ctx.strokeStyle=limb;ctx.lineWidth=4.5*u;
+  trace(ctx,[[x-4*u,feet-17*u],[x-4*u+swing,feet]]);ctx.stroke();trace(ctx,[[x+4*u,feet-17*u],[x+4*u-swing,feet]]);ctx.stroke();
+  ctx.fillStyle=col;ctx.beginPath();ctx.roundRect(x-10*u,feet-36*u,20*u,22*u,7*u);ctx.fill();
+  ctx.fillStyle='rgba(255,255,255,.22)';ctx.beginPath();ctx.roundRect(x-7*u,feet-33*u,6*u,9*u,3*u);ctx.fill();
+  ctx.strokeStyle=col;ctx.lineWidth=5*u;
+  for(const [hx,hy] of hands){trace(ctx,[[x+Math.sign(hx-x||1)*8*u,feet-31*u],[hx,hy]]);ctx.stroke();ctx.fillStyle=dark;ctx.beginPath();ctx.arc(hx,hy,2.6*u,0,TAU);ctx.fill();}
+  ctx.fillStyle=col;ctx.beginPath();ctx.roundRect(x-11*u,feet-54*u,22*u,17*u,7*u);ctx.fill();
+  ctx.strokeStyle=dark;ctx.lineWidth=1.4*u;trace(ctx,[[x,feet-54*u],[x,feet-60*u]]);ctx.stroke();ctx.fillStyle='#f59e0b';ctx.beginPath();ctx.arc(x,feet-61*u,2.2*u,0,TAU);ctx.fill();
+  if(mask){ctx.fillStyle='#111827';ctx.beginPath();ctx.roundRect(x-10*u+dir*2*u,feet-52*u,18*u,13*u,5*u);ctx.fill();ctx.fillStyle='rgba(56,189,248,.55)';ctx.fillRect(x-5*u+dir*3*u,feet-48*u,10*u,4*u);}
+  else{ctx.fillStyle=dark;ctx.beginPath();ctx.roundRect(x-7*u+dir*2*u,feet-49*u,14*u,7*u,3.5*u);ctx.fill();
+   ctx.fillStyle='#7dd3fc';for(const e of [-3,3]){ctx.beginPath();ctx.arc(x+dir*2*u+e*u,feet-45.5*u,1.5*u,0,TAU);ctx.fill();}}
+ };
+ // A soft spotlight on the floor for the agent at work during a run.
+ const spot=(x,col)=>{const g=ctx.createRadialGradient(x,floor-30,4,x,floor-30,64);g.addColorStop(0,rgba(col,.22));g.addColorStop(1,rgba(col,0));ctx.fillStyle=g;ctx.fillRect(x-70,floor-100,140,110);};
+ // The floor and the lamp's light.
+ ctx.fillStyle='rgba(120,90,60,.07)';ctx.fillRect(0,floor,VW,VH-floor);trace(ctx,[[0,floor],[VW,floor]]);ctx.strokeStyle='rgba(60,40,25,.25)';ctx.lineWidth=1.5;ctx.stroke();
+ const cone=ctx.createLinearGradient(0,10,0,floor);cone.addColorStop(0,'rgba(255,214,140,.32)');cone.addColorStop(1,'rgba(255,214,140,0)');
+ ctx.fillStyle=cone;ctx.beginPath();ctx.moveTo(cx-10,12);ctx.lineTo(cx+10,12);ctx.lineTo(cx+150,floor);ctx.lineTo(cx-150,floor);ctx.closePath();ctx.fill();
+ trace(ctx,[[cx,0],[cx,6]]);ctx.strokeStyle='rgba(31,41,55,.6)';ctx.lineWidth=1.5;ctx.stroke();
+ ctx.fillStyle='#374151';ctx.beginPath();ctx.moveTo(cx-6,6);ctx.lineTo(cx+6,6);ctx.lineTo(cx+12,14);ctx.lineTo(cx-12,14);ctx.closePath();ctx.fill();
+ ctx.fillStyle='#fde68a';ctx.beginPath();ctx.arc(cx,15,3,0,TAU);ctx.fill();
+ // The easel and the frame, with the picture being painted on it.
+ ctx.strokeStyle='#8b5e3c';ctx.lineWidth=5;ctx.lineCap='round';
+ trace(ctx,[[cx-56,frame.y+frame.h],[cx-76,floor]]);ctx.stroke();trace(ctx,[[cx+56,frame.y+frame.h],[cx+76,floor]]);ctx.stroke();
+ ctx.lineWidth=3;trace(ctx,[[cx,frame.y+frame.h],[cx,floor-2]]);ctx.strokeStyle='#a0714f';ctx.stroke();
+ ctx.fillStyle='#fffdf7';ctx.fillRect(frame.x,frame.y,frame.w,frame.h);
+ ctx.strokeStyle='#8b5e3c';ctx.lineWidth=7;ctx.strokeRect(frame.x,frame.y,frame.w,frame.h);
+ const loop=11, inLoop=T%loop;
+ const prog=active?(now>=2?1:now===1?.35+.45*((T%4)/4):.08):idle?0:inLoop<7?inLoop/7:inLoop<10?1:1-(inLoop-10);
+ const wx0=frame.x+16, wx1=frame.x+frame.w-16, wy=frame.y+frame.h*.55, wave=x=>wy-Math.sin((x-wx0)/(wx1-wx0)*TAU*1.5)*frame.h*.2;
+ const fadeAll=!active&&!idle&&inLoop>=10?1-(inLoop-10):1, head=wx0+(wx1-wx0)*clamp(prog);
+ if(prog>0){ctx.globalAlpha=fadeAll;const pts=[];for(let x=wx0;x<=head;x+=2)pts.push([x,wave(x)]);trace(ctx,pts);ctx.strokeStyle='#2563eb';ctx.lineWidth=4;ctx.lineCap='round';ctx.stroke();
+  if(prog>=.98){ctx.fillStyle='#f59e0b';ctx.beginPath();ctx.arc(frame.x+frame.w-30,frame.y+24,9,0,TAU);ctx.fill();}ctx.globalAlpha=1;}
+ // The welder, at the frame's left edge, in a spray of sparks while the torch is lit.
+ const wxp=cx-128, torch=[frame.x+2,frame.y+frame.h+3], lit=!idle&&(still||T%3<2.2);
+ if(now===4)spot(wxp,LAB_STEPS[4][1]);
+ // A gas tank behind the welder, its hose running to the torch.
+ const tank=[wxp-40,floor];ctx.fillStyle='#9ca3af';ctx.beginPath();ctx.roundRect(tank[0]-9,floor-44,18,44,8);ctx.fill();ctx.fillStyle='#6b7280';ctx.fillRect(tank[0]-4,floor-50,8,7);
+ ctx.strokeStyle='rgba(31,41,55,.6)';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(tank[0]+4,floor-48);ctx.quadraticCurveTo(wxp-20,floor+2,torch[0]-22,torch[1]+10);ctx.stroke();
+ bot(wxp,floor,'#c2410c',{hands:[[torch[0]-20,torch[1]+8],[torch[0]-26,torch[1]+14]],dir:1,mask:true});
+ ctx.strokeStyle='#4b5563';ctx.lineWidth=4;trace(ctx,[[torch[0]-24,torch[1]+11],[torch[0]-3,torch[1]+1]]);ctx.stroke();
+ if(lit){const f=.6+.4*hash(Math.floor(T*24));const g=ctx.createRadialGradient(...torch,0,...torch,18*f);g.addColorStop(0,'rgba(255,255,255,.95)');g.addColorStop(.35,'rgba(125,211,252,.6)');g.addColorStop(1,'rgba(125,211,252,0)');ctx.fillStyle=g;ctx.beginPath();ctx.arc(...torch,18*f,0,TAU);ctx.fill();
+  for(let i=0;i<34;i++){const ph=((T*1.7+hash(i*1.31))%1), age=ph*.75, ang=-Math.PI*.98+hash(i*3.7)*Math.PI*.62, sp=55+95*hash(i*7.3);
+   const x=torch[0]+Math.cos(ang)*sp*age, y=torch[1]+Math.sin(ang)*sp*age+.5*300*age*age;if(y>floor)continue;
+   ctx.globalAlpha=1-ph;trace(ctx,[[x,y],[x-Math.cos(ang)*sp*.025,y-(Math.sin(ang)*sp+300*age)*.025]]);ctx.strokeStyle=ph<.3?'#fff7d6':'#fb923c';ctx.lineWidth=1.6;ctx.stroke();}
+  ctx.globalAlpha=1;}
+ // The weld seam glows on the frame where the torch has been.
+ ctx.strokeStyle='rgba(251,146,60,.6)';ctx.lineWidth=2.2;trace(ctx,[[frame.x+2,frame.y+frame.h+3],[frame.x+26,frame.y+frame.h+3]]);ctx.stroke();
+ // The painter, walking along under the frame with a long brush that follows the wet end of the wave.
+ const painting=!idle&&prog>0&&prog<.999&&fadeAll===1, px=Math.max(frame.x+30,Math.min(frame.x+frame.w-30,head+26));
+ if(now===1)spot(px,LAB_STEPS[1][1]);
+ const brushTip=painting?[head,wave(head)]:[px-14,frame.y+frame.h+6];
+ bot(px,floor,'#d97706',{walk:painting&&!still?T*7:null,hands:[[px-12,floor-52]],dir:-1});
+ ctx.strokeStyle='#92400e';ctx.lineWidth=3;trace(ctx,[[px-12,floor-52],brushTip]);ctx.stroke();ctx.fillStyle='#2563eb';ctx.beginPath();ctx.arc(...brushTip,3.4,0,TAU);ctx.fill();
+ // The hammerer at the easel's right leg; a small puff on each blow.
+ const hxp=cx+132, period=.9, sw=idle||still?.4:Math.abs(Math.sin(T*Math.PI/period)), ang=-.25-1.3*sw, hand=[hxp-18,floor-44];
+ const hammerHead=[hand[0]+Math.cos(Math.PI+ang)*22,hand[1]+Math.sin(Math.PI+ang)*22];
+ bot(hxp,floor,'#0e9f7a',{hands:[hand],dir:-1});
+ ctx.strokeStyle='#6b4f3a';ctx.lineWidth=3.2;trace(ctx,[hand,hammerHead]);ctx.stroke();
+ ctx.save();ctx.translate(...hammerHead);ctx.rotate(ang);ctx.fillStyle='#4b5563';ctx.fillRect(-4,-7,8,14);ctx.restore();
+ if(!idle&&!still&&sw<.18){ctx.strokeStyle='rgba(31,41,55,.45)';ctx.lineWidth=1.4;const c=[cx+70,floor-34];for(const a2 of [-.6,0,.6]){trace(ctx,[[c[0]+Math.cos(a2-1.57)*8,c[1]+Math.sin(a2-1.57)*8],[c[0]+Math.cos(a2-1.57)*14,c[1]+Math.sin(a2-1.57)*14]]);ctx.stroke();}}
+ if(!phone){
+  // The courier: from the shelf of papers to the tray by the welder and back.
+  const shelfX=70, trayX=cx-226;
+  ctx.fillStyle='#b08968';ctx.fillRect(shelfX-40,floor-86,5,86);ctx.fillRect(shelfX+35,floor-86,5,86);
+  for(const y of [floor-84,floor-56,floor-28]){ctx.fillStyle='#c9a77c';ctx.fillRect(shelfX-40,y,80,5);}
+  const paper=(x,y,wd,ht)=>{ctx.fillStyle='#fffaf0';ctx.strokeStyle='rgba(120,90,60,.5)';ctx.lineWidth=1;ctx.fillRect(x,y,wd,ht);ctx.strokeRect(x,y,wd,ht);};
+  for(const y of [floor-84,floor-56]){for(let i=0;i<3;i++)paper(shelfX-32+i*22,y-14,16,14);}
+  ctx.fillStyle='#b08968';ctx.beginPath();ctx.roundRect(trayX-22,floor-16,44,16,3);ctx.fill();
+  const cyc=idle?0:T%8, goingOut=cyc<3, dropping=cyc>=3&&cyc<3.6, back=cyc>=3.6&&cyc<6.6;
+  const kx=goingOut?shelfX+40+(trayX-30-shelfX-40)*smooth(cyc/3):dropping?trayX-30:back?trayX-30-(trayX-30-shelfX-40)*smooth((cyc-3.6)/3):shelfX+40;
+  const carrying=goingOut||(dropping&&cyc<3.3), walking=!still&&(goingOut||back);
+  if(now===0)spot(kx,LAB_STEPS[0][1]);
+  const hands=carrying?[[kx+14,floor-46],[kx+20,floor-44]]:[[kx-14,floor-28],[kx+14,floor-28]];
+  bot(kx,floor,'#2563eb',{walk:walking?T*8:null,hands,dir:back?-1:1});
+  if(carrying)for(let i=0;i<3;i++)paper(kx+8,floor-56-i*5,22,5);
+  const inTray=Math.min(3,1+Math.floor((idle?0:T)/8)%3);for(let i=0;i<inTray;i++)paper(trayX-16,floor-21-i*4,32,4);
+  // The camera on its tripod, flashing now and then, and the inspector with a clipboard and a magnifier.
+  const camX=cx+232, flash=!idle&&!still&&T%4<.16;
+  ctx.strokeStyle='#4b5563';ctx.lineWidth=2;for(const d of [-9,0,9]){trace(ctx,[[camX,floor-34],[camX+d,floor]]);ctx.stroke();}
+  ctx.fillStyle='#1f2937';ctx.beginPath();ctx.roundRect(camX-11,floor-46,22,14,3);ctx.fill();ctx.fillStyle='#93c5fd';ctx.beginPath();ctx.arc(camX-11,floor-39,4,0,TAU);ctx.fill();
+  if(now===2)spot(camX,LAB_STEPS[2][1]);
+  if(flash){const g=ctx.createRadialGradient(camX-12,floor-39,0,camX-12,floor-39,40);g.addColorStop(0,'rgba(255,255,255,.95)');g.addColorStop(1,'rgba(255,255,255,0)');ctx.fillStyle=g;ctx.beginPath();ctx.arc(camX-12,floor-39,40,0,TAU);ctx.fill();}
+  const ix=cx+300;if(now===3)spot(ix,LAB_STEPS[3][1]);
+  bot(ix,floor,'#64748b',{hands:[[ix-18,floor-44],[ix+16,floor-40]],dir:-1});
+  ctx.fillStyle='#e7d7bd';ctx.strokeStyle='rgba(120,90,60,.5)';ctx.lineWidth=1;ctx.fillRect(ix-30,floor-56,16,22);ctx.strokeRect(ix-30,floor-56,16,22);ctx.fillStyle='rgba(31,41,55,.35)';for(let r=0;r<3;r++)ctx.fillRect(ix-27,floor-50+r*5,10,1.3);
+  ctx.strokeStyle='#374151';ctx.lineWidth=2;ctx.beginPath();ctx.arc(ix+21,floor-46,6,0,TAU);ctx.stroke();
+  const q=idle||still?.5:(T%3.2)/3.2;if(q<.8){const r=7*(q<.2?.6+.4*Math.sin(q/.2*Math.PI/2)*1.3:1);ctx.fillStyle='#16a34a';ctx.beginPath();ctx.arc(ix-22,floor-72,r,0,TAU);ctx.fill();
+   ctx.strokeStyle='#fff';ctx.lineWidth=1.8;trace(ctx,[[ix-22-r*.45,floor-72],[ix-22-r*.1,floor-72+r*.38],[ix-22+r*.5,floor-72-r*.38]]);ctx.stroke();}
+ }
+ ctx.restore();
 }
 const ENGINES={
  'light-bending':{draw:drawLight,a:['Mass','how much mass sits nearby'],b:['Passing distance','how close the light passes','×'],
