@@ -86,6 +86,9 @@ def capture(scene, directory, research=None, provider='fixture'):
             fastest = max(len(l['text']) / (l['end'] - l['start']) for l in lines)
             shortest = min(l['end'] - l['start'] for l in lines)
             checks.append({'name': f'Subtitles read at most {fastest:.1f} characters per second (limit 15)', 'pass': fastest <= 15})
+            # One idea per chapter: two or three short sentences, never a paragraph.
+            most_lines = max(len(chapter['lines']) for chapter in page.evaluate('CouncilScene.timeline()')['chapters'])
+            checks.append({'name': f'Each chapter has at most 3 subtitle sentences (most: {most_lines})', 'pass': most_lines <= 3})
             checks.append({'name': f'Each subtitle stays up at least {shortest:.1f} s (minimum 2.5)', 'pass': shortest >= 2.5})
             interaction = page.evaluate('''async () => {
                 const slider=document.getElementById('mass'); slider.value='0';

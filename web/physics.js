@@ -211,32 +211,31 @@
         return edge*Math.exp(-l.kappa*(Math.abs(x)-h));};
       return {V,L,levels,psi};
     },
-    // Scaled dot-product attention ("Attention Is All You Need", 2017) on a tiny hand-made example: the word "it" in
-    // "The animal didn't cross the street because it was too tired" (or "... too wide"). Each word offers a key (what it
-    // is) and carries a value (what it means, drawn as a colour); the asking word's query says what it looks for. Shares
-    // are softmax(focus * q.k / sqrt(d)); the result is the share-weighted blend of the values. Focus 1 is the formula
-    // itself; focus 0 gives every word the same share. Key and query features: [could be tired, could be wide,
-    // a thing "it" could stand for, a small grammar word]. The vectors are hand-made, not taken from a trained model.
-    attentionWords: ['The', 'animal', "didn't", 'cross', 'the', 'street', 'because', 'it', 'was', 'too'],
-    attentionKeys: [[0,0,0,1], [1,0,1,0], [0,0,0,1], [0,0,0,0], [0,0,0,1], [0,1,1,0], [0,0,0,1], [0,0,.4,0], [0,0,0,1], [0,0,0,1], [0,0,0,0]],
-    attentionValues: [[.8,.8,.8], [.88,.48,.18], [.78,.78,.78], [.23,.44,.85], [.8,.8,.8], [.25,.56,.35], [.8,.8,.8], [.55,.58,.65], [.78,.78,.78], [.8,.8,.8], [.56,.36,.76]],
-    // Shares one query gives a list of keys: softmax of the scaled dot products, sharpened or softened by focus.
+    // Attention for guessing the next word, on one hand-made sentence: "I grew up in France, so I speak fluent ___".
+    // The guess (the query) is scored against every earlier word (its key) by a scaled dot product, and the scores
+    // become shares by a softmax, as in "Attention Is All You Need" (2017). Key and query features: [a country,
+    // a verb about language, a skill word, a small grammar word]. The vectors are hand-made, not from a trained model.
+    lookWords: ['I', 'grew', 'up', 'in', 'France,', 'so', 'I', 'speak', 'fluent'],
+    lookKeys: [[0,0,0,1], [0,0,0,.3], [0,0,0,1], [0,0,0,1], [1,0,0,0], [0,0,0,1], [0,0,0,1], [0,1,0,0], [0,0,1,0]],
+    lookQuery: [6.4, 3.2, 2.4, 0],
+    lookClue: 4,
+    // Shares one query gives a list of keys: softmax of the scaled dot products; strength 0 gives equal shares.
     attend(query, keys, focus = 1) {
       const scores = keys.map(k => k.reduce((s, x, i) => s + x * query[i], 0) / Math.sqrt(query.length));
       const top = Math.max(...scores), raw = scores.map(s => Math.exp(focus * (s - top))), total = raw.reduce((s, x) => s + x, 0);
       return {scores, weights: raw.map(x => x / total)};
     },
-    attention(a, b) {
-      // The last word: "tired" below about 1.6, "wide" above about 1.9, swapped smoothly in between.
-      const u = Math.min(1, Math.max(0, (b - 1.6) / .3)), mix = u * u * (3 - 2 * u), focus = Math.min(1, Math.max(0, a));
-      const words = [...this.attentionWords, mix < .5 ? 'tired' : 'wide'], ask = 7;
-      // "it" looks for a thing it could stand for that could be tired (or wide).
-      const query = [4 * (1 - mix), 4 * mix, 3, 0];
-      const {scores, weights} = this.attend(query, this.attentionKeys, focus);
-      const blend = [0, 1, 2].map(c => weights.reduce((s, w, j) => s + w * this.attentionValues[j][c], 0));
-      const top = weights.reduce((best, w, j) => w > best.w + 1e-12 ? {w, j, word: words[j]} : best, {w: -1, j: -1, word: ''});
-      const even = weights.every(w => Math.abs(w - weights[0]) < 1e-9);
-      return {words, ask, ending: words[10], mix, focus, query, keys: this.attentionKeys, values: this.attentionValues, scores, weights, blend, top, even};
+    lookBack(strength = 1) { return this.attend(this.lookQuery, this.lookKeys, strength).weights; },
+    // A one-at-a-time memory instead: each word read squeezes the older ones, so word j is kept with weight
+    // fade^(words read since), and the clue is mostly gone by the end.
+    memoryFade: .62,
+    memoryKeeps(j) { return Math.pow(this.memoryFade, this.lookWords.length - j); },
+    // A toy rule for the guess: the more of the clue reaches the guess, the surer "French" is. strength mixes the
+    // memory alone (0) with attention (1).
+    lookGuess(strength = 1) {
+      const clue = strength * this.lookBack(1)[this.lookClue] + (1 - strength) * this.memoryKeeps(this.lookClue);
+      const french = .2 + .7 * clue / (clue + .25);
+      return [['French', french], ['English', (1 - french) * .55], ['Spanish', (1 - french) * .3]];
     },
     // A wave shot across a trap of depth V and width L at a trial energy E (-V < E < 0): it starts fading into the
     // left wall, wiggles inside, and in the right wall is part fading (C) and part growing (D). Only at the allowed
@@ -524,20 +523,19 @@
       }).map(([name,pass])=>({name,pass}));
     },
     attentionChecks() {
-      const near = (x, y, e = 1e-12) => Math.abs(x - y) < e, A = this.attention(1, 1), W = this.attention(1, 2.5), Z = this.attention(0, 1);
-      const soft = this.attention(.45, 1), n = A.words.length, settings = [[0, 1], [.45, 1], [1, 1], [.7, 1.75], [1, 2.5]];
+      const near = (x, y, e = 1e-12) => Math.abs(x - y) < e, W = this.lookBack(1), Z = this.lookBack(0), n = this.lookWords.length;
+      const sc = this.attend(this.lookQuery, this.lookKeys).scores;
       // Without position information, shuffling the words shuffles their shares in exactly the same way.
-      const order = [3, 0, 10, 5, 1, 7, 2, 9, 4, 6, 8], mixed = this.attend(A.query, order.map(j => A.keys[j]), 1).weights;
+      const order = [3, 0, 8, 5, 1, 7, 2, 4, 6], mixed = this.attend(this.lookQuery, order.map(j => this.lookKeys[j])).weights;
       return Object.entries({
-        'Shares are positive and add up to one': settings.every(([a, b]) => { const w = this.attention(a, b).weights; return w.every(x => x > 0) && near(w.reduce((s, x) => s + x, 0), 1, 1e-12); }),
-        'With no focus every word gets an equal share': Z.even && Z.weights.every(x => near(x, 1 / n)),
-        'Scores are dot products divided by the square root of the vector size': near(A.scores[1], (4 * 1 + 3 * 1) / 2) && near(A.scores[5], 3 / 2) && near(A.scores[3], 0),
-        'Shares follow the softmax of the scores': near(A.weights[1] / A.weights[5], Math.exp(A.scores[1] - A.scores[5]), 1e-9),
-        'Ending in "tired", "it" looks most at "animal"': A.top.word === 'animal' && A.top.w > .6 && A.ending === 'tired',
-        'Ending in "wide", "it" looks most at "street"': W.top.word === 'street' && W.top.w > .6 && W.ending === 'wide',
-        'More focus gives the top word a bigger share': Z.top.w < soft.top.w && soft.top.w < A.top.w,
-        'The result is the share-weighted blend of the values': [0, 1, 2].every(c => near(A.blend[c], A.weights.reduce((s, w, j) => s + w * A.values[j][c], 0))),
-        'Without position information, word order does not change the shares': order.every((j, i) => near(mixed[i], A.weights[j], 1e-12)),
+        'Shares are positive and add up to one': [0, .5, 1].every(k => { const v = this.lookBack(k); return v.every(x => x > 0) && near(v.reduce((s, x) => s + x, 0), 1); }),
+        'With attention off every earlier word gets an equal share': Z.every(x => near(x, 1 / n)),
+        'Scores are dot products divided by the square root of the vector size': near(sc[4], 6.4 / 2) && near(sc[7], 3.2 / 2) && near(sc[0], 0),
+        'Shares follow the softmax of the scores': near(W[4] / W[7], Math.exp(sc[4] - sc[7]), 1e-9),
+        'The guess looks hardest at the clue, “France”': W.indexOf(Math.max(...W)) === this.lookClue && W[this.lookClue] > .5,
+        'A one-at-a-time memory keeps little of the clue': this.memoryKeeps(this.lookClue) < .1 && this.memoryKeeps(n - 1) > this.memoryKeeps(this.lookClue),
+        'Looking straight back makes the right guess likelier': this.lookGuess(1)[0][1] > this.lookGuess(0)[0][1] + .2,
+        'Without position information, word order does not change the shares': order.every((j, i) => near(mixed[i], W[j])),
       }).map(([name, pass]) => ({name, pass}));
     },
     waveChecks() {

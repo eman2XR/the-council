@@ -1,7 +1,7 @@
 {
   "id": "20261029T175059-82fa6e44",
   "status": "reviewed",
-  "question": "What does the \u201cattention\u201d in \u201cAttention Is All You Need\u201d do when an AI reads a sentence?",
+  "question": "Why did \u201cAttention Is All You Need\u201d lead to ChatGPT?",
   "topic": "attention",
   "created": "2026-10-29T17:50:59.782080+00:00",
   "research": {
@@ -126,25 +126,29 @@
     ]
   },
   "scene": {
-    "title": "Which word does \u201cit\u201d mean? How attention shares out a sentence",
-    "subtitle": "A small sentence worked through by hand. \u201cit\u201d gives every word a share, and the word that best fits what \u201cit\u201d looks for gets most. Attention on its own ignores word order, so real models add each word\u2019s position.",
-    "why": "Translation apps and chatbots use this step. It lets a word like \u201cit\u201d take its meaning from the right word anywhere in the sentence.",
+    "title": "Why \u201cAttention Is All You Need\u201d Led to ChatGPT",
+    "subtitle": "Chatbots write by guessing the next word. The 2017 paper built them from attention alone: every word looks straight back at every earlier word, all at once.",
+    "why": "Every chatbot you have used, from ChatGPT to Claude, is built on this idea: its Transformer is the \u201cT\u201d in GPT.",
     "beats": [
       {
-        "title": "Equal shares: nothing links \u201cit\u201d to a word yet",
-        "body": "Here \u201cit\u201d gives every word the same share, about 9%, so nothing links \u201cit\u201d to the animal or the street. Shares are like slices of one pie: however you cut them, they add up to 100%."
+        "title": "Guess the next word",
+        "body": "A chatbot writes one word at a time: it reads everything so far and guesses what comes next. Then it adds that word and guesses again."
       },
       {
-        "title": "The best match gets the biggest share",
-        "body": "Each word offers a short description of itself, and \u201cit\u201d asks a question: which word could be tired? A closer match gives a higher score and a bigger share: \u201canimal\u201d gets about 70%, \u201cstreet\u201d about 10%. \u201cit\u201d even gives itself a small share, then becomes a blend of all the words, mostly \u201canimal\u201d."
+        "title": "A clue far back",
+        "body": "Here the clue it needs, \u201cFrance\u201d, is five words back. Older models read one word at a time through a small memory, so early words faded by the end."
       },
       {
-        "title": "A calculation, not a person reading",
-        "body": "Here every word may look at every other word, so \u201cit\u201d can use \u201ctired\u201d, which comes later. Chatbots, which write one word at a time, may only look at earlier words. Nothing here understands anything: these numbers were set by hand, and real models learn theirs from text."
+        "title": "Look straight back",
+        "body": "Attention lets the guess look straight back at every earlier word and weigh which ones matter. It looks hardest at \u201cFrance\u201d, and the guess becomes clear."
       },
       {
-        "title": "Less Focus, then a different last word",
-        "body": "Now Focus, a teaching slider for how much score gaps count, drops to half: \u201canimal\u201d falls to about 30%. Back at full Focus, which real models always use, the shares sharpen again. Now the last word becomes \u201cwide\u201d, the question changes, and about 70% moves to \u201cstreet\u201d."
+        "title": "All at once",
+        "body": "The 2017 paper\u2019s leap: build the model from attention alone, with no one-at-a-time reading. Then every word can be worked on at the same moment, so computers could learn from vast amounts of text."
+      },
+      {
+        "title": "The T in GPT",
+        "body": "Stacked dozens of times and trained on much of the internet, this became the Transformer. It is the \u201cT\u201d in GPT, and the engine inside today\u2019s chatbots."
       }
     ],
     "mass": 1,
@@ -155,9 +159,10 @@
     "accent": "blue",
     "line_width": 3,
     "duration": 40,
-    "takeaway": "Attention is a calculation: each word blends in the words that best match its question, in shares that add up to 100%.",
+    "takeaway": "Attention lets each word look straight back at every other, all at once; stacked many times, it powers today\u2019s chatbots.",
     "controls": "first",
-    "kind": "attention"
+    "kind": "attention",
+    "opening": "Your phone guesses your next word. How did that idea turn into ChatGPT?"
   },
   "checks": [
     {
@@ -240,7 +245,8 @@
   "provider": "reviewed-agents",
   "provenance": {
     "sources_retrieved": true,
-    "retrieved_by": "agent"
+    "retrieved_by": "agent",
+    "intro_note": "The illustration, its five chapters and all wording were rebuilt by hand after the agents\u2019 review, at the owner\u2019s request, to show why the paper mattered for chatbots: next-word guessing, a fading memory, attention looking straight back, and the Transformer. The reviews below refer to the earlier version, which explained the formula on a toy sentence."
   },
   "revisions": [
     {

@@ -119,9 +119,8 @@
    "items": [
     {
      "id": "5.1",
-     "question": "What does the “attention” in “Attention Is All You Need” do when an AI reads a sentence?",
-     "model": "attention",
-     "ready": true
+     "question": "Why did “Attention Is All You Need” lead to ChatGPT?",
+     "model": "attention"
     }
    ]
   }

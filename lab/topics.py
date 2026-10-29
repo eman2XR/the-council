@@ -188,46 +188,28 @@ while both coast; every kind of clock, and the crew's bodies, slow the same way,
 No twin-paradox resolution, acceleration, gravity or Doppler effects. Slowed down for viewing and not to scale.
 No new-discovery claims.'''+COMMON
 
-ATTENTION_NOTES = '''ATTENTION (WHICH WORDS MATTER TO EACH OTHER). Scaled dot-product attention, the core step of the Transformer from
-the 2017 paper "Attention Is All You Need" (Vaswani and others), computed exactly on one tiny hand-made example. The sentence
-"The animal didn't cross the street because it was too tired" is drawn as a row of word tiles (on phones, one row per
-word with a bar). The asking word is "it", highlighted. Each word offers a key (what it is) and carries a value (what it
-means); "it" has a query (what it looks for), shown under it as "it asks: which word could be tired?" once Focus is above
-zero. Each word's share of attention is the softmax of the query times that word's key, divided by the square root of the
-vector length (four numbers here): shares are positive and add up to 100%, and "it" also gives a small share to itself.
-A line runs from every other word into "it", thicker for a bigger share; shares of 5% or more are printed under their word.
-Below the question a label names the result: "it means the animal" (or, with Focus off, "every word counts the same").
-One small legend reads "thicker line: more attention". Nothing else is labelled; the subtitles explain.
-Field mass sets Focus (UI "Focus", 0..1), which scales the scores before the softmax: at 0 every word gets an equal share
-(9% each); at 1 it is the formula itself: about 70% goes to "animal", about 10% to "street", about 4% to "it" and about 2%
-to each other word. Field distance chooses the last word (UI "Last word"): below about 1.6 "tired", above about 1.9 "wide",
-swapped smoothly in between, with the tile outlined while it changes. With "wide" the question becomes "which word could
-be wide?" and about 70% goes to "street". There is no readout pill.
-Choreography: chapter 1 has Focus at zero (equal shares); later chapters use the scene's mass (use 1) and distance (use 1,
-so the sentence ends in "tired"). In the last chapter, playback first dips Focus to about half and back (the shares spread
-out, about 30% on "animal", then sharpen again), then swaps the last word to "wide" about two thirds of the way through the
-chapter, and the attention moves to "street". Write the last chapter's sentences in that order.
-Supported questions: how a language AI works out which words in a sentence matter to each other; how "it" gets linked to the
-right word; what the attention in "Attention Is All You Need" computes; why the shares add up to 100%; why the same word
-looks at different words in different sentences. Honesty points: the numbers are hand-made to show the mechanism, not taken
-from a trained model. Real models learn their queries, keys and values from huge amounts of text, use hundreds of numbers
-per word, run many attention heads side by side and stack many layers. Here the question "it" asks already depends on the
-last word; in a real model "it" picks that up in earlier layers, where it first takes in the words around it. As in the
-paper's encoder, every word may look at words after it too ("it" looks ahead to "tired"); models that write text one word
-at a time, such as chatbots, let a word look only at the words before it. Attention
-alone ignores word order, so real models add position information. Do not say the AI understands, thinks or reads like a
-person; give no model sizes or company claims; do not present Focus as a setting real models have (it shows how scores
-become shares; the real formula is Focus 100%). Plain words: query = what a word looks for, key = what a word offers,
-value = what it passes on. Describe changes concretely; this is mathematics, not physics. No new-discovery claims.'''+COMMON
+ATTENTION_NOTES = '''WHY ATTENTION LED TO CHATBOTS. Exact softmax attention (scaled dot products of hand-made four-number vectors, as in
+"Attention Is All You Need", 2017) for guessing the next word of "I grew up in France, so I speak fluent ___". Five
+chapters with fixed choreography and no slider demo: 1 the sentence types itself and the model guesses "French" (bars for
+French, English, Spanish), then adds it and a new blank waits; 2 the clue "France" is marked five words back, then a
+one-at-a-time memory reads the words and the clue fades in it, leaving an unsure guess (French 39%, English 34%); 3 lines
+from the guess back to every earlier word, thicker for a bigger share (France 63%, speak 13%, fluent 9%), the clue's line
+glowing, and the guess becomes clear (French 70%); 4 every word looks back at the ones before it at once (a faint web),
+pulsing together; 5 the web stacked in layers (the Transformer), and the answer fills in. After playback field mass sets
+how much attention is used (UI "Attention"; 0 is the fading memory alone). Readout: the chance of "French". The guesses
+come from a toy rule. Supported questions: why the 2017 paper mattered for chatbots, what attention does, why it allowed
+training on vast text. Honesty points: hand-made numbers; real models learn them, split words into pieces and run many
+heads in dozens of layers; older recurrent models kept more than the fading memory suggests but could not be trained on
+all words at once; attention itself is older than 2017; the first GPT came in 2018. No claims that models understand.'''+COMMON
 
 # Models whose picture explains why, not only what, and that passed owner review and beginner tests.
 # Only these are planned; the others wait for a redesign. attention (2026-10-29) was added at the owner's request
 # for the next run after subagent beginner tests; the owner has not reviewed its picture yet.
 READY = {'light-bending', 'gravity-clocks', 'spacetime-paths', 'light-clock', 'interference',
-         'diffraction', 'attention'}
+         'diffraction'}
 # Not ready (2026-10-28): twin-trip shows what rather than why; spacetime, falling-time and tunneling are graph-style;
-# standing-waves, quantum-well (five chapters) and wave-packet (four chapters) are hand-made guides with fixed
-# choreography, which agent-written scenes would not match;
+# standing-waves, quantum-well, attention (five chapters each) and wave-packet (four chapters) are hand-made guides
+# with fixed choreography, which agent-written scenes would not match;
 # two-slit-particles failed a beginner test (faint ripples, slits read as one gap, unexplained screen marks, stripes
 # form before the narration says so).
 

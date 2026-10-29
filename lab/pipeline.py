@@ -47,11 +47,14 @@ STANDARD = ('Quality bar: explain WHY, not only what happens. Start from somethi
     'sentences per chapter, each under 110 characters, and let the first chapter make its point in one or two short '
     'sentences. Never refer to other guides. Keep the picture calm: the stage shows only a few short labels (names of '
     'five words or fewer, never sentences), the subtitles carry every explanation, and only what the current sentence is '
-    'about moves or changes.')
+    'about moves or changes. Answer the question behind the topic for a newcomer: why it matters in the world, not only '
+    'how it works; for a famous discovery or paper, show what it changed and connect it to something the viewer uses.')
 
 LEARNER = ('You are a curious adult with school-level science who has never studied this topic. Use ONLY what these '
     'frames and texts show: each frame includes the subtitle on screen at that moment. Frames come in order, an early and '
-    'a late frame for each chapter, then the phone view of the last chapter and the phone page top. First answer each '
+    'a late frame for each chapter, then the phone view of the last chapter and the phone page top. First, in the summary, '
+    'say in one plain sentence why this idea matters and what it changed, using only the guide; if you cannot, fail it. '
+    'Then answer each '
     'transfer question from the guide alone, writing "not covered" when it does not answer it; put the answers in the '
     'summary. Then, as the copy editor, list in changes: undefined words, sentences hard to follow on one read, objections '
     'left unanswered, any subtitle that does not match its frame, and text that could be shorter; quote the field, the '
