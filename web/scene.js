@@ -6,7 +6,11 @@ const clamp=(x,a=0,b=1)=>Math.min(b,Math.max(a,x));
 const smooth=x=>{x=clamp(x);return x*x*(3-2*x);};
 function rgba(hex,a){const n=parseInt(hex.slice(1),16);return `rgba(${n>>16},${n>>8&255},${n&255},${a})`;}
 function trace(ctx,points){ctx.beginPath();points.forEach(([x,y],i)=>i?ctx.lineTo(x,y):ctx.moveTo(x,y));}
-function text(ctx,value,x,y,{align='left',color='rgba(20,23,28,.64)',size=11,weight=500,spacing='0px'}={}){
+// Labels drawn on the stage during one paint, so checks can hold every picture to a small label budget. Text that is
+// the subject itself (the words of a sentence being studied) is passed with content: true and not counted.
+let LABELS=null, lastLabels=[];
+function text(ctx,value,x,y,{align='left',color='rgba(20,23,28,.64)',size=11,weight=500,spacing='0px',content=false}={}){
+ if(LABELS&&!content)LABELS.push(String(value));
  ctx.font=`${weight} ${size}px ${FONT}`;ctx.textAlign=align;ctx.textBaseline='middle';ctx.fillStyle=color;
  if('letterSpacing' in ctx)ctx.letterSpacing=spacing;ctx.fillText(value,x,y);if('letterSpacing' in ctx)ctx.letterSpacing='0px';
 }
@@ -376,8 +380,8 @@ function drawGuitar(ctx,w,h,spec,st){
   ctx.fillStyle='rgba(255,240,230,.9)';ctx.strokeStyle=edge;ctx.beginPath();ctx.roundRect(xs-f*.5,yc-f*1.05,f,f*.75,f*.3);ctx.fill();ctx.stroke();}
  if(!st.labels)return;
  const lsize=small?10:11, base=yc+board/2+(small?24:30);
- text(ctx,'a guitar string, drawn 220× slower',(x0+x1)/2,yc-board/2-(small?40:52),{align:'center',size:lsize,weight:600,color:'rgba(20,23,28,.7)'});
- text(ctx,len<.999?(len>.51?`pressed: ${Math.round(len*100)}% of the string rings`:'pressed at the middle: half the string rings'):'open string: the whole string rings',(x0+x1)/2,base,{align:'center',size:small?11:12,weight:600,color:len<.999?warm:accent});
+ text(ctx,'a guitar string',(x0+x1)/2,yc-board/2-(small?40:52),{align:'center',size:lsize,weight:600,color:'rgba(20,23,28,.7)'});
+ text(ctx,len<.999?(len>.51?`${Math.round(len*100)}% of it rings`:'pressed at the middle'):'open string',(x0+x1)/2,base,{align:'center',size:small?11:12,weight:600,color:len<.999?warm:accent});
  if(pull>0)pill(ctx,'pluck',xs+p*(x1-xs),yc-amp-34,{align:'center',size:lsize,weight:600,color:accent});
 }
 function drawRope(ctx,w,h,spec,st){
@@ -401,8 +405,8 @@ function drawRope(ctx,w,h,spec,st){
  if(inStep)for(let m=1;m<n;m++){ctx.beginPath();ctx.arc(x0+m/n*W,yc,4.5,0,TAU);ctx.fillStyle=warm;ctx.fill();}
  if(!st.labels)return;
  const lsize=small?10:11, base=yc+h*.3;
- text(ctx,'your hand',x0-size*1.2,base,{align:'center',size:lsize,weight:600,color:'rgba(20,23,28,.7)'});
- text(ctx,'tied to a wall',small?w-6:x1+10,base,{align:small?'right':'center',size:lsize,weight:600,color:'rgba(20,23,28,.7)'});
+ if(st.stage===0)text(ctx,'your hand',x0-size*1.2,base,{align:'center',size:lsize,weight:600,color:'rgba(20,23,28,.7)'});
+ if(st.stage===0)text(ctx,'wall',small?w-6:x1+10,base,{align:small?'right':'center',size:lsize,weight:600,color:'rgba(20,23,28,.7)'});
  const shakes=ROPE.rate, rateText=st.stage===0?'one shake, 8× slower':`${shakes%1?shakes.toFixed(1):shakes} shake${shakes===1?'':'s'} a second`;
  text(ctx,rateText,x0-size*1.2,base+18,{align:'center',size:small?11:13,weight:600,color:'rgba(20,23,28,.78)'});
  if(st.stage===0){
@@ -414,7 +418,7 @@ function drawRope(ctx,w,h,spec,st){
   text(ctx,`in step: ${n} loop${n>1?'s':''}`,(x0+x1)/2,base,{align:'center',size:small?11:12,weight:600,color:accent});
   // The still point's tag sits below the swing, joined to its dot by a thin line.
   if(n>1){const px=x0+W/n, ty=yc+.17*V+14;trace(ctx,[[px,yc+6],[px,ty-8]]);ctx.strokeStyle=rgba(warm,.5);ctx.lineWidth=1;ctx.stroke();pill(ctx,'still point',px,ty,{align:'center',size:10,weight:600,color:warm});}
- }else if(shakes>0&&Math.abs(shakes-n)>.04&&st.since>3)text(ctx,small?'out of step':'out of step: the rope only jiggles',(x0+x1)/2,base,{align:'center',size:small?11:12,weight:600,color:warm});
+ }else if(shakes>0&&Math.abs(shakes-n)>.04&&st.since>3)text(ctx,'out of step',(x0+x1)/2,base,{align:'center',size:small?11:12,weight:600,color:warm});
 }
 
 function drawTunnel(ctx,w,h,spec,st){
@@ -487,24 +491,22 @@ function drawPacket(ctx,w,h,spec,st){
    const pts=[];for(let i=0;i<=320;i++){const x=-half+2*half*i/320;pts.push([X(x),rowY(j)-a*S*Math.cos((KC+j*D)*x)]);}
    trace(ctx,pts);ctx.strokeStyle=hue(j,.95*plan.rows*Math.min(1,a*1.6));ctx.lineWidth=1.8;ctx.stroke();}
   if(st.labels){ctx.globalAlpha=plan.rows;
-   text(ctx,word('PITCHES MIXED IN','WAVES MIXED IN'),small?X(half):X(-half),rTop-(small?12:14),{align:small?'right':'left',size:lsize,weight:600,spacing:'1px'});
+   if(plan.mode==='beep')text(ctx,'WAVES MIXED IN',small?X(half):X(-half),rTop-(small?12:14),{align:small?'right':'left',size:lsize,weight:600,spacing:'1px'});
    if(plan.speeds>0){ctx.globalAlpha=plan.rows*plan.speeds;
-    pill(ctx,'longer wave: slower',X(half),rowY(-1)-2,{align:'right',size:lsize,weight:600,color:hue(-1)});
-    pill(ctx,'shorter wave: faster',X(half),rowY(1)+2,{align:'right',size:lsize,weight:600,color:hue(1)});}
+    pill(ctx,'slower',X(half),rowY(-1)-2,{align:'right',size:lsize,weight:600,color:hue(-1)});
+    pill(ctx,'faster',X(half),rowY(1)+2,{align:'right',size:lsize,weight:600,color:hue(1)});}
    ctx.globalAlpha=1;}
  }
  // Where the crests line up, and where crest meets trough.
  const markTop=y0-amp-(small?6:8);
  if(plan.marks>0){ctx.globalAlpha=plan.marks;
   for(const x of [0,8,-8]){if(Math.abs(x)>half)continue;trace(ctx,[[X(x),rTop-4],[X(x),rBot+4]]);trace(ctx,[[X(x),markTop],[X(x),y0+amp+6]]);ctx.strokeStyle=x?'rgba(194,65,12,.55)':rgba(accent,.6);ctx.lineWidth=1.2;ctx.setLineDash([3,4]);ctx.stroke();ctx.setLineDash([]);}
-  if(st.labels){pill(ctx,'line up: loud',X(0),y0+amp+20,{align:'center',size:lsize,weight:600,color:accent});
-   for(const x of [8,-8])if(Math.abs(x)<=half)pill(ctx,'cancel: quiet',X(x),y0+amp+20,{align:'center',size:lsize,weight:600,color:warm});}
+  if(st.labels){pill(ctx,'loud',X(0),y0+amp+20,{align:'center',size:lsize,weight:600,color:accent});
+  pill(ctx,'quiet',X(8),y0+amp+20,{align:'center',size:lsize,weight:600,color:warm});}
   ctx.globalAlpha=1;}
  if(plan.steps>0){ctx.globalAlpha=plan.steps;const far=7;
   for(const x of [0,far,-far]){trace(ctx,[[X(x),rTop-4],[X(x),rBot+4]]);ctx.strokeStyle=x?'rgba(194,65,12,.5)':rgba(accent,.6);ctx.lineWidth=1.2;ctx.setLineDash([3,4]);ctx.stroke();trace(ctx,[[X(x),markTop],[X(x),y0+amp+6]]);ctx.stroke();ctx.setLineDash([]);}
-  if(st.labels){pill(ctx,'all in step',X(0),y0+amp+20,{align:'center',size:lsize,weight:600,color:accent});
-   pill(ctx,small?'out of step':'out of step: they cancel',X(far),y0+amp+20,{align:'center',size:lsize,weight:600,color:warm});
-   if(!small)pill(ctx,'out of step: they cancel',X(-far),y0+amp+20,{align:'center',size:lsize,weight:600,color:warm});}
+  if(st.labels)pill(ctx,'in step',X(0),y0+amp+20,{align:'center',size:lsize,weight:600,color:accent});
   ctx.globalAlpha=1;}
  // Everything added together; the shaded band shows where the particle is likely to be.
  const N=small?420:700, pts=[];
@@ -515,10 +517,9 @@ function drawPacket(ctx,w,h,spec,st){
  trace(ctx,pts);ctx.strokeStyle=accent;ctx.lineWidth=spec.line_width||2.4;ctx.lineJoin='round';ctx.stroke();
  const sk=plan.sk??.25, sx=sk>.01?.5/sk:Infinity;
  if(st.labels){
-  text(ctx,word(small?'ALL ADDED: WHAT YOU HEAR':'ALL ADDED TOGETHER: WHAT YOU HEAR','THE PARTICLE’S WAVE'),X(-half),y0-amp-(small?14:18),{size:lsize,weight:600,spacing:'1px'});
-  text(ctx,word('time →','place →'),X(half),y0+amp+(small?36:40),{align:'right',size:lsize,color:'rgba(20,23,28,.55)'});
+  if(plan.mode==='beep'||plan.mode==='particle')text(ctx,word('ALL ADDED TOGETHER','THE PARTICLE’S WAVE'),X(-half),y0-amp-(small?14:18),{size:lsize,weight:600,spacing:'1px'});
   if(plan.click>0){ctx.globalAlpha=plan.click;pill(ctx,'a short click',small?X(half):X(0),y0-amp-(small?14:18),{align:small?'right':'center',size:lsize,weight:600,color:accent});ctx.globalAlpha=1;}
-  if(plan.band>.5&&!plan.brackets){const edge=Math.min(half*.9,2.2*.5/.25);pill(ctx,small?'shaded: likely to be here':'shaded: where the particle is likely to be found',X(edge),y0-amp*.55,{align:'left',size:lsize,weight:600,color:rgba(accent,.95)});}
+
  }
  // The recipe: how much of each wave length is mixed in, on a fixed scale.
  const bBase=h*.93, bTall=h*(small?.15:.17), K=k=>w/2+(k-KC)/(13*D)*w*(small?.44:.32), bw=Math.max(2,(K(KC+D)-K(KC))*.62);
@@ -526,18 +527,15 @@ function drawPacket(ctx,w,h,spec,st){
  const top=Math.max(...comps.map(([,a])=>a),1e-9);
  for(const [j,a] of comps){const hh=a/top*bTall;ctx.fillStyle=hue(j,.85);ctx.fillRect(K(KC+j*D)-bw/2,bBase-hh,bw,hh);}
  if(st.labels){
-  text(ctx,speedWord('PITCHES IN THE MIX','SPEEDS IN THE MIX'),w/2,bBase+12,{align:'center',size:lsize,weight:600,spacing:'1px'});
-  text(ctx,speedWord('lower','slower'),K(KC-13*D),bBase+12,{size:lsize});text(ctx,speedWord('higher','faster'),K(KC+13*D),bBase+12,{align:'right',size:lsize});
+  text(ctx,speedWord('pitch: low → high','speed: slow → fast'),w/2,bBase+12,{align:'center',size:lsize,weight:600});
  }
  // Brackets: where the particle may be, and the speeds it may have (each covering most of its spread).
  if(plan.brackets>0){ctx.globalAlpha=plan.brackets;
   const brace=(x0,x1,y,label)=>{trace(ctx,[[x0,y+5],[x0,y],[x1,y],[x1,y+5]]);ctx.strokeStyle=warm;ctx.lineWidth=1.6;ctx.stroke();if(st.labels)pill(ctx,label,(x0+x1)/2,y-12,{align:'center',size:lsize,weight:600,color:warm});};
   if(2*sx<half*.95)brace(X(-2*sx),X(2*sx),y0-amp-(small?8:10),'where it may be');
-  else if(st.labels)pill(ctx,'where it may be: anywhere',X(0),y0-amp-(small?18:22),{align:'center',size:lsize,weight:600,color:warm});
-  if(sk>.01)brace(K(KC-2*sk),K(KC+2*sk),bBase-bTall-(small?28:34),'the speeds it may have');
-  else if(st.labels)pill(ctx,'its speed: exactly one',K(KC),bBase-bTall-(small?40:46),{align:'center',size:lsize,weight:600,color:warm});
-  if(plan.extremes&&st.labels){const note=sk>=.85?'nearly an exact place, so speeds spread everywhere':sk<=.03?'one exact speed, so it could be anywhere':'';
-   if(note)pill(ctx,small?note.replace('nearly an exact place, so ','').replace('one exact speed, so ',''):note,w/2,y0+amp+(small?20:24),{align:'center',size:lsize,weight:700,color:warm});}
+  else if(st.labels)pill(ctx,'anywhere',X(0),y0-amp-(small?18:22),{align:'center',size:lsize,weight:600,color:warm});
+  if(sk>.01)brace(K(KC-2*sk),K(KC+2*sk),bBase-bTall-(small?28:34),'its speeds');
+  else if(st.labels)pill(ctx,'one exact speed',K(KC),bBase-bTall-(small?40:46),{align:'center',size:lsize,weight:600,color:warm});
   ctx.globalAlpha=1;}
 }
 
@@ -562,10 +560,10 @@ function trapPlan(st){
  const L=2, lv=P.trapLevels(L), mid=(lv[1]+lv[2])/2, floor=-V+.4;
  if(st.since===undefined)return {mode:'all',L,levels:lv,found:[0,1,2],show:[1,1,1]};
  // 1: the wave inside the trap; with the second sentence its energy rises and it wiggles more.
- if(st.stage===0)return {mode:'inside',L,E:-14+(mid+14)*smooth((t-at(1))/3.6),levels:lv,found:[]};
- // 2: the same wave with the walls: it fades into the left wall but grows without end in the right one; with the
- // second sentence a dashed tail shows the fade it would need.
- if(st.stage===1)return {mode:'walls',L,E:mid,levels:lv,found:[],grow:smooth((t-at(0)-2.4)/2.2),warn:t>=at(1),ghost:smooth((t-at(1)-1.4)/1)};
+ if(st.stage===0)return {mode:'inside',L,E:-14+(mid+14)*smooth((t-at(1))/3.6),levels:lv,found:[],name:t<at(1)};
+ // 2: the same wave with the walls: it fades into the left wall and grows in the right one. The second sentence
+ // lights up the fading tail (the particle pokes in only a little), the third the growing one (impossible).
+ if(st.stage===1)return {mode:'walls',L,E:mid,levels:lv,found:[],grow:smooth((t-.6)/1.6),focus:t>=at(2)?'right':t>=at(1)?'left':''};
  // 3: first the rule: a fade would need a sharp corner where the wave enters the right wall. Then the energy rises
  // through every value (almost every wave grows), drops back, and with the third sentence rises again, stopping at
  // each energy where the wave arrives at just the slope a fade needs.
@@ -596,6 +594,7 @@ function drawWell(ctx,w,h,spec,st){
  if(st.labels){
   for(const x of [(-xm-half)/2,(xm+half)/2])text(ctx,'WALL',X(x),floor+16,{align:'center',size:lsize,weight:600,spacing:'1.5px',color:'rgba(90,60,35,.8)'});
   text(ctx,'TRAP',cx,floor+16,{align:'center',size:lsize,weight:600,spacing:'1.5px',color:'rgba(90,60,35,.8)'});
+  text(ctx,'↑ energy',small?6:14,rim-14,{size:lsize-1,weight:600,color:'rgba(20,23,28,.45)'});
  }
  // One wave at energy E, drawn around its energy line at the same size inside the trap for every energy; the shading
  // between wave and line shows how much wave is there, above or below. A tail that grows without end is drawn warm and
@@ -618,7 +617,7 @@ function drawWell(ctx,w,h,spec,st){
    trace(ctx,seg);ctx.strokeStyle=col;ctx.lineWidth=spec.line_width||2.4;ctx.stroke();}
   if(cut){const d=cut.up?-1:1;ctx.beginPath();ctx.moveTo(cut.x,cut.y+d*2);ctx.lineTo(cut.x-6,cut.y-d*9);ctx.lineTo(cut.x+6,cut.y-d*9);ctx.closePath();ctx.fillStyle=warm;ctx.fill();}
   ctx.globalAlpha=1;
-  return {fits,cut,s,y0,right,end:right.at(-1)||mid.at(-1)};
+  return {fits,cut,s,y0,right,left,end:right.at(-1)||mid.at(-1)};
  };
  const junction=(r,{show=1,label=true}={})=>{if(show<=0)return;const s=r.s, e=1e-5, ph=s.psi(half-e), slope=(s.psi(half-e)-s.psi(half-3*e))/(2*e);
   const px=X(half), py=r.y0-ph/s.top*A, dx=.42, go=x=>r.y0-(ph+slope*x)/s.top*A, fade=x=>r.y0-ph*Math.exp(-s.kappa*x)/s.top*A;
@@ -627,13 +626,14 @@ function drawWell(ctx,w,h,spec,st){
   trace(ctx,Array.from({length:12},(_,i)=>[X(half+dx*i/11),fade(dx*i/11)]));ctx.strokeStyle=accent;ctx.lineWidth=2;ctx.setLineDash([4,4]);ctx.stroke();ctx.setLineDash([]);
   trace(ctx,[[px,py],[X(half+dx),go(dx)]]);ctx.strokeStyle=match?accent:warm;ctx.lineWidth=2;ctx.stroke();
   ctx.beginPath();ctx.arc(px,py,9,0,TAU);ctx.strokeStyle=match?accent:warm;ctx.lineWidth=2;ctx.stroke();
-  if(st.labels&&label)pill(ctx,match?'smooth: it fits':(small?'sharp corner':'sharp corner: not allowed'),px+14,py+(small?20:24),{size:lsize,weight:600,color:match?accent:warm});
+  if(st.labels&&label&&!match)pill(ctx,small?'needs a kink':'fading here needs a kink',px+14,py+(small?20:24),{size:lsize,weight:600,color:warm});
   ctx.globalAlpha=1;return match;};
  const line=E=>{trace(ctx,[[0,Y(E)],[w,Y(E)]]);ctx.strokeStyle='rgba(20,23,28,.28)';ctx.lineWidth=1;ctx.setLineDash([4,5]);ctx.stroke();ctx.setLineDash([]);
-  if(st.labels)pill(ctx,'energy',X(-xm)+8,Y(E)-14,{size:lsize,weight:600,color:'rgba(20,23,28,.72)'});};
+  };
  // Allowed energies found so far: a solid rung across the trap, labelled.
  const rungs=list=>{for(const i of list){trace(ctx,[[X(-half),Y(lv[i])],[X(half),Y(lv[i])]]);ctx.strokeStyle=rgba(accent,.45);ctx.lineWidth=1.6;ctx.stroke();
-   if(st.labels)pill(ctx,'allowed',X(half)-8,Y(lv[i])+(small?11:13),{align:'right',size:small?10:11,weight:600,color:rgba(accent,.95)});}};
+  }};
+ const glow=(seg,col)=>{if(!seg||seg.length<2)return;trace(ctx,seg);ctx.strokeStyle=rgba(col,.28);ctx.lineWidth=14;ctx.lineCap='round';ctx.stroke();};
  const tailNote=(r,good,bad,extra)=>{if(!st.labels||!r.right.length)return null;
   const far=r.cut?Math.abs(r.cut.y-r.y0):0, pt=r.fits?r.end:(r.right.find(([,y])=>Math.abs(y-r.y0)>=.5*far)||r.end);
   const label=r.fits?good:bad;ctx.font=`600 ${lsize}px ${FONT}`;const room=ctx.measureText(extra&&!small?extra:label).width+18;
@@ -643,34 +643,28 @@ function drawWell(ctx,w,h,spec,st){
   return [x,y];};
  if(plan.mode==='inside'){
   line(plan.E);wave(plan.E,{inside:true});
-  if(st.labels)pill(ctx,'the particle’s wave',cx,Y(plan.E)-A-18,{align:'center',size:lsize,weight:600,color:accent});
+  if(st.labels&&plan.name)pill(ctx,'the particle’s wave',cx,Y(plan.E)-A-18,{align:'center',size:lsize,weight:600,color:accent});
   return;
  }
  if(plan.mode==='walls'){
   line(plan.E);
   const r=wave(plan.E,{reach:plan.grow});
-  // The fade the right tail would need, drawn dashed.
-  if(plan.ghost>0){const s=r.s, y0=r.y0, pts=[];for(let i=0;i<=120;i++){const x=half+(xm-half)*i/120;pts.push([X(x),y0-s.psi(half)*Math.exp(-s.kappa*(x-half))/s.top*A]);}
-   ctx.globalAlpha=plan.ghost;trace(ctx,pts);ctx.strokeStyle=accent;ctx.lineWidth=2;ctx.setLineDash([5,5]);ctx.stroke();ctx.setLineDash([]);
-   if(st.labels)pill(ctx,'needed: fades',Math.min(w-8,X(half)+(small?48:110)),y0+(small?18:22),{align:small?'right':'center',size:lsize,weight:600,color:accent});ctx.globalAlpha=1;}
-  if(st.labels){
-   pill(ctx,'fades away',X((-xm-half)/2),Y(plan.E)+(small?20:22),{align:'center',size:lsize,weight:600,color:accent});
-   // What the picture's heights mean.
-   pill(ctx,small?'wall height: energy to be there':'wall height: the energy it takes to be in the wall',X(-xm)+8,rim-14,{size:lsize,weight:600,color:'rgba(90,60,35,.9)'});
-   if(!small)pill(ctx,'shaded: how much wave there is, above or below its line',cx,Y(plan.E)+A+30,{align:'center',size:lsize,weight:600,color:rgba(accent,.95)});
-   if(plan.grow>.6)tailNote(r,'fades away','grows without end',plan.warn?(small?'impossible':'impossible: the particle would be deep in the wall'):'');
+  if(plan.focus==='left')glow(r.left,accent);
+  if(plan.focus==='right')glow(r.right,warm);
+  if(st.labels&&plan.grow>.6){
+   pill(ctx,plan.focus==='left'?'pokes in a little':'fades',X((-xm-half)/2),Y(plan.E)+(small?20:22),{align:'center',size:lsize,weight:600,color:accent});
+   tailNote(r,'fades',plan.focus==='right'?'grows: impossible':'grows');
   }
   return;
  }
  if(plan.mode==='corner'){
   line(plan.E);const r=wave(plan.E,{reach:0});junction(r,{show:plan.corner});
-  if(st.labels&&plan.corner>.5)pill(ctx,'needed: fades',X(half)+(small?10:18),r.y0-(small?24:30),{size:lsize,weight:600,color:accent});
   return;
  }
  if(plan.mode==='sweep'||plan.mode==='live'){
   rungs(plan.found);line(plan.E);
   const r=wave(plan.E);TRAP.fits=r.fits;
-  tailNote(r,'fades: it fits','grows: no fit');
+  if(r.fits)tailNote(r,'fits','');else if(plan.mode==='live')tailNote(r,'fits','grows');
   return;
  }
  if(plan.mode==='all'){
@@ -686,19 +680,17 @@ function drawWell(ctx,w,h,spec,st){
  const strip=ctx.createLinearGradient(sx0,0,sx0+sw,0);[[0,'rgba(120,60,200,.22)'],[.3,'rgba(40,120,230,.22)'],[.5,'rgba(40,180,90,.22)'],[.7,'rgba(240,200,40,.22)'],[1,'rgba(220,50,40,.22)']].forEach(([o,c])=>strip.addColorStop(o,c));
  ctx.fillStyle='#202028';ctx.beginPath();ctx.roundRect(sx0,sy,sw,14,4);ctx.fill();ctx.fillStyle=strip;ctx.beginPath();ctx.roundRect(sx0,sy,sw,14,4);ctx.fill();
  if(st.labels){text(ctx,'light from the atom',sx0+sw/2,sy+26,{align:'center',size:small?10:11,weight:600});
-  text(ctx,'violet',sx0-6,sy+7,{align:'right',size:small?9:10,color:'rgba(20,23,28,.6)'});text(ctx,'red',sx0+sw+6,sy+7,{size:small?9:10,color:'rgba(20,23,28,.6)'});}
+ }
  plan.drops.forEach((d,i)=>{if(d.p<=0)return;
   const x=X(-half*.55+i*half*.55), yu=Y(lv[d.u]), yd=Y(lv[d.d]), y=yu+(yd-yu)*smooth(d.p), col=dropColour((gaps[i]-lo)/(hi-lo||1));
   const done=d.p>=1, fade=done&&plan.drops[i+1]&&plan.drops[i+1].p>0?.45:1;
   ctx.globalAlpha=fade;trace(ctx,[[x,yu],[x,y]]);ctx.strokeStyle='rgba(20,23,28,.55)';ctx.lineWidth=1.6;ctx.stroke();
   if(done){ctx.beginPath();ctx.moveTo(x,yd);ctx.lineTo(x-5,yd-9);ctx.lineTo(x+5,yd-9);ctx.closePath();ctx.fillStyle='rgba(20,23,28,.7)';ctx.fill();}
   else{ctx.beginPath();ctx.moveTo(x,y+2);ctx.lineTo(x-5,y-7);ctx.lineTo(x+5,y-7);ctx.closePath();ctx.fillStyle='rgba(20,23,28,.8)';ctx.fill();}
-  if(st.labels&&i===0&&d.p<1.2)pill(ctx,'an electron drops',x-10,(yu+yd)/2,{align:'right',size:lsize,weight:600,color:'rgba(20,23,28,.8)'});
   if(done){TRAP.colours++;
    const ym=(yu+yd)/2, x1=Math.min(w-10,X(half)+(small?70:200)), pts=[];
    for(let j=0;j<=80;j++){const xx=x+8+(x1-x-8)*j/80;pts.push([xx,ym+Math.sin(j*.9)*4]);}
    trace(ctx,pts);ctx.strokeStyle=col.css;ctx.lineWidth=2.4;ctx.stroke();
-   if(st.labels&&i===0)pill(ctx,'light',x1,ym-14,{align:'right',size:lsize,weight:600,color:'rgba(20,23,28,.8)'});
    ctx.globalAlpha=1;ctx.save();ctx.shadowColor=col.css;ctx.shadowBlur=8;ctx.fillStyle=col.css;ctx.fillRect(nm(col.nm)-3,sy,6,14);ctx.restore();}
   ctx.globalAlpha=1;
  });
@@ -780,9 +772,9 @@ function drawGap(ctx,w,h,spec,st){
  if(st.labels){
   const size=small?10:11;
   pill(ctx,'WAVE COMING IN',cx,Math.max(16,yb-24),{align:'center',size,weight:600,spacing:'1px'});
-  if(open)pill(ctx,`gap ${(G.width/G.lambda).toFixed(1)} wavelengths wide`,cx,yb+18,{align:'center',size:10,weight:500});
+  if(open)pill(ctx,`gap: ${(G.width/G.lambda).toFixed(1)} waves wide`,cx,yb+18,{align:'center',size:10,weight:500});
   else pill(ctx,'no barrier',cx,yb+18,{align:'center',size:10,weight:500});
-  text(ctx,!open?'SCREEN · no barrier: lit straight ahead':G.sinMin>=1?'SCREEN · gap narrower than the wave: it spreads to every side':'SCREEN · dashed lines: first dark directions',w*.04,screen+band+22,{size:10,weight:600,spacing:'.5px'});
+  text(ctx,!open?'SCREEN · lit straight ahead':G.sinMin>=1?'SCREEN · lit on every side':'SCREEN · dashed: first dark bands',w*.04,screen+band+22,{size:10,weight:600,spacing:'.5px'});
  }
 }
 
@@ -893,7 +885,7 @@ function drawTwinTrip(ctx,w,h,spec,st){
  if(st.labels){
   text(ctx,'EARTH',xE,yTrip+r*1.9,{align:'center',size:10,weight:600,spacing:'1.5px'});
   text(ctx,'STAR',xS,yTrip+r*1.9,{align:'center',size:10,weight:600,spacing:'1.5px'});
-  if(tc>=H-1e-6&&v>.001)pill(ctx,`Together again: the traveller is ${(H-H/g).toFixed(1)} years younger`,w/2,h*(small?.93:.9),{align:'center',size:small?11:13,weight:600});
+  if(tc>=H-1e-6&&v>.001)pill(ctx,`traveller: ${(H-H/g).toFixed(1)} years younger`,w/2,h*(small?.93:.9),{align:'center',size:small?11:13,weight:600});
  }
 }
 
@@ -932,14 +924,11 @@ function drawLightClocks(ctx,w,h,spec,st,{vplan}={}){
  drawRocket(ctx,x,ry+L/2+(small?16:22),small?12:16,1,moving,st.t);mirrors(x,ry);photon(...at(since));
  if(!st.labels)return;
  const size=small?11:13, note=small?10:12, ticks=n=>`${n} tick${n===1?'':'s'}`;
- text(ctx,`Clock on Earth: ${ticks(Math.floor(homeTicks))}`,xa+40,ey-L/2+4,{size,weight:600,color:dark});
- text(ctx,'light goes straight up and down',xa+40,ey-L/2+(small?20:24),{size:note});
- const head=moving?(small?`Rocket, ${Math.round(v*100)}% of light speed: ${ticks(Math.floor(rocketTicks))}`:`Clock on the rocket, ${Math.round(v*100)}% of light speed, seen from Earth: ${ticks(Math.floor(rocketTicks))}`)
-  :`Clock on the rocket, parked: ${ticks(Math.floor(rocketTicks))}`;
+ text(ctx,`Earth: ${ticks(Math.floor(homeTicks))}`,xa+40,ey-L/2+4,{size,weight:600,color:dark});
+ const head=`Rocket: ${ticks(Math.floor(rocketTicks))}`;
  text(ctx,head,xa,ry-L/2-(small?34:42),{size,weight:600,color:accent});
- text(ctx,moving?(small?'same light speed, longer slanted path':'same light speed, longer slanted path: each tick takes longer'):'light goes straight up and down',xa,ry-L/2-(small?18:22),{size:note});
- if(moving&&!small)text(ctx,'dots: equal steps of time, so light covers the same distance between dots on both clocks',w/2,h*.97,{align:'center',size:10,color:'rgba(20,23,28,.5)'});
- if(moving&&since>6)pill(ctx,`The rocket clock ticks ${Math.round(slow*10)} times for every 10 on Earth`,w/2,small?h*.94:h*.9,{align:'center',size:small?11:13,weight:600});
+ 
+ if(moving&&since>6)pill(ctx,`${Math.round(slow*10)} ticks to Earth’s 10`,w/2,small?h*.94:h*.9,{align:'center',size:small?11:13,weight:600});
 }
 
 function drawPaths(ctx,w,h,spec,st){
@@ -971,25 +960,24 @@ function drawPaths(ctx,w,h,spec,st){
  if(v>.001&&tc>0&&tc<H)drawRocket(ctx,map(xAt(tc),0)[0],sy-r*1.3,r*.7,tc<=T?1:-1,true,st.t);
  if(!st.labels)return;
  const size=small?10:11, T2=n=>n.toFixed(1), leg=T/g;
- const ty0=(bottom+map(0,H)[1])/2;if(Math.abs(hy-ty0)>22)text(ctx,'time ↑',x0-14,ty0,{align:'right',size:10});
+ const intro=st.stage===0, ty0=(bottom+map(0,H)[1])/2;if(Math.abs(hy-ty0)>22)text(ctx,'time ↑',x0-14,ty0,{align:'right',size:10});
  text(ctx,'space →',x0+L.k*4.4,bottom+14,{size:10});
- text(ctx,'goodbye',x0,bottom+14,{align:'center',size,weight:600,color:'rgba(20,23,28,.75)'});
- text(ctx,'reunion',x0,map(0,H)[1]-14,{align:'center',size,weight:600,color:'rgba(20,23,28,.75)'});
- const [lx,ly]=map(Math.min(reach,H)*.82,Math.min(reach,H)*.82);text(ctx,'light',lx+8,ly+4,{size:10,color:'rgba(180,83,9,.9)'});
- if(v>.001)pill(ctx,'turnaround',L.kink[0]+14,L.kink[1]+22,{size:10,weight:600,color:accent});
+ if(intro)text(ctx,'goodbye',x0,bottom+14,{align:'center',size,weight:600,color:'rgba(20,23,28,.75)'});
+ if(intro)text(ctx,'reunion',x0,map(0,H)[1]-14,{align:'center',size,weight:600,color:'rgba(20,23,28,.75)'});
+ const [lx,ly]=map(Math.min(reach,H)*.82,Math.min(reach,H)*.82);if(intro)text(ctx,'light',lx+8,ly+4,{size:10,color:'rgba(180,83,9,.9)'});
+ if(v>.001&&st.stage<=2&&tc<H-1e-6)pill(ctx,'turnaround',L.kink[0]+14,L.kink[1]+22,{size:10,weight:600,color:accent});
  text(ctx,'EARTH',x0,sy+r+12,{align:'center',size:9,weight:600,spacing:'1.5px'});
  const sx=map(v*T,0)[0], close=sx-x0<(small?90:150);
- if(v>.001)text(ctx,small?`STAR · ${T2(v*T)} ly`:`STAR · ${T2(v*T)} light-years`,close?sx+r+8:sx,close?sy:sy+r+12,{align:close?'left':'center',size:9,weight:600,spacing:'1px'});
+ if(v>.001)text(ctx,'STAR',close?sx+r+8:sx,close?sy:sy+r+12,{align:close?'left':'center',size:9,weight:600,spacing:'1px'});
  pill(ctx,`${T2(tc)} yr`,hx-14,hy,{align:'right',size,weight:600,color:'rgba(20,23,28,.85)'});
  if(v>.001&&tc>0)pill(ctx,`${T2(own)} yr`,tx+14,ty,{size,weight:600,color:accent});
  // Each twin's own clock so far: one dot per year on that twin's path.
  const px=small?w*.08:w*.56, right=small?w*.92:w*.93, py=small?h*.775:h*.3, lh=small?23:40, dark='rgba(20,23,28,.85)';
- text(ctx,'Home twin’s clock',px,py,{size:small?12:14,color:'rgba(20,23,28,.65)'});text(ctx,`${T2(Math.min(tc,H))} years`,right,py,{align:'right',size:small?16:22,weight:700,color:dark});
- text(ctx,'Traveller’s clock',px,py+lh,{size:small?12:14,color:'rgba(20,23,28,.65)'});text(ctx,`${T2(v>.001?own:Math.min(tc,H))} years`,right,py+lh,{align:'right',size:small?16:22,weight:700,color:accent});
- trace(ctx,[[px,py+lh*.5],[right,py+lh*.5]]);ctx.strokeStyle='rgba(20,23,28,.1)';ctx.lineWidth=1;ctx.stroke();
- const note=v>.001?[`Each leg: ${T2(T)} years pass on Earth,`,`${T2(leg)} on the traveller’s slow clock.`]:['No trip: both twins share one path.'];
- note.forEach((line,i)=>text(ctx,line,px,py+lh*1.8+i*(small?15:18),{size:small?11:12,color:'rgba(20,23,28,.6)'}));
- if(tc>=H-1e-6&&v>.001)pill(ctx,`Together again: the traveller is ${T2(H-H/g)} years younger`,small?w/2:(px+right)/2,small?h*.95:py+lh*3.3,{align:'center',size:small?11:13,weight:600});
+ 
+ 
+ 
+
+ if(tc>=H-1e-6&&v>.001)pill(ctx,`traveller: ${T2(H-H/g)} years younger`,small?w/2:(px+right)/2,small?h*.95:py+lh*3.3,{align:'center',size:small?11:13,weight:600});
 }
 function dragPaths(w,h,spec,st,x,y,grab){
  const L=pathsLayout(w,h,st);
@@ -1070,11 +1058,10 @@ function drawRiver(ctx,w,h,spec,st){
    const len=Math.min(w*.06,6+10*flow(r));trace(ctx,[[X(r),lane],[X(r)-len,lane]]);ctx.strokeStyle='rgba(255,255,255,.75)';ctx.lineWidth=2;ctx.lineCap='round';ctx.stroke();}
   // The point of no return: where the current equals the fish's own speed.
   if(plan.line>0){ctx.globalAlpha=plan.line;trace(ctx,[[X(rs),yw-(small?34:44)],[X(rs),yb]]);ctx.strokeStyle=warm;ctx.lineWidth=1.6;ctx.setLineDash([5,5]);ctx.stroke();ctx.setLineDash([]);
-   if(st.labels)pill(ctx,small?'point of no return':'point of no return: current = the fish’s speed',X(rs),yw-(small?44:56),{align:'center',size:lsize,weight:600,color:warm});ctx.globalAlpha=1;}
+   if(st.labels)pill(ctx,'point of no return',X(rs),yw-(small?44:56),{align:'center',size:lsize,weight:600,color:warm});ctx.globalAlpha=1;}
   if(st.labels){text(ctx,'WATERFALL',Math.min(w-8,xe+w*.05),h*.9,{align:small?'right':'center',size:lsize,weight:600,spacing:'1.5px',color:'rgba(255,255,255,.9)'});
-   text(ctx,'current: slow',X(R*.86),yw-12,{align:'center',size:lsize,weight:600,color:'rgba(37,99,235,.85)'});
-   text(ctx,'fast',X(.35),yw-12,{align:'center',size:lsize,weight:600,color:'rgba(37,99,235,.85)'});
-   text(ctx,'the river flows this way →',w*(small?.04:.06),yb+(small?18:22),{size:lsize,weight:600,color:'rgba(255,255,255,.9)'});}
+
+   }
   // The fish: each swims upstream at the same speed through the water.
   plan.fish.forEach((f,i)=>{const show=f.show??1;if(show<=0)return;
    const m=P.riverSwim(f.r0,rs,Math.max(0,f.tau)), size=small?26:38, y=yw+(yb-yw)*[.3,.55,.8][i%3];
@@ -1084,10 +1071,10 @@ function drawRiver(ctx,w,h,spec,st){
    drawFish(ctx,x,yy,size,st.t*9+i,alpha);
    if(f.arrows&&m.fell<0&&show>.6){ctx.globalAlpha=show;const own=small?30:48;
     swimArrows(ctx,x,f.below?yy+size*.62:yy-size*.75,-1,own,own*flow(m.r),{small,labels:false,names:[]});ctx.globalAlpha=1;}
-   if(st.labels&&show>.6&&!f.dim){const drift=1-flow(m.r), note=m.fell>=0?'swept over':Math.abs(drift)<.01?'holds still':drift>0?'gets away':'swept toward the edge';
+   if(st.labels&&show>.6&&!f.dim){const drift=1-flow(m.r), note=m.fell>=0?'swept over':Math.abs(drift)<.01?'holds still':drift>0?'gets away':'swept along';
     pill(ctx,note,x+size*.8,yy,{size:lsize,weight:600,color:note==='gets away'?'#1f6f43':warm});}
   });
-  if(st.labels)arrowLegend(ctx,w/2,h*(small?.08:.1),['the fish’s own swimming','the current'],small,[-1,1]);
+  if(st.labels)arrowLegend(ctx,w/2,h*(small?.08:.1),['swims','current'],small,[-1,1]);
   return;
  }
  // Top view of a black hole: space pictured flowing inward along spokes, faster closer in; light pulses swim outward.
@@ -1104,9 +1091,8 @@ function drawRiver(ctx,w,h,spec,st){
    const v=Math.sqrt(rs/r), len=Math.min(k*.5,k*.07*v), x=cx+Math.cos(ang)*r*k, y=cy+Math.sin(ang)*r*k, inside=r<rs;
    trace(ctx,[[x,y],[x+Math.cos(ang)*len,y+Math.sin(ang)*len]]);ctx.strokeStyle=inside?'rgba(180,200,255,.55)':'rgba(37,99,235,.45)';ctx.lineWidth=1.6;ctx.lineCap='round';ctx.stroke();
    ctx.beginPath();ctx.arc(x,y,2.2,0,TAU);ctx.fillStyle=inside?'rgba(200,215,255,.8)':'rgba(37,99,235,.75)';ctx.fill();}}
- if(st.labels){pill(ctx,small?'horizon':'horizon: the point of no return',cx-rs*k-10,cy,{align:'right',size:lsize,weight:600,color:'rgba(180,83,9,.95)'});
-  pill(ctx,small?'dots: flowing space':'dots: space flowing in, faster closer in',cx,Math.min(h-10,cy+rmax*k+(small?6:10)),{align:'center',size:lsize,weight:600,color:'rgba(37,99,235,.95)'});
-  arrowLegend(ctx,w/2,h*(small?.1:.07),small?['light’s own speed','space flowing in']:['light’s own speed, like the fish’s','space flowing in, like the current'],small);}
+ if(st.labels){pill(ctx,'horizon',cx-rs*k-10,cy,{align:'right',size:lsize,weight:600,color:'rgba(180,83,9,.95)'});
+ arrowLegend(ctx,w/2,h*(small?.1:.07),['light','space flows in'],small);}
  // Light pulses, each sent outward along its own direction.
  const states=[];
  plan.pulses.forEach((q,i)=>{
@@ -1132,12 +1118,10 @@ function drawRiver(ctx,w,h,spec,st){
   const note=r<rs*.985?'carried in':Math.abs(r-rs)<.015*rs?'stands still':'escapes', inflow=Math.round(v*100);
   const lx=x+ux*(own+16)+(ux>=0?4:-4), ly=y+uy*(own+16), align=ux>=-.2?'left':'right';
   pill(ctx,note,lx,ly,{align,size:lsize,weight:700,color:note==='escapes'?'#1f6f43':warm});
-  pill(ctx,small?`inflow ${inflow}%`:`space flows in at ${inflow}% of light speed`,lx,ly+(small?15:18),{align,size:small?9:11,weight:500,color:'rgba(20,23,28,.7)'});
+
  }
  // Inside the horizon: light still moves at light speed through space; it is the space that flows in faster.
- if(plan.limit>0&&st.labels){ctx.globalAlpha=plan.limit;
-  pill(ctx,small?'light: still light speed through space':'light still moves at light speed through the space around it',cx,cy+rs*k+(small?26:34),{align:'center',size:lsize,weight:600,color:'#b45309'});
-  pill(ctx,small?'space: flows in faster':'the space itself flows in faster than light',cx,cy+rs*k+(small?44:56),{align:'center',size:lsize,weight:600,color:'#2563eb'});ctx.globalAlpha=1;}
+
 }
 
 // One toss, two views: from the ground (the ball arcs) and floating with the ball (the ground moves).
@@ -1186,16 +1170,13 @@ function drawViews(ctx,w,h,spec,st){
  ctx.restore();
  if(!st.labels)return;
  const size2=small?10:11, held=grav>.5&&u>=.999&&stage!==2;
- pill(ctx,stage===0?'Far from any planet or star':s<.5?'From the ground':'From the ball’s perspective',M.l,M.t-30,{size:small?11:13,weight:700,color:dark});
+ pill(ctx,stage===0?'far from any planet':s<.5?'from the ground':'from the ball',M.l,M.t-30,{size:small?11:13,weight:700,color:dark});
  text(ctx,'height ↑',M.l-10,M.t+6,{align:'right',size:10});text(ctx,'time →',M.r,M.b+14,{align:'right',size:10});
  if(grav>0&&stage>=1&&feet+scaleH+size*2<h-6)text(ctx,'push',sx+8,feet+scaleH+size*2,{size:10,weight:600,color:warm});
  if(!held&&by>M.t&&by<h-8)pill(ctx,'scale: 0',sx+size*1.6,by-size*.6,{size:10,weight:600,color:accent});
  if(stage>=3){const mid=V.T/2;
   pill(ctx,'straight',X(mid),Y(V.h(mid)-shift(mid))-16,{align:'center',size:size2,weight:600,color:accent});
   pill(ctx,'pushed',X(mid),Y(-shift(mid))+18,{align:'center',size:size2,weight:600,color:dark});
-  // The measurement that decides: what a scale reads on the ball and under you.
-  const bx=M.r, y0=M.t+(small?8:14);
-  [[accent,'Ball’s scale: zero'],[dark,'Your scale: your weight']].forEach(([c,a],i)=>text(ctx,a,bx,y0+i*(small?16:20),{align:'right',size:size2,weight:600,color:c}));
  }
 }
 
@@ -1331,12 +1312,12 @@ function drawLift(ctx,w,h,spec,st){
  text(ctx,'you weigh',dx,dy-R-(small?34:40),{align:'center',size:small?11:12,weight:600,color:'rgba(20,23,28,.6)'});
  text(ctx,`${Math.round(reading*70)} kg`,dx,dy+R*.35,{align:'center',size:small?22:30,weight:700,color:reading>.01?dark:accent});
  text(ctx,'0',dx+Math.cos(ang(0))*R*1.2,dy+Math.sin(ang(0))*R*1.2,{align:'center',size:10});
- text(ctx,'standing still: 70 kg',dx,dy-R-(small?16:18),{align:'center',size:10,color:'rgba(20,23,28,.5)'});
+
  if(snapped&&stage===2)pill(ctx,'apple let go',ax+size*.6,ay-size*.5,{size:10,weight:600,color:'#b3362f'});
  // While falling: how fast, so "faster and faster" can be seen; the fall is shown in slow motion.
  if(snapped){text(ctx,`falling at ${Math.round(L.g*tf*3.6)} km/h`,cx,small?bot+18:h*.06,{align:'center',size:small?11:12,weight:600,color:accent});
-  text(ctx,'slow motion · no air',cx,small?bot+34:h*.06+16,{align:'center',size:10,color:'rgba(20,23,28,.5)'});}
- if(stage>=3&&!small)text(ctx,'falling around the Earth',w*.88,h*.16+40,{align:'center',size:10,color:'rgba(20,23,28,.6)'});
+  }
+ if(stage>=3&&!small)text(ctx,'orbiting',w*.88,h*.16+40,{align:'center',size:10,color:'rgba(20,23,28,.6)'});
 }
 
 // The Moon stretches the Earth: it pulls the near side more and the far side less than the centre, so the oceans bulge both ways.
@@ -1366,14 +1347,14 @@ function drawMoonTides(ctx,w,h,spec,st){
   trace(ctx,[[gx,gy+gh/2],[gx+gw,gy+gh/2]]);ctx.strokeStyle='rgba(20,23,28,.15)';ctx.lineWidth=1;ctx.stroke();
   trace(ctx,Array.from({length:121},(_,i)=>{const f=i/120;return [gx+f*gw,gy+gh/2-M.shape(Math.PI*.75+f*TAU)*gh*.45];}));ctx.strokeStyle=accent;ctx.lineWidth=2;ctx.stroke();
   const f=((spin%TAU)+TAU)%TAU/TAU;ctx.beginPath();ctx.arc(gx+f*gw,gy+gh/2-M.shape(Math.PI*.75+spin)*gh*.45,4.5,0,TAU);ctx.fillStyle=dark;ctx.fill();
-  if(st.labels){text(ctx,'water level where you are, over one day',gx,gy-12,{size:small?10:11,weight:600,color:'rgba(20,23,28,.65)'});}}
+  if(st.labels){text(ctx,'your water level, one day',gx,gy-12,{size:small?10:11,weight:600,color:'rgba(20,23,28,.65)'});}}
  if(!st.labels)return;
  const size=small?10:11;
- text(ctx,'Moon (not to scale)',small?w-8:mx,ey+mr+16,{align:small?'right':'center',size:10,color:'rgba(20,23,28,.55)'});
+ text(ctx,'Moon',small?w-8:mx,ey+mr+16,{align:small?'right':'center',size:10,color:'rgba(20,23,28,.55)'});
  if(stage===0||stage>=3){pill(ctx,'high tide',ex+Re*1.25,ey-Re*.28,{size,weight:600,color:accent});pill(ctx,'high tide',ex-Re*1.25,ey-Re*.28,{align:'right',size,weight:600,color:accent});
   if(stage===0){pill(ctx,'low tide',ex,ey-Re*1.12-14,{align:'center',size,color:'rgba(20,23,28,.6)'});}}
  if(stage===1){pill(ctx,'pulled most',ex+Re*1.08,ey+24,{align:'center',size,weight:600,color:warm});pill(ctx,'centre',ex,ey+24,{align:'center',size,weight:600,color:dark});pill(ctx,'pulled least',ex-Re*1.08,ey+24,{align:'center',size,weight:600,color:warm});
-  text(ctx,'differences enlarged',ex,ey+Re*1.08+24,{align:'center',size:10,color:'rgba(20,23,28,.5)'});}
+  }
  if(stage===2&&morph>.6){pill(ctx,'pulled ahead',ex+Re*1.3,ey+22,{size,weight:600,color:warm});pill(ctx,'left behind',ex-Re*1.3,ey+22,{align:'right',size,weight:600,color:warm});pill(ctx,'squeezed',ex+12,ey-Re*1.2,{size,weight:600,color:warm});}
 }
 
@@ -1388,82 +1369,58 @@ function percents(weights){
 }
 function drawAttention(ctx,w,h,spec,st){
  const accent=ACCENT[spec.accent]||ACCENT.blue, A=Physics.attention(st.mass,st.distance), small=w<520, n=A.words.length, ask=A.ask;
- ATTN.A=A;const P100=percents(A.weights), focused=A.focus>.02, swapping=st.distance>1.45&&st.distance<2.2;
- const colour=(v,a=1)=>`rgba(${v.map(c=>Math.round(c*255)).join(',')},${a})`, pct=j=>P100[j]+'%', ink='rgba(20,23,28,.85)';
+ ATTN.A=A;const P100=percents(A.weights), focused=A.focus>.02, swapping=st.distance>1.45&&st.distance<2.2, ink='rgba(20,23,28,.85)', warm='#c2410c';
+ // Only shares worth reading are printed; the rest are thin lines.
+ const ranked=A.weights.map((v,j)=>[v,j]).sort((p,q)=>q[0]-p[0]).slice(0,2).map(([,j])=>j), shown=j=>focused&&!A.even&&ranked.includes(j)&&A.weights[j]>=.05;
  // The last word swaps smoothly between "tired" and "wide"; the question "it" asks swaps with it.
- const last=[['tired',1-A.mix],['wide',A.mix]], question=`“it” asks: which thing here could be ${A.mix<.5?'tired':'wide'}?`;
- const label=(j,x,y,opts)=>{if(j!==n-1)return text(ctx,A.words[j],x,y,opts);for(const [word,alpha] of last)if(alpha>.01){ctx.globalAlpha=alpha;text(ctx,word,x,y,opts);ctx.globalAlpha=1;}};
- const summary=A.even?`an equal bit of every word`:A.top.w>=.45?`mostly “${A.top.word}”`:`a bit of everything, most from “${A.top.word}”`;
- const focusLabel=A.focus<.005?'focus off: every word gets the same share':A.focus>.995?'full focus: the shares exactly as the formula gives them':`focus ${Math.round(A.focus*100)}%: shares more even than the formula’s`;
+ const last=[['tired',1-A.mix],['wide',A.mix]], question=`“it” looks for: something ${A.mix<.5?'tired':'wide'}`;
+ const word=(j,x,y,opts)=>{if(j!==n-1)return text(ctx,A.words[j],x,y,{...opts,content:true});for(const [wd,alpha] of last)if(alpha>.01){ctx.globalAlpha=alpha;text(ctx,wd,x,y,{...opts,content:true});ctx.globalAlpha=1;}};
  // The answer: the word whose meaning "it" takes in most.
- const answer=!focused||A.even?'“it” → a bit of every word':A.top.w>=.4?`“it” → ${A.top.word}`:`“it” → mostly ${A.top.word}, a little of the rest`;
+ const answer=!focused||A.even?'every word counts the same':A.top.w>=.4?`“it” means the ${A.top.word}`:`mostly the ${A.top.word}`;
  if(small){
-  // Phone: one row per word, with a bar for the share of attention "it" gives it; the readout pill sits above.
-  const top=Math.max(136,h*.28), rowH=Math.min(24,(h-top-80)/n), xw=w*.31, bx=w*.35, bw=w*.5;
-  if(st.labels){if(focused)pill(ctx,question,w/2,top-50,{align:'center',size:12,weight:600,color:accent});text(ctx,focusLabel,w/2,top-30,{align:'center',size:11,color:'rgba(20,23,28,.6)'});
-   text(ctx,'how much “it” looks at each word',bx,top-12,{size:11,weight:600,color:'rgba(20,23,28,.65)'});}
+  // Phone: one row per word, with a bar for the share of attention "it" gives it.
+  const top=Math.max(120,h*.24), rowH=Math.min(24,(h-top-60)/n), xw=w*.31, bx=w*.35, bw=w*.5;
+  if(st.labels){if(focused)pill(ctx,question,w/2,top-40,{align:'center',size:12,weight:600,color:accent});
+   text(ctx,'attention from “it”',bx,top-14,{size:11,weight:600,color:'rgba(20,23,28,.6)'});}
   A.words.forEach((_,j)=>{
    const y=top+j*rowH, share=A.weights[j], len=Math.max(2,share*bw);
    if(j===ask){ctx.fillStyle=accent;ctx.beginPath();ctx.roundRect(xw-40,y-rowH*.42,46,rowH*.84,rowH*.42);ctx.fill();}
-   label(j,xw,y,{align:'right',size:14,weight:j===ask?700:500,color:j===ask?'#fff':ink});
-   ctx.fillStyle=colour(A.values[j],.95);ctx.beginPath();ctx.roundRect(bx,y-6,len,12,4);ctx.fill();
-   text(ctx,pct(j),bx+len+6,y,{size:11,weight:j===A.top.j&&!A.even?700:500,color:j===A.top.j&&!A.even?ink:'rgba(20,23,28,.6)'});
-   if(j===n-1&&swapping){ctx.strokeStyle='#c2410c';ctx.lineWidth=2;ctx.beginPath();ctx.roundRect(xw-52,y-rowH*.46,58,rowH*.92,6);ctx.stroke();}
+   word(j,xw,y,{align:'right',size:14,weight:j===ask?700:500,color:j===ask?'#fff':ink});
+   ctx.fillStyle=rgba(accent,.25+.6*Math.min(1,share/.3));ctx.beginPath();ctx.roundRect(bx,y-6,len,12,4);ctx.fill();
+   if(shown(j))text(ctx,P100[j]+'%',bx+len+6,y,{size:11,weight:700,color:ink});
+   if(j===n-1&&swapping){ctx.strokeStyle=warm;ctx.lineWidth=2;ctx.beginPath();ctx.roundRect(xw-52,y-rowH*.46,58,rowH*.92,6);ctx.stroke();}
   });
-  if(st.labels)pill(ctx,answer,w/2,top+n*rowH+14,{align:'center',size:14,weight:700,color:A.even||!focused?ink:colour(A.values[A.top.j])});
-  drawBlend(top+n*rowH+52,24,w-48,12);
+  if(st.labels)pill(ctx,answer,w/2,top+n*rowH+16,{align:'center',size:14,weight:700,color:focused&&!A.even?accent:ink});
   return;
  }
- // Desktop: the sentence as a row of tiles, with a line from "it" to every word.
- const size=18, padX=13, gap=12, tileH=42, rowY=h*.58;
+ // Desktop: the sentence as a row of tiles, with a line from every word into "it", thicker for a bigger share.
+ const size=18, padX=13, gap=12, tileH=42, rowY=h*.6;
  ctx.font=`600 ${size}px ${FONT}`;
- const widths=A.words.map((word,j)=>(j===n-1?Math.max(ctx.measureText('tired').width,ctx.measureText('wide').width):ctx.measureText(word).width)+2*padX);
+ const widths=A.words.map((wd,j)=>(j===n-1?Math.max(ctx.measureText('tired').width,ctx.measureText('wide').width):ctx.measureText(wd).width)+2*padX);
  let x=(w-widths.reduce((s,v)=>s+v,0)-gap*(n-1))/2;
  const tiles=widths.map(tw=>{const t={x,w:tw,cx:x+tw/2};x+=tw+gap;return t;}), top=rowY-tileH/2, from=tiles[ask];
  const curve=j=>{const to=tiles[j], dx=Math.abs(to.cx-from.cx);return [[to.cx,top-2],[(to.cx+from.cx)/2,top-36-dx*.5],[from.cx,top-2]];};
- const at=([p0,c,p1],u)=>[(1-u)*(1-u)*p0[0]+2*(1-u)*u*c[0]+u*u*p1[0],(1-u)*(1-u)*p0[1]+2*(1-u)*u*c[1]+u*u*p1[1]];
  ctx.lineCap='round';
  A.words.forEach((_,j)=>{
-  // The share "it" gives itself is printed under its tile and shown in the blend; it has no line.
   if(j===ask)return;
-  // Every line has the same colour; only its thickness shows the share.
-  const share=A.weights[j], lw=1.5+24*share, alpha=.22+.5*Math.min(1,share/.3);
-  const c=curve(j);ctx.beginPath();ctx.moveTo(...c[0]);ctx.quadraticCurveTo(...c[1],...c[2]);ctx.strokeStyle=`rgba(37,99,235,${alpha})`;ctx.lineWidth=lw;ctx.stroke();
-  // Meaning flows along each line into "it": dots in the word's colour, bigger for bigger shares.
-  if(share>.03)for(let k=0;k<2;k++){const u=((st.t*.4+k/2+j*.137)%1+1)%1, p=at(c,u);ctx.beginPath();ctx.arc(...p,1.8+5*Math.sqrt(share),0,TAU);ctx.fillStyle=colour(A.values[j],.95);ctx.fill();}
+  const share=A.weights[j], c=curve(j);
+  ctx.beginPath();ctx.moveTo(...c[0]);ctx.quadraticCurveTo(...c[1],...c[2]);ctx.strokeStyle=rgba(accent,.2+.6*Math.min(1,share/.3));ctx.lineWidth=1.5+24*share;ctx.stroke();
  });
  tiles.forEach((t,j)=>{
   const asking=j===ask;
   ctx.fillStyle=asking?accent:'#fff';ctx.strokeStyle=asking?accent:'rgba(20,23,28,.16)';ctx.lineWidth=1.2;
   ctx.beginPath();ctx.roundRect(t.x,top,t.w,tileH,9);ctx.fill();ctx.stroke();
-  // The tile's colour strip is the word's meaning.
-  if(!asking){ctx.fillStyle=colour(A.values[j]);ctx.beginPath();ctx.roundRect(t.x+6,top+tileH-7,t.w-12,4,2);ctx.fill();}
-  // The last word glows while it is being swapped.
-  if(j===n-1&&swapping){ctx.strokeStyle='#c2410c';ctx.lineWidth=2.5;ctx.beginPath();ctx.roundRect(t.x-3,top-3,t.w+6,tileH+6,11);ctx.stroke();}
-  label(j,t.cx,rowY-2,{align:'center',size,weight:asking?700:600,color:asking?'#fff':ink});
-  text(ctx,pct(j),t.cx,top+tileH+16,{align:'center',size:13,weight:j===A.top.j&&!A.even?700:500,color:j===A.top.j&&!A.even?ink:'rgba(20,23,28,.55)'});
+  // The last word is outlined while it is being swapped.
+  if(j===n-1&&swapping){ctx.strokeStyle=warm;ctx.lineWidth=2.5;ctx.beginPath();ctx.roundRect(t.x-3,top-3,t.w+6,tileH+6,11);ctx.stroke();}
+  word(j,t.cx,rowY,{align:'center',size,weight:asking?700:600,color:asking?'#fff':ink});
+  if(shown(j))text(ctx,P100[j]+'%',t.cx,top+tileH+16,{align:'center',size:13,weight:700,color:ink});
  });
  if(st.labels){
-  text(ctx,'each line: how much “it” looks at that word (thicker = more)',tiles[0].x,34,{size:12,weight:600,color:'rgba(20,23,28,.65)'});
-  text(ctx,'dots: each word’s meaning flowing into “it”',tiles[0].x,54,{size:12,weight:500,color:'rgba(20,23,28,.6)'});
-  text(ctx,focusLabel,tiles[0].x,74,{size:12,weight:500,color:'rgba(20,23,28,.6)'});
-  if(focused)pill(ctx,question,from.cx,top+tileH+46,{align:'center',size:13,weight:600,color:accent});
-  pill(ctx,answer,from.cx,top+tileH+(focused?78:46),{align:'center',size:16,weight:700,color:A.even||!focused?ink:colour(A.values[A.top.j])});
- }
- drawBlend(h*.86,w/2-270,540,14);
- // What "it" takes in: the words' colours side by side in proportion to their shares.
- function drawBlend(y,x0,width,size){
-  let x=x0;const bh=small?16:20;
-  A.weights.forEach((share,j)=>{const seg=share*width;ctx.fillStyle=colour(A.values[j]);ctx.fillRect(x,y,seg,bh);x+=seg;
-   if(j<n-1){ctx.fillStyle='rgba(255,255,255,.9)';ctx.fillRect(x-.5,y,1,bh);}});
-  ctx.strokeStyle='rgba(20,23,28,.18)';ctx.lineWidth=1;ctx.strokeRect(x0,y,width,bh);
-  if(!st.labels)return;
-  text(ctx,'what “it” takes in:',x0,y-13,{size,weight:600,color:'rgba(20,23,28,.65)'});
-  ctx.font=`600 ${size}px ${FONT}`;text(ctx,summary,x0+ctx.measureText('what “it” takes in:').width+6,y-13,{size,weight:700,color:ink});
-  text(ctx,'each colour is one word’s meaning, as wide as its share',x0,y+bh+14,{size:small?10:11,color:'rgba(20,23,28,.55)'});
+  if(focused)pill(ctx,question,from.cx,top+tileH+48,{align:'center',size:13,weight:600,color:accent});
+  pill(ctx,answer,from.cx,top+tileH+(focused?80:48),{align:'center',size:16,weight:700,color:focused&&!A.even?accent:ink});
+  if(!focused)text(ctx,'thicker line: more attention',tiles[0].x,h*.93,{size:11,color:'rgba(20,23,28,.5)'});
  }
 }
-
 const ENGINES={
  'light-bending':{draw:drawLight,a:['Mass','how much mass sits nearby'],b:['Passing distance','how close the light passes','×'],
   fa:a=>a.toFixed(2),fb:b=>b.toFixed(2)+'×',
@@ -1556,10 +1513,10 @@ const ENGINES={
   try:'',aria:'The Earth with its oceans and the Moon. The Moon pulls the near side most and the far side least, so the oceans bulge toward and away from the Moon, and a place on the coast passes two high tides a day.'},
  'attention':{draw:drawAttention,a:['Focus','how strongly the matches count'],b:['Last word','tired or wide',''],
   fa:a=>a<.005?'none':Math.round(a*100)+'%',fb:b=>Physics.attention(1,b).ending,
-  measure:['“it” looks most at',(a,b)=>{const A=ATTN.A||Physics.attention(a,b);return A.even?`no word: all get ${Math.round(100/A.words.length)}%`:`“${A.top.word}”, ${percents(A.weights)[A.top.j]}%`;}],
+  measure:null,tryAny:true,
   // The modelled effect for the render checks: how far the top share rises above an equal share.
   effect:(a,b)=>{const A=Physics.attention(a,b);return A.top.w-1/A.words.length;},scale:'',demoEnd:()=>2.5,
-  disclosure:'The shares are computed exactly with the attention formula from “Attention Is All You Need” (2017): each word’s share is the softmax of the asking word’s query times that word’s key, divided by the square root of their length. The numbers are hand-made, four per word, not taken from a trained model. Real models learn them, use hundreds of numbers per word, many attention heads and many layers, and add position information, because attention alone ignores word order. As in the paper’s encoder, every word can look at the words after it too; models that write text one word at a time let a word look only at the words before it. Focus scales the scores to show how the shares form; at 100% it is the formula itself. Here “it” is handed its question, which already depends on the last word; a real model builds it from the words around “it” in earlier layers. Colours stand for what each word means; shares are rounded so they add up to 100%.',
+  disclosure:'The shares are computed exactly with the attention formula from “Attention Is All You Need” (2017): each word’s share is the softmax of the asking word’s query times that word’s key, divided by the square root of their length. The numbers are hand-made, four per word, not taken from a trained model. Real models learn them, use hundreds of numbers per word, many attention heads and many layers, and add position information, because attention alone ignores word order. As in the paper’s encoder, every word can look at the words after it too; models that write text one word at a time let a word look only at the words before it. Focus scales the scores to show how the shares form; at 100% it is the formula itself. Here “it” is handed its question, which already depends on the last word; a real model builds it from the words around “it” in earlier layers. Shares are rounded to whole percentages; only shares of 5% or more are printed.',
   try:'Set Focus to zero and every word gets the same share. Then switch the last word between “tired” and “wide”, and watch which word “it” takes in.',
   aria:'The sentence “The animal didn’t cross the street because it was too tired” as word tiles. Lines from the word “it” to every word show how much attention it gives each one; most goes to “animal”, and a bar shows the blend of meanings “it” takes in. With the last word swapped to “wide”, most goes to “street”.'}
 };
@@ -1629,7 +1586,9 @@ function paint(){
  if(ctx.reset)ctx.reset();ctx.setTransform(dpr,0,0,dpr,0,0);ctx.clearRect(0,0,w,h);
  const since=started&&timeline?Math.max(0,time-timeline.chapters[stage].start):time;
  const live=started&&mode==='live';
+ LABELS=[];
  draw(ctx,w,h,spec,{t:time,since,stage,mass:shown,distance,labels:spec.show_labels,live,playing:mode==='playing'});
+ lastLabels=LABELS;LABELS=null;
  voice();
  const value=target();
  // An engine may leave its readout empty for a moment, hiding the pill (the rope during its single shake).
@@ -1765,7 +1724,7 @@ function input(id,value){
  explore();paint();
 }
 
-window.CouncilScene={load,seek,play,pause,toggle,chapter,render:t=>{time=t;paint();},
+window.CouncilScene={load,seek,play,pause,toggle,chapter,render:t=>{time=t;paint();},labels:()=>lastLabels.slice(),
  getState:()=>({time,mass,distance,stage,mode,ended}),
  sound:()=>({on:SOUND.on,state:SOUND.ctx?.state||null,plucked:GUITAR.plucked.slice(),rope:{rate:ROPE.rate,size:+ROPE.size.toFixed(2)}}),
  timeline:()=>timeline&&JSON.parse(JSON.stringify(timeline)),on:fn=>listeners.add(fn),

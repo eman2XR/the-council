@@ -1,4 +1,5 @@
 """Render the actual webpage at deterministic times for agent image review."""
+import re
 from pathlib import Path
 from urllib.parse import unquote, urlparse
 import mimetypes
@@ -44,6 +45,23 @@ def launch(p):
     raise RuntimeError('No browser could start: ' + '; '.join(errors))
 
 
+# The picture stays calm: a few short names on the stage, never sentences; the subtitles carry the explanation.
+LABEL_WORDS_AT_ONCE = 12
+LABEL_WORDS_EACH = 5
+
+
+def label_words(label):
+    return len([t for t in str(label).split() if re.search(r'[A-Za-z0-9]', t)])
+
+
+def label_checks(frames):
+    """Checks for the labels drawn on the stage in each sampled frame (lists of strings)."""
+    most = max((sum(label_words(x) for x in labels) for labels in frames), default=0)
+    longest = max((label_words(x) for labels in frames for x in labels), default=0)
+    return [{'name': f'At most {LABEL_WORDS_AT_ONCE} words of labels on the stage at once (most: {most})', 'pass': most <= LABEL_WORDS_AT_ONCE},
+            {'name': f'Every stage label is at most {LABEL_WORDS_EACH} words (longest: {longest})', 'pass': longest <= LABEL_WORDS_EACH}]
+
+
 def capture(scene, directory, research=None, provider='fixture'):
     from playwright.sync_api import sync_playwright
     directory.mkdir(parents=True, exist_ok=True)
@@ -79,11 +97,13 @@ def capture(scene, directory, research=None, provider='fixture'):
                 // Some models respond over time (a shaken rope builds its swing): let the page run for two seconds.
                 await new Promise(r=>setTimeout(r,2000));
                 const full=CouncilScene.getState().mass===1 && effect()>0;
+                // The labels on the stage after playback, when the viewer has the controls.
+                const live=CouncilScene.labels?CouncilScene.labels():[];
                 CouncilScene.seek(1,0);
                 const noMass=slider.disabled && slider.value==='0' && document.getElementById('mass-value').dataset.value==='0';
                 CouncilScene.seek(11,1); const first=document.getElementById('universe').toDataURL();
                 CouncilScene.seek(2,0); CouncilScene.seek(11,1);
-                return {zero,full,noMass:noMass && !slider.disabled && slider.value==='1',deterministic:first===document.getElementById('universe').toDataURL()};
+                return {zero,full,live,noMass:noMass && !slider.disabled && slider.value==='1',deterministic:first===document.getElementById('universe').toDataURL()};
             }''')
             checks.extend({'name':name,'pass':value} for name,value in [
                 ('Zero-mass control removes the modeled effect',interaction['zero']),
@@ -96,11 +116,14 @@ def capture(scene, directory, research=None, provider='fixture'):
             # playback shows while that chapter's sentences are on screen (seeking includes the last chapter's demo).
             chapters = page.evaluate('CouncilScene.timeline().chapters.map(c=>[c.start,c.end])')
             samples = [(start + (end - start) * f, i) for i, (start, end) in enumerate(chapters) for f in (.3, .92)]
+            stage_labels = [interaction['live']]
             for i, (time, beat) in enumerate(samples):
                 page.evaluate('([t,b])=>CouncilScene.seek(t,b)', [time, beat])
+                stage_labels.append(page.evaluate('CouncilScene.labels?CouncilScene.labels():[]'))
                 path = directory/f'frame-{i+1}.png'
                 page.locator('.workspace').screenshot(path=str(path))
                 frames.append(path)
+            checks.extend(label_checks(stage_labels))
             last = samples[-1]
             page.set_viewport_size({'width':390,'height':844})
             page.evaluate('([t,b])=>CouncilScene.seek(t,b)', [last[0], last[1]])

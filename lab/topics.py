@@ -25,7 +25,10 @@ order. The viewer reads one subtitle sentence at a time below the stage; screens
 ray_count is unused. The stage carries no scale or magnification disclaimers: drawings are illustrations, and each model's
 caveats are shown once in the investigation details. Do not ask for on-stage "not to scale" or "magnified" labels.
 Field controls chooses which sliders the viewer gets: none, first, second or both. Offer a slider only when moving
-it builds intuition beyond what playback already shows; otherwise choose none.'''
+it builds intuition beyond what playback already shows; otherwise choose none.
+The stage shows only a few short labels (each five words or fewer, at most about a dozen words at once, checked
+automatically); the subtitles carry every explanation. Never write a sentence that relies on a label the model notes do
+not list, and never ask for extra labels.'''
 
 SPACETIME_NOTES = '''SPACETIME DIAGRAM. Special relativity in flat spacetime, units of years and light-years (light speed 1).
 Time runs up the page, space runs right; light moves at 45 degrees, and a shaded light cone from the departure event marks
@@ -188,23 +191,18 @@ No new-discovery claims.'''+COMMON
 ATTENTION_NOTES = '''ATTENTION (WHICH WORDS MATTER TO EACH OTHER). Scaled dot-product attention, the core step of the Transformer from
 the 2017 paper "Attention Is All You Need" (Vaswani and others), computed exactly on one tiny hand-made example. The sentence
 "The animal didn't cross the street because it was too tired" is drawn as a row of word tiles (on phones, one row per
-word). The asking word is "it", highlighted. Each word offers a key (what it is) and carries a value (what it means, drawn
-as that word's colour); "it" has a query (what it looks for), shown as "it asks: which thing here could be tired?". Each
-word's share of attention is the softmax of the query times that word's key, divided by the square root of the vector
-length (four numbers here): shares are positive and add up to 100%, and "it" also gives a small share to itself (printed
-under its tile, no line). A line runs from every other word into "it", thicker for a bigger share, with dots in the word's
-colour flowing along it into "it"; the
-share is printed under the word. A bar at the bottom shows what "it" takes in: the words' colours side by side in
-proportion to their shares, labelled for example "mostly 'animal'". A large label by "it" names the word it takes in most
-("“it” → animal"). Every word's share is printed under it, rounded so the printed shares add up to 100%. The lines all
-have one colour; only their thickness shows the share. The question tag appears only once Focus is above zero. A caption
-states the focus ("focus off: every word gets the same share", "full focus: the shares exactly as the formula gives them").
-While the last word is being swapped, its tile is outlined.
+word with a bar). The asking word is "it", highlighted. Each word offers a key (what it is) and carries a value (what it
+means); "it" has a query (what it looks for), shown under it as "it asks: which word could be tired?" once Focus is above
+zero. Each word's share of attention is the softmax of the query times that word's key, divided by the square root of the
+vector length (four numbers here): shares are positive and add up to 100%, and "it" also gives a small share to itself.
+A line runs from every other word into "it", thicker for a bigger share; shares of 5% or more are printed under their word.
+Below the question a label names the result: "it means the animal" (or, with Focus off, "every word counts the same").
+One small legend reads "thicker line: more attention". Nothing else is labelled; the subtitles explain.
 Field mass sets Focus (UI "Focus", 0..1), which scales the scores before the softmax: at 0 every word gets an equal share
-(9% each, a muddy blend of everything); at 1 it is the formula itself: about 70% goes to "animal", about 10% to "street",
-about 4% to "it" and about 2% to each other word. Field distance chooses the last word (UI "Last word"): below about 1.6
-"tired", above about 1.9 "wide", swapped smoothly in between. With "wide" the question becomes "which thing here could be
-wide?" and about 70% goes to "street". The readout names the word "it" looks at most, with its share.
+(9% each); at 1 it is the formula itself: about 70% goes to "animal", about 10% to "street", about 4% to "it" and about 2%
+to each other word. Field distance chooses the last word (UI "Last word"): below about 1.6 "tired", above about 1.9 "wide",
+swapped smoothly in between, with the tile outlined while it changes. With "wide" the question becomes "which word could
+be wide?" and about 70% goes to "street". There is no readout pill.
 Choreography: chapter 1 has Focus at zero (equal shares); later chapters use the scene's mass (use 1) and distance (use 1,
 so the sentence ends in "tired"). In the last chapter, playback first dips Focus to about half and back (the shares spread
 out, about 30% on "animal", then sharpen again), then swaps the last word to "wide" about two thirds of the way through the

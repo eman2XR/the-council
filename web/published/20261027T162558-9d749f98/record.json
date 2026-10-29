@@ -64,19 +64,19 @@
   },
   "scene": {
     "title": "Why a Trapped Particle Can Only Have Certain Energies",
-    "subtitle": "A ball in a pit can roll with any energy. A trapped electron cannot: its wave must fade into both walls, and only a few energies allow that.",
+    "subtitle": "A ball in a pit can roll with any energy. A trapped electron can\u2019t: it can only poke a little way into the walls, so its wave must fade there, and only a few energies allow that.",
     "beats": [
       {
         "title": "A wave in a trap",
         "body": "A quantum particle behaves like a wave: where the wave is big, the particle is likely to be found. The more energy the particle has, the more its wave wiggles."
       },
       {
-        "title": "In the walls",
-        "body": "Being in a wall needs more energy than the particle has, so there its wave can\u2019t wiggle, only fade or grow. Growing forever would put the particle deep in the wall, so the wave must fade on both sides."
+        "title": "Why the wave must fade",
+        "body": "In a wall the particle has no energy to spare, so its wave can\u2019t wiggle there: it can only fade or grow. It must fade, because without the energy the particle can only poke a little way into a wall. A growing wave would mean the opposite: the particle most likely deep inside the wall."
       },
       {
         "title": "Only a few energies fit",
-        "body": "A wave can\u2019t have a sharp corner, so in the wall it must carry on from the slope it arrives with. Raise the energy: almost always, the wave reaches the right wall on a slope that makes it grow. Only at a few energies does it arrive at just the slope a fade needs."
+        "body": "Like a rope, the wave can\u2019t have a kink, so how it reaches the right wall decides what it does there. Raise the energy: almost always, it arrives the wrong way and grows. Only at a few energies does it arrive just right, and fade."
       },
       {
         "title": "One more loop each",
@@ -95,7 +95,7 @@
     "accent": "blue",
     "line_width": 2.5,
     "duration": 32,
-    "takeaway": "A trapped particle\u2019s wave must fade into both walls. Only a few energies allow that, so the particle can have only those.",
+    "takeaway": "A trapped particle can only poke a little way into the walls, so its wave must fade there, and only a few energies allow that.",
     "controls": "both",
     "kind": "quantum-well",
     "why": "This is why each kind of atom glows only in certain colours, which is how astronomers tell what distant stars are made of. Quantum-dot TV screens get their colours from the same rule.",
