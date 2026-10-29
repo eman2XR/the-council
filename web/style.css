@@ -349,10 +349,19 @@ body[data-view=article] .hero{padding-top:48px}
 .draft-note{display:none}
 body[data-draft=yes] .draft-note:not(:empty){display:block;max-width:760px;margin:14px auto 0;padding:0 24px;font-size:13px;line-height:1.5;color:var(--muted);text-align:center}
 
-/* Home index by chapter; drafts page; request buttons only while the daily run is on. */
-.chapters{display:block}
-.chapter{margin-top:46px}
-.chapter:first-child{margin-top:8px}
+/* Home: every investigation in one grid under the featured one, then the questions open for tomorrow; request
+   buttons only while the daily run is on. */
+.up-next{margin-top:56px}
+.up-next .items li{grid-template-columns:1fr auto}
+.up-later{margin:12px 4px 0;font-size:13px;color:var(--faint)}
+/* Phones: the grid becomes a list, a small picture beside each title. */
+@media (max-width:600px){.gallery .thumbs{grid-template-columns:1fr;gap:18px}
+ .gallery .thumb-card{display:grid;grid-template-columns:128px 1fr;grid-template-rows:auto 1fr;column-gap:14px;row-gap:8px;align-items:start}
+ .gallery .thumb-card .card-media{grid-row:1/3}
+ .gallery .thumb-card .card-cat{justify-self:start;font-size:10px;letter-spacing:.22em}
+ .gallery .thumb-card h3{font-size:16px}
+ .gallery .mini-play{left:8px;bottom:8px;width:26px;height:26px}
+ .gallery .mini-play::after{left:10px;top:8px;border-left-width:8px;border-top-width:5px;border-bottom-width:5px}}
 .chapter-title{display:flex;align-items:baseline;gap:14px;font:700 24px/1.2 var(--serif);margin:0 0 20px}
 .chapter-title span{font:600 11px var(--sans);letter-spacing:.2em;text-transform:uppercase;color:var(--faint)}
 .items.pending{margin-top:18px;border-bottom:none;padding:0}
@@ -364,6 +373,5 @@ body[data-paused=no] .talk{display:contents}
 .foot-links a{color:var(--muted);font-size:13px}
 .foot-links a:hover{color:var(--ink)}
 body[data-draft=yes] .behind{display:none}
-.chapter .card-cat{display:none}
 
 /* Why it matters. */

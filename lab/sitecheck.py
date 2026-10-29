@@ -19,14 +19,12 @@ def main():
             index=ROOT/'web'/'published'/'index.json'
             entries=json.loads(index.read_text()) if index.exists() else []
             if entries:
-                # Home: one featured investigation; every other one appears once in the chapter index.
-                pinned=ROOT/'web'/'featured.json'
-                lead=json.loads(pinned.read_text()).get('id') if pinned.exists() else None
-                lead=lead if any(e['id']==lead for e in entries) else entries[0]['id']
-                page.wait_for_function('n=>document.querySelectorAll("#chapters a[data-guide]").length>=n',arg=len(entries)-1)
-                assert page.locator('#featured a[data-guide]').count()==1
-                assert page.locator('#chapters a[data-guide]').count()==len(entries)-1
-                assert page.locator(f'#chapters a[data-guide="{lead}"]').count()==0, 'Featured investigation repeated in the index'
+                # Home: the newest investigation is featured; every other one appears once in the grid.
+                lead=max(entries,key=lambda e:e.get('created',''))['id']
+                page.wait_for_function('n=>document.querySelectorAll("#gallery a[data-guide]").length>=n',arg=len(entries)-1)
+                assert page.locator(f'#featured a[data-guide="{lead}"]').count()==1, 'Newest investigation is not featured'
+                assert page.locator('#gallery a[data-guide]').count()==len(entries)-1
+                assert page.locator(f'#gallery a[data-guide="{lead}"]').count()==0, 'Featured investigation repeated in the grid'
             for entry in entries or [{'id':'example'}]:
                 page.goto(url+'?guide='+entry['id'],wait_until='networkidle')
                 page.wait_for_function('(id)=>{const r=document.getElementById("record").textContent;return r&&(id==="example"||JSON.parse(r).id===id)}',arg=entry['id'])

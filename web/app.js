@@ -11,7 +11,6 @@ let current=null, entries=[], example=null;
 const requestedGuide=new URLSearchParams(location.search).get('guide');
 const requestedDraft=new URLSearchParams(location.search).get('draft');
 const VIEW=requestedGuide||requestedDraft?'article':'home';
-let featuredId=null;
 let drafts=[];
 document.body.dataset.view=VIEW;
 // With the header hidden on an investigation, the reading bar's mark leads home.
@@ -113,12 +112,12 @@ function thumbCard(entry,record){
 function renderCards(){
  thumbs.forEach(c=>visible.unobserve(c));thumbs.clear();
  if(VIEW==='home'){
-  // One featured investigation, then every other one grouped by chapter of the path.
-  const lead=entries.find(e=>e.id===featuredId)||entries[0];
+  // The newest published investigation leads; every other one follows in a single grid.
+  const lead=[...entries].sort((a,b)=>new Date(b.created||0)-new Date(a.created||0))[0];
   $('featured').replaceChildren(...(lead?[card(lead,records.get(lead.id))]:example?[card({id:'example',title:example.scene.title.replace(/\n/g,' ')},example)]:[]));
   $('featured').firstChild?.classList.add('featured-card');
   put('past-title','Investigations');put('past-count',entries.length+drafts.length?`${entries.length+drafts.length} investigations`:'');
-  $('chapters').replaceChildren(...chapterGroups(lead));
+  $('gallery').replaceChildren(...gallery(lead));
  }else{
   // Related first: investigations from the same chapter, then the rest.
   const chapterOf=e=>String(e?.curriculum||'').split('.')[0], here=chapterOf(current);
@@ -170,7 +169,6 @@ async function openGuide(id,{autoplay=false}={}){
 async function loadPublished(){
  try{const response=await fetch('published/index.json',{cache:'no-store'});entries=response.ok?await response.json():[];}catch{entries=[];}
  try{example=await (await fetch('example.json')).json();}catch{example=null;}
- try{featuredId=(await (await fetch('featured.json',{cache:'no-store'})).json()).id;}catch{featuredId=null;}
  try{const r=await fetch('drafts/index.json',{cache:'no-store'});drafts=r.ok?(await r.json()).map(d=>({...d,draft:true})):[];}catch{drafts=[];}
  if(requestedDraft){try{show(await getDraft(requestedDraft));}catch{await openGuide('example');}}
  else if(VIEW==='article')await openGuide(entries.find(e=>e.id===requestedGuide)?.id||(requestedGuide==='example'||!entries.length?'example':requestedGuide));
@@ -283,20 +281,18 @@ function requestFor(item){
 // Drafts sit with the investigations: in the slot whose model they use, else in the chapter of their topic.
 function draftFor(item,used){const d=drafts.find(d=>!used.has(d.id)&&d.kind===item.model);if(d)used.add(d.id);return d;}
 const cardFor=e=>thumbCard(e,records.get((e.draft?'draft:':'')+e.id));
-function chapterGroups(lead){
- if(!curriculum)return [el('div',{className:'thumbs'},...[...entries.filter(e=>e!==lead),...drafts].map(cardFor))];
- const placed=new Set(), used=new Set();
- const groups=curriculum.chapters.map(c=>{
-  const done=c.items.map(i=>[i,doneItem(i)||draftFor(i,used)]);done.forEach(([,e])=>e&&!e.draft&&placed.add(e.id));
-  const extra=drafts.filter(d=>!used.has(d.id)&&TOPICS[d.kind]===c.title);extra.forEach(d=>used.add(d.id));
-  const cards=[...done.filter(([,e])=>e&&e!==lead).map(([,e])=>e),...extra].map(cardFor);
-  const pending=done.filter(([,e])=>!e).map(([i])=>el('li',{},el('span',{className:'num',textContent:i.id}),el('span',{className:'q',textContent:i.question}),requestFor(i)));
-  return el('section',{className:'chapter'},el('h3',{className:'chapter-title'},el('span',{textContent:`Chapter ${c.number}`}),c.title),
-   ...(cards.length?[el('div',{className:'thumbs'},...cards)]:[]),...(pending.length?[el('ul',{className:'items pending'},...pending)]:[]));
- });
- const loose=[...entries.filter(e=>!placed.has(e.id)&&e!==lead),...drafts.filter(d=>!used.has(d.id))];
- if(loose.length)groups.push(el('section',{className:'chapter'},el('h3',{className:'chapter-title'},'Other investigations'),el('div',{className:'thumbs'},...loose.map(cardFor))));
- return groups;
+// Every other investigation in one grid, reviewed ones newest first and then drafts, then the questions that can
+// be picked for tomorrow's run.
+function gallery(lead){
+ const newest=(a,b)=>new Date(b.created||0)-new Date(a.created||0);
+ const grid=el('div',{className:'thumbs'},...[...entries.filter(e=>e!==lead).sort(newest),...[...drafts].sort(newest)].map(cardFor));
+ if(!curriculum)return [grid];
+ const used=new Set(), open=curriculum.chapters.flatMap(c=>c.items).filter(i=>!doneItem(i)&&!draftFor(i,used));
+ const ready=open.filter(i=>i.ready), later=open.length-ready.length;
+ if(!open.length)return [grid];
+ return [grid,el('section',{className:'up-next'},el('h3',{className:'chapter-title',textContent:'Up next'}),
+  ...(ready.length?[el('ul',{className:'items pending'},...ready.map(i=>el('li',{},el('span',{className:'q',textContent:i.question}),requestFor(i))))]:[]),
+  ...(later?[el('p',{className:'up-later',textContent:`${later} more question${later>1?'s are':' is'} planned, waiting for a picture that explains ${later>1?'them':'it'} well.`})]:[]))];
 }
 function renderPath(){
  if(!curriculum)return;
