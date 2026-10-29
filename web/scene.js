@@ -1421,6 +1421,95 @@ function drawAttention(ctx,w,h,spec,st){
   if(!focused)text(ctx,'thicker line: more attention',tiles[0].x,h*.93,{size:11,color:'rgba(20,23,28,.5)'});
  }
 }
+// The Council at work, for the home page: five agents along a track pass the new investigation, a glowing card, from
+// one to the next. Research brings in pages, design draws on it, render photographs it, three reviewers tick it, and
+// publish folds it into a paper plane that flies off; then a fresh card arrives. During a run the card waits at the
+// current step and that step's work repeats; otherwise a slow preview plays. still: one frame, no motion.
+const LAB_STEPS=[['research','#0e9f7a'],['design','#d97706'],['render','#2563eb'],['review','#64748b'],['publish','#c2410c']];
+function drawLab(ctx,w,h,{t=0,active=false,step=1,paused=false,still=false}={}){
+ const small=w<520, n=LAB_STEPS.length, x0=w*(small?.02:.1), x1=w*(small?.98:.9), gapX=(x1-x0)/n, X=i=>x0+gapX*(i+.5);
+ const track=h*.76, s=small?16:26, ink='rgba(20,23,28,.85)', cw=s*(small?2.1:2.5), ch=cw*.7, off=gapX*(small?.34:.36);
+ // Where the card is: at the current step during a run; otherwise on a loop through all five steps.
+ const dwell=3, move=1.1, loop=n*(dwell+move);
+ let at=0, pos=0, p=.55, hop=0, fresh=1;
+ if(active){at=clamp(step-1,0,n-1);pos=at;p=still?.55:(t%dwell)/dwell;}
+ else if(!paused&&!still){const u=t%loop, k=Math.floor(u/(dwell+move)), r=u-k*(dwell+move);at=k;
+  if(r<dwell){pos=k;p=r/dwell;}else if(k<n-1){const q=smooth((r-dwell)/move);pos=k+q;p=1;hop=Math.sin(Math.PI*q);}else{pos=k;p=1;}
+  if(k===0)fresh=smooth(r/.5);}
+ // The track, with a soft shadow under each agent.
+ ctx.setLineDash([2,6]);trace(ctx,[[x0,track],[x1,track]]);ctx.strokeStyle='rgba(20,23,28,.16)';ctx.lineWidth=1.2;ctx.stroke();ctx.setLineDash([]);
+ const agent=(x,col,{on=false,size=s,lean=0}={})=>{
+  const breathe=on&&!still?Math.sin(t*4)*size*.04:0, hy=track-size*1.62+breathe, by=track-size*1.04+breathe;
+  ctx.globalAlpha=paused?.4:1;
+  ctx.fillStyle='rgba(20,23,28,.08)';ctx.beginPath();ctx.ellipse(x,track,size*.62,size*.13,0,0,TAU);ctx.fill();
+  if(on){const g=ctx.createRadialGradient(x,hy,0,x,hy,size*1.7);g.addColorStop(0,rgba(col,.26));g.addColorStop(1,rgba(col,0));ctx.fillStyle=g;ctx.fillRect(x-size*1.7,hy-size*1.7,size*3.4,size*3.4);}
+  ctx.save();ctx.translate(x,track);ctx.rotate(lean);ctx.translate(-x,-track);
+  ctx.fillStyle=col;ctx.beginPath();ctx.roundRect(x-size*.5,by,size,size*1.02,size*.46);ctx.fill();
+  ctx.beginPath();ctx.arc(x,hy,size*.45,0,TAU);ctx.fill();
+  // The visor: a light band across the head, brighter on the agent at work.
+  ctx.fillStyle=on?'#fff':'rgba(255,255,255,.82)';ctx.beginPath();ctx.roundRect(x-size*.31,hy-size*.1,size*.62,size*.2,size*.1);ctx.fill();
+  ctx.restore();ctx.globalAlpha=1;
+  return {hand:[x+size*.42,by+size*.32]};
+ };
+ const hands=LAB_STEPS.map(([name,col],i)=>{
+  const on=!paused&&i===at, lean=on&&!still&&i!==3?.07:0;
+  let hand=null;
+  if(i===3){for(const d of [-1,0,1])agent(X(i)+d*s*.92,col,{on:on&&d===0,size:s*.74});}
+  else hand=agent(X(i),col,{on,lean}).hand;
+  const done=active&&i<at, ly=track+(small?15:19), size=small?10:11;
+  text(ctx,name,X(i),ly,{align:'center',size,weight:on||done?700:500,color:on?col:done?ink:'rgba(20,23,28,.45)'});
+  // A finished step gets a small drawn tick before its name.
+  if(done){ctx.font=`700 ${size}px ${FONT}`;const tx=X(i)-ctx.measureText(name).width/2-8;trace(ctx,[[tx-4,ly],[tx-1,ly+3],[tx+4,ly-3]]);ctx.strokeStyle='#16a34a';ctx.lineWidth=1.6;ctx.stroke();}
+  return hand;
+ });
+ if(paused)return;
+ // The card: the investigation, carried along and filled in by each step. It hops from agent to agent.
+ const leaving=at===n-1&&!active?smooth((p-.45)/.5):0;
+ let cx=X(pos)+(small?0:off), cy=(small?track-s*2.2-ch:track-s*1.6-ch*.2)-hop*s*(small?1.1:2.1);
+ const stage=pos+(p>=.98?1:0), col=LAB_STEPS[at][1];
+ if(leaving<1){
+  ctx.globalAlpha=fresh*(1-leaving);
+  const glow=ctx.createRadialGradient(cx,cy+ch/2,0,cx,cy+ch/2,cw*1.05);glow.addColorStop(0,rgba(col,.14));glow.addColorStop(1,rgba(col,0));ctx.fillStyle=glow;ctx.fillRect(cx-cw*1.4,cy-cw*.9,cw*2.8,cw*2.4);
+  ctx.fillStyle='rgba(20,23,28,.07)';ctx.beginPath();ctx.ellipse(cx,track,cw*.45,s*.1,0,0,TAU);ctx.fill();
+  ctx.fillStyle='#fff';ctx.strokeStyle='rgba(217,119,6,.8)';ctx.lineWidth=1.5;ctx.beginPath();ctx.roundRect(cx-cw/2,cy,cw,ch,5);ctx.fill();ctx.stroke();
+  // Notes from research, a wave drawn by design, a tick from review.
+  for(let k=0;k<2;k++){const fill=stage>=1?1:at===0?clamp((p-.3-k*.2)/.3):0;ctx.fillStyle='rgba(20,23,28,.28)';ctx.fillRect(cx-cw*.36,cy+ch*(.22+k*.17),cw*.72*fill,1.8);}
+  const drawn=stage>=2?1:at===1?smooth(p/.8):0;
+  if(drawn>0){const pts=[];for(let i=0;i<=30*drawn;i++){const u=i/30;pts.push([cx-cw*.36+u*cw*.72,cy+ch*.7-Math.sin(u*TAU*1.5)*ch*.14]);}trace(ctx,pts);ctx.strokeStyle='#2563eb';ctx.lineWidth=small?1.4:2;ctx.lineCap='round';ctx.stroke();}
+  if(stage>=4||(at===3&&p>.8)){const bx=cx+cw*.5, by=cy, r=s*.3;ctx.fillStyle='#16a34a';ctx.beginPath();ctx.arc(bx,by,r,0,TAU);ctx.fill();ctx.strokeStyle='#fff';ctx.lineWidth=1.6;trace(ctx,[[bx-r*.45,by],[bx-r*.1,by+r*.38],[bx+r*.5,by-r*.38]]);ctx.stroke();}
+  ctx.globalAlpha=1;
+ }
+ if(still)return;
+ // What the agent at the card is doing right now, with its tool in hand.
+ const ax=X(at), hand=small?null:hands[at], arm=(x,y)=>{if(!hand||leaving>0)return;trace(ctx,[hand,[x,y]]);ctx.strokeStyle=col;ctx.lineWidth=s*.16;ctx.lineCap='round';ctx.stroke();};
+ if(hop>0)return;
+ if(at===0){
+  const mx=cx-cw*.62, my=cy+ch*.45+Math.sin(t*3)*s*.08;arm(mx-s*.12,my+s*.18);
+  if(!small){ctx.strokeStyle='#065f46';ctx.lineWidth=2;ctx.beginPath();ctx.arc(mx,my,s*.24,0,TAU);ctx.stroke();trace(ctx,[[mx-s*.17,my+s*.17],[mx-s*.36,my+s*.36]]);ctx.stroke();}
+  for(let k=0;k<3;k++){const q=clamp((p-k*.2)/.45);if(q<=0||q>=1)continue;
+   const sx0=ax-gapX*.45+k*s*.7, sy0=track-s*3.1, x=sx0+(cx-sx0)*smooth(q), y=sy0+(cy+ch*.3-sy0)*smooth(q);
+   ctx.globalAlpha=1-smooth((q-.75)/.25);ctx.fillStyle='#fff';ctx.strokeStyle='rgba(14,159,122,.85)';ctx.lineWidth=1.2;ctx.beginPath();ctx.roundRect(x-s*.3,y-s*.4,s*.6,s*.8,2);ctx.fill();ctx.stroke();
+   ctx.fillStyle='rgba(14,159,122,.55)';for(let r=0;r<3;r++)ctx.fillRect(x-s*.18,y-s*.2+r*s*.18,s*.36,1.2);ctx.globalAlpha=1;}
+ }
+ if(at===1){const u=smooth(p/.8), px=cx-cw*.36+u*cw*.72, py=cy+ch*.7-Math.sin(u*TAU*1.5)*ch*.14;arm(px-s*.3,py+s*.5);
+  ctx.strokeStyle='#92400e';ctx.lineWidth=s*.14;ctx.lineCap='round';trace(ctx,[[px,py],[px-s*.3,py+s*.5]]);ctx.stroke();}
+ if(at===2){const camx=cx-cw*.66, camy=cy+ch*.5;arm(camx-s*.2,camy+s*.1);
+  if(!small){ctx.fillStyle='#1e3a8a';ctx.beginPath();ctx.roundRect(camx-s*.3,camy-s*.2,s*.6,s*.4,3);ctx.fill();ctx.fillStyle='#93c5fd';ctx.beginPath();ctx.arc(camx+s*.06,camy,s*.12,0,TAU);ctx.fill();}
+  const f=clamp((p-.3)/.1)*(1-clamp((p-.4)/.2));
+  if(f>0){const g=ctx.createRadialGradient(cx,cy+ch/2,0,cx,cy+ch/2,cw*1.1);g.addColorStop(0,`rgba(255,255,255,${f})`);g.addColorStop(1,'rgba(255,255,255,0)');ctx.fillStyle=g;ctx.beginPath();ctx.arc(cx,cy+ch/2,cw*1.1,0,TAU);ctx.fill();}
+  for(let k=0;k<3;k++){const q=smooth((p-.45-k*.12)/.25);if(q<=0)continue;ctx.globalAlpha=q;ctx.fillStyle='rgba(37,99,235,.12)';ctx.strokeStyle='rgba(37,99,235,.75)';ctx.lineWidth=1;
+   ctx.beginPath();ctx.roundRect(cx-cw*.5+k*cw*.36,cy-s*.7-q*s*.15,cw*.3,cw*.21,2);ctx.fill();ctx.stroke();ctx.globalAlpha=1;}}
+ if(at===3)[-1,0,1].forEach((d,k)=>{const q=clamp((p-.12-k*.22)/.15);if(q<=0)return;const r=s*.22*(q<1?1+.4*Math.sin(q*Math.PI):1), x=ax+d*s*.92, y=track-s*1.95;
+  ctx.fillStyle='#16a34a';ctx.beginPath();ctx.arc(x,y,r,0,TAU);ctx.fill();ctx.strokeStyle='#fff';ctx.lineWidth=1.4;trace(ctx,[[x-r*.45,y],[x-r*.1,y+r*.36],[x+r*.5,y-r*.36]]);ctx.stroke();});
+ if(at===4){const q=smooth(p/.45);arm(cx-cw*.5,cy+ch*.6);
+  ctx.strokeStyle=`rgba(194,65,12,${.55*(1-q)})`;ctx.lineWidth=2;ctx.beginPath();ctx.arc(cx,cy+ch/2,cw*.55+q*cw*1.2,0,TAU);ctx.stroke();
+  // The finished card folds into a paper plane and flies off to the reader.
+  if(leaving>0){const fx=cx+leaving*(w-cx+s*2), fy=cy-leaving*(cy+s*2)*.8, k=s*(1-.3*leaving), ang=-.55;
+   ctx.save();ctx.translate(fx,fy);ctx.rotate(ang);ctx.globalAlpha=1-smooth((leaving-.7)/.3);
+   ctx.fillStyle='#fff';ctx.strokeStyle='#c2410c';ctx.lineWidth=1.4;ctx.beginPath();ctx.moveTo(k*.9,0);ctx.lineTo(-k*.7,-k*.5);ctx.lineTo(-k*.35,0);ctx.lineTo(-k*.7,k*.5);ctx.closePath();ctx.fill();ctx.stroke();
+   trace(ctx,[[k*.9,0],[-k*.35,0]]);ctx.stroke();ctx.restore();ctx.globalAlpha=1;
+   ctx.setLineDash([3,5]);trace(ctx,[[cx,cy+ch/2],[cx+(fx-cx)*.6,cy+ch/2+(fy-cy-ch/2)*.6]]);ctx.strokeStyle=`rgba(194,65,12,${.35*(1-leaving)})`;ctx.lineWidth=1.2;ctx.stroke();ctx.setLineDash([]);}}
+}
 const ENGINES={
  'light-bending':{draw:drawLight,a:['Mass','how much mass sits nearby'],b:['Passing distance','how close the light passes','×'],
   fa:a=>a.toFixed(2),fb:b=>b.toFixed(2)+'×',
@@ -1524,6 +1613,7 @@ const engineOf=spec=>ENGINES[spec?.kind]||ENGINES['light-bending'];
 
 function draw(ctx,w,h,spec,state){engineOf(spec).draw(ctx,w,h,spec,state);}
 window.CouncilDraw={draw,accent:spec=>ACCENT[spec.accent]||ACCENT.mint,disclosure:spec=>engineOf(spec).disclosure||''};
+window.CouncilLab={draw:drawLab};
 
 const $=id=>document.getElementById(id);
 const canvas=$('universe');

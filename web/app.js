@@ -181,7 +181,7 @@ async function loadPublished(){
 loadPublished();
 
 /* Lab status from the published snapshot. It is not a live heartbeat. */
-let schedule=null, labActive=false, labQuestion='', attempts=[];
+let schedule=null, labActive=false, labQuestion='', attempts=[], labStep=1;
 function stepOf(state){
  if(state.status==='planning')return 0;
  if(state.status==='reviewed')return 6;
@@ -222,7 +222,7 @@ async function refreshDashboard(){
   const outcome={reviewed:'Last investigation passed review',needs_review:'Last attempt stayed a draft',failed:'Last attempt stopped early',interrupted:'Last attempt was interrupted'};
   put('now-title',active?(state.status==='planning'?'Choosing today’s question':'Investigating now'):entries[0]?`Latest published: ${entries[0].title}`:outcome[state.status]||'Resting');
   put('dashboard-question',active&&state.question&&state.question!=='Choosing the next question'?state.question:'');
-  const step=stepOf(state);
+  const step=stepOf(state);labStep=step;drawLabStill();
   $('steps').hidden=!active;
   $('steps').replaceChildren(...STEPS.map((name,i)=>el('li',{className:i<step?'done':i===step?'active':'',textContent:name})));
   put('dashboard-phase',active?plain(state.events?.at(-1)?.message):state.updated?`Updated ${new Date(state.updated).toLocaleString(undefined,{month:'short',day:'numeric',hour:'numeric',minute:'2-digit'})}`:'');
@@ -236,6 +236,25 @@ async function refreshDashboard(){
   document.body.dataset.paused='yes';
   put('dashboard-status','No status yet');put('now-title','No status published yet');put('next-title','—');
  }
+}
+// The lab at work: agents passing the investigation along, drawn above the status line on the home page. It moves
+// only while on screen and in a visible tab; with reduced motion it shows one still frame.
+const labCanvas=VIEW==='home'?el('canvas',{id:'lab-anim',className:'lab-anim'}):null;
+let labVisible=true;
+function paintLab(now){
+ if(!labCanvas||!window.CouncilLab)return;
+ const w=labCanvas.clientWidth, h=labCanvas.clientHeight, dpr=Math.min(2,devicePixelRatio||1);if(!w||!h)return;
+ if(labCanvas.width!==Math.round(w*dpr)||labCanvas.height!==Math.round(h*dpr)){labCanvas.width=Math.round(w*dpr);labCanvas.height=Math.round(h*dpr);}
+ const ctx=labCanvas.getContext('2d');ctx.setTransform(dpr,0,0,dpr,0,0);ctx.clearRect(0,0,w,h);
+ CouncilLab.draw(ctx,w,h,{t:now/1000,active:labActive,step:labStep,paused:document.body.dataset.paused==='yes',still:reduceMotion});
+}
+function drawLabStill(){if(reduceMotion)paintLab(0);}
+if(labCanvas){
+ labCanvas.setAttribute('aria-hidden','true');$('lab').before(labCanvas);
+ new IntersectionObserver(([entry])=>{labVisible=entry.isIntersecting;}).observe(labCanvas);
+ const tick=now=>{if(labVisible&&!document.hidden)paintLab(now);requestAnimationFrame(tick);};
+ if(reduceMotion)paintLab(0);else requestAnimationFrame(tick);
+ addEventListener('resize',()=>paintLab(performance.now()));
 }
 refreshDashboard();setInterval(refreshDashboard,60000);setInterval(()=>{renderNext();renderPath();},30000);
 
