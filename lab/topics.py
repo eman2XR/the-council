@@ -173,10 +173,45 @@ while both coast; every kind of clock, and the crew's bodies, slow the same way,
 No twin-paradox resolution, acceleration, gravity or Doppler effects. Slowed down for viewing and not to scale.
 No new-discovery claims.'''+COMMON
 
+ATTENTION_NOTES = '''ATTENTION (WHICH WORDS MATTER TO EACH OTHER). Scaled dot-product attention, the core step of the Transformer from
+the 2017 paper "Attention Is All You Need" (Vaswani and others), computed exactly on one tiny hand-made example. The sentence
+"The animal didn't cross the street because it was too tired" is drawn as a row of word tiles (on phones, one row per
+word). The asking word is "it", highlighted. Each word offers a key (what it is) and carries a value (what it means, drawn
+as that word's colour); "it" has a query (what it looks for), shown as "it asks: which thing here could be tired?". Each
+word's share of attention is the softmax of the query times that word's key, divided by the square root of the vector
+length (four numbers here): shares are positive and add up to 100%, and "it" also gives a small share to itself (printed
+under its tile, no line). A line runs from every other word into "it", thicker for a bigger share, with dots in the word's
+colour flowing along it into "it"; the
+share is printed under the word. A bar at the bottom shows what "it" takes in: the words' colours side by side in
+proportion to their shares, labelled for example "mostly 'animal'"; the strip on the "it" tile shows the blended colour.
+A caption states the focus ("focus off: every word gets the same share", "focus 100%: the attention formula itself").
+Field mass sets Focus (UI "Focus", 0..1), which scales the scores before the softmax: at 0 every word gets an equal share
+(9% each, a muddy blend of everything); at 1 it is the formula itself: about 70% goes to "animal", about 10% to "street",
+about 4% to "it" and about 2% to each other word. Field distance chooses the last word (UI "Last word"): below about 1.6
+"tired", above about 1.9 "wide", swapped smoothly in between. With "wide" the question becomes "which thing here could be
+wide?" and about 70% goes to "street". The readout names the word "it" looks at most, with its share.
+Choreography: chapter 1 has Focus at zero (equal shares); later chapters use the scene's mass (use 1) and distance (use 1,
+so the sentence ends in "tired"). In the last chapter, playback first dips Focus to about half and back (the shares spread
+out, about 30% on "animal", then sharpen again), then swaps the last word to "wide" about two thirds of the way through the
+chapter, and the attention moves to "street". Write the last chapter's sentences in that order.
+Supported questions: how a language AI works out which words in a sentence matter to each other; how "it" gets linked to the
+right word; what the attention in "Attention Is All You Need" computes; why the shares add up to 100%; why the same word
+looks at different words in different sentences. Honesty points: the numbers are hand-made to show the mechanism, not taken
+from a trained model. Real models learn their queries, keys and values from huge amounts of text, use hundreds of numbers
+per word, run many attention heads side by side and stack many layers. Here the question "it" asks already depends on the
+last word; in a real model "it" picks that up in earlier layers, where it first takes in the words around it. As in the
+paper's encoder, every word may look at words after it too ("it" looks ahead to "tired"); models that write text one word
+at a time, such as chatbots, let a word look only at the words before it. Attention
+alone ignores word order, so real models add position information. Do not say the AI understands, thinks or reads like a
+person; give no model sizes or company claims; do not present Focus as a setting real models have (it shows how scores
+become shares; the real formula is Focus 100%). Plain words: query = what a word looks for, key = what a word offers,
+value = what it passes on. Describe changes concretely; this is mathematics, not physics. No new-discovery claims.'''+COMMON
+
 # Models whose picture explains why, not only what, and that passed owner review and beginner tests.
-# Only these are planned; the others wait for a redesign.
+# Only these are planned; the others wait for a redesign. attention (2026-10-29) was added at the owner's request
+# for the next run after subagent beginner tests; the owner has not reviewed its picture yet.
 READY = {'light-bending', 'gravity-clocks', 'spacetime-paths', 'light-clock', 'interference',
-         'wave-packet', 'diffraction', 'quantum-well'}
+         'wave-packet', 'diffraction', 'quantum-well', 'attention'}
 # Not ready (2026-10-28): twin-trip shows what rather than why; spacetime, falling-time and tunneling are graph-style;
 # standing-waves is a hand-made five-chapter guide (agents write three or four chapters);
 # two-slit-particles failed a beginner test (faint ripples, slits read as one gap, unexplained screen marks, stripes
@@ -197,4 +232,5 @@ TOPICS = {
     'falling-time': {'label':'Why things fall', 'question':'If gravity slows time, why do things fall?', 'notes':FALL_NOTES},
     'diffraction': {'label':'Spreading through a gap', 'question':'Why do waves spread out after passing a narrow gap?', 'notes':GAP_NOTES},
     'quantum-well': {'label':'Allowed energies in a well', 'question':'Why can a trapped particle only have certain energies?', 'notes':WELL_NOTES},
+    'attention': {'label':'Attention in language AI', 'question':'What does the “attention” in “Attention Is All You Need” do when an AI reads a sentence?', 'notes':ATTENTION_NOTES},
 }

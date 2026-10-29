@@ -71,7 +71,8 @@ def fetch(url, opener=urllib.request.urlopen, timeout=15):
 def retrieve(provider, question, opener=urllib.request.urlopen, limit=6):
     """Ask the model for candidate sources, fetch them, and return notes built only from retrieved text."""
     candidates = provider.generate('source_finder', question + '\nList up to eight specific, stable web pages '
-        '(university, government, encyclopedia, or open educational resources; https only) that explain this '
+        '(the original paper when the question names one, university, government, encyclopedia, or open educational '
+        'resources; https only) that explain this '
         'question reliably. Prefer pages that are plain HTML. Return URLs only as data.', CANDIDATES)
     retrieved = []
     for item in candidates.get('urls', [])[:8]:

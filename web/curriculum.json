@@ -113,6 +113,19 @@
      "model": "tunneling"
     }
    ]
+  },
+  {
+   "number": 5,
+   "title": "How AI reads",
+   "engine": "word attention",
+   "items": [
+    {
+     "id": "5.1",
+     "question": "What does the “attention” in “Attention Is All You Need” do when an AI reads a sentence?",
+     "model": "attention",
+     "ready": true
+    }
+   ]
   }
  ]
 }

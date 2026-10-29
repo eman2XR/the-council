@@ -1,7 +1,9 @@
 const $=id=>document.getElementById(id);
 const put=(id,text)=>{const el=$(id);if(el)el.textContent=text??'';};
 const el=(tag,props={},...children)=>{const node=Object.assign(document.createElement(tag),props);node.append(...children);return node;};
-const TOPICS={'gravity-clocks':'Gravity and time','light-bending':'Gravity and light','spacetime':'Space and time','twin-trip':'Space and time','interference':'Waves','standing-waves':'Waves','two-slit-particles':'Quanta','tunneling':'Quanta','wave-packet':'Quanta','quantum-well':'Quanta','falling-time':'Gravity and time','diffraction':'Waves','spacetime-paths':'Space and time','light-clock':'Space and time','river':'Black holes','fall-views':'Gravity and time','tides':'Curved spacetime','lift':'Gravity and time','moon-tides':'Gravity and time'};
+const TOPICS={'gravity-clocks':'Gravity and time','light-bending':'Gravity and light','spacetime':'Space and time','twin-trip':'Space and time','interference':'Waves','standing-waves':'Waves','two-slit-particles':'Quanta','tunneling':'Quanta','wave-packet':'Quanta','quantum-well':'Quanta','falling-time':'Gravity and time','diffraction':'Waves','spacetime-paths':'Space and time','light-clock':'Space and time','river':'Black holes','fall-views':'Gravity and time','tides':'Curved spacetime','lift':'Gravity and time','moon-tides':'Gravity and time','attention':'How AI reads'};
+// The accuracy reviewer checks physics for physics guides and the mathematics for the others.
+const REVIEWED={'attention':'accuracy'};
 const STATUS={planning:'Choosing a question',running:'Investigating now',reviewed:'Passed review',needs_review:'Draft, not published',failed:'Attempt stopped',interrupted:'Run interrupted',idle:'Resting'};
 const STEPS=['Question','Research','Design','Render','Review','Publish'];
 const reduceMotion=matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -49,8 +51,8 @@ function show(data,{autoplay=false}={}){
 
 function renderBehind(data){
  const r=data.research, fixture=data.provider==='fixture', revisions=data.revisions||[], final=revisions.at(-1);
- const chips=[];
- if(final?.physics_review&&final?.visual_review)chips.push(final.accepted?(final.learner_review?'Passed physics, visual and beginner review':'Passed physics and visual review'):'Reviews requested changes');
+ const chips=[], field=REVIEWED[data.scene?.kind]||'physics';
+ if(final?.physics_review&&final?.visual_review)chips.push(final.accepted?(final.learner_review?`Passed ${field}, visual and beginner review`:`Passed ${field} and visual review`):'Reviews requested changes');
  if(revisions.length>1)chips.push(`${revisions.length} drafts`);
  const checks=data.checks||[];if(checks.length)chips.push(`${checks.filter(c=>c.pass).length} of ${checks.length} checks`);
  if(fixture)chips.unshift('Scripted example');
@@ -173,13 +175,13 @@ async function loadPublished(){
  else if(VIEW==='article')await openGuide(entries.find(e=>e.id===requestedGuide)?.id||(requestedGuide==='example'||!entries.length?'example':requestedGuide));
  // Fetch the remaining records for previews without blocking the main guide.
  await Promise.all([...entries.slice(0,24).map(e=>getRecord(e.id).catch(()=>null)),...drafts.map(d=>getDraft(d.id).catch(()=>null))]);
- renderCards();
+ renderCards();renderPath();
 }
 
 loadPublished();
 
 /* Lab status from the published snapshot. It is not a live heartbeat. */
-let schedule=null, labActive=false, labQuestion='';
+let schedule=null, labActive=false, labQuestion='', attempts=[];
 function stepOf(state){
  if(state.status==='planning')return 0;
  if(state.status==='reviewed')return 6;
@@ -212,7 +214,7 @@ function renderNext(){
 async function refreshDashboard(){
  try{
   const response=await fetch('dashboard.json',{cache:'no-store'});if(!response.ok)throw Error('No status');
-  const state=await response.json();schedule=state.schedule;
+  const state=await response.json();schedule=state.schedule;attempts=state.attempts||[];
   const active=['running','planning'].includes(state.status), age=Date.now()-new Date(state.updated).getTime();
   put('dashboard-status',active?'Investigating now':schedule?.enabled?'Lab resting':schedule?.state==='paused'?'New investigations paused':'Lab paused');
   $('lab').dataset.state=active?'active':schedule?.enabled?'idle':'paused';
@@ -278,7 +280,11 @@ function chapterGroups(lead){
 }
 function renderPath(){
  if(!curriculum)return;
- const all=curriculum.chapters.flatMap(c=>c.items), next=all.find(i=>i.model&&!doneItem(i)&&!picks.has(i.id));
+ // Like the daily run: ready items whose model has no guide or draft yet, skipping questions a guide or draft answers
+ // or that were tried with the same model.
+ const used=new Set([...entries.map(e=>e.topic),...drafts.map(d=>d.kind)]);
+ const tried=i=>attempts.some(a=>norm(a.question)===norm(i.question)&&a.topic===i.model)||drafts.some(d=>norm(d.question||d.title)===norm(i.question));
+ const all=curriculum.chapters.flatMap(c=>c.items), next=all.find(i=>i.model&&i.ready&&!used.has(i.model)&&!doneItem(i)&&!tried(i)&&!picks.has(i.id));
  if(schedule?.enabled){
   const pick=[...picks.keys()].map(id=>all.find(i=>i.id===id)).find(i=>i&&i.model&&!doneItem(i));
   const upcoming=pick||next;

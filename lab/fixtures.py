@@ -145,4 +145,9 @@ ENGINE_SCENES = {
         ('Shake in step.', 'Each hump returns just as the hand shakes again, so the swing grows.'),
         ('Shake out of step.', 'The humps come back at the wrong moment, so the rope only jiggles.'),
         ('Twice and three times as fast.', 'In step again: two loops, then three.')], 'gold', 1, 2.25),
+    'ATTENTION (WHICH WORDS MATTER': _engine_scene('How “it” finds the word it means', [
+        ('No focus: every word counts the same.', 'With focus off, “it” gives every word the same share. It takes in a muddy mix of everything.'),
+        ('Match the question to each word.', '“it” asks which thing here could be tired. “animal” matches best, so it gets most of the attention.'),
+        ('Take in the best matches.', 'Now “it” carries mostly the meaning of “animal”. That is how the AI links “it” to the right word.'),
+        ('Soften the focus, then change one word.', 'With less focus the shares spread out. Swap “tired” for “wide” and the attention moves to “street”.')], 'blue', 1, 1),
 }

@@ -208,7 +208,7 @@ def daily(factory, count=1, rounds=3, push=False, root=ROOT, requests=None):
                     context=[{k:v for k,v in entry.items() if k in ('question','topic','status')} for entry in previous]
                     schema=plan_schema(sorted({i['model'] for i in ready}))
                     plan=provider.generate('planner',
-                        'Choose ONE of these ready curriculum items for a beginner physics investigation, in teaching order '
+                        'Choose ONE of these ready curriculum items for a beginner science investigation, in teaching order '
                         'unless a viewer request below is better answered by another. You may rephrase its question to answer '
                         'the request, but keep its model and never promise visuals beyond the model. No claims of new discoveries. '
                         'Question <=180 characters, reason <=1000 characters.\nReady items: '+json.dumps(options)+

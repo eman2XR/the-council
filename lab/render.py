@@ -72,11 +72,13 @@ def capture(scene, directory, research=None, provider='fixture'):
             interaction = page.evaluate('''async () => {
                 const slider=document.getElementById('mass'); slider.value='0';
                 slider.dispatchEvent(new Event('input'));
-                const zero=CouncilScene.getState().mass===0 && parseFloat(document.getElementById('bend-value').textContent)===0;
+                // The modelled effect: the readout's number, or the engine's own measure when its readout is not zero-based.
+                const effect=()=>CouncilScene.effect?CouncilScene.effect():parseFloat(document.getElementById('bend-value').textContent);
+                const zero=CouncilScene.getState().mass===0 && effect()===0;
                 slider.value='1'; slider.dispatchEvent(new Event('input'));
                 // Some models respond over time (a shaken rope builds its swing): let the page run for two seconds.
                 await new Promise(r=>setTimeout(r,2000));
-                const full=CouncilScene.getState().mass===1 && parseFloat(document.getElementById('bend-value').textContent)>0;
+                const full=CouncilScene.getState().mass===1 && effect()>0;
                 CouncilScene.seek(1,0);
                 const noMass=slider.disabled && slider.value==='0' && document.getElementById('mass-value').dataset.value==='0';
                 CouncilScene.seek(11,1); const first=document.getElementById('universe').toDataURL();

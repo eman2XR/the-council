@@ -182,6 +182,33 @@
         return edge*Math.exp(-l.kappa*(Math.abs(x)-h));};
       return {V,L,levels,psi};
     },
+    // Scaled dot-product attention ("Attention Is All You Need", 2017) on a tiny hand-made example: the word "it" in
+    // "The animal didn't cross the street because it was too tired" (or "... too wide"). Each word offers a key (what it
+    // is) and carries a value (what it means, drawn as a colour); the asking word's query says what it looks for. Shares
+    // are softmax(focus * q.k / sqrt(d)); the result is the share-weighted blend of the values. Focus 1 is the formula
+    // itself; focus 0 gives every word the same share. Key and query features: [could be tired, could be wide,
+    // a thing "it" could stand for, a small grammar word]. The vectors are hand-made, not taken from a trained model.
+    attentionWords: ['The', 'animal', "didn't", 'cross', 'the', 'street', 'because', 'it', 'was', 'too'],
+    attentionKeys: [[0,0,0,1], [1,0,1,0], [0,0,0,1], [0,0,0,0], [0,0,0,1], [0,1,1,0], [0,0,0,1], [0,0,.4,0], [0,0,0,1], [0,0,0,1], [0,0,0,0]],
+    attentionValues: [[.8,.8,.8], [.88,.48,.18], [.78,.78,.78], [.23,.44,.85], [.8,.8,.8], [.25,.56,.35], [.8,.8,.8], [.55,.58,.65], [.78,.78,.78], [.8,.8,.8], [.56,.36,.76]],
+    // Shares one query gives a list of keys: softmax of the scaled dot products, sharpened or softened by focus.
+    attend(query, keys, focus = 1) {
+      const scores = keys.map(k => k.reduce((s, x, i) => s + x * query[i], 0) / Math.sqrt(query.length));
+      const top = Math.max(...scores), raw = scores.map(s => Math.exp(focus * (s - top))), total = raw.reduce((s, x) => s + x, 0);
+      return {scores, weights: raw.map(x => x / total)};
+    },
+    attention(a, b) {
+      // The last word: "tired" below about 1.6, "wide" above about 1.9, swapped smoothly in between.
+      const u = Math.min(1, Math.max(0, (b - 1.6) / .3)), mix = u * u * (3 - 2 * u), focus = Math.min(1, Math.max(0, a));
+      const words = [...this.attentionWords, mix < .5 ? 'tired' : 'wide'], ask = 7;
+      // "it" looks for a thing it could stand for that could be tired (or wide).
+      const query = [4 * (1 - mix), 4 * mix, 3, 0];
+      const {scores, weights} = this.attend(query, this.attentionKeys, focus);
+      const blend = [0, 1, 2].map(c => weights.reduce((s, w, j) => s + w * this.attentionValues[j][c], 0));
+      const top = weights.reduce((best, w, j) => w > best.w + 1e-12 ? {w, j, word: words[j]} : best, {w: -1, j: -1, word: ''});
+      const even = weights.every(w => Math.abs(w - weights[0]) < 1e-9);
+      return {words, ask, ending: words[10], mix, focus, query, keys: this.attentionKeys, values: this.attentionValues, scores, weights, blend, top, even};
+    },
     // Weak gravity, slow motion (schematic units): proper time = T + integral of (g h - v^2/2) dt.
     fall(a, b) {
       const g=.8*a, T=2+2*(b-1), ref=.8*T*T/8, best=g*T*T/8;
@@ -314,7 +341,7 @@
     // Which checks belong to each visual model; light bending uses checks().
     checkSets() {
       return {'gravity-clocks':this.clockChecks,'spacetime':this.spacetimeChecks,'interference':this.waveChecks,
-        'two-slit-particles':this.waveChecks,'standing-waves':this.ropeChecks,'tunneling':this.tunnelChecks,'wave-packet':this.packetChecks,'quantum-well':this.wellChecks,'falling-time':this.fallChecks,'diffraction':this.gapChecks,'twin-trip':this.spacetimeChecks,'spacetime-paths':this.pathChecks,'light-clock':this.lightClockChecks,'river':this.riverChecks,'fall-views':this.viewsChecks,'tides':this.tidesChecks,'lift':this.liftChecks,'moon-tides':this.moonChecks};
+        'two-slit-particles':this.waveChecks,'standing-waves':this.ropeChecks,'tunneling':this.tunnelChecks,'wave-packet':this.packetChecks,'quantum-well':this.wellChecks,'falling-time':this.fallChecks,'diffraction':this.gapChecks,'twin-trip':this.spacetimeChecks,'spacetime-paths':this.pathChecks,'light-clock':this.lightClockChecks,'river':this.riverChecks,'fall-views':this.viewsChecks,'tides':this.tidesChecks,'lift':this.liftChecks,'moon-tides':this.moonChecks,'attention':this.attentionChecks};
     },
     checksFor(kind) { return this.checkSets()[kind]?.call(this) || this.checks(); },
     // Every model's checks, run in CI.
@@ -420,6 +447,23 @@
         'Twice as far away, the stretch is about eight times weaker':near(far.tide(1,0)[0]*8/a,1,.03),
         'Two high tides in one turn of the Earth':peaks===2,
       }).map(([name,pass])=>({name,pass}));
+    },
+    attentionChecks() {
+      const near = (x, y, e = 1e-12) => Math.abs(x - y) < e, A = this.attention(1, 1), W = this.attention(1, 2.5), Z = this.attention(0, 1);
+      const soft = this.attention(.45, 1), n = A.words.length, settings = [[0, 1], [.45, 1], [1, 1], [.7, 1.75], [1, 2.5]];
+      // Without position information, shuffling the words shuffles their shares in exactly the same way.
+      const order = [3, 0, 10, 5, 1, 7, 2, 9, 4, 6, 8], mixed = this.attend(A.query, order.map(j => A.keys[j]), 1).weights;
+      return Object.entries({
+        'Shares are positive and add up to one': settings.every(([a, b]) => { const w = this.attention(a, b).weights; return w.every(x => x > 0) && near(w.reduce((s, x) => s + x, 0), 1, 1e-12); }),
+        'With no focus every word gets an equal share': Z.even && Z.weights.every(x => near(x, 1 / n)),
+        'Scores are dot products divided by the square root of the vector size': near(A.scores[1], (4 * 1 + 3 * 1) / 2) && near(A.scores[5], 3 / 2) && near(A.scores[3], 0),
+        'Shares follow the softmax of the scores': near(A.weights[1] / A.weights[5], Math.exp(A.scores[1] - A.scores[5]), 1e-9),
+        'Ending in "tired", "it" looks most at "animal"': A.top.word === 'animal' && A.top.w > .6 && A.ending === 'tired',
+        'Ending in "wide", "it" looks most at "street"': W.top.word === 'street' && W.top.w > .6 && W.ending === 'wide',
+        'More focus gives the top word a bigger share': Z.top.w < soft.top.w && soft.top.w < A.top.w,
+        'The result is the share-weighted blend of the values': [0, 1, 2].every(c => near(A.blend[c], A.weights.reduce((s, w, j) => s + w * A.values[j][c], 0))),
+        'Without position information, word order does not change the shares': order.every((j, i) => near(mixed[i], A.weights[j], 1e-12)),
+      }).map(([name, pass]) => ({name, pass}));
     },
     waveChecks() {
       const near=(a,b)=>Math.abs(a-b)<1e-12;
