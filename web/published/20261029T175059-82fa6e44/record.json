@@ -1,0 +1,599 @@
+{
+  "id": "20261029T175059-82fa6e44",
+  "status": "reviewed",
+  "question": "What does the \u201cattention\u201d in \u201cAttention Is All You Need\u201d do when an AI reads a sentence?",
+  "topic": "attention",
+  "created": "2026-10-29T17:50:59.782080+00:00",
+  "research": {
+    "claim": "In the Transformer from \"Attention Is All You Need\" (Vaswani and others, 2017), attention is a calculation that rebuilds each word as a blend of information passed on by the words it is allowed to see. Every word has three lists of numbers: a query (what it looks for), a key (what it offers) and a value (what it passes on). To set the blend for one word, its query is multiplied with every word's key to give a score. Each score is divided by the square root of the list length, and the softmax step turns the scores into shares that are all positive and add up to 100%. The word's new version is the share-weighted mix of all the values. In the small hand-made sentence \"The animal didn't cross the street because it was too tired\", that puts about 70% of the share from \"it\" on \"animal\". When the last word becomes \"wide\", about 70% moves to \"street\".",
+    "explanation": "What the paper defines: attention \"maps a query and a set of key-value pairs to an output\", and all of them are vectors (lists of numbers). The output is a weighted sum of the values. Each weight depends on how well the query matches that value's key. The formula is Attention(Q, K, V) = softmax(QK\u1d40 / \u221ad_k) V. In self-attention the queries, keys and values all come from the same sentence. So every word gets a new version of itself that mixes in information from the words it matched best.\n\nStep by step for one asking word, \"it\":\n1. \"it\" has a query, in effect \"which word could be tired?\". Every word, including \"it\", has a key and a value.\n2. Score: multiply the query of \"it\" with each word's key, number by number, and add up the products (a dot product). A bigger score means a better match.\n3. Scale: divide every score by \u221a(list length). Here the lists have four numbers, so the divisor is 2. The paper's reason: if the numbers in queries and keys were random with average 0 and spread 1, dot products would grow with list length, and the softmax would give nearly everything to one word. Dividing keeps the scores in a usable range.\n4. Softmax: raise e to the power of each scaled score, then divide each result by their total. The shares are always positive and always add up to 100%. That is a property of the formula, not a fact about language. Because \"it\" also scores its own key, it gives itself a small share.\n5. Blend: multiply each word's value by its share and add them up. The result is the new \"it\", which now carries mostly what \"animal\" passes on.\n\nWhat the hand-made example shows:\n- Focus at 0: all 11 words get an equal share, about 9% each (100% \u00f7 11). The Focus control scales the scores before the softmax, and equal scores give equal shares.\n- Focus at 1 (the real formula): about 70% to \"animal\", about 10% to \"street\", about 4% to \"it\" itself and about 2% to each of the other eight words.\n- Focus dipped to about half: the shares spread out, with about 30% on \"animal\". Back at 1 they sharpen again. This shows that softmax turns differences between scores into differences between shares, and bigger score gaps give sharper shares.\n- Last word swapped to \"wide\": the question becomes \"which word could be wide?\", and about 70% moves to \"street\". The same word looks at different words in different sentences because its query depends on its surroundings, and in this example the query already depends on the last word.\n\nHonest status:\n- These numbers are made by hand to show the mechanism. They were not taken from a trained model.\n- Real models learn their queries, keys and values from huge amounts of text. They use hundreds of numbers per word, run several attention heads side by side and stack many layers.\n- In a real model, \"it\" picks up the meaning of the last word in earlier layers, where it first takes in the words around it.\n- As in the paper's encoder, every word here may look at words after it, so \"it\" looks ahead to \"tired\". Models that write text one word at a time, such as chatbots, block that: a word may look only at the words before it.\n- Attention on its own ignores word order, so the paper adds position information.\n- Focus is a teaching control, not a setting real models have. The real formula is Focus at 100%.\n- All of this is mathematics, not physics. The mechanism is from the 2017 paper; nothing new is claimed here.",
+    "assumptions": [
+      "Queries, keys and values are lists of numbers of equal length. Here each has four numbers, so the scaling divisor is \u221a4 = 2.",
+      "The example's numbers were chosen by hand so that the query of \"it\" matches the key of \"animal\" when the last word is \"tired\" and the key of \"street\" when it is \"wide\". They are not learned.",
+      "One attention head and one layer are shown; real Transformers use many of each.",
+      "The paper's reason for dividing by \u221ad_k assumes the numbers in queries and keys behave like independent random values with average 0 and spread 1. It is a reason about scale, not a claim about trained weights.",
+      "Every word may look at every word, including later ones, as in the paper's encoder. Text-writing decoders are masked so a word sees only earlier words.",
+      "Word position is ignored in this tiny example. Real models add position information because attention alone is blind to order.",
+      "Focus multiplies the scores before the softmax. Focus = 1 is the paper's formula exactly; Focus = 0 makes all scores equal."
+    ],
+    "prediction": "In the hand-made example: with Focus at 0, each of the 11 words gets an equal share of about 9%. With Focus at 1 and the last word \"tired\", \"animal\" gets about 70%, \"street\" about 10%, \"it\" about 4% and each other word about 2%, and the shares always add up to 100%. Lowering Focus to about half spreads the shares out, to about 30% on \"animal\". Swapping the last word to \"wide\" moves the biggest share, about 70%, to \"street\". In general, if you shuffle the words of a sentence without position information, each word gets exactly the same shares from the asking word as before, just at its new place.",
+    "falsifier": "Any of these would show the description is wrong:\n- A softmax share that is negative, or a set of shares that does not add up to 100%.\n- Equal scores (Focus 0) giving unequal shares.\n- Swapping \"tired\" for \"wide\" leaving the biggest share on \"animal\", even though the query now matches the key of \"street\" best.\n- Without position information, reordering the words changing which word receives which share.\n- For the broader claim that attention lines explain a trained model's answer: the cited studies already find this unreliable. Weights often disagree with gradient-based importance, very different weights can give the same prediction, and the size of value vectors and mixing across layers also matter.",
+    "limitations": [
+      "The numbers are made by hand to show the mechanism. They are not measured from any trained model.",
+      "Only one head and one layer are shown. Real models run several heads side by side and stack many layers, and by later layers each position is already a mixture of words. So a line from \"it\" to a position is not simply a line to the original word (Abnar & Zuidema).",
+      "A share is only one of two factors in a word's contribution; the size of the value vector matters too (Kobayashi et al.).",
+      "Attention shares are a noisy guide to what drives a model's prediction (Jain & Wallace; Serrano & Smith). Whether they count as an explanation depends on how explanation is defined (Wiegreffe & Pinter).",
+      "Attention alone, without skip connections and the per-word feed-forward layers, makes all words drift toward looking the same (Dong, Cordonnier & Loukas). Despite the title, attention is not the whole machine.",
+      "In this example the question \"it\" asks already depends on the last word. In a real model that context reaches \"it\" in earlier layers.",
+      "Focus is a teaching control, not a setting in real models.",
+      "The animal/street coreference sentence is not in the paper's text as retrieved. The paper's Figure 4 caption describes an \"its\" example, and only the caption was read, not the image. The Google Research blog post that uses this sentence was not fetched and is not cited.",
+      "The paper itself is inconsistent about its English-French score (41.8 BLEU in the abstract and Table 2, 41.0 in Section 6.1). This record makes no performance claims that rely on that number.",
+      "No university textbook or course page could be retrieved, so no teaching source is cited."
+    ],
+    "misconceptions": [
+      "\"Attention means the AI is paying attention like a person, with eyes moving across the words.\" It is a calculation, done for every word at the same moment, that produces shares adding up to 100%. Nothing reads, looks or understands.",
+      "\"It reads the sentence left to right, one word at a time.\" All the shares are computed in parallel. Masking in text-writing models only blocks later words; it does not create a reading order.",
+      "\"Attention picks the one right word.\" It gives every word a share and blends them. Even at full Focus, \"it\" gives about 30% to words other than \"animal\".",
+      "\"Wait, why does 'it' give attention to itself?\" Its own key is scored like every other key, so it gets a share too, about 4% here.",
+      "\"Why do the shares always add up to 100%? Is that something about language?\" No. Softmax divides each result by the total, so the shares always add up to 100% for any scores.",
+      "\"A thick line proves that word caused the answer.\" Studies find attention shares are an unreliable explanation. The value vector's size and mixing across layers also matter.",
+      "\"The AI knows animals get tired and streets are wide.\" Here the matches were set by hand. In real models, queries and keys are learned from text, and a match means closeness in a learned space of numbers, not understanding.",
+      "\"Wait, how can 'it' use 'tired' before reaching it?\" In the paper's encoder every word may look at later words. Chatbot-style models that write one word at a time cannot.",
+      "\"Word order is built into attention.\" Attention alone ignores order. The paper adds position information to every word.",
+      "\"Each head has one job, like 'the pronoun head'.\" Even the paper's own captions hedge on this, and many heads in later studies track positions or punctuation-like markers.",
+      "\"Attention is all there is, as the title says.\" Without skip connections and feed-forward layers, stacked attention makes every word look the same.",
+      "\"Real models have a Focus knob.\" Focus only shows how scores become shares. The real formula is always Focus at 100%.",
+      "\"These percentages come from a real AI.\" They are hand-made to show the mechanism."
+    ],
+    "questions": [
+      {
+        "q": "A sentence has 5 words and every score is equal (Focus at 0). What share does each word get from the asking word?",
+        "a": "20% each. Equal scores give equal shares, and the shares must add up to 100%."
+      },
+      {
+        "q": "In \"The animal didn't cross the street because it was too wide\", which word gets the biggest share from \"it\", and why?",
+        "a": "\"street\", about 70%. The query of \"it\" now asks which word could be wide, and that matches the key of \"street\" best."
+      },
+      {
+        "q": "A friend says: \"The thick line from 'it' to 'animal' proves the AI understood that the animal was tired.\" What is wrong with that?",
+        "a": "The line only shows a share from matching numbers, and here those numbers were made by hand. In real models, studies find attention shares are an unreliable guide to why a prediction was made: value sizes and earlier layers also matter. Nothing in the formula understands anything."
+      },
+      {
+        "q": "If you shuffled the words and the model had no position information, would \"animal\" still get the same share from \"it\"?",
+        "a": "Yes. Attention alone ignores order, so each word keeps its share at its new place. That is why real models add position information."
+      },
+      {
+        "q": "In a chatbot that writes one word at a time, could \"it\" give any share to \"tired\" in this sentence?",
+        "a": "No. Such models let a word look only at the words before it, and \"tired\" comes after \"it\"."
+      }
+    ],
+    "sources": [
+      {
+        "title": "Vaswani et al., \"Attention Is All You Need\" (arXiv abstract)",
+        "url": "https://arxiv.org/abs/1706.03762",
+        "supports": "Definition of attention as mapping a query and key-value pairs to a weighted sum of values; scaled dot-product formula softmax(QK\u1d40/\u221ad_k)V; multi-head attention; decoder masking; positional encodings."
+      },
+      {
+        "title": "Vaswani et al., \"Attention Is All You Need\" (arXiv HTML v7)",
+        "url": "https://arxiv.org/html/1706.03762v7",
+        "supports": "Quoted text: the footnote's reason for scaling by 1/\u221ad_k (components with mean 0 and variance 1 give dot products with variance d_k); masking so position i depends only on earlier positions; hedged figure captions on heads 'apparently involved in anaphora resolution'."
+      },
+      {
+        "title": "Bahdanau, Cho & Bengio, \"Neural Machine Translation by Jointly Learning to Align and Translate\" (ICLR 2015)",
+        "url": "https://arxiv.org/abs/1409.0473",
+        "supports": "Earlier origin of attention as a learned soft search over source words, not a hard alignment."
+      },
+      {
+        "title": "Dong, Cordonnier & Loukas, \"Attention is Not All You Need\" (arXiv preprint)",
+        "url": "https://arxiv.org/abs/2103.03404",
+        "supports": "Pure attention without skip connections and MLPs drives all tokens toward the same representation, so attention is not the whole machine."
+      },
+      {
+        "title": "Jain & Wallace, \"Attention is not Explanation\" (NAACL 2019)",
+        "url": "https://arxiv.org/abs/1902.10186",
+        "supports": "Attention weights often disagree with gradient-based importance, and different weight patterns can give the same prediction."
+      },
+      {
+        "title": "Wiegreffe & Pinter, \"Attention is not not Explanation\" (EMNLP 2019)",
+        "url": "https://arxiv.org/abs/1908.04626",
+        "supports": "Whether attention counts as explanation depends on how explanation is defined; the earlier critique does not settle the question."
+      },
+      {
+        "title": "Serrano & Smith, \"Is Attention Interpretable?\" (ACL 2019)",
+        "url": "https://arxiv.org/abs/1906.03731",
+        "supports": "Attention weights are a noisy, not fail-safe, indicator of importance."
+      },
+      {
+        "title": "Clark, Khandelwal, Levy & Manning, \"What Does BERT Look At?\" (BlackboxNLP 2019)",
+        "url": "https://arxiv.org/abs/1906.04341",
+        "supports": "Some heads track coreference and syntax, while many attend to delimiters or fixed offsets, so 'one head, one job' is too simple."
+      },
+      {
+        "title": "Abnar & Zuidema, \"Quantifying Attention Flow in Transformers\" (arXiv preprint)",
+        "url": "https://arxiv.org/abs/2005.00928",
+        "supports": "Information mixes across layers, so raw attention weights in later layers do not map cleanly onto the original words."
+      },
+      {
+        "title": "Kobayashi et al., \"Attention is Not Only a Weight\" (EMNLP 2020)",
+        "url": "https://arxiv.org/abs/2004.10102",
+        "supports": "A word's contribution depends on both the attention weight and the size of the transformed value vector."
+      },
+      {
+        "title": "Vig, \"A Multiscale Visualization of Attention in the Transformer Model\" (ACL 2019 demos)",
+        "url": "https://arxiv.org/abs/1906.05714",
+        "supports": "Multi-layer, multi-head attention is hard to interpret from visualizations."
+      }
+    ]
+  },
+  "scene": {
+    "title": "Which word does \u201cit\u201d mean? How attention shares out a sentence",
+    "subtitle": "A small sentence worked through by hand. \u201cit\u201d gives every word a share, and the word that best fits what \u201cit\u201d looks for gets most. Attention on its own ignores word order, so real models add each word\u2019s position.",
+    "why": "Translation apps and chatbots use this step. It lets a word like \u201cit\u201d take its meaning from the right word anywhere in the sentence.",
+    "beats": [
+      {
+        "title": "Equal shares: nothing links \u201cit\u201d to a word yet",
+        "body": "Here \u201cit\u201d gives every word the same share, about 9%, so nothing links \u201cit\u201d to the animal or the street. Shares are like slices of one pie: however you cut them, they add up to 100%."
+      },
+      {
+        "title": "The best match gets the biggest share",
+        "body": "Each word offers a short description of itself, and \u201cit\u201d asks a question: which word could be tired? A closer match gives a higher score and a bigger share: \u201canimal\u201d gets about 70%, \u201cstreet\u201d about 10%. \u201cit\u201d even gives itself a small share, then becomes a blend of all the words, mostly \u201canimal\u201d."
+      },
+      {
+        "title": "A calculation, not a person reading",
+        "body": "Here every word may look at every other word, so \u201cit\u201d can use \u201ctired\u201d, which comes later. Chatbots, which write one word at a time, may only look at earlier words. Nothing here understands anything: these numbers were set by hand, and real models learn theirs from text."
+      },
+      {
+        "title": "Less Focus, then a different last word",
+        "body": "Now Focus, a teaching slider for how much score gaps count, drops to half: \u201canimal\u201d falls to about 30%. Back at full Focus, which real models always use, the shares sharpen again. Now the last word becomes \u201cwide\u201d, the question changes, and about 70% moves to \u201cstreet\u201d."
+      }
+    ],
+    "mass": 1,
+    "distance": 1,
+    "ray_count": 1,
+    "show_reference": false,
+    "show_labels": true,
+    "accent": "blue",
+    "line_width": 3,
+    "duration": 40,
+    "takeaway": "Attention is a calculation: each word blends in the words that best match its question, in shares that add up to 100%.",
+    "controls": "first",
+    "kind": "attention"
+  },
+  "checks": [
+    {
+      "name": "Shares are positive and add up to one",
+      "pass": true
+    },
+    {
+      "name": "With no focus every word gets an equal share",
+      "pass": true
+    },
+    {
+      "name": "Scores are dot products divided by the square root of the vector size",
+      "pass": true
+    },
+    {
+      "name": "Shares follow the softmax of the scores",
+      "pass": true
+    },
+    {
+      "name": "Ending in \"tired\", \"it\" looks most at \"animal\"",
+      "pass": true
+    },
+    {
+      "name": "Ending in \"wide\", \"it\" looks most at \"street\"",
+      "pass": true
+    },
+    {
+      "name": "More focus gives the top word a bigger share",
+      "pass": true
+    },
+    {
+      "name": "The result is the share-weighted blend of the values",
+      "pass": true
+    },
+    {
+      "name": "Without position information, word order does not change the shares",
+      "pass": true
+    },
+    {
+      "name": "Subtitles read at most 14.0 characters per second (limit 15)",
+      "pass": true
+    },
+    {
+      "name": "Each subtitle stays up at least 5.2 s (minimum 2.5)",
+      "pass": true
+    },
+    {
+      "name": "Zero-mass control removes the modeled effect",
+      "pass": true
+    },
+    {
+      "name": "Mass control updates the rendered model",
+      "pass": true
+    },
+    {
+      "name": "No-mass step shows zero and restores the chosen mass afterward",
+      "pass": true
+    },
+    {
+      "name": "Seeking reproduces identical canvas pixels",
+      "pass": true
+    },
+    {
+      "name": "At most 12 words of labels on the stage at once (most: 11)",
+      "pass": true
+    },
+    {
+      "name": "Every stage label is at most 5 words (longest: 5)",
+      "pass": true
+    },
+    {
+      "name": "Mobile page fits viewport",
+      "pass": true
+    },
+    {
+      "name": "Renderer has no JavaScript errors",
+      "pass": true
+    }
+  ],
+  "provider": "reviewed-agents",
+  "provenance": {
+    "sources_retrieved": true,
+    "retrieved_by": "agent"
+  },
+  "revisions": [
+    {
+      "number": 1,
+      "scene": {
+        "title": "Which word does \u201cit\u201d mean? How attention shares out a sentence",
+        "subtitle": "A small sentence worked through by hand. The word \u201cit\u201d gives every word a share of its attention, and the word that best fits what \u201cit\u201d is looking for gets most of it.",
+        "why": "Chatbots and translation apps rely on this step. It lets a word like \u201cit\u201d take its meaning from the right word nearby.",
+        "beats": [
+          {
+            "title": "Equal shares: no way to tell",
+            "body": "Here \u201cit\u201d gives every word the same share, about 9%, so it cannot tell the animal from the street. Shares are like slices of one pie: however you cut them, they add up to 100%."
+          },
+          {
+            "title": "The best match takes the biggest share",
+            "body": "Each word offers a short description of itself, and \u201cit\u201d carries a question: which word could be tired? A closer match gets a bigger share, so \u201canimal\u201d takes about 70% and gets the thickest line. The new \u201cit\u201d mixes in what each word passes on, mostly from the animal."
+          },
+          {
+            "title": "A calculation, not a person reading",
+            "body": "It does not pick just one word: \u201cstreet\u201d still gets about 10%, and every word gets a little. All the shares are worked out at once, so \u201cit\u201d can use \u201ctired\u201d even though that word comes later. Nothing here understands anything: these numbers were set by hand, while real models learn theirs from text."
+          },
+          {
+            "title": "Softer differences, then a different last word",
+            "body": "Shrink the gaps between match scores and the shares spread out, with \u201canimal\u201d dropping to about 30%. Back at full strength, which is how real models always run, the bigger gaps make the shares sharp again. Now the last word becomes \u201cwide\u201d, the question changes, and about 70% moves to \u201cstreet\u201d."
+          }
+        ],
+        "mass": 1,
+        "distance": 1,
+        "ray_count": 1,
+        "show_reference": false,
+        "show_labels": true,
+        "accent": "blue",
+        "line_width": 3,
+        "duration": 40,
+        "takeaway": "Attention lets each word blend in the words that best fit what it looks for, in shares that always add up to 100%.",
+        "controls": "first",
+        "kind": "attention"
+      },
+      "checks": [
+        {
+          "name": "Shares are positive and add up to one",
+          "pass": true
+        },
+        {
+          "name": "With no focus every word gets an equal share",
+          "pass": true
+        },
+        {
+          "name": "Scores are dot products divided by the square root of the vector size",
+          "pass": true
+        },
+        {
+          "name": "Shares follow the softmax of the scores",
+          "pass": true
+        },
+        {
+          "name": "Ending in \"tired\", \"it\" looks most at \"animal\"",
+          "pass": true
+        },
+        {
+          "name": "Ending in \"wide\", \"it\" looks most at \"street\"",
+          "pass": true
+        },
+        {
+          "name": "More focus gives the top word a bigger share",
+          "pass": true
+        },
+        {
+          "name": "The result is the share-weighted blend of the values",
+          "pass": true
+        },
+        {
+          "name": "Without position information, word order does not change the shares",
+          "pass": true
+        },
+        {
+          "name": "Subtitles read at most 14.0 characters per second (limit 15)",
+          "pass": true
+        },
+        {
+          "name": "Each subtitle stays up at least 5.1 s (minimum 2.5)",
+          "pass": true
+        },
+        {
+          "name": "Zero-mass control removes the modeled effect",
+          "pass": true
+        },
+        {
+          "name": "Mass control updates the rendered model",
+          "pass": true
+        },
+        {
+          "name": "No-mass step shows zero and restores the chosen mass afterward",
+          "pass": true
+        },
+        {
+          "name": "Seeking reproduces identical canvas pixels",
+          "pass": true
+        },
+        {
+          "name": "At most 12 words of labels on the stage at once (most: 11)",
+          "pass": true
+        },
+        {
+          "name": "Every stage label is at most 5 words (longest: 5)",
+          "pass": true
+        },
+        {
+          "name": "Mobile page fits viewport",
+          "pass": true
+        },
+        {
+          "name": "Renderer has no JavaScript errors",
+          "pass": true
+        }
+      ],
+      "accepted": false,
+      "physics_review": {
+        "pass": false,
+        "score": 7.5,
+        "summary": "The mathematics is correct and the frames match it. With Focus at 0 the shares are equal: 1/11 is about 9.1% each, and the first frame shows identical lines with \"every word counts the same\". At Focus 1 the frames show 70% on \"animal\" and 10% on \"street\". The remaining 4% on \"it\" plus 8 x 2% on the other words brings the total to exactly 100%. The \"wide\" frame mirrors this, with 70% on \"street\" and 10% on \"animal\". A quick check of the Focus dip agrees with the claim. If you halve the log-ratios implied by 70/10/4/2, \"animal\" gets about 34%, which fits \"about 30%\". The chapter 4 subtitles give the dip, the return to full strength and the swap in the right order.\n\nThe other subtitles are sound. The pie-slice comparison for softmax normalisation fits. Values are described as a blend (\"mixes in what each word passes on\"). Chapter 3 says \"it\" does not pick just one word, and it disclaims understanding and the hand-made numbers. Focus is framed correctly as a teaching knob, with real models \"always\" at full strength.\n\nOne sentence is misleading and needs fixing before this passes. Chapter 3 says \"All the shares are worked out at once, so 'it' can use 'tired' even though that word comes later.\" That treats computing in parallel as the reason \"it\" can look ahead. In fact it can look ahead because there is no mask: every word may look at every word, as in the paper's encoder. The research record warns against exactly this mix-up. Masked text-writing models also compute their shares in parallel, yet cannot look ahead. This matters more because the \"why\" text names chatbots, which are exactly the models that could not use \"tired\" here. The fix is one sentence; everything else is ready to publish.",
+        "changes": [
+          "Chapter 3: replace \"All the shares are worked out at once, so 'it' can use 'tired' even though that word comes later.\" with two separate facts. Suggested: \"All the shares are worked out at once, not word by word. Here every word may look at every other, so 'it' can use the later word 'tired'; models that write one word at a time, like chatbots, cannot.\" Keep it within the subtitle reading-speed limit, splitting the sentence if needed.",
+          "'why': change \"from the right word nearby\" to \"from the right word elsewhere in the sentence\". Attention is not limited to nearby words: \"animal\" is six words before \"it\". Optionally replace \"Chatbots\" with \"Translation apps and chatbots\", or keep it once the chapter 3 masking sentence is in place.",
+          "Optional: the honesty point that the question \"it\" asks already depends on the last word only by hand here would read well in chapter 4, right after the swap: \"Here that change was built in by hand; real models carry it to 'it' in earlier layers.\" Leave it out if it breaks the subtitle limits, since it is in the investigation details.",
+          "Optional, renderer and notes consistency: the model notes say shares of 5% or more are printed under their word, but the Focus-0 frame prints none of the 11 shares of 9%. Either update the notes to say per-word shares are hidden when all are equal, or leave it as is. The subtitles already carry the 9% figure, so no new label is needed."
+        ],
+        "blocking_issues": [
+          "Chapter 3 subtitle presents computing in parallel as the reason \"it\" can use the later word \"tired\". The real reason is that there is no causal mask, as in the paper's encoder. Masked chatbot-style models also compute in parallel but cannot look ahead. Together with the 'why' text naming chatbots, this teaches a wrong idea that the research record explicitly warns against."
+        ]
+      },
+      "visual_review": {
+        "pass": true,
+        "score": 8,
+        "summary": "I reviewed the ten supplied frames: eight desktop frames at 0:04, 0:14, 0:22, 0:37, 0:46, 1:02, 1:12 and 1:27, the phone view at 1:27, and the phone page top. Stills cannot show motion, so I can't say whether the transitions are smooth.\n\n**What works**\n- **Clear progression.** Chapter 1 shows equal thin arcs with \"every word counts the same\". Chapter 2 shows one thick arc to \"animal\" (70%) and a thinner one to \"street\" (10%), with \"it means the animal\". At 1:12 the half-strength step shows the shares spreading (32% on \"animal\", 12% on \"street\", \"mostly the animal\"). At 1:27 the swap to \"wide\" moves the thick arc to \"street\" (70%), with \"it means the street\".\n- **Cause and effect is visible** and the comparisons are direct: the same sentence and the same arcs, with only the thickness and the percentages changing. The last chapter's subtitles follow the playback order (dip, then swap to \"wide\").\n- **The stage is calm.** The labels are short, sit under the word they belong to and are easy to read. The phone bar view is clean and fits the screen.\n- **The \"why\" text works for a beginner**, and the guide does not refer to any other investigation.\n- **The slider choice suits the topic.** Offering only Focus lets the viewer feel how softmax sharpens or spreads the shares. Playback already shows the word swap, so a second slider isn't needed.\n- **Honesty points are covered:** the numbers are hand-made, nothing understands, and real models always run at full strength.\n\n**Weaknesses (none blocking)**\n- **Confusing pronouns.** In a scene about what \"it\" refers to, two subtitles use a bare \"it\" with an unclear meaning: \"so it cannot tell the animal from the street\" and \"It does not pick just one word\".\n- **Chapter 3 is static.** The stage doesn't change for about 25 seconds. That is acceptable for the honesty chapter, but the subtitles carry it alone.\n- **Chapter 4 wording.** The opening sentence is an instruction (\"Shrink the gaps\u2026\") while playback does the change, and it never says \"Focus\", even though the viewer is then given a slider with that name.\n- **Missing chatbot caveat.** The \"why\" names chatbots, but no subtitle says that chatbot-style models cannot look ahead to \"tired\". A beginner could wrongly assume they do.\n- **Kicker wording.** The phone page's kicker reads \"HOW AI READS\", which goes against the \"not a person reading\" honesty point.",
+        "changes": [
+          "beats[0].body: replace the first sentence with: \"Here \u201cit\u201d gives every word the same share, about 9%, so nothing yet ties \u201cit\u201d to the animal or the street.\" (removes the bare pronoun \"it\" in a scene about what \"it\" means).",
+          "beats[2].body: start with \"\u201cit\u201d does not pick just one word: \u201cstreet\u201d still gets about 10%, and every word gets a little.\" instead of \"It does not pick\u2026\".",
+          "beats[2].body: after the sentence about using \"tired\", add a short caveat such as: \"Chatbots that write one word at a time may only look back.\" Keep the reading pace under the limit by shortening elsewhere, for example: \"These numbers were set by hand; real models learn theirs from text.\"",
+          "beats[3].body: describe what playback does and name the slider. For example: \"Now Focus drops to half: the gaps between match scores shrink, and the shares spread out, with \u201canimal\u201d at about 30%.\" Keep: \"Back at full Focus, which is how real models always run, the shares sharpen again.\" Then the existing \"wide\" sentence.",
+          "beats[1].body: name the score so chapter 4 can build on it, for example: \"A closer match gives a higher score and a bigger share, so \u201canimal\u201d takes about 70% and gets the thickest line.\"",
+          "If the page kicker can be changed, replace \"HOW AI READS\" with something like \"HOW LANGUAGE AI WORKS\"; it isn't one of the scene fields."
+        ],
+        "blocking_issues": []
+      },
+      "learner_review": {
+        "pass": false,
+        "score": 6,
+        "summary": "Answers from the guide alone. Q1: 20% each. Equal scores give equal shares, and the pie slices always add up to 100%, so 100/5 = 20%. The guide never says what \"Focus at 0\" means, but a beginner can still get this from beat 1. Q2: \"street\" gets about 70%. When the last word becomes \"wide\", the question \"it\" carries becomes \"which word could be wide?\", and \"street\" fits that best. Q3: The numbers were set by hand, and nothing here understands anything. Attention is a calculation that gives out shares, not reading or understanding. Beat 3 covers this. The guide does not cover the deeper point that a thick line is not proof of what caused the answer. Q4: Not covered. The guide never mentions word order or position information. Q5: Not covered, and the guide points the wrong way. Beat 3 says \"it\" can use \"tired\" even though it comes later, and the \"why\" field says chatbots rely on this step. So a beginner would probably answer yes, which is wrong for chatbots that write one word at a time. Result: 3 of 5 answerable, so this fails the bar of at most one miss. Screen versus subtitle: frames 1-2 show equal thin lines and match \"same share, about 9%\". Frames 3-6 show 70% for \"animal\" and 10% for \"street\" with the thickest line to \"animal\", which matches. Frame 7 shows 32% and 12%, which matches \"about 30%\", but its label \"mostly the animal\" overstates a 32% share when 68% goes elsewhere. The final desktop and phone frames show 70% for \"street\" and 10% for \"animal\" with \"looks for: something wide\", which matches. The main idea comes through clearly: a question is matched against descriptions, giving shares that add up to 100% and a blended result. Missing answers to beginner objections: masking in chatbots, position information, why \"it\" gives a share to itself, a thick line not proving cause, heads, and skip connections.",
+        "changes": [
+          "beats[2].body: \"All the shares are worked out at once, so \u201cit\u201d can use \u201ctired\u201d even though that word comes later.\" -> \"All shares are found at once, so \u201cit\u201d can use the later \u201ctired\u201d; word-by-word chatbots cannot.\" (answers Q5 and the masking objection)",
+          "why: \"It lets a word like \u201cit\u201d take its meaning from the right word nearby.\" -> \"This step alone ignores word order; models add positions separately.\" (answers Q4 and the word-order objection; the subtitle already says what the step does)",
+          "beats[3].body: \"Shrink the gaps between match scores and the shares spread out, with \u201canimal\u201d dropping to about 30%.\" -> \"Turn Focus down and score gaps shrink, so shares spread out: \u201canimal\u201d drops to about 30%.\" (names the Focus control that Q1 relies on)",
+          "beats[3].body: \"Back at full strength, which is how real models always run, the bigger gaps make the shares sharp again.\" -> \"Real models always use full Focus, which makes the shares sharp again.\" (\"full strength\" is never defined)",
+          "beats[1].body: \"The new \u201cit\u201d mixes in what each word passes on, mostly from the animal.\" -> \"\u201cit\u201d is then updated with a blend of the words, mostly \u201canimal\u201d.\" (\"the new it\" and \"passes on\" are hard to follow on one read)",
+          "beats[2].body: \"It does not pick just one word: \u201cstreet\u201d still gets about 10%, and every word gets a little.\" -> \"It never picks one word: \u201cstreet\u201d gets about 10%, and every word, \u201cit\u201d included, gets some.\" (answers the objection about why \"it\" gives itself a share)",
+          "on-screen label, Focus-down frame (1:12): \"mostly the animal\" -> \"leans to the animal\" (32% is the largest share, not most of the total)",
+          "beats[1].body: \"A closer match gets a bigger share, so \u201canimal\u201d takes about 70% and gets the thickest line.\" -> \"A closer match gets a bigger share: \u201canimal\u201d takes about 70%, the thickest line.\" (shorter)"
+        ],
+        "blocking_issues": [
+          "Q4 (shuffled words with no position information) cannot be answered: the guide never says that attention alone ignores word order.",
+          "Q5 (word-by-word chatbot) is likely answered wrong: beat 3 says \"it\" can use the later word \"tired\", and the why field says chatbots rely on this step. Nothing mentions that chatbots block later words."
+        ]
+      },
+      "frames": [
+        "published/20261029T175059-82fa6e44/revision-1-0.png",
+        "published/20261029T175059-82fa6e44/revision-1-1.png",
+        "published/20261029T175059-82fa6e44/revision-1-2.png",
+        "published/20261029T175059-82fa6e44/revision-1-3.png",
+        "published/20261029T175059-82fa6e44/revision-1-4.png",
+        "published/20261029T175059-82fa6e44/revision-1-5.png",
+        "published/20261029T175059-82fa6e44/revision-1-6.png",
+        "published/20261029T175059-82fa6e44/revision-1-7.png",
+        "published/20261029T175059-82fa6e44/revision-1-8.png",
+        "published/20261029T175059-82fa6e44/revision-1-9.png"
+      ]
+    },
+    {
+      "number": 2,
+      "scene": {
+        "title": "Which word does \u201cit\u201d mean? How attention shares out a sentence",
+        "subtitle": "A small sentence worked through by hand. \u201cit\u201d gives every word a share, and the word that best fits what \u201cit\u201d looks for gets most. Attention on its own ignores word order, so real models add each word\u2019s position.",
+        "why": "Translation apps and chatbots use this step. It lets a word like \u201cit\u201d take its meaning from the right word anywhere in the sentence.",
+        "beats": [
+          {
+            "title": "Equal shares: nothing links \u201cit\u201d to a word yet",
+            "body": "Here \u201cit\u201d gives every word the same share, about 9%, so nothing links \u201cit\u201d to the animal or the street. Shares are like slices of one pie: however you cut them, they add up to 100%."
+          },
+          {
+            "title": "The best match gets the biggest share",
+            "body": "Each word offers a short description of itself, and \u201cit\u201d asks a question: which word could be tired? A closer match gives a higher score and a bigger share: \u201canimal\u201d gets about 70%, \u201cstreet\u201d about 10%. \u201cit\u201d even gives itself a small share, then becomes a blend of all the words, mostly \u201canimal\u201d."
+          },
+          {
+            "title": "A calculation, not a person reading",
+            "body": "Here every word may look at every other word, so \u201cit\u201d can use \u201ctired\u201d, which comes later. Chatbots, which write one word at a time, may only look at earlier words. Nothing here understands anything: these numbers were set by hand, and real models learn theirs from text."
+          },
+          {
+            "title": "Less Focus, then a different last word",
+            "body": "Now Focus, a teaching slider for how much score gaps count, drops to half: \u201canimal\u201d falls to about 30%. Back at full Focus, which real models always use, the shares sharpen again. Now the last word becomes \u201cwide\u201d, the question changes, and about 70% moves to \u201cstreet\u201d."
+          }
+        ],
+        "mass": 1,
+        "distance": 1,
+        "ray_count": 1,
+        "show_reference": false,
+        "show_labels": true,
+        "accent": "blue",
+        "line_width": 3,
+        "duration": 40,
+        "takeaway": "Attention is a calculation: each word blends in the words that best match its question, in shares that add up to 100%.",
+        "controls": "first",
+        "kind": "attention"
+      },
+      "checks": [
+        {
+          "name": "Shares are positive and add up to one",
+          "pass": true
+        },
+        {
+          "name": "With no focus every word gets an equal share",
+          "pass": true
+        },
+        {
+          "name": "Scores are dot products divided by the square root of the vector size",
+          "pass": true
+        },
+        {
+          "name": "Shares follow the softmax of the scores",
+          "pass": true
+        },
+        {
+          "name": "Ending in \"tired\", \"it\" looks most at \"animal\"",
+          "pass": true
+        },
+        {
+          "name": "Ending in \"wide\", \"it\" looks most at \"street\"",
+          "pass": true
+        },
+        {
+          "name": "More focus gives the top word a bigger share",
+          "pass": true
+        },
+        {
+          "name": "The result is the share-weighted blend of the values",
+          "pass": true
+        },
+        {
+          "name": "Without position information, word order does not change the shares",
+          "pass": true
+        },
+        {
+          "name": "Subtitles read at most 14.0 characters per second (limit 15)",
+          "pass": true
+        },
+        {
+          "name": "Each subtitle stays up at least 5.2 s (minimum 2.5)",
+          "pass": true
+        },
+        {
+          "name": "Zero-mass control removes the modeled effect",
+          "pass": true
+        },
+        {
+          "name": "Mass control updates the rendered model",
+          "pass": true
+        },
+        {
+          "name": "No-mass step shows zero and restores the chosen mass afterward",
+          "pass": true
+        },
+        {
+          "name": "Seeking reproduces identical canvas pixels",
+          "pass": true
+        },
+        {
+          "name": "At most 12 words of labels on the stage at once (most: 11)",
+          "pass": true
+        },
+        {
+          "name": "Every stage label is at most 5 words (longest: 5)",
+          "pass": true
+        },
+        {
+          "name": "Mobile page fits viewport",
+          "pass": true
+        },
+        {
+          "name": "Renderer has no JavaScript errors",
+          "pass": true
+        }
+      ],
+      "accepted": true,
+      "physics_review": {
+        "pass": true,
+        "score": 8.7,
+        "summary": "The mathematics is right and fits the brief. At Focus 1 the stated shares add up: 70% + 10% + 4% + 8 \u00d7 2% = 100%. At Focus 0 each of the 11 words gets about 9%. I checked the Focus-half figure from the implied log-ratios (ln 35, ln 5 and ln 2 relative to the minor words). Halving them gives about 34% on \"animal\", so \"about 30%\" is a slightly low but acceptable round-off. The \"wide\" swap mirrors the \"tired\" case, and the frames match it: street 70%, animal 10%.\n\nAll four frames match their subtitles. Chapter 1 shows lines of equal thickness and the \"every word counts the same\" label, with no question label at Focus 0. Chapters 2 and 3 show the thick line to \"animal\" with 70% and 10% printed. Chapter 4 ends on \"wide\" with 70% under \"street\". The last chapter's sentences come in the right order: the Focus dip first, then the word swap.\n\nThe honesty points are covered:\n- The numbers are hand-made, not from a trained model.\n- Nothing here understands anything.\n- Real models learn their numbers from text.\n- Every word may look ahead here, while chatbots only look back.\n- Attention alone ignores word order.\n- Focus is a teaching control, and real models always use full Focus.\n\nThe metaphors are mild and accurate: pie slices for shares that add up to 100%, and \"a short description of itself\" for a key. There are no claims about model sizes or companies, no new-discovery claims, and no on-stage disclaimers.\n\nWhat remains is small wording. Two phrases slightly overstate what attention does: \"the right word anywhere in the sentence\" in the \"why\" line, and \"the words that best match\" in the takeaway. One subtitle says \"it\" becomes a blend of \"the words\" rather than of what the words pass on (their values). The \"why\" line's claim about real-world use is broader than the cited sources.\n\nThe label \"it asks: which word could be tired?\" from the model notes appears on stage as \"\u201cit\u201d looks for: something tired\". The meaning is the same, so this doesn't block anything. At 9% every share is above the 5% threshold, yet the chapter 1 frame prints no percentages. That is probably to stay within the label-word limit, and the subtitle's \"about 9%\" doesn't depend on a label, so it is fine.\n\nOffering the Focus slider is justified: dragging it shows how score gaps turn into sharper or flatter shares.",
+        "changes": [
+          "Chapter 4: change \"'animal' falls to about 30%\" to \"'animal' falls to about a third\". Exactly half Focus gives about 34%, so this is more accurate and still plain.",
+          "\"why\" line: replace \"take its meaning from the right word anywhere in the sentence\" with \"draw on the words that fit it best elsewhere in the sentence\". Attention does not guarantee the right word, and in chatbots a word can only use earlier words, which contradicts \"anywhere\" and chapter 3.",
+          "\"why\" line: soften \"Translation apps and chatbots use this step\" to \"Transformer-based translation systems and chatbots build on this step\". The cited sources support the Transformer's use in translation, not specific products.",
+          "Chapter 2: change \"then becomes a blend of all the words, mostly 'animal'\" to \"then becomes a blend of what every word passes on, mostly from 'animal'\". The blend is of the values, which matches the plain-word definition of value.",
+          "Takeaway: change \"each word blends in the words that best match its question\" to \"each word blends in every word, giving the most to those that best match its question\". This guards against the 'attention picks one word' misconception the record lists.",
+          "Optional, renderer and notes consistency: either update the model notes to the label as rendered (\"\u201cit\u201d looks for: something tired\") or render the noted wording, so notes and stage agree."
+        ],
+        "blocking_issues": []
+      },
+      "visual_review": {
+        "pass": true,
+        "score": 8,
+        "summary": "This is a clear, calm guide that a beginner can follow. The ten frames I looked at show the effects the subtitles describe.\n\n- **Chapter 1** shows equal-weight lines into \"it\" with only \"every word counts the same\" and the legend.\n- **Chapter 2** shows the thick line to \"animal\" with 70% and 10% printed. The blue question and answer labels match the subtitle's question.\n- **Chapter 3** handles the honesty points (looking ahead, chatbots, hand-set numbers, no understanding) plainly. Its stage stays still, and the sampled frames are identical, which suits a caveat chapter.\n- **Chapter 4** follows the required order. Focus dips (animal 32%, street 12%, label \"mostly the animal\"), then the last word changes to \"wide\" (street 70%, animal 10%, label \"it means the street\"). The subtitles say the same things in the same order.\n- **Phone view:** the bar layout is legible and the page fits. The page top shows title, subtitle and why without clutter.\n- **Labels:** at most about 11 words, all short, nothing distracting.\n- **Why field:** works for a newcomer (translation apps and chatbots, \"it\" taking its meaning from the right word).\n- **Slider:** showing only the Focus slider makes sense. Dragging it continuously teaches how score gaps turn into sharper or flatter shares. The word swap is an either/or change that playback already shows in full.\n\nWeaknesses, none blocking:\n\n- Chapter 1 never says why the shares are equal. The cause (Focus at zero) is only named in the last chapter.\n- The subtitle's \"about 9%\" doesn't appear on stage in chapter 1. The viewer has to judge it from equal line thickness.\n- The desktop stage shows nothing for the self-share that chapter 2 mentions. It is below the 5% print threshold and there is no visible loop.\n- \"a teaching slider for how much score gaps count\" is a bit abstract to read while things move.\n- Small point outside the scene fields: the phone page's category label \"HOW AI READS\" slightly clashes with the rule against saying the AI reads like a person.",
+        "changes": [
+          "beats[0].body: name the cause of the equal shares so Focus isn't first introduced in the last chapter. For example: \"Focus is at zero, so how well each word matches is ignored: every line is equally thin, about 9% each. Shares are like slices of one pie: however you cut them, they add up to 100%.\"",
+          "beats[1].body: say that the self-share is too small to see, since the desktop stage shows nothing for it. For example: \"\u201cit\u201d even gives itself about 4%, too small to print, then becomes a blend of all the words, mostly \u201canimal\u201d.\"",
+          "beats[3].body: make the Focus sentence more concrete and less abstract. For example: \"Now Focus, a teaching slider for how strongly the best match wins, drops to half: the lines even out and \u201canimal\u201d falls to about 30%.\"",
+          "beats[3].body: optionally tie the swap to the visible question label: \"Now the last word becomes \u201cwide\u201d, \u201cit\u201d looks for something wide, and about 70% moves to \u201cstreet\u201d.\"",
+          "beats[2].body: optionally point the viewer at the stage during the still chapter: \"Here every word may look at every other word, so the thin line from \u201ctired\u201d still reaches \u201cit\u201d, though \u201ctired\u201d comes later.\"",
+          "Outside the scene fields: think about changing the 'HOW AI READS' category label to something like 'HOW AI LINKS WORDS', so it matches the rule against saying the AI reads."
+        ],
+        "blocking_issues": []
+      },
+      "learner_review": {
+        "pass": true,
+        "score": 8,
+        "summary": "Transfer answers, using only the guide:\n(1) Each word gets 20%. Equal scores mean equal shares, and the shares add up to 100% like slices of one pie (100 / 5). The guide only gives the 11-word case (about 9%) and never mentions \"Focus at 0\", so this is an inference, but an easy one.\n(2) \"street\" gets about 70%. \"it\" now looks for something wide, and \"street\" is the best match. This is shown and stated in beat 4.\n(3) The friend is wrong because the line is a calculation, not understanding. The numbers were set by hand, and nothing here understands anything (beat 3). The guide does not say that line thickness is an unreliable explanation even in real models, so this answer is only partly covered.\n(4) Yes, \"animal\" would get the same share. The subtitle says attention on its own ignores word order, and that is why real models add positions. This is covered only by the subtitle, never in a beat or on screen.\n(5) No. Chatbots that write one word at a time may only use earlier words, and \"tired\" comes later (beat 3).\n\nA beginner could answer all five, so the pass threshold is met. Every frame matches its subtitle on the numbers: about 9% when shares are equal; 70/10 for \"tired\"; 32/12 at half Focus (\"about 30%\"); and 10/70 for \"wide\".\n\nMinor tensions:\n- The on-screen label \"it means the animal\" claims more than \"a blend, mostly animal\" and \"nothing here understands anything\".\n- The desktop view shows no self-share for \"it\", although the subtitle mentions one. The phone view does show a small bar.\n- The equal-shares frame never shows \"9%\".\n- The \"short description\" each word offers is never shown.\n- The Focus slider is never shown on screen.\n- The legend says \"attention\", but the text says \"share\" throughout.\n\nUnanswered objections:\n- Why shares always add up to 100% (division by the total).\n- That all shares are computed at once, in parallel, rather than read left to right.\n- That a thick line does not prove the cause of the answer.\n- Why \"it\" scores itself.\n- Heads.\n- \"Attention is all there is\".",
+        "changes": [
+          "beats[0].body: \"Shares are like slices of one pie: however you cut them, they add up to 100%.\" -> \"Each score is divided by the total, so like pie slices, shares add to 100%.\" (answers the objection about why it is always 100%)",
+          "beats[1].body: \"Each word offers a short description of itself, and \u201cit\u201d asks a question: which word could be tired?\" -> \"Each word carries a hidden description, and \u201cit\u201d asks: which word could be tired?\" (the descriptions are never shown on screen)",
+          "beats[1].body: \"\u201cit\u201d even gives itself a small share, then becomes a blend of all the words, mostly \u201canimal\u201d.\" -> \"\u201cit\u201d scores itself too, about 4%, then becomes a blend, mostly \u201canimal\u201d.\" (says why it gets a self-share, and gives the number)",
+          "beats[2].body: \"Here every word may look at every other word, so \u201cit\u201d can use \u201ctired\u201d, which comes later.\" -> \"All shares are computed at once, so \u201cit\u201d can use \u201ctired\u201d, which comes later.\" (avoids 'look', which the guide's own objections reject, and covers the left-to-right objection)",
+          "beats[2].body: \"Chatbots, which write one word at a time, may only look at earlier words.\" -> \"Chatbots, which write one word at a time, may only use earlier words.\"",
+          "beats[2].body: \"Nothing here understands anything: these numbers were set by hand, and real models learn theirs from text.\" -> \"Nothing here understands: these numbers were set by hand; real models learn theirs, and thick lines prove nothing.\" (covers the line-proves-cause objection behind Q3)",
+          "beats[3].body: \"Now Focus, a teaching slider for how much score gaps count, drops to half: \u201canimal\u201d falls to about 30%.\" -> \"Now Focus, a teaching slider that sharpens shares, drops to half: \u201canimal\u201d falls to about 30%.\" ('score gaps count' is hard to follow on one read)",
+          "on-screen legend: \"thicker line: more attention\" -> \"thicker line: bigger share\" (the text uses 'share' everywhere else)",
+          "on-screen label (beats 2-3): \"\u201cit\u201d means the animal\" -> \"mostly the animal\" (matches 'a blend, mostly animal' and 'nothing understands'; the half-Focus frame already uses this wording)",
+          "on-screen label (beat 4 end): \"\u201cit\u201d means the street\" -> \"mostly the street\"",
+          "frame beat 1 (desktop): subtitle says 'about 9%' but no percentage is shown; show 9% under one or more words",
+          "frame beat 2 (desktop): subtitle says 'it even gives itself a small share' but nothing on the desktop view shows it; show 4% under \u201cit\u201d as the phone bar does",
+          "frame beat 4: subtitle calls Focus a slider, but no slider or Focus value is visible; show e.g. 'Focus 50%' while it is lowered"
+        ],
+        "blocking_issues": []
+      },
+      "frames": [
+        "published/20261029T175059-82fa6e44/revision-2-0.png",
+        "published/20261029T175059-82fa6e44/revision-2-1.png",
+        "published/20261029T175059-82fa6e44/revision-2-2.png",
+        "published/20261029T175059-82fa6e44/revision-2-3.png",
+        "published/20261029T175059-82fa6e44/revision-2-4.png",
+        "published/20261029T175059-82fa6e44/revision-2-5.png",
+        "published/20261029T175059-82fa6e44/revision-2-6.png",
+        "published/20261029T175059-82fa6e44/revision-2-7.png",
+        "published/20261029T175059-82fa6e44/revision-2-8.png",
+        "published/20261029T175059-82fa6e44/revision-2-9.png"
+      ]
+    }
+  ]
+}

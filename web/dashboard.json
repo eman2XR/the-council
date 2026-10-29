@@ -1,35 +1,11 @@
 {
-  "status": "running",
+  "status": "reviewed",
   "question": "What does the \u201cattention\u201d in \u201cAttention Is All You Need\u201d do when an AI reads a sentence?",
   "topic": "attention",
   "id": "20261029T175059-82fa6e44",
-  "revision": 1,
-  "updated": "2026-10-29T17:59:06.218351+00:00",
+  "revision": 2,
+  "updated": "2026-10-29T18:00:22.800090+00:00",
   "events": [
-    {
-      "at": "2026-10-29T17:54:29.312529+00:00",
-      "message": "Research recorded. Director is designing the visual explanation."
-    },
-    {
-      "at": "2026-10-29T17:56:14.184478+00:00",
-      "message": "Revision 1: rendering desktop and mobile frames."
-    },
-    {
-      "at": "2026-10-29T17:56:30.216914+00:00",
-      "message": "Revision 1: reviewers are inspecting the rendered frames."
-    },
-    {
-      "at": "2026-10-29T17:57:49.863372+00:00",
-      "message": "Revision 1: physics_review saved."
-    },
-    {
-      "at": "2026-10-29T17:57:55.633073+00:00",
-      "message": "Revision 1: visual_review saved."
-    },
-    {
-      "at": "2026-10-29T17:58:09.172190+00:00",
-      "message": "Revision 1: learner_review saved."
-    },
     {
       "at": "2026-10-29T17:58:09.176120+00:00",
       "message": "Revision 1: changes requested; feedback saved."
@@ -37,6 +13,30 @@
     {
       "at": "2026-10-29T17:59:06.215619+00:00",
       "message": "Revision 2: rendering desktop and mobile frames."
+    },
+    {
+      "at": "2026-10-29T17:59:16.964205+00:00",
+      "message": "Revision 2: reviewers are inspecting the rendered frames."
+    },
+    {
+      "at": "2026-10-29T18:00:11.702338+00:00",
+      "message": "Revision 2: visual_review saved."
+    },
+    {
+      "at": "2026-10-29T18:00:13.395154+00:00",
+      "message": "Revision 2: physics_review saved."
+    },
+    {
+      "at": "2026-10-29T18:00:22.769612+00:00",
+      "message": "Revision 2: learner_review saved."
+    },
+    {
+      "at": "2026-10-29T18:00:22.775749+00:00",
+      "message": "Revision 2: review gates passed."
+    },
+    {
+      "at": "2026-10-29T18:00:22.778970+00:00",
+      "message": "Investigation reviewed. Artifact is ready for human inspection; no new-discovery claim."
     }
   ],
   "schedule": {
@@ -78,7 +78,7 @@
       "day": "2026-10-29",
       "question": "What does the \u201cattention\u201d in \u201cAttention Is All You Need\u201d do when an AI reads a sentence?",
       "topic": "attention",
-      "status": "running",
+      "status": "reviewed",
       "run_id": "20261029T175059-82fa6e44"
     }
   ]

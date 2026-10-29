@@ -1,5 +1,13 @@
 [
   {
+    "id": "20261029T175059-82fa6e44",
+    "question": "What does the \u201cattention\u201d in \u201cAttention Is All You Need\u201d do when an AI reads a sentence?",
+    "topic": "attention",
+    "created": "2026-10-29T17:50:59.782080+00:00",
+    "curriculum": "5.1",
+    "title": "Which word does \u201cit\u201d mean? How attention shares out a sentence"
+  },
+  {
     "id": "20261027T163256-3e5bd32e",
     "question": "Why do waves spread out after passing a narrow gap?",
     "topic": "diffraction",
