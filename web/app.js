@@ -237,8 +237,8 @@ async function refreshDashboard(){
   put('dashboard-status','No status yet');put('now-title','No status published yet');put('next-title','—');
  }
 }
-// The lab at work: agents passing the investigation along, drawn above the status line on the home page. It moves
-// only while on screen and in a visible tab; with reduced motion it shows one still frame.
+// The lab at work: scientists in a small lab working on the investigation, drawn above the status line on the home
+// page. It moves only while on screen and in a visible tab; with reduced motion it shows one still frame.
 const labCanvas=VIEW==='home'?el('canvas',{id:'lab-anim',className:'lab-anim'}):null;
 let labVisible=true;
 function paintLab(now){

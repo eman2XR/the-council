@@ -45,7 +45,7 @@ p{margin:0}
 main{max-width:1240px;margin:auto;padding:0 32px}
 
 /* Lab status line */
-/* The lab at work: a small workshop of robot agents building the next investigation, above the status line. */
+/* The lab at work: scientists in a small physics lab working on the next investigation, above the status line. */
 .lab-anim{display:block;width:100%;max-width:1100px;height:190px;margin:10px auto -4px}
 @media(max-width:600px){.lab-anim{height:118px;margin-top:4px}}
 body[data-view=article] #lab-anim{display:none}
