@@ -4,7 +4,7 @@
   "topic": "attention",
   "id": "20261029T175059-82fa6e44",
   "revision": 0,
-  "updated": "2026-10-29T17:53:07.006896+00:00",
+  "updated": "2026-10-29T17:56:14.186958+00:00",
   "events": [
     {
       "at": "2026-10-29T17:50:59.782095+00:00",
@@ -13,6 +13,14 @@
     {
       "at": "2026-10-29T17:53:07.003970+00:00",
       "message": "Sources retrieved. Scientist is preparing the research record."
+    },
+    {
+      "at": "2026-10-29T17:54:29.312529+00:00",
+      "message": "Research recorded. Director is designing the visual explanation."
+    },
+    {
+      "at": "2026-10-29T17:56:14.184478+00:00",
+      "message": "Revision 1: rendering desktop and mobile frames."
     }
   ],
   "schedule": {
