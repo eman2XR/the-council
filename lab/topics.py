@@ -62,10 +62,11 @@ No new-discovery claims.'''+COMMON
 
 ROPE_NOTES = '''STANDING WAVES ON A ROPE. A drawn hand shakes one end of a rope tied to a wall; the rope is simulated
 with the damped wave equation (length 1, wave speed 2, a little friction), so the slowest in-step shaking is one shake a
-second (all slowed down). Four chapters with fixed choreography and no slider demo: 1 one shake, a hump runs to the wall and
+second (all slowed down). Five chapters with fixed choreography and no slider demo: 1 one shake, a hump runs to the wall and
 comes back upside down (shown extra slowly); 2 steady shaking at 1 a second, in step, the swing builds to about 6 times
 the hand's; 3 shaking at 1.5 a second, out of step, the rope only jiggles; 4 shaking at 2 a second (two loops and a still
-point) then, from the chapter's second sentence, 3 a second (three loops). Labels: your hand, tied to a wall, shakes a
+point) then, from the chapter's second sentence, 3 a second (three loops); 5 a guitar string, plucked open
+(220 Hz) and, from the third sentence, pressed at the middle and plucked again (440 Hz). The rope is silent; only plucks sound. Labels: your hand, tied to a wall, shakes a
 second, in step: N loops, still point, out of step. Readout: the steady swing for the current shaking, as a multiple of the
 hand's. Sound: a tone at 220 Hz per shake a second, as loud as the rope swings. After playback the field distance sets the
 shaking rate 0.5 + 2*(distance - 1) (UI "How fast you shake"); field mass is how hard the hand shakes. Supported questions:
@@ -175,8 +176,9 @@ No new-discovery claims.'''+COMMON
 # Models whose picture explains why, not only what, and that passed owner review and beginner tests.
 # Only these are planned; the others wait for a redesign.
 READY = {'light-bending', 'gravity-clocks', 'spacetime-paths', 'light-clock', 'interference',
-         'standing-waves', 'wave-packet', 'diffraction', 'quantum-well'}
+         'wave-packet', 'diffraction', 'quantum-well'}
 # Not ready (2026-10-28): twin-trip shows what rather than why; spacetime, falling-time and tunneling are graph-style;
+# standing-waves is a hand-made five-chapter guide (agents write three or four chapters);
 # two-slit-particles failed a beginner test (faint ripples, slits read as one gap, unexplained screen marks, stripes
 # form before the narration says so).
 

@@ -360,7 +360,6 @@ body[data-draft=yes] .behind{display:none}
 .chapter .card-cat{display:none}
 
 /* Why it matters. */
-#why{max-width:620px;margin:16px auto 14px;font-size:15px;line-height:1.55;color:var(--muted);text-align:left}
-#why p{margin:0}#why p+p{margin-top:8px}
-#why strong{color:var(--brown);font-weight:600;margin-right:4px}
+#why{max-width:40em;margin:-4px auto 0;font:italic 400 clamp(15px,1.25vw,17px)/1.55 var(--serif);color:var(--faint);text-align:center;text-wrap:balance}
+#why p{margin:0}
 #why:empty{display:none}

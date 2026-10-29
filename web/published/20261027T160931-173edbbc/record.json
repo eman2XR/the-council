@@ -56,11 +56,15 @@
       },
       {
         "title": "Two and three shakes a second",
-        "body": "Twice a second is in step again: two loops swing opposite ways, with a still point between. Three times a second gives three loops, and the note climbs each time. Pluck a string and it rings at its own in-step speeds, mostly the slowest: that is its note."
+        "body": "Twice a second is in step again: two loops swing opposite ways, with a still point between. Three times a second gives three loops."
+      },
+      {
+        "title": "A guitar string",
+        "body": "A guitar string is a short, tight rope. A pluck sets it ringing, and only its in-step patterns last: the slowest is the note you hear. Press it at the middle and half the string rings: humps return twice as often, so the note goes up."
       }
     ],
     "mass": 1,
-    "distance": 2.25,
+    "distance": 2.5,
     "ray_count": 1,
     "show_reference": true,
     "show_labels": true,
@@ -135,7 +139,7 @@
   "provenance": {
     "sources_retrieved": true,
     "retrieved_by": "agent",
-    "intro_note": "The illustration, its four chapters and all wording were rebuilt by hand after the agents\u2019 review, after owner feedback and beginner tests: a simulated rope shaken by a hand replaced the earlier two-wave drawing. The reviews below refer to the earlier version."
+    "intro_note": "The illustration, its five chapters, the sound and all wording were rebuilt by hand after the agents\u2019 review, after owner feedback and beginner tests: a simulated rope shaken by a hand, then a plucked guitar string, replaced the earlier two-wave drawing. The reviews below refer to the earlier version."
   },
   "revisions": [
     {

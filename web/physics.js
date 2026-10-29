@@ -92,6 +92,31 @@
         return (plan.amp ?? 1) * A * on * Math.sin(phase);
       };
     },
+    // A plucked string: pulled into a sharp bend at fraction p of its ringing length and let go. Its shape is a sum of
+    // in-step patterns n (sin(n pi u)) with heights 2 sin(n pi p) / (n^2 pi^2 p (1 - p)); each swings n times per slowest
+    // swing and fades, the faster ones sooner, so the string settles into mostly the slowest pattern: its note.
+    // Drawn slowed down: the slowest swing takes 1 second for the open string; length len scales it to 1 / len.
+    stringPluckAt: .25,
+    stringMode(n, p = .25) { return 2 * Math.sin(n * Math.PI * p) / (n * n * Math.PI * Math.PI * p * (1 - p)); },
+    stringFade: n => .1 + .25 * (n - 1),
+    // The slowest swing of the ringing part, in drawn swings a second: a shorter string swings faster.
+    stringRate: len => 1 / len,
+    stringY(u, t, len = 1, M = 16) {
+      let y = 0;
+      for (let n = 1; n <= M; n++) y += this.stringMode(n, this.stringPluckAt) * Math.sin(n * Math.PI * u) * Math.cos(2 * Math.PI * n * this.stringRate(len) * t) * Math.exp(-this.stringFade(n) * t);
+      return y;
+    },
+    stringChecks() {
+      const p = this.stringPluckAt;
+      // Share of the swing energy in the slowest pattern, at time t.
+      const share = t => { let all = 0; for (let n = 1; n <= 16; n++) all += (this.stringMode(n, p) * n * Math.exp(-this.stringFade(n) * t)) ** 2; return (this.stringMode(1, p) * Math.exp(-this.stringFade(1) * t)) ** 2 / all; };
+      return Object.entries({
+        'A pluck starts as a sharp bend at the pluck point': Math.abs(this.stringY(p, 0, 1, 60) - 1) < .03 && Math.abs(this.stringY(.625, 0, 1, 60) - .5) < .03,
+        'Both ends of the ringing string stay still': [0, 1].every(u => Math.abs(this.stringY(u, .37)) < 1e-9),
+        'Faster patterns fade first, leaving mostly the slowest': share(0) < .8 && share(4) > .9,
+        'Half the string rings twice as fast': this.stringRate(.5) === 2 * this.stringRate(1),
+      }).map(([name, pass]) => ({name, pass}));
+    },
     // Exact steady swing for steady shaking, as a multiple of the hand's swing: y(x) = sin(k(1 - x)) / sin(k) with the
     // complex wave number k^2 = (w^2 - 2 i gamma w) / c^2 of the damped rope.
     ropeSteady(rate) {
@@ -428,6 +453,7 @@
         'Two and three times as fast are in step too': swing(2, 12) > 4.5 && swing(3, 12) > 4.5 && swing(2.5, 12) < 1.6,
         'Twice as fast leaves a still point in the middle': mid < .15 * quarter,
         'The simulation matches the exact steady swing': [1, 1.5, 2, 3].every(r => Math.abs(swing(r, 16) / this.ropeSteady(r) - 1) < .05),
+        ...Object.fromEntries(this.stringChecks().map(c => [c.name, c.pass])),
         'The energy measure gives the swing in step': Math.abs(this.ropeSize(this.ropeStep(this.ropeStart(), 16, this.ropeHand({rates: [[0, 1]]})), 1) / this.ropeSteady(1) - 1) < .08,
       }).map(([name, pass]) => ({name, pass}));
     },

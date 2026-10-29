@@ -29,8 +29,7 @@ CouncilScene.on(type=>{
 // Heading, why it matters and the idea for one scene.
 function heading(scene){
  put('title',scene.title);put('subtitle',scene.subtitle);put('takeaway',scene.takeaway);
- const part=(label,text)=>text?[el('p',{},el('strong',{textContent:label}),' '+text)]:[];
- $('why').replaceChildren(...part('Why it matters',scene.why));
+ $('why').replaceChildren(...(scene.why?[el('p',{textContent:scene.why})]:[]));
 }
 
 function show(data,{autoplay=false}={}){

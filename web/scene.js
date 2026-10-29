@@ -289,8 +289,7 @@ function drawParticles(ctx,w,h,spec,st){
 
 // The rope: simulated, not drawn from a formula. Each chapter has its own shaking plan; the simulation runs from the
 // chapter's start, is advanced frame by frame during playback and rebuilt when seeking, so frames match playback.
-// After playback the hand keeps shaking at the slider's rate while the viewer explores, then stops and the rope settles.
-const ROPE={key:'',s:null,rate:0,size:0,phase:0,on:0,drive:0,last:0,held:0,liveRate:0,liveFrom:0};
+const ROPE={key:'',s:null,rate:0,size:0,on:0,held:0};
 function ropePlan(spec,st){
  const lines=timeline?.chapters?.[st.stage]?.lines||[], c0=timeline?.chapters?.[st.stage]?.start||0;
  const third=lines[1]?lines[1].start-c0:8;
@@ -300,21 +299,10 @@ function ropePlan(spec,st){
  return {key:`${st.stage}|${third.toFixed(2)}`,plan:{rates},t,rate:seg[1],held:t-seg[0]};
 }
 function ropeAdvance(spec,st){
- const P=Physics;
- if(st.live){
-  // Exploring: shake at the slider's rate, easing in and out, from wherever the rope is.
-  if(!ROPE.s||ROPE.key.startsWith('pulse'))ROPE.s=P.ropeStart();
-  if(ROPE.key!=='live'){ROPE.key='live';ROPE.last=ROPE.s.t;ROPE.phase=0;}
-  const rate=P.ropeRate(st.distance), amp=st.mass, target=st.driving?1:0;ROPE.drive=target;const dt=Math.min(.1,Math.max(0,st.t-ROPE.lt||0));ROPE.lt=st.t;
-  const t1=ROPE.s.t+dt, A=P.ropeModel.A;
-  P.ropeStep(ROPE.s,t1,t=>{const d=t-ROPE.last;ROPE.last=t;ROPE.phase+=2*Math.PI*rate*d;ROPE.on+=(target-ROPE.on)*(1-Math.exp(-d/.4));return amp*A*ROPE.on*Math.sin(ROPE.phase);});
-  if(rate!==ROPE.liveRate){ROPE.liveRate=rate;ROPE.liveFrom=ROPE.s.t;}
-  ROPE.rate=rate;ROPE.held=ROPE.s.t-ROPE.liveFrom;
- }else{
-  const {key,plan,t,rate,held}=ropePlan(spec,st);ROPE.held=held??0;
-  if(ROPE.key!==key||!ROPE.s||t<ROPE.s.t-1e-6){ROPE.key=key;ROPE.s=P.ropeStart();}
-  P.ropeStep(ROPE.s,t,P.ropeHand(plan));ROPE.rate=rate;ROPE.on=ROPE.drive=st.stage===0?0:1;ROPE.lt=st.t;
- }
+ const P=Physics, {key,plan,t,rate,held}=ropePlan(spec,st);
+ if(ROPE.key!==key||!ROPE.s||t<ROPE.s.t-1e-6){ROPE.key=key;ROPE.s=P.ropeStart();}
+ P.ropeStep(ROPE.s,t,P.ropeHand(plan));
+ ROPE.rate=rate;ROPE.held=held??0;ROPE.on=st.stage===0?0:1;
  ROPE.size=ROPE.rate>0?P.ropeSize(ROPE.s,ROPE.rate):0;
  return ROPE.s;
 }
@@ -336,7 +324,65 @@ function drawHand(ctx,x,y,size){
  // The thumb, resting along the top of the fingers and pointing forward.
  ctx.save();ctx.translate(x-u*1.2,y-u*.62);ctx.rotate(.18);ctx.fillStyle=skin;blob(0,-u*.22,u*1.05,u*.36,u*.18);ctx.restore();
 }
+// The guitar string: pulled into a bend and let go; it rings in its in-step patterns, mostly the slowest. Pressing it
+// at the middle leaves half the string ringing, twice as fast. Drawn slowed down 220 times; heard at the real pitch.
+const GUITAR={active:false,len:1,plucked:[],tAbs:null,lastSince:-1,lastLen:null,key:''};
+const guitarLen=b=>1-(b-1)/1.5*.5;
+function guitarPlan(st){
+ const c=timeline?.chapters?.[st.stage], lines=c?.lines||[], c0=c?.start||0;
+ const press=lines[2]?lines[2].start-c0:9;
+ return {plucks:[[.9,1],[press+.9,.5]],press};
+}
+function drawGuitar(ctx,w,h,spec,st){
+ const accent=ACCENT[spec.accent]||ACCENT.gold, warm='#c2410c', small=w<520, P=Physics, p=P.stringPluckAt;
+ const x0=w*(small?.08:.12), x1=w*(small?.92:.88), yc=h*.46, W=x1-x0, amp=(small?.16:.1)*W*st.mass;
+ let len, age, pull=0;
+ if(st.live){
+  // Exploring: each move of "Where you press" plucks the string again.
+  len=guitarLen(st.distance);
+  if(GUITAR.lastLen===null)GUITAR.lastLen=len;
+  if(Math.abs(len-GUITAR.lastLen)>.004){GUITAR.lastLen=len;GUITAR.tAbs=st.t;soundPluck(220/len);GUITAR.plucked.push(Math.round(220/len));}
+  age=GUITAR.tAbs===null?99:st.t-GUITAR.tAbs;
+ }else{
+  const {plucks,press}=guitarPlan(st), since=st.since;
+  if(GUITAR.key!==String(st.stage)||since<GUITAR.lastSince){GUITAR.key=String(st.stage);GUITAR.lastSince=-1;}
+  for(const [tp,L] of plucks)if(st.playing&&GUITAR.lastSince<tp&&since>=tp){soundPluck(220/L);GUITAR.plucked.push(Math.round(220/L));}
+  GUITAR.lastSince=since;
+  const last=plucks.filter(([tp])=>since>=tp).at(-1), next=plucks.find(([tp])=>since<tp);
+  len=since>=press?.5:1;
+  if(next&&next[0]-since<.6){pull=1-(next[0]-since)/.6;age=null;}
+  else age=last?since-last[0]:null;
+  GUITAR.tAbs=age===null?null:st.t-age;GUITAR.lastLen=len;
+ }
+ GUITAR.active=true;GUITAR.len=len;
+ // The fretboard, its frets at real guitar spacing, the nut on the left and the bridge on the right.
+ const board=small?h*.1:h*.13;
+ ctx.fillStyle='#8a5a3b';ctx.beginPath();ctx.roundRect(x0-8,yc-board/2,W+16,board,6);ctx.fill();
+ for(let k=1;k<=12;k++){const fx=x0+W*(1-Math.pow(2,-k/12));trace(ctx,[[fx,yc-board/2],[fx,yc+board/2]]);ctx.strokeStyle='rgba(235,225,210,.55)';ctx.lineWidth=1.4;ctx.stroke();}
+ ctx.fillStyle='#efe6d4';ctx.fillRect(x0-6,yc-board/2-2,6,board+4);ctx.fillStyle='#2a2a2e';ctx.fillRect(x1,yc-board/2-2,7,board+4);
+ // The string: still between the nut and a pressing finger; the ringing part from there to the bridge.
+ const xs=x0+W*(1-len), N=200, ring=Array.from({length:N+1},(_,i)=>{const u=i/N;let v=0;
+  if(pull>0)v=pull*(u<p?u/p:(1-u)/(1-p));else if(age!==null)v=P.stringY(u,age,len);return [xs+u*(x1-xs),yc-v*amp];});
+ if(xs>x0+1){trace(ctx,[[x0,yc],[xs,yc]]);ctx.strokeStyle='rgba(225,225,230,.9)';ctx.lineWidth=2;ctx.stroke();}
+ trace(ctx,ring);ctx.strokeStyle='rgba(245,240,230,.95)';ctx.lineWidth=2.4;ctx.stroke();
+ trace(ctx,ring);ctx.strokeStyle=rgba(accent,.35);ctx.lineWidth=6;ctx.stroke();
+ const skin='#e0ad86', edge='rgba(110,62,35,.55)';
+ // A fingertip pulls the string before each pluck.
+ if(pull>0){const fx=xs+p*(x1-xs), fy=yc-pull*amp;ctx.fillStyle=skin;ctx.strokeStyle=edge;ctx.lineWidth=1.2;ctx.beginPath();ctx.ellipse(fx,fy-9,8,11,0,0,TAU);ctx.fill();ctx.stroke();}
+ // A finger pressing the string at the middle.
+ if(len<.999){const f=small?9:12;ctx.fillStyle=skin;ctx.strokeStyle=edge;ctx.lineWidth=1.2;
+  ctx.beginPath();ctx.roundRect(xs-f*.9,yc-f*5.2,f*1.8,f*4.6,f*.9);ctx.fill();ctx.stroke();
+  ctx.beginPath();ctx.ellipse(xs,yc-f*.35,f,f*1.25,0,0,TAU);ctx.fill();ctx.stroke();
+  ctx.fillStyle='rgba(255,240,230,.9)';ctx.strokeStyle=edge;ctx.beginPath();ctx.roundRect(xs-f*.5,yc-f*1.05,f,f*.75,f*.3);ctx.fill();ctx.stroke();}
+ if(!st.labels)return;
+ const lsize=small?10:11, base=yc+board/2+(small?24:30);
+ text(ctx,'a guitar string, drawn 220× slower',(x0+x1)/2,yc-board/2-(small?40:52),{align:'center',size:lsize,weight:600,color:'rgba(20,23,28,.7)'});
+ text(ctx,len<.999?(len>.51?`pressed: ${Math.round(len*100)}% of the string rings`:'pressed at the middle: half the string rings'):'open string: the whole string rings',(x0+x1)/2,base,{align:'center',size:small?11:12,weight:600,color:len<.999?warm:accent});
+ if(pull>0)pill(ctx,'pluck',xs+p*(x1-xs),yc-amp-34,{align:'center',size:lsize,weight:600,color:accent});
+}
 function drawRope(ctx,w,h,spec,st){
+ if(st.stage>=4||st.live)return drawGuitar(ctx,w,h,spec,st);
+ GUITAR.active=false;
  const accent=ACCENT[spec.accent]||ACCENT.gold, warm='#c2410c', small=w<520, P=Physics, A=P.ropeModel.A, N=P.ropeModel.N;
  const s=ropeAdvance(spec,st), y=s.y, x0=w*(small?.22:.17), x1=w*(small?.9:.86), yc=h*.46, W=x1-x0, size=small?15:24;
  // Heights use the rope's own scale; on a phone they are drawn 2.2 times taller so the swing stays easy to see.
@@ -357,9 +403,9 @@ function drawRope(ctx,w,h,spec,st){
  const lsize=small?10:11, base=yc+h*.3;
  text(ctx,'your hand',x0-size*1.2,base,{align:'center',size:lsize,weight:600,color:'rgba(20,23,28,.7)'});
  text(ctx,'tied to a wall',small?w-6:x1+10,base,{align:small?'right':'center',size:lsize,weight:600,color:'rgba(20,23,28,.7)'});
- const shakes=ROPE.rate, rateText=st.stage===0&&!st.live?'one shake, 8× slower':ROPE.on<.05&&st.live?'hand still':`${shakes%1?shakes.toFixed(1):shakes} shake${shakes===1?'':'s'} a second`;
+ const shakes=ROPE.rate, rateText=st.stage===0?'one shake, 8× slower':`${shakes%1?shakes.toFixed(1):shakes} shake${shakes===1?'':'s'} a second`;
  text(ctx,rateText,x0-size*1.2,base+18,{align:'center',size:small?11:13,weight:600,color:'rgba(20,23,28,.78)'});
- if(st.stage===0&&!st.live){
+ if(st.stage===0){
   // Follow the hump: out to the wall, then back upside down.
   let k=4;for(let i=4;i<N;i++)if(Math.abs(y[i])>Math.abs(y[k]))k=i;
   const leg=Math.floor(Math.max(0,2*(s.t-.15)));
@@ -368,7 +414,7 @@ function drawRope(ctx,w,h,spec,st){
   text(ctx,`in step: ${n} loop${n>1?'s':''}`,(x0+x1)/2,base,{align:'center',size:small?11:12,weight:600,color:accent});
   // The still point's tag sits below the swing, joined to its dot by a thin line.
   if(n>1){const px=x0+W/n, ty=yc+.17*V+14;trace(ctx,[[px,yc+6],[px,ty-8]]);ctx.strokeStyle=rgba(warm,.5);ctx.lineWidth=1;ctx.stroke();pill(ctx,'still point',px,ty,{align:'center',size:10,weight:600,color:warm});}
- }else if(shakes>0&&Math.abs(shakes-n)>.04&&ROPE.on>.5&&(st.live||st.since>3))text(ctx,small?'out of step':'out of step: the rope only jiggles',(x0+x1)/2,base,{align:'center',size:small?11:12,weight:600,color:warm});
+ }else if(shakes>0&&Math.abs(shakes-n)>.04&&st.since>3)text(ctx,small?'out of step':'out of step: the rope only jiggles',(x0+x1)/2,base,{align:'center',size:small?11:12,weight:600,color:warm});
 }
 
 function drawTunnel(ctx,w,h,spec,st){
@@ -1051,12 +1097,12 @@ const ENGINES={
   fa:a=>a<.005?'closed':Math.round(a*100)+'% open',fb:b=>b.toFixed(2)+'×',
   measure:['Stripe contrast',a=>(Physics.visibility(a)*100).toFixed(0)+'%'],scale:'',disclosure:'Arrivals are pseudo-random samples from the predicted pattern; the ripples show possibilities, not paths.',demoEnd:()=>2.5,
   try:'Close the second slit: do the stripes survive? Open it again, then move the slits apart.',aria:'Particles arrive one at a time on a screen behind two slits and slowly build up stripes.'},
- 'standing-waves':{draw:drawRope,demo:false,sound:()=>({freq:220*ROPE.rate,level:ROPE.rate>0?Math.min(1,ROPE.size/6):0}),
-  a:['How hard you shake','how far your hand moves'],b:['How fast you shake','shakes a second, slowed down',''],
-  fa:a=>Math.round(a*100)+'%',fb:b=>Physics.ropeRate(b).toFixed(1)+' a second',
-  measure:['Rope swings',a=>ROPE.key==='pulse'?'':ROPE.size.toFixed(1)+'× as far as your hand'],tryAny:true,scale:'',demoEnd:()=>2.5,
-  disclosure:'The rope is simulated: the wave equation with a little friction, which is why an in-step swing stops growing at about 6 times the hand. Everything is slowed down, the single shake 8 times more; on phones the swing is drawn taller. A guitar string vibrates about 220 times faster, and the sound plays that rate: one shake a second is 220 Hz, two are 440 Hz, three are 660 Hz. The sound is as loud as the rope swings.',
-  try:'Move “How fast you shake” slowly from 1 to 3: the rope only swings big at 1, 2 and 3 shakes a second.',aria:'A hand shakes one end of a rope tied to a wall. At one, two or three shakes a second the rope swings big in one, two or three loops; at other speeds it only jiggles.'},
+ 'standing-waves':{draw:drawRope,demo:false,plucks:true,
+  a:['How hard you pluck','how far you pull the string'],b:['Where you press','toward the middle, a shorter string rings',''],
+  fa:a=>Math.round(a*100)+'%',fb:b=>{const L=guitarLen(b);return L>.996?'open string':Math.round(L*100)+'% rings';},
+  measure:[()=>GUITAR.active?'Note':'Rope swings',a=>GUITAR.active?(a>.001?Math.round(220/GUITAR.len):0)+' swings a second':ROPE.key==='pulse'||ROPE.size<.05?'':ROPE.size.toFixed(1)+'× as far as your hand'],tryAny:true,scale:'',demoEnd:()=>2.5,
+  disclosure:'The rope is simulated: the wave equation with a little friction, which is why an in-step swing stops growing at about 6 times the hand. Everything is slowed down, the single shake 8 times more; on phones the swing is drawn taller. The rope makes no sound: at a few swings a second it is far too slow to hear. The guitar string is drawn 220 times slower and bigger than it really moves; its sound is a synthesized plucked string at the real pitch, 220 Hz open and 440 Hz pressed at the middle.',
+  try:'Move “Where you press” toward the middle: each move plucks the string, and the shorter it rings, the higher the note.',aria:'A hand shakes one end of a rope tied to a wall. At one, two or three shakes a second the rope swings big in one, two or three loops; at other speeds it only jiggles. Then a guitar string is plucked, open and pressed at the middle.'},
  'tunneling':{draw:drawTunnel,a:['Barrier height','compared with the particle’s energy'],b:['Barrier width','how thick the barrier is',''],
   fa:a=>a<.005?'none':(2*a).toFixed(1)+'× energy',fb:b=>(.6*b/(2*Math.PI)).toFixed(2)+' wavelengths',
   measure:['Bounces back',(a,b)=>(Physics.reflected(a,b)*100).toFixed(0)+'%'],scale:'A steady stream, shown at one instant',disclosure:'Exact steady-state solution in units where ħ = 1 and 2m = 1.',demoEnd:()=>2.5,
@@ -1146,31 +1192,31 @@ const chapterAt=t=>{const i=timeline.chapters.findIndex(c=>t<c.end);return i<0?t
 const target=()=>stage===0?0:mass;
 const fmt=s=>`${Math.floor(s/60)}:${String(Math.floor(s%60)).padStart(2,'0')}`;
 
-// Sound: an engine may give a note for the current state; it sounds exactly while the picture moves.
-// Pitch is the pattern's note, loudness how much the rope moves, and it settles with the picture after playback.
-// Nothing sounds before the viewer presses play, or while playback is paused.
-const TONE={partials:[[1,.2],[2,.07],[3,.03]],lowpass:2600};
-const SOUND={ctx:null,out:null,oscs:[],freq:0,target:-1,on:(()=>{try{return localStorage.getItem('council-sound')!=='off';}catch{return true;}})()};
+// Sound: only plucked strings make a sound, at the moments an engine plucks one (playback crossing a pluck, or the
+// viewer moving a control). Nothing sounds before the viewer presses play.
+const SOUND={ctx:null,out:null,buffers:new Map(),queue:[],on:(()=>{try{return localStorage.getItem('council-sound')!=='off';}catch{return true;}})()};
 function audioStart(){
- if(SOUND.ctx||!engineOf(spec).sound)return SOUND.ctx?.resume?.();
+ if(SOUND.ctx||!engineOf(spec).plucks)return SOUND.ctx?.resume?.();
  const AC=window.AudioContext||window.webkitAudioContext;if(!AC)return;
  const a=SOUND.ctx=new AC(), out=SOUND.out=a.createGain(), warm=a.createBiquadFilter();
- a.resume?.();out.gain.value=0;warm.type='lowpass';warm.frequency.value=TONE.lowpass;out.connect(warm);warm.connect(a.destination);
- // A warm tone: the note with two quieter overtones.
- SOUND.oscs=TONE.partials.map(([k,g])=>{const o=a.createOscillator(), gain=a.createGain();o.type='sine';gain.gain.value=g;o.connect(gain);gain.connect(out);o.start();return [o,k];});
+ a.resume?.();out.gain.value=.5;warm.type='lowpass';warm.frequency.value=3200;out.connect(warm);warm.connect(a.destination);
 }
+// A plucked string (Karplus-Strong): a short burst of softened noise circulating in a delay line one period long,
+// averaged on each pass so it mellows and fades like a real string.
+function stringBuffer(freq){
+ const key=Math.round(freq);if(SOUND.buffers.has(key))return SOUND.buffers.get(key);
+ const a=SOUND.ctx, rate=a.sampleRate, n=Math.floor(rate*2.6), y=new Float32Array(n), N=Math.max(2,Math.floor(rate/freq)), decay=.996;
+ let prev=0;for(let i=0;i<N;i++){prev=.5*prev+.5*(hash(i*1.37+freq)*2-1);y[i]=prev;}
+ for(let i=N;i<n;i++)y[i]=decay*.5*(y[i-N]+y[Math.max(0,i-N-1)]);
+ let peak=0;for(const v of y)peak=Math.max(peak,Math.abs(v));const fade=Math.floor(rate*.08);
+ for(let i=0;i<n;i++)y[i]=y[i]/(peak||1)*(i>n-fade?(n-i)/fade:1);
+ const buffer=a.createBuffer(1,n,rate);buffer.copyToChannel(y,0);SOUND.buffers.set(key,buffer);return buffer;
+}
+function soundPluck(freq){SOUND.queue.push(freq);}
 function voice(){
- const e=engineOf(spec);if(!e.sound||!SOUND.ctx)return;
- const {freq,level}=e.sound({mass:shown,distance}), now=SOUND.ctx.currentTime;
- // A new note steps in within a few milliseconds: no slide between notes, and no click.
- if(Math.abs(freq-SOUND.freq)>.5){SOUND.freq=freq;for(const [o,k] of SOUND.oscs)o.frequency.setTargetAtTime(freq*k,now,.01);}
- const moving=started&&(mode==='playing'||mode==='live');
- const target=SOUND.on&&moving?Math.round(level*50)/50:0;
- if(target!==SOUND.target){SOUND.target=target;SOUND.out.gain.setTargetAtTime(target,now,.08);}
+ if(!SOUND.ctx||!SOUND.on){SOUND.queue.length=0;return;}
+ while(SOUND.queue.length){const src=SOUND.ctx.createBufferSource();src.buffer=stringBuffer(SOUND.queue.shift());src.connect(SOUND.out);src.start();}
 }
-// Engines with a hand (the rope) keep shaking while the viewer explores; it stops when playback ends and 15 s after the
-// last slider move.
-let driveUntil=0;
 // A hidden tab freezes the picture, so its sound pauses too.
 document.addEventListener('visibilitychange',()=>{if(!SOUND.ctx)return;if(document.hidden)SOUND.ctx.suspend?.();else SOUND.ctx.resume?.();});
 function paint(){
@@ -1182,11 +1228,12 @@ function paint(){
  if(ctx.reset)ctx.reset();ctx.setTransform(dpr,0,0,dpr,0,0);ctx.clearRect(0,0,w,h);
  const since=started&&timeline?Math.max(0,time-timeline.chapters[stage].start):time;
  const live=started&&mode==='live';
- draw(ctx,w,h,spec,{t:time,since,stage,mass:shown,distance,labels:spec.show_labels,live,driving:!live||time<=driveUntil});
+ draw(ctx,w,h,spec,{t:time,since,stage,mass:shown,distance,labels:spec.show_labels,live,playing:mode==='playing'});
  voice();
  const value=target();
  // An engine may leave its readout empty for a moment, hiding the pill (the rope during its single shake).
- if(engineOf(spec).measure){const v=engineOf(spec).measure[1](value,distance);$('bend-value').textContent=v;$('bend-value').closest('.stage-note').hidden=v==='';}
+ const m=engineOf(spec).measure;
+ if(m){const v=m[1](value,distance);$('bend-value').textContent=v;$('bend-value').closest('.stage-note').hidden=v==='';if(typeof m[0]==='function')$('measure-label').textContent=m[0]();}
  captions();transport();
 }
 // A sentence ends at . ! or ? followed by a space or the end, so decimals such as 4.8 stay whole.
@@ -1248,11 +1295,11 @@ function configure(){
  $('mass-label').textContent=e.a[0];$('mass-hint').textContent=e.a[1];
  $('distance-label').textContent=e.b[0];$('distance-hint').textContent=e.b[1];
  // Engines without a readout hide the readout pill.
- $('measure-label').closest('.stage-note').hidden=!e.measure;$('measure-label').textContent=e.measure?.[0]||'';$('scale-label').textContent=e.scale;
+ $('measure-label').closest('.stage-note').hidden=!e.measure;$('measure-label').textContent=typeof e.measure?.[0]==='function'?e.measure[0]():e.measure?.[0]||'';$('scale-label').textContent=e.scale;
  canvas.setAttribute('aria-label',e.aria);
 }
 function load(scene){
- exploreOpen=null;SOUND.freq=0;SOUND.target=-1;driveUntil=0;
+ exploreOpen=null;SOUND.queue.length=0;
  // Before playback the stage shows the opening frame of chapter 1.
  spec=scene;buildTimeline();
  $('ticks').replaceChildren(...timeline.chapters.slice(1).map((c,i)=>{const tick=document.createElement('button');tick.type='button';tick.dataset.beat=String(i+1);tick.style.left=`calc(12px + (100% - 24px) * ${c.start/timeline.total})`;tick.title=`Chapter ${i+2}: ${spec.beats[i+1].title}`;tick.setAttribute('aria-label',tick.title);tick.onclick=e=>{e.stopPropagation();chapter(i+1);};return tick;}));mass=scene.mass;distance=scene.distance;time=0;mode='live';started=false;ended=false;captionKey='';
@@ -1301,7 +1348,7 @@ function tick(stamp){
    const next=chapterAt(time), last=timeline.chapters.length-1, c=timeline.chapters[last];
    if(next!==stage)setStage(next);
    if(stage===last&&engineOf(spec).demo!==false)demo(clamp((time-c.start)/(c.end-c.start)));
-   if(time>=timeline.total){time=timeline.total;mode='live';ended=true;driveUntil=time;emit('ended');}
+   if(time>=timeline.total){time=timeline.total;mode='live';ended=true;emit('ended');}
   }
   shown+=(target()-shown)*(1-Math.exp(-dt*(mode==='playing'?1.6:7)));
   paint();
@@ -1314,18 +1361,18 @@ function input(id,value){
  // Touching a control before playing means exploring; during playback it hands control to the viewer.
  if(id==='mass')mass=value;else distance=value;
  audioStart();
- explore();driveUntil=time+15;paint();
+ explore();paint();
 }
 
 window.CouncilScene={load,seek,play,pause,toggle,chapter,render:t=>{time=t;paint();},
  getState:()=>({time,mass,distance,stage,mode,ended}),
- sound:()=>({on:SOUND.on,state:SOUND.ctx?.state||null,freq:Math.round(SOUND.freq),gain:SOUND.out?+SOUND.out.gain.value.toFixed(3):null,rope:{rate:ROPE.rate,size:+ROPE.size.toFixed(2)}}),
+ sound:()=>({on:SOUND.on,state:SOUND.ctx?.state||null,plucked:GUITAR.plucked.slice(),rope:{rate:ROPE.rate,size:+ROPE.size.toFixed(2)}}),
  timeline:()=>timeline&&JSON.parse(JSON.stringify(timeline)),on:fn=>listeners.add(fn),
  checks:()=>Physics.checksFor(spec?.kind)};
 $('play').onclick=toggle;$('poster').onclick=play;
 $('reset').onclick=()=>{started=false;play();};
 $('sound').onclick=()=>{SOUND.on=!SOUND.on;try{localStorage.setItem('council-sound',SOUND.on?'on':'off');}catch{}audioStart();soundButton();paint();};
-function soundButton(){const b=$('sound');b.hidden=!engineOf(spec)?.sound;b.setAttribute('aria-pressed',String(SOUND.on));b.setAttribute('aria-label',SOUND.on?'Mute the sound':'Turn the sound on');}
+function soundButton(){const b=$('sound');b.hidden=!engineOf(spec)?.plucks;b.setAttribute('aria-pressed',String(SOUND.on));b.setAttribute('aria-label',SOUND.on?'Mute the sound':'Turn the sound on');}
 $('explore').onclick=()=>{exploreOpen=!document.querySelector('.workspace').classList.contains('exploring');pause();paint();};
 // Scrubbing: click or drag anywhere on the bar; playback continues if it was playing.
 function scrubTo(clientX){
