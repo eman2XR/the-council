@@ -318,15 +318,23 @@ function ropeAdvance(spec,st){
  ROPE.size=ROPE.rate>0?P.ropeSize(ROPE.s,ROPE.rate):0;
  return ROPE.s;
 }
-// A hand and forearm gripping the rope's end, drawn simply; (x, y) is where the rope leaves the fist.
+// A fist gripping the rope's end, seen from the side: the forearm in a sleeve, the back of the hand, four curled
+// fingers wrapped around the rope and the thumb laid across them. (x, y) is where the rope leaves the fist.
 function drawHand(ctx,x,y,size){
- const skin='#d8a47f', edge='rgba(90,50,28,.5)';
- ctx.fillStyle='#4a5566';ctx.beginPath();ctx.roundRect(x-size*4.6,y-size*.5,size*3.4,size*1,size*.28);ctx.fill();
- ctx.fillStyle='#3b4452';ctx.fillRect(x-size*1.4,y-size*.56,size*.22,size*1.12);
- ctx.fillStyle=skin;ctx.strokeStyle=edge;ctx.lineWidth=1.3;
- ctx.beginPath();ctx.roundRect(x-size*1.2,y-size*.62,size*1.22,size*1.24,size*.4);ctx.fill();ctx.stroke();
- ctx.beginPath();ctx.roundRect(x-size*1.05,y-size*.98,size*.95,size*.46,size*.22);ctx.fill();ctx.stroke();
- ctx.beginPath();for(const f of [-.22,.1,.42]){ctx.moveTo(x-size*.28,y+f*size);ctx.lineTo(x+size*.02,y+f*size);}ctx.strokeStyle=edge;ctx.stroke();
+ const skin='#e0ad86', edge='rgba(110,62,35,.55)', u=size;
+ const blob=(x0,y0,w,h,r)=>{ctx.beginPath();ctx.roundRect(x0,y0,w,h,r);ctx.fill();ctx.stroke();};
+ // The rope runs into the grip, hidden by the fingers.
+ trace(ctx,[[x-u*1.2,y],[x,y]]);ctx.strokeStyle='rgba(37,99,235,.9)';ctx.lineWidth=2.5;ctx.stroke();
+ // Sleeve and cuff.
+ ctx.fillStyle='#4a5566';ctx.beginPath();ctx.roundRect(x-u*4.8,y-u*.52,u*3.2,u*1.04,u*.24);ctx.fill();
+ ctx.fillStyle='#3a4352';ctx.beginPath();ctx.roundRect(x-u*1.78,y-u*.6,u*.3,u*1.2,u*.1);ctx.fill();
+ ctx.lineWidth=1.2;ctx.strokeStyle=edge;
+ // Back of the hand.
+ ctx.fillStyle=skin;blob(x-u*1.55,y-u*.66,u*1.05,u*1.32,u*.42);
+ // Four curled fingers, top to bottom, each wrapping over the rope.
+ ctx.fillStyle=skin;for(let k=3;k>=0;k--)blob(x-u*.82,y-u*.66+k*u*.33,u*.86,u*.36,u*.18);
+ // The thumb, resting along the top of the fingers and pointing forward.
+ ctx.save();ctx.translate(x-u*1.2,y-u*.62);ctx.rotate(.18);ctx.fillStyle=skin;blob(0,-u*.22,u*1.05,u*.36,u*.18);ctx.restore();
 }
 function drawRope(ctx,w,h,spec,st){
  const accent=ACCENT[spec.accent]||ACCENT.gold, warm='#c2410c', small=w<520, P=Physics, A=P.ropeModel.A, N=P.ropeModel.N;
