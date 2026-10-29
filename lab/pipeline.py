@@ -48,7 +48,10 @@ STANDARD = ('Quality bar: explain WHY, not only what happens. Start from somethi
     'sentences. Never refer to other guides. Keep the picture calm: the stage shows only a few short labels (names of '
     'five words or fewer, never sentences), the subtitles carry every explanation, and only what the current sentence is '
     'about moves or changes. Answer the question behind the topic for a newcomer: why it matters in the world, not only '
-    'how it works; for a famous discovery or paper, show what it changed and connect it to something the viewer uses.')
+    'how it works; for a famous discovery or paper, show what it changed and connect it to something the viewer uses. '
+    'When the picture singles something out (a thicker line, a marked word, a brighter spot), show and say why it is '
+    'singled out, not only that it is. The why line is the only text under the title: one or two short sentences, about '
+    '25 words.')
 
 LEARNER = ('You are a curious adult with school-level science who has never studied this topic. Use ONLY what these '
     'frames and texts show: each frame includes the subtitle on screen at that moment. Frames come in order, an early and '
@@ -57,7 +60,8 @@ LEARNER = ('You are a curious adult with school-level science who has never stud
     'Then answer each '
     'transfer question from the guide alone, writing "not covered" when it does not answer it; put the answers in the '
     'summary. Then, as the copy editor, list in changes: undefined words, sentences hard to follow on one read, objections '
-    'left unanswered, any subtitle that does not match its frame, and text that could be shorter; quote the field, the '
+    'left unanswered, any subtitle that does not match its frame, anything singled out without a reason, a why line '
+    'over about 25 words, and text that could be shorter; quote the field, the '
     'current text and a replacement no longer than the original. Pass only if a beginner could answer all but at most one '
     'question correctly from the guide, nothing on screen contradicts its subtitle, and no confusion blocks the main idea. '
     'Score 0..10 for how well a beginner would understand why.')
