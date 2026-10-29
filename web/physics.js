@@ -162,6 +162,35 @@
       const psi=(x,t)=>{let re=0,im=0;for(const [kj,w] of comps){const ph=kj*x-kj*kj*t;re+=w*Math.cos(ph);im+=w*Math.sin(ph);}return [re/norm,im/norm];};
       return {k0,sk,L,comps,psi};
     },
+    // A blend of waves k = kc + j*delta with amplitudes from a bell curve of width sk (all equal when sk = 0), every
+    // wave at its crest at x = 0. Waves 2*pi/delta apart in x line up again, so delta keeps one burst in view.
+    blendDelta: Math.PI / 16, blendCentre: 2.6,
+    blendAmp(j, sk) { return sk > 0 ? Math.exp(-((j * this.blendDelta) ** 2) / (4 * sk * sk)) : 1; },
+    blendRange(sk) { const n = sk > 0 ? Math.min(12, Math.ceil(3 * sk / this.blendDelta)) : 0; return Array.from({length: 2 * n + 1}, (_, i) => i - n); },
+    blendWaves(comps) {
+      const D = this.blendDelta, kc = this.blendCentre, tot = comps.reduce((s, [, a]) => s + a, 0) || 1;
+      const sum = x => comps.reduce((s, [j, a]) => s + a * Math.cos((kc + j * D) * x), 0) / tot;
+      const env = x => { let re = 0, im = 0; for (const [j, a] of comps) { const k = kc + j * D; re += a * Math.cos(k * x); im += a * Math.sin(k * x); } return Math.hypot(re, im) / tot; };
+      return {sum, env};
+    },
+    blendSpread(sk, X = 16) {
+      const B = this.blendWaves(this.blendRange(sk).map(j => [j, this.blendAmp(j, sk)]));
+      let s = 0, s1 = 0, s2 = 0; const n = 4000;
+      for (let i = 0; i < n; i++) { const x = -X + 2 * X * i / n, v = B.env(x) ** 2; s += v; s1 += v * x; s2 += v * x * x; }
+      const m = s1 / s; return Math.sqrt(s2 / s - m * m);
+    },
+    blendChecks() {
+      const D = this.blendDelta, two = this.blendWaves([[-1, 1], [1, 1]]);
+      const spreads = [.12, .25, .5].map(sk => this.blendSpread(sk));
+      return Object.entries({
+        'Two waves line up at the centre and cancel halfway to the next line-up': Math.abs(two.sum(0) - 1) < 1e-12 && two.env(Math.PI / (2 * D)) < 1e-9,
+        'A bell-curve blend leaves one burst in view': [.25, .5].every(sk => { const B = this.blendWaves(this.blendRange(sk).map(j => [j, this.blendAmp(j, sk)])), sx = this.blendSpread(sk);
+          let side = 0; for (let i = 0; i <= 800; i++) { const x = -16 + 32 * i / 800; if (Math.abs(x) > 3 * sx) side = Math.max(side, B.env(x)); } return side < .12; }),
+        'Burst width times blend width is the smallest allowed, one half': [.12, .25, .5].every((sk, i) => Math.abs(spreads[i] * sk - .5) < .02),
+        'A wider blend gives a narrower burst': spreads[2] < spreads[1] && spreads[1] < spreads[0],
+        'One wave alone is spread evenly everywhere': (() => { const B = this.blendWaves([[0, 1]]); return [0, 3.7, 11.2].every(x => Math.abs(B.env(x) - 1) < 1e-12); })(),
+      }).map(([name, pass]) => ({name, pass}));
+    },
     well(a, b) {
       // Bound states of a finite square well of depth 25a and width 1+(b-1); returns sorted levels.
       const V=25*a, L=1+(b-1), z0=L/2*Math.sqrt(V), levels=[];
@@ -209,6 +238,22 @@
       const even = weights.every(w => Math.abs(w - weights[0]) < 1e-9);
       return {words, ask, ending: words[10], mix, focus, query, keys: this.attentionKeys, values: this.attentionValues, scores, weights, blend, top, even};
     },
+    // A wave shot across a trap of depth V and width L at a trial energy E (-V < E < 0): it starts fading into the
+    // left wall, wiggles inside, and in the right wall is part fading (C) and part growing (D). Only at the allowed
+    // energies is the growing part zero, so the wave fades into both walls.
+    wellShoot(E, V, L) {
+      const h = L / 2, k = Math.sqrt(Math.max(1e-12, E + V)), kappa = Math.sqrt(Math.max(1e-12, -E));
+      const P = Math.cos(k * L) + kappa / k * Math.sin(k * L), Q = -k * Math.sin(k * L) + kappa * Math.cos(k * L);
+      const D = (P + Q / kappa) / 2, C = (P - Q / kappa) / 2;
+      const psi = x => x < -h ? Math.exp(kappa * (x + h)) : x <= h ? Math.cos(k * (x + h)) + kappa / k * Math.sin(k * (x + h))
+        : C * Math.exp(-kappa * (x - h)) + D * Math.exp(kappa * (x - h));
+      // Largest size of the wave inside the trap, used to draw every trial wave at the same height.
+      let top = 0; for (let i = 0; i <= 240; i++) top = Math.max(top, Math.abs(psi(-h + L * i / 240)));
+      return {k, kappa, C, D, psi, h, top};
+    },
+    // The trap the guide sweeps: depth 16; width 2 holds three allowed energies.
+    trapDepth: 16,
+    trapLevels(L) { return this.well(this.trapDepth / 25, L).levels.map(l => l.E); },
     // Weak gravity, slow motion (schematic units): proper time = T + integral of (g h - v^2/2) dt.
     fall(a, b) {
       const g=.8*a, T=2+2*(b-1), ref=.8*T*T/8, best=g*T*T/8;
@@ -226,6 +271,16 @@
       const light=(r0,dir,t)=>{let r=r0;const n=Math.ceil(t/.01),h=t/Math.max(1,n),f=r=>dir-flow(Math.max(r,1e-4));
         for(let i=0;i<n&&r>.02&&r<12;i++){const k1=f(r),k2=f(r+h*k1/2),k3=f(r+h*k2/2),k4=f(r+h*k3);r+=h*(k1+2*k2+2*k3+k4)/6;}return r;};
       return {rs,re,flow,light};
+    },
+    // A swimmer in the river: it moves outward at speed 1 through the flowing medium while the medium flows in at
+    // sqrt(rs/r), so dr/dt = 1 - sqrt(rs/r). Returns where it is after time t, and how long ago it reached the edge
+    // (r = 0.05) if it was swept in. The same rule moves a fish near a waterfall and light near a black hole.
+    riverSwim(r0, rs, t) {
+      const f = r => 1 - Math.sqrt(rs / Math.max(r, 1e-4)), h = .01;
+      let r = r0, u = 0;
+      while (u < t - 1e-12) { const d = Math.min(h, t - u), k1 = f(r), k2 = f(r + d * k1 / 2), k3 = f(r + d * k2 / 2), k4 = f(r + d * k3);
+        r += d * (k1 + 2 * k2 + 2 * k3 + k4) / 6; u += d; if (r <= .05) return {r: .05, fell: t - u}; }
+      return {r, fell: -1};
     },
     // One toss seen from the ground and from the ball (weak gravity, schematic units). The throw speed is fixed;
     // gravity g = 0.8*a, so with a = 0 the ball keeps going and with a = 1 it comes back after T.
@@ -324,6 +379,7 @@
         'Position spread times momentum spread is the minimum, one half':Math.abs(sx*sk-.5)<.02,
         'A packet spreads out as it moves':spread(.6,.4)>spread(.6,0),
         'Momentum spread readout is zero for one wave':this.momentumSpread(0)===0,
+        ...Object.fromEntries(this.blendChecks().map(c => [c.name, c.pass])),
         'Total probability is the same for any mix':[.3,.9].every(a=>{const q=this.packet(a,1.5);let s=0;const n=4000;for(let i=0;i<n;i++)s+=this.cx.abs2(q.psi(-q.L/2+q.L*i/n,0))*q.L/n;return Math.abs(s/q.L-1)<1e-6;}),
       }).map(([name,pass])=>({name,pass}));
     },
@@ -336,7 +392,24 @@
         'Levels sit between the well floor and zero':E.every(e=>e>-w.V&&e<0),
         'Levels alternate even and odd shapes':w.levels.every((l,i)=>l.parity===(i%2?'odd':'even')),
         'Lowest level lies below the infinite-well value':(deep.levels[0].E+deep.V)<(Math.PI/deep.L)**2,
+        ...Object.fromEntries(this.shootChecks().map(c => [c.name, c.pass])),
       }).map(([name,pass])=>({name,pass}));
+    },
+    shootChecks() {
+      const V = this.trapDepth, L = 2, E = this.trapLevels(L), S = e => this.wellShoot(e, V, L);
+      const mids = [(-V + E[0]) / 2, ...E.slice(1).map((e, i) => (E[i] + e) / 2), E.at(-1) / 2];
+      const humps = e => { const s = S(e); let n = 1, prev = s.psi(-s.h + 1e-9);
+        for (let i = 1; i <= 400; i++) { const v = s.psi(-s.h + L * i / 400); if (v * prev < 0) n++; if (Math.abs(v) > 1e-9) prev = v; } return n; };
+      const near = (a, b, e) => Math.abs(a - b) < e;
+      return Object.entries({
+        'The swept trap holds three allowed energies': E.length === 3,
+        'At each allowed energy the wave fades into both walls': E.every(e => { const s = S(e); return Math.abs(s.D) / s.top < 1e-9 && Math.abs(s.psi(s.h + 3 / s.kappa)) < .06 * Math.abs(s.psi(s.h)); }),
+        'Between allowed energies the wave grows in the right wall, flipping side each time': mids.every((e, i) => { const s = S(e); return Math.abs(s.psi(1.6 * L / 2 + .6)) > 2 * s.top && Math.sign(s.D) === (i % 2 ? -1 : 1); }),
+        'The trial wave and its slope join smoothly at both trap edges': [-1, 1].every(side => { const s = S(-7), x = side * s.h, d = 1e-6;
+          return near(s.psi(x - d), s.psi(x + d), 1e-4) && near((s.psi(x - d) - s.psi(x - 3 * d)) / (2 * d), (s.psi(x + 3 * d) - s.psi(x + d)) / (2 * d), 1e-3); }),
+        'Each allowed wave has one more hump than the one below': E.every((e, i) => humps(e) === i + 1),
+        'A wider trap holds more allowed energies, lower down': this.trapLevels(3).length > E.length && this.trapLevels(3)[0] < E[0] && this.trapLevels(1).length < E.length,
+      }).map(([name, pass]) => ({name, pass}));
     },
     // Which checks belong to each visual model; light bending uses checks().
     checkSets() {
@@ -390,6 +463,8 @@
         'Outgoing light at the horizon stands still':near(R.light(1,1,2),1,1e-6),
         'Outgoing light inside the horizon is swept inward':R.light(.8,1,.2)<.8,
         'With no mass, light moves at light speed':near(this.river(0,1.8).light(1,1,1.5),2.5,1e-9),
+        'A swimmer at the point of no return stays in place':near(this.riverSwim(1.2,1.2,5).r,1.2,1e-9),
+        'A swimmer outside it gets away; one just inside is swept to the edge':this.riverSwim(2.4,1.2,3).r>2.4&&this.riverSwim(.97,1.2,6).fell>0,
       }).map(([name,pass])=>({name,pass}));
     },
     viewsChecks() {

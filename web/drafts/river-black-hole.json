@@ -11,42 +11,50 @@
   "show_labels": true,
   "line_width": 2.5,
   "duration": 24,
-  "controls": "second",
+  "controls": "both",
   "kind": "river",
-  "title": "A black hole as a river of space",
-  "subtitle": "Space flows inward, faster closer in. Light swims through it at light speed. The horizon is where the flow wins.",
+  "title": "Why Light Can’t Escape a Black Hole",
+  "subtitle": "Picture space flowing into a black hole like a river toward a waterfall, faster closer in. Light swims through it at light speed, and at the black hole’s edge the flow is just as fast.",
   "accent": "gold",
   "mass": 1,
   "distance": 1.9,
-  "takeaway": "A black hole’s horizon is where space flows inward at light speed. Inside, even light is carried in.",
+  "takeaway": "A black hole’s horizon is where space flows in at light speed. Inside it, even light swimming outward is carried in.",
   "beats": [
    {
-    "title": "Still space",
-    "body": "Without a black hole, space is still. A flash of light swims outward at light speed and gets away."
+    "title": "A fish near a waterfall",
+    "body": "A river speeds up as it nears a waterfall. A fish swims upstream at a steady speed through the water: far from the edge, it outswims the slow current."
    },
    {
-    "title": "Space starts to flow",
-    "body": "Add a black hole and space flows inward, faster closer in. Light swims at light speed relative to the space it is in. Out here the flow is slower than light, so the flash still escapes, but slowly."
+    "title": "The point of no return",
+    "body": "Closer in, the current matches the fish’s speed, and the fish holds still. Past that point the current is faster, and the fish is swept over the edge even as it keeps swimming."
    },
    {
-    "title": "Past the horizon",
-    "body": "At the horizon the flow matches light: an outward flash stands still. Inside, space itself flows faster than light, sweeping every flash in. Nothing moves through space faster than light, but space itself has no such limit."
+    "title": "A river of space",
+    "body": "Space around a black hole can be pictured the same way: flowing inward, faster closer in. Light is the fish: it always moves at light speed through the space around it."
+   },
+   {
+    "title": "The horizon",
+    "body": "The horizon is the point of no return: there, space flows in at light speed. Light sent outward escapes from outside it, stands still on it, and is carried in from inside it."
+   },
+   {
+    "title": "No speed limit is broken",
+    "body": "Inside, space flows in faster than light, yet light still moves through it at exactly light speed. Space is not a fluid: the flow is an exact picture of how Einstein’s theory describes a black hole."
    }
   ],
-  "why": "It explains a black hole’s edge, the event horizon, without equations: the place where space flows inward as fast as light can swim.",
+  "why": "It explains a black hole’s edge, the event horizon: the place past which nothing, not even light, can get back out.",
   "opening": "Light always moves at light speed. So why can’t it escape from inside a black hole?",
   "questions": [
    {
-    "q": "Just outside the horizon, can a flash sent outward escape?",
-    "a": "Yes, slowly: the inflow there is a little slower than light."
+    "q": "Just outside the horizon, can light sent outward escape?",
+    "a": "Yes, slowly: space there flows in a little slower than light."
    },
    {
-    "q": "What happens to a flash sent outward exactly at the horizon?",
-    "a": "It stays where it is: the inflow equals light speed."
+    "q": "What happens to light sent outward exactly at the horizon?",
+    "a": "It stands still: space flows in exactly at light speed."
    },
    {
-    "q": "If the black hole were heavier, would its horizon be bigger or smaller?",
-    "a": "Bigger: the place where the inflow reaches light speed is farther out."
+    "q": "Does anything move through space faster than light inside the horizon?",
+    "a": "No: light still moves at light speed through the space around it; it is the space that flows in faster."
    }
   ]
  },

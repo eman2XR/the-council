@@ -98,14 +98,12 @@
     {
      "id": "4.2",
      "question": "Why can a trapped particle only have certain energies?",
-     "model": "quantum-well",
-     "ready": true
+     "model": "quantum-well"
     },
     {
      "id": "4.3",
      "question": "Why can't you pin down both where a particle is and how it moves?",
-     "model": "wave-packet",
-     "ready": true
+     "model": "wave-packet"
     },
     {
      "id": "4.4",

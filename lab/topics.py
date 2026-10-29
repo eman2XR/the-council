@@ -85,25 +85,37 @@ its energy, why thicker or taller barriers let less through, why some reflects e
 stream, not one particle's path; do not say the particle "borrows energy" or travels inside the barrier classically.
 No new-discovery claims.'''+COMMON
 
-PACKET_NOTES = '''WAVE PACKET AND UNCERTAINTY. A free quantum particle's wave built from a Gaussian blend of plane waves
-(units hbar = 1, 2m = 1). Top: the real part of the wave (line) and its magnitude (shaded band) along a line; the packet
-moves and slowly spreads (correct free-particle dispersion, time slowed down, loops). Bottom: bars showing how strongly
-each momentum (wavelength) is blended in. Field mass sets the momentum spread 1.1*mass (UI "Momentum mix"; 0 means one pure
-wave with exact momentum, spread over all space); field distance sets the average momentum 2 + 2*(distance - 1)
-(UI "Average momentum"). The readout is the momentum spread; for a Gaussian the position spread times the momentum spread
-equals one half (the minimum allowed). Supported questions: why pinning down position blurs momentum and vice versa, why
-packets spread. Do not describe uncertainty as measurement clumsiness or disturbance; it is a property of waves.
-No new-discovery claims.'''+COMMON
+PACKET_NOTES = '''A BLEND OF WAVES (WHY A SHARP PLACE MEANS A BLURRY SPEED). Exact sums of waves k = 2 + j*pi/16, every
+wave at its crest at the centre, with bell-curve amounts (units hbar = 1, drawn at one instant). Top: one row per wave mixed
+in, slower (longer) waves at the top; middle: all of them added together, with a shaded band where the particle is likely
+to be; bottom: bars showing how much of each wave length (pitch, then speed) is in the mix, on a fixed axis. Four chapters
+with fixed choreography and no slider demo: 1 a long beep: one wave, then from the second sentence a second, slightly
+higher one, so the sum swells and cancels (marked "line up: loud" and "cancel: quiet"); 2 pitches in between join one by one
+and make one short click, marked "all in step" at the centre and "out of step: they cancel" to the sides; 3 the same picture
+relabelled as a particle's wave (shaded band; from the second sentence "longer waves: slower", "shorter waves: faster");
+4 the rows fade, brackets show how wide the burst is in place and in speed, and from the second sentence the burst is
+squeezed (the blend widens) and then spread out (the blend narrows). Readout: how many waves are blended. After playback
+field mass sets the blend's width, 0.5*mass (UI "Blend of speeds"; near 0 one wave, spread everywhere). For a bell-curve
+blend the burst's width times the blend's width is one half, the smallest allowed. Supported questions: why pinning down
+place blurs speed, why a short sound has no clear pitch. Do not describe uncertainty as measurement clumsiness or
+disturbance; it is a property of waves. No new-discovery claims.'''+COMMON
 
-WELL_NOTES = '''FINITE SQUARE WELL (ALLOWED ENERGIES). Bound states of a particle in a one-dimensional finite well
-(units hbar = 1, 2m = 1), found by solving the standard even/odd matching conditions numerically. Drawn: the well (flat
-outside, floor of depth V inside), each allowed energy as a level line with its wave shape drawn on it (the wave leaks
-slightly into the walls and gently vibrates like a plucked string), and an energy ladder showing that only these
-rungs are allowed. Field mass sets depth V = 25*mass (UI "Well depth", 0 = no well); field distance sets width
-1 + (distance - 1) (UI "Well width"). The readout is the number of allowed levels; any well in one dimension holds at
-least one, deeper or wider wells hold more. Supported questions: why trapped particles have only certain energies
-(standing waves that fit), why a bigger well has more and closer levels, why the wave leaks into the walls. Energies are to
-scale; wave heights are not. Not an atom model; no spin or 3D. No new-discovery claims.'''+COMMON
+WELL_NOTES = '''A WAVE IN A TRAP (WHY ONLY CERTAIN ENERGIES). A particle's wave in a one-dimensional square pit of depth 16
+and width 2 (units hbar = 1, 2m = 1), drawn around its energy line with the area between them shaded; the walls and the rock
+under the floor are ground. A trial wave starts fading into the left wall; in the walls it can only fade or grow, and only
+at the three allowed energies does it fade into the right wall too (exact shooting solution, Physics.wellShoot). Five
+chapters with fixed choreography and no slider demo: 1 the symmetric wave inside the trap, its energy rising from the
+second sentence so it wiggles more; 2 the same energy with the walls: it fades into the left wall and grows without end
+in the right one (warm, cut at the picture's edge), with from the second sentence "impossible" and a dashed "needed:
+fades" tail; 3 during the first two sentences the energy rises through every value (almost every wave grows in the right
+wall, the counter stays at 0), and with the third it comes back down and stops at each allowed energy (marked "allowed");
+4 the three allowed waves with 1, 2 and 3 loops; 5 an atom: from the second sentence three drops between allowed energies,
+one at a time, each giving off light of one colour (bigger drop, bluer; colours illustrative) onto a spectrum strip.
+Readouts: allowed energies found, allowed energies, colours given off; after playback, whether the chosen energy is allowed.
+After playback field mass sets the trial energy (UI "Energy"; it clicks onto an allowed energy when close) and field
+distance the trap's width, 1 to 2.5 (UI "Trap width"; a wider trap holds more, lower energies). Supported questions: why a
+trapped particle has only certain energies, why atoms glow in certain colours. Energies are to scale; wave heights are not.
+A square pit is not an atom; no spin or 3D. No new-discovery claims.'''+COMMON
 
 FALL_NOTES = '''MOST-TIME PATH (WHY THINGS FALL). Weak gravity, slow motion, schematic units with effects hugely exaggerated.
 Two clocks leave the ground together and meet again a time T later: one is held at the ground, one is thrown up and falls
@@ -214,9 +226,10 @@ value = what it passes on. Describe changes concretely; this is mathematics, not
 # Only these are planned; the others wait for a redesign. attention (2026-10-29) was added at the owner's request
 # for the next run after subagent beginner tests; the owner has not reviewed its picture yet.
 READY = {'light-bending', 'gravity-clocks', 'spacetime-paths', 'light-clock', 'interference',
-         'wave-packet', 'diffraction', 'quantum-well', 'attention'}
+         'diffraction', 'attention'}
 # Not ready (2026-10-28): twin-trip shows what rather than why; spacetime, falling-time and tunneling are graph-style;
-# standing-waves is a hand-made five-chapter guide (agents write three or four chapters);
+# standing-waves, quantum-well (five chapters) and wave-packet (four chapters) are hand-made guides with fixed
+# choreography, which agent-written scenes would not match;
 # two-slit-particles failed a beginner test (faint ripples, slits read as one gap, unexplained screen marks, stripes
 # form before the narration says so).
 

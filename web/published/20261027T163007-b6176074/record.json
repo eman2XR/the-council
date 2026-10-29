@@ -52,23 +52,27 @@
     ]
   },
   "scene": {
-    "title": "Why a particle can't have both a sharp place and a sharp motion",
-    "subtitle": "A quantum particle behaves like a wave. Watch the trade-off: the more tightly the wave is bunched in space, the more speeds it has to blend together.",
+    "title": "Why a Particle Can\u2019t Have an Exact Place and an Exact Speed",
+    "subtitle": "A long beep has one clear pitch; a short click has none. A particle\u2019s wave works the same way: the more exact its place, the wider its blend of speeds.",
     "beats": [
       {
-        "title": "One pure wave: exact motion, no location",
-        "body": "Each bar at the bottom is one speed, and only one is lit, so the speed is exact. Up top, the wave repeats evenly and never fades. A particle with one exact speed has no particular place to be."
+        "title": "A long beep",
+        "body": "A long, steady beep has one clear pitch: its sound wave repeats evenly, on and on. Add a second, slightly higher pitch, and the two waves line up in some places and cancel in others."
       },
       {
-        "title": "Blend many waves and a bunch appears",
-        "body": "Now many bars light up below, each one a different speed. Up top they add up in one spot and cancel elsewhere. That is how a located particle gets made, by mixing many speeds together."
+        "title": "Many pitches make a click",
+        "body": "Add more nearby pitches, and they line up in only one place: a short click. That is why a click has no clear pitch: it is many pitches at once."
       },
       {
-        "title": "Narrower in place means wider in motion",
-        "body": "Watch the bunch spread out as the mix below narrows, then tighten again as it widens. Shifting the bars to faster motion packs the ripples closer, but the trade-off stays the same. Over time the bunch spreads, because its fast parts pull ahead of its slow parts."
+        "title": "A particle\u2019s wave",
+        "body": "A quantum particle is described by a wave like this: where it is big, the particle is likely to be found. For a particle, unlike sound, wave length sets speed: shorter waves, faster, as electron experiments show."
+      },
+      {
+        "title": "Exact place, blurry speed",
+        "body": "So a particle in one place blends many wave lengths: measure its speed and you could get any of them. Waves that differ more fall out of step sooner, so a narrower burst needs a wider blend."
       }
     ],
-    "mass": 0.6,
+    "mass": 0.5,
     "distance": 1.4,
     "ray_count": 1,
     "show_reference": true,
@@ -76,10 +80,11 @@
     "accent": "blue",
     "line_width": 2.5,
     "duration": 32,
-    "takeaway": "Pinning a wave to one place takes a blend of many speeds, so a sharp place always comes with a blurry motion.",
+    "takeaway": "A particle in one place is a short burst of wave, a blend of many speeds. The more exact its place, the less exact its speed.",
     "controls": "first",
     "kind": "wave-packet",
-    "why": "This is the uncertainty principle, a central rule of quantum physics. It is not a flaw in our instruments, and it is part of why atoms have a size at all instead of collapsing."
+    "why": "This is the uncertainty principle, a central rule of quantum physics. It is not a flaw in our instruments, and it is part of why atoms have a size at all instead of collapsing.",
+    "opening": "Why can\u2019t a particle have an exact place and an exact speed at the same time?"
   },
   "checks": [
     {
@@ -143,7 +148,7 @@
   "provenance": {
     "sources_retrieved": true,
     "retrieved_by": "agent",
-    "intro_note": "The introduction, some wording and the playback (which controls move in the last chapter) were edited by hand after the agents\u2019 review, following copy-editing and beginner tests; the reviews below refer to the earlier version."
+    "intro_note": "The illustration, its four chapters and all wording were rebuilt by hand after the agents\u2019 review, following owner feedback and beginner tests: waves added one at a time, starting from sound, replaced the earlier moving packet. The reviews below refer to the earlier version."
   },
   "revisions": [
     {

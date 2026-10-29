@@ -64,33 +64,42 @@
   },
   "scene": {
     "title": "Why a Trapped Particle Can Only Have Certain Energies",
-    "subtitle": "A particle in a trap acts like a wave. Only waves that fit the trap and fade away into its walls can last, so only certain energies are allowed.",
+    "subtitle": "A ball in a pit can roll with any energy. A trapped electron cannot: its wave must fade into both walls, and only a few energies allow that.",
     "beats": [
       {
-        "title": "No trap, no special energies",
-        "body": "With the trap flattened away, nothing holds the particle in. Its wave can have any energy at all. Nothing is trapped, so the counter reads zero trapped levels."
+        "title": "A wave in a trap",
+        "body": "A quantum particle behaves like a wave: where the wave is big, the particle is likely to be found. The more energy the particle has, the more its wave wiggles."
       },
       {
-        "title": "A trap lets only fitting waves survive",
-        "body": "Bring the trap back and only a few energy lines appear. More wiggles in the trap means more energy. Watch the edges: the wave leaks a little way into the walls before dying away."
+        "title": "In the walls",
+        "body": "Being in a wall needs more energy than the particle has, so there its wave can\u2019t wiggle, only fade or grow. Growing forever would put the particle deep in the wall, so the wave must fade on both sides."
       },
       {
-        "title": "Shallower traps hold fewer levels, wider traps hold more",
-        "body": "As the trap gets shallower, the top levels slip out, but one always stays. As the trap gets wider, more waves fit inside. The levels drop lower and crowd closer together."
+        "title": "Only a few energies fit",
+        "body": "A wave can\u2019t have a sharp corner, so in the wall it must carry on from the slope it arrives with. Raise the energy: almost always, the wave reaches the right wall on a slope that makes it grow. Only at a few energies does it arrive at just the slope a fade needs."
+      },
+      {
+        "title": "One more loop each",
+        "body": "Those are the only energies the particle can have, each with one more loop than the one below. A ball has allowed energies too, but packed so closely that any energy seems possible."
+      },
+      {
+        "title": "Why atoms glow in certain colours",
+        "body": "An atom traps its electrons in much the same way: the pull of its nucleus is the trap. An electron that drops to a lower energy gives off the difference as light, bluer for bigger drops. Each kind of atom has its own trap, so it glows in its own set of colours."
       }
     ],
-    "mass": 1,
-    "distance": 1,
+    "mass": 0.25,
+    "distance": 2,
     "ray_count": 1,
     "show_reference": true,
     "show_labels": true,
     "accent": "blue",
     "line_width": 2.5,
     "duration": 32,
-    "takeaway": "A trapped particle is a wave that has to fit its trap, and only a few waves fit, so only a few energies are allowed.",
-    "controls": "none",
+    "takeaway": "A trapped particle\u2019s wave must fade into both walls. Only a few energies allow that, so the particle can have only those.",
+    "controls": "both",
     "kind": "quantum-well",
-    "why": "It is why each kind of atom gives off light of only certain colours, which is how astronomers tell what distant stars are made of. Quantum-dot screens pick their colours with the same rule."
+    "why": "This is why each kind of atom glows only in certain colours, which is how astronomers tell what distant stars are made of. Quantum-dot TV screens get their colours from the same rule.",
+    "opening": "A ball in a pit can roll with any energy. Why can an electron trapped in an atom have only certain energies?"
   },
   "checks": [
     {
@@ -154,7 +163,7 @@
   "provenance": {
     "sources_retrieved": true,
     "retrieved_by": "agent",
-    "intro_note": "The introduction, some wording and the playback (which controls move in the last chapter) were edited by hand after the agents\u2019 review, following copy-editing and beginner tests; the reviews below refer to the earlier version."
+    "intro_note": "The illustration, its five chapters and all wording were rebuilt by hand after the agents\u2019 review, following owner feedback and beginner tests: a trial wave swept through the energies replaced the drawn levels, so the guide shows why only some energies fit. The reviews below refer to the earlier version."
   },
   "revisions": [
     {

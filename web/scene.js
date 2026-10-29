@@ -443,67 +443,265 @@ function drawTunnel(ctx,w,h,spec,st){
  }
 }
 
+// A blend of waves. A long beep is one pitch; adding pitches in between, all at their crests in one place, makes a
+// short click. A particle's wave works the same way, each wave length being a different speed. Each chapter has a
+// fixed plan; after playback the viewer sets how wide the blend of speeds is.
+const BLEND={mode:'',count:1};
+const blendSk=a=>a<.02?0:.5*clamp(a);
+function blendPlan(st){
+ const P=Physics, c=timeline?.chapters?.[st.stage], lines=c?.lines||[], c0=c?.start||0, at=i=>lines[i]?lines[i].start-c0:3+4*i, t=Math.max(0,st.since);
+ const bell=sk=>P.blendRange(sk).map(j=>[j,P.blendAmp(j,sk),1]);
+ if(st.since===undefined)return {mode:'particle',comps:bell(.25),rows:1,particle:1,band:1,speeds:0};
+ if(st.live){const sk=blendSk(st.mass);return {mode:'live',sk,comps:bell(sk),rows:0,particle:1,band:1,speeds:1,brackets:1,extremes:true};}
+ // 1: one steady wave draws in; from the second sentence a second, slightly higher one joins it.
+ if(st.stage===0){const e=smooth((t-at(1)-.2)/1.4);
+  return {mode:'beep',comps:[[-1,1,1],[1,e,1]],rows:1,particle:0,marks:smooth((t-at(1)-2)/.8)};}
+ // 2: pitches in between join one by one, settling into a bell curve; together they make one short click.
+ if(st.stage===1){const order=[0,2,-2,3,-3,4,-4], settle=smooth(t/2.2), sk=.25;
+  const comps=[[-1,1+(P.blendAmp(1,sk)-1)*settle,1],[1,1+(P.blendAmp(1,sk)-1)*settle,1]];
+  order.forEach((j,i)=>{const e=smooth((t-.6-i*.9)/.8);comps.push([j,P.blendAmp(j,sk)*e,1]);});
+  const click=smooth((t-.6-order.length*.9-.4)/.8);
+  return {mode:'click',comps,rows:1,particle:0,click,steps:click};}
+ // 3: the same picture as a particle's wave: where it is big, the particle is likely to be; length sets speed.
+ if(st.stage===2)return {mode:'particle',comps:bell(.25),rows:1,particle:smooth(t/1),band:smooth((t-1.4)/1),speeds:smooth((t-at(1))/1)};
+ // 4: the rows fade; then the burst is squeezed until speeds spread everywhere, and spread out until one wave is left.
+ const u=t-at(1), sk=u<2?.25+.65*smooth(u/2):u<3.2?.9:u<5.6?.9-.88*smooth((u-3.2)/2.4):.02;
+ return {mode:'squeeze',sk,comps:bell(sk),rows:1-smooth((t-at(1)+.6)/1),particle:1,band:1,speeds:1,brackets:smooth((t-.8)/1),extremes:true};
+}
 function drawPacket(ctx,w,h,spec,st){
- const accent=ACCENT[spec.accent]||ACCENT.mint, P=Physics.packet(st.mass,st.distance), small=w<520;
- const cycle=((st.t*.035)%1+1)%1, tt=cycle*.9, fade=smooth(cycle/.06)*smooth((1-cycle)/.06);
- const xmin=-16,xmax=16,start=-9, X=x=>w*.05+(x-xmin)/(xmax-xmin)*w*.9, y0=h*(small?.42:.38), amp=h*.17;
- const peak=P.comps.reduce((s,[,v])=>s+v,0)/Math.sqrt(P.comps.reduce((s,[,v])=>s+v*v,0));
- trace(ctx,[[X(xmin),y0],[X(xmax),y0]]);ctx.strokeStyle='rgba(20,23,28,.12)';ctx.lineWidth=1;ctx.stroke();
- const N=600, env=[], re=[];
- for(let i=0;i<=N;i++){const x=xmin+(xmax-xmin)*i/N, v=P.psi(x-start,tt), m=Math.sqrt(Physics.cx.abs2(v))/peak;env.push([X(x),m]);re.push([X(x),y0-v[0]/peak*amp]);}
- ctx.globalAlpha=fade;
- ctx.beginPath();env.forEach(([x,m],i)=>i?ctx.lineTo(x,y0-m*amp):ctx.moveTo(x,y0-m*amp));for(let i=env.length-1;i>=0;i--)ctx.lineTo(env[i][0],y0+env[i][1]*amp);ctx.closePath();
- ctx.fillStyle=rgba(accent,.12);ctx.fill();
- trace(ctx,re);ctx.strokeStyle=accent;ctx.lineWidth=spec.line_width||2.2;ctx.lineJoin='round';ctx.stroke();ctx.globalAlpha=1;
- // Momentum mix: one bar per wavelength blended into the packet.
- const by=h*.88, bh=h*.17, kmin=P.k0-4, kmax=P.k0+4, K=k=>w*.2+(k-kmin)/(kmax-kmin)*w*.6, top=Math.max(...P.comps.map(([,v])=>v));
- trace(ctx,[[K(kmin),by],[K(kmax),by]]);ctx.strokeStyle='rgba(20,23,28,.2)';ctx.stroke();
- const bw=Math.max(1.5,(K(kmin+2*Math.PI/P.L)-K(kmin))*.7);
- for(const [k,v] of P.comps){const hh=(v/top)**2*bh;ctx.fillStyle=rgba(accent,.75);ctx.fillRect(K(k)-bw/2,by-hh,bw,hh);}
- if(st.labels){
-  const size=small?10:11;
-  text(ctx,'WHERE IT MIGHT BE',X(xmin),y0-amp-22,{size,weight:600,spacing:'1px'});
-  text(ctx,'WHICH SPEEDS ARE MIXED IN',K(kmin),by-bh-12,{size,weight:600,spacing:'1px'});
-  text(ctx,P.comps.length===1?'one pure wave: exact speed, spread everywhere':`${P.comps.length} waves blended: the more speeds mixed in, the narrower in place`,w/2,by+16,{align:'center',size:small?9:10});
+ const accent=ACCENT[spec.accent]||ACCENT.blue, small=w<520, P=Physics, plan=blendPlan(st), D=P.blendDelta, KC=P.blendCentre, warm='#c2410c';
+ const half=small?12:16, X=x=>w/2+x/half*w*(small?.46:.45), lsize=small?10:12;
+ const comps=plan.comps.filter(([,a])=>a>1e-3), B=P.blendWaves(comps.map(([j,a])=>[j,a])), total=comps.reduce((s,[,a])=>s+a,0)||1;
+ Object.assign(BLEND,{mode:plan.mode,count:comps.filter(([,a])=>a>.02).length,sk:plan.sk??null,sound:plan.particle<=.5});
+ // Each wave length has its own colour, from blue-green for the longest to violet for the shortest.
+ const hue=(j,al=1)=>`hsla(${232+j*11},70%,${46-Math.min(6,Math.abs(j))}%,${al})`;
+ const word=(sound,particle)=>plan.particle>.5?particle:sound, speedWord=(sound,particle)=>(plan.speeds??0)>.5?particle:sound;
+ // The waves mixed in, one row each, slower (longer) waves at the top, each as tall as its share of the mix.
+ const rTop=h*(small?.14:.1), rBot=h*(small?.4:.4), slot=(rBot-rTop)/9, rowY=j=>rTop+(j+4.5)*slot;
+ // One scale for rows and their sum while the rows are shown, so the total really is the rows added up; once the rows
+ // fade the total is drawn to fit.
+ const full=P.blendRange(.25).reduce((s,j)=>s+P.blendAmp(j,.25),0), y0=h*((small?.56:.57)-(1-plan.rows)*(small?.14:.17)), amp=h*(small?.1:.11);
+ const S=amp/full, scale=plan.rows*S+(1-plan.rows)*amp/total;
+ if(plan.rows>.01){
+  for(const [j,a] of comps){if(Math.abs(j)>4)continue;
+   const pts=[];for(let i=0;i<=320;i++){const x=-half+2*half*i/320;pts.push([X(x),rowY(j)-a*S*Math.cos((KC+j*D)*x)]);}
+   trace(ctx,pts);ctx.strokeStyle=hue(j,.95*plan.rows*Math.min(1,a*1.6));ctx.lineWidth=1.8;ctx.stroke();}
+  if(st.labels){ctx.globalAlpha=plan.rows;
+   text(ctx,word('PITCHES MIXED IN','WAVES MIXED IN'),small?X(half):X(-half),rTop-(small?12:14),{align:small?'right':'left',size:lsize,weight:600,spacing:'1px'});
+   if(plan.speeds>0){ctx.globalAlpha=plan.rows*plan.speeds;
+    pill(ctx,'longer wave: slower',X(half),rowY(-1)-2,{align:'right',size:lsize,weight:600,color:hue(-1)});
+    pill(ctx,'shorter wave: faster',X(half),rowY(1)+2,{align:'right',size:lsize,weight:600,color:hue(1)});}
+   ctx.globalAlpha=1;}
  }
+ // Where the crests line up, and where crest meets trough.
+ const markTop=y0-amp-(small?6:8);
+ if(plan.marks>0){ctx.globalAlpha=plan.marks;
+  for(const x of [0,8,-8]){if(Math.abs(x)>half)continue;trace(ctx,[[X(x),rTop-4],[X(x),rBot+4]]);trace(ctx,[[X(x),markTop],[X(x),y0+amp+6]]);ctx.strokeStyle=x?'rgba(194,65,12,.55)':rgba(accent,.6);ctx.lineWidth=1.2;ctx.setLineDash([3,4]);ctx.stroke();ctx.setLineDash([]);}
+  if(st.labels){pill(ctx,'line up: loud',X(0),y0+amp+20,{align:'center',size:lsize,weight:600,color:accent});
+   for(const x of [8,-8])if(Math.abs(x)<=half)pill(ctx,'cancel: quiet',X(x),y0+amp+20,{align:'center',size:lsize,weight:600,color:warm});}
+  ctx.globalAlpha=1;}
+ if(plan.steps>0){ctx.globalAlpha=plan.steps;const far=7;
+  for(const x of [0,far,-far]){trace(ctx,[[X(x),rTop-4],[X(x),rBot+4]]);ctx.strokeStyle=x?'rgba(194,65,12,.5)':rgba(accent,.6);ctx.lineWidth=1.2;ctx.setLineDash([3,4]);ctx.stroke();trace(ctx,[[X(x),markTop],[X(x),y0+amp+6]]);ctx.stroke();ctx.setLineDash([]);}
+  if(st.labels){pill(ctx,'all in step',X(0),y0+amp+20,{align:'center',size:lsize,weight:600,color:accent});
+   pill(ctx,small?'out of step':'out of step: they cancel',X(far),y0+amp+20,{align:'center',size:lsize,weight:600,color:warm});
+   if(!small)pill(ctx,'out of step: they cancel',X(-far),y0+amp+20,{align:'center',size:lsize,weight:600,color:warm});}
+  ctx.globalAlpha=1;}
+ // Everything added together; the shaded band shows where the particle is likely to be.
+ const N=small?420:700, pts=[];
+ if(plan.band>0){ctx.beginPath();for(let i=0;i<=N;i++){const x=-half+2*half*i/N;ctx.lineTo(X(x),y0-B.env(x)*total*scale);}
+  for(let i=N;i>=0;i--){const x=-half+2*half*i/N;ctx.lineTo(X(x),y0+B.env(x)*total*scale);}ctx.closePath();ctx.fillStyle=rgba(accent,.13*plan.band);ctx.fill();}
+ trace(ctx,[[X(-half),y0],[X(half),y0]]);ctx.strokeStyle='rgba(20,23,28,.12)';ctx.lineWidth=1;ctx.stroke();
+ for(let i=0;i<=N;i++){const x=-half+2*half*i/N;pts.push([X(x),y0-B.sum(x)*total*scale]);}
+ trace(ctx,pts);ctx.strokeStyle=accent;ctx.lineWidth=spec.line_width||2.4;ctx.lineJoin='round';ctx.stroke();
+ const sk=plan.sk??.25, sx=sk>.01?.5/sk:Infinity;
+ if(st.labels){
+  text(ctx,word(small?'ALL ADDED: WHAT YOU HEAR':'ALL ADDED TOGETHER: WHAT YOU HEAR','THE PARTICLE’S WAVE'),X(-half),y0-amp-(small?14:18),{size:lsize,weight:600,spacing:'1px'});
+  text(ctx,word('time →','place →'),X(half),y0+amp+(small?36:40),{align:'right',size:lsize,color:'rgba(20,23,28,.55)'});
+  if(plan.click>0){ctx.globalAlpha=plan.click;pill(ctx,'a short click',small?X(half):X(0),y0-amp-(small?14:18),{align:small?'right':'center',size:lsize,weight:600,color:accent});ctx.globalAlpha=1;}
+  if(plan.band>.5&&!plan.brackets){const edge=Math.min(half*.9,2.2*.5/.25);pill(ctx,small?'shaded: likely to be here':'shaded: where the particle is likely to be found',X(edge),y0-amp*.55,{align:'left',size:lsize,weight:600,color:rgba(accent,.95)});}
+ }
+ // The recipe: how much of each wave length is mixed in, on a fixed scale.
+ const bBase=h*.93, bTall=h*(small?.15:.17), K=k=>w/2+(k-KC)/(13*D)*w*(small?.44:.32), bw=Math.max(2,(K(KC+D)-K(KC))*.62);
+ trace(ctx,[[K(KC-13*D),bBase],[K(KC+13*D),bBase]]);ctx.strokeStyle='rgba(20,23,28,.25)';ctx.lineWidth=1;ctx.stroke();
+ const top=Math.max(...comps.map(([,a])=>a),1e-9);
+ for(const [j,a] of comps){const hh=a/top*bTall;ctx.fillStyle=hue(j,.85);ctx.fillRect(K(KC+j*D)-bw/2,bBase-hh,bw,hh);}
+ if(st.labels){
+  text(ctx,speedWord('PITCHES IN THE MIX','SPEEDS IN THE MIX'),w/2,bBase+12,{align:'center',size:lsize,weight:600,spacing:'1px'});
+  text(ctx,speedWord('lower','slower'),K(KC-13*D),bBase+12,{size:lsize});text(ctx,speedWord('higher','faster'),K(KC+13*D),bBase+12,{align:'right',size:lsize});
+ }
+ // Brackets: where the particle may be, and the speeds it may have (each covering most of its spread).
+ if(plan.brackets>0){ctx.globalAlpha=plan.brackets;
+  const brace=(x0,x1,y,label)=>{trace(ctx,[[x0,y+5],[x0,y],[x1,y],[x1,y+5]]);ctx.strokeStyle=warm;ctx.lineWidth=1.6;ctx.stroke();if(st.labels)pill(ctx,label,(x0+x1)/2,y-12,{align:'center',size:lsize,weight:600,color:warm});};
+  if(2*sx<half*.95)brace(X(-2*sx),X(2*sx),y0-amp-(small?8:10),'where it may be');
+  else if(st.labels)pill(ctx,'where it may be: anywhere',X(0),y0-amp-(small?18:22),{align:'center',size:lsize,weight:600,color:warm});
+  if(sk>.01)brace(K(KC-2*sk),K(KC+2*sk),bBase-bTall-(small?28:34),'the speeds it may have');
+  else if(st.labels)pill(ctx,'its speed: exactly one',K(KC),bBase-bTall-(small?40:46),{align:'center',size:lsize,weight:600,color:warm});
+  if(plan.extremes&&st.labels){const note=sk>=.85?'nearly an exact place, so speeds spread everywhere':sk<=.03?'one exact speed, so it could be anywhere':'';
+   if(note)pill(ctx,small?note.replace('nearly an exact place, so ','').replace('one exact speed, so ',''):note,w/2,y0+amp+(small?20:24),{align:'center',size:lsize,weight:700,color:warm});}
+  ctx.globalAlpha=1;}
 }
 
-function drawWell(ctx,w,h,spec,st){
- const accent=ACCENT[spec.accent]||ACCENT.gold, W=Physics.well(st.mass,st.distance), small=w<520;
- const xmin=-2.4,xmax=2.4, X=x=>w*.06+(x-xmin)/(xmax-xmin)*w*(small?.7:.74), Emax=3,Emin=-26, top=h*(st.labels&&small?.24:.14), bottom=h*.9;
- const Y=E=>top+(Emax-E)/(Emax-Emin)*(bottom-top), half=W.L/2, rim=Y(0), floor=Y(-W.V);
- // Ground on both sides and a pit whose depth is the well depth.
- if(W.V>1e-4){
-  const pit=ctx.createLinearGradient(0,rim,0,floor);pit.addColorStop(0,'rgba(255,255,255,0)');pit.addColorStop(1,rgba(accent,.08));ctx.fillStyle=pit;ctx.fillRect(X(-half),rim,X(half)-X(-half),floor-rim);}
- trace(ctx,[[X(xmin),rim],[X(-half),rim],[X(-half),floor],[X(half),floor],[X(half),rim],[X(xmax),rim]]);
- ctx.strokeStyle='rgba(60,40,25,.7)';ctx.lineWidth=2.2;ctx.lineJoin='round';ctx.stroke();
- // Each allowed level: its wave fits the trap and leaks only a little into the walls.
- const ys=W.levels.map(l=>Y(l.E));
- W.levels.forEach((l,i)=>{
-  const y=ys[i], room=Math.min(i?ys[i-1]-y:floor-y, i<ys.length-1?y-ys[i+1]:y-rim)*.42, amp=Math.max(4,Math.min(room,h*.06));
-  const reach=half+Math.min(.55,1.4/Math.max(l.kappa,.6)), vib=Math.cos(st.t*(1.2+.55*i));
-  trace(ctx,[[X(-half),y],[X(half),y]]);ctx.strokeStyle='rgba(20,23,28,.18)';ctx.lineWidth=1;ctx.setLineDash([3,4]);ctx.stroke();ctx.setLineDash([]);
-  const pts=[];for(let j=0;j<=180;j++){const x=-reach+2*reach*j/180;pts.push([X(x),y-W.psi(l,x)*amp*vib]);}
-  // Inside the trap the wave is solid; the short leak into the walls is drawn faded.
-  const inside=pts.filter((_,j)=>Math.abs(-reach+2*reach*j/180)<=half), leftLeak=pts.filter((_,j)=>-reach+2*reach*j/180<=-half+1e-9), rightLeak=pts.filter((_,j)=>-reach+2*reach*j/180>=half-1e-9);
-  ctx.lineCap='round';
-  for(const seg of [leftLeak,rightLeak]){trace(ctx,seg);ctx.strokeStyle=rgba(accent,.35);ctx.lineWidth=1.6;ctx.setLineDash([2,3]);ctx.stroke();ctx.setLineDash([]);}
-  trace(ctx,inside);ctx.strokeStyle=rgba(accent,.18);ctx.lineWidth=7;ctx.stroke();
-  trace(ctx,inside);ctx.strokeStyle=i===0?accent:rgba(accent,.8);ctx.lineWidth=i===0?2.6:2;ctx.stroke();
- });
- // Energy ladder: only these rungs exist; the gaps between them are not allowed.
- const lx=w*(small?.83:.86), lw=w*(small?.1:.07);
- ctx.fillStyle='rgba(20,23,28,.05)';ctx.fillRect(lx,W.V>1e-4?floor:rim,lw,(W.V>1e-4?rim-floor:0));
- for(const y of ys){ctx.fillStyle=accent;ctx.fillRect(lx-2,y-1.5,lw+4,3);}
- if(st.labels){
-  const size=small?10:11;
-  text(ctx,'energy ↑',lx+lw/2,top-14,{align:'center',size:10});
-  text(ctx,'ALLOWED',lx+lw/2,bottom+12>h-4?bottom-8:bottom+12,{align:'center',size:9,weight:600,spacing:'1.5px'});
-  ys.forEach((y,i)=>pill(ctx,i===0?'lowest level':`level ${i+1}`,X(half+.62)+10,y,{size:10,weight:600,color:'rgba(20,23,28,.7)'}));
-  if(W.levels.length)text(ctx,'dotted: the wave leaks a little into the walls',X(0),Math.min(h-10,bottom+4),{align:'center',size:10});
-  if(W.V>1e-4)text(ctx,'TRAP',X(-half)-10,floor-10,{align:'right',size,weight:600,spacing:'1.5px',color:'rgba(60,40,25,.75)'});
-  else text(ctx,small?'no trap: any energy is possible':'no trap: nothing holds the particle, so any energy is possible',X(0),rim-24,{align:'center',size});
+// A trapped particle's wave at a trial energy, started fading into the left wall. Inside the trap it wiggles; in the
+// walls it can only fade or grow. Only at a few energies does it fade into the right wall too: the allowed energies.
+// Each chapter has a fixed plan; after playback the viewer chooses the energy and the trap's width.
+const TRAP={mode:'',found:0,fits:false,colours:0,L:2};
+const trapE=a=>-Physics.trapDepth*(1-.985*clamp(a)), trapL=b=>clamp(b,1,2.5);
+// The energy control clicks onto an allowed energy when it comes close, like a dial finding a station.
+const trapSnap=(E,levels)=>levels.find(e=>Math.abs(e-E)<.35)??E;
+// Colour of the light given off by a drop, from red for the smallest drop to violet for the largest (illustrative).
+function dropColour(f){
+ const nm=1/(1/650+clamp(f)*(1/420-1/650));let r=0,g=0,b=0;
+ if(nm<440){r=(440-nm)/60;b=1;}else if(nm<490){g=(nm-440)/50;b=1;}else if(nm<510){g=1;b=(510-nm)/20;}
+ else if(nm<580){r=(nm-510)/70;g=1;}else if(nm<645){r=1;g=(645-nm)/65;}else r=1;
+ const c=v=>Math.round(255*Math.pow(clamp(v),.8));return {nm,css:`rgb(${c(r)},${c(g)},${c(b)})`};
+}
+function trapPlan(st){
+ const P=Physics, V=P.trapDepth, c=timeline?.chapters?.[st.stage], lines=c?.lines||[], c0=c?.start||0, dur=c?c.end-c.start:14;
+ const at=i=>lines[i]?lines[i].start-c0:3+4*i, t=Math.max(0,st.since);
+ if(st.live){const L=trapL(st.distance), lv=P.trapLevels(L);return {mode:'live',L,E:trapSnap(trapE(st.mass),lv),levels:lv,found:lv.map((_,i)=>i)};}
+ const L=2, lv=P.trapLevels(L), mid=(lv[1]+lv[2])/2, floor=-V+.4;
+ if(st.since===undefined)return {mode:'all',L,levels:lv,found:[0,1,2],show:[1,1,1]};
+ // 1: the wave inside the trap; with the second sentence its energy rises and it wiggles more.
+ if(st.stage===0)return {mode:'inside',L,E:-14+(mid+14)*smooth((t-at(1))/3.6),levels:lv,found:[]};
+ // 2: the same wave with the walls: it fades into the left wall but grows without end in the right one; with the
+ // second sentence a dashed tail shows the fade it would need.
+ if(st.stage===1)return {mode:'walls',L,E:mid,levels:lv,found:[],grow:smooth((t-at(0)-2.4)/2.2),warn:t>=at(1),ghost:smooth((t-at(1)-1.4)/1)};
+ // 3: first the rule: a fade would need a sharp corner where the wave enters the right wall. Then the energy rises
+ // through every value (almost every wave grows), drops back, and with the third sentence rises again, stopping at
+ // each energy where the wave arrives at just the slope a fade needs.
+ if(st.stage===2){
+  const s2=at(1)-.2, s3=Math.max(s2+5,at(2)-.2);
+  if(t<s2)return {mode:'corner',L,E:mid,levels:lv,found:[],corner:smooth((t-.5)/.8)};
+  if(t<s3){const u=(t-s2)/(s3-s2), E=u<.6?mid+(-.6-mid)*smooth(u/.6):-.6+(floor+.6)*smooth((u-.6)/.4);return {mode:'sweep',L,E,levels:lv,found:[]};}
+  const stops=[floor,...lv], seg=Math.max(1.2,(dur-(s3-0)-.4)/3), move=seg*.35;
+  let u=t-s3, E=floor;const found=[];
+  for(let i=0;i<3;i++){if(u<move){E=stops[i]+(stops[i+1]-stops[i])*smooth(u/move);break;}u-=move;E=stops[i+1];found.push(i);if(u<seg-move)break;u-=seg-move;}
+  return {mode:'sweep',L,E,levels:lv,found};
  }
+ // 4: the allowed waves together, one more loop each.
+ if(st.stage===3)return {mode:'all',L,levels:lv,found:lv.map((_,i)=>i),show:lv.map((_,i)=>i?smooth((t-.3-i*1.1)/.8):1)};
+ // 5: an atom: drops between allowed energies give off light, one colour per drop, one drop at a time.
+ return {mode:'atom',L,levels:lv,found:lv.map((_,i)=>i),drops:[[1,0],[2,1],[2,0]].map(([u,d],i)=>({u,d,p:clamp((t-at(1)-.2-i*2.2)/1.1)}))};
+}
+function drawWell(ctx,w,h,spec,st){
+ const accent=ACCENT[spec.accent]||ACCENT.blue, warm='#c2410c', small=w<520, P=Physics, V=P.trapDepth, plan=trapPlan(st);
+ const xm=small?2.3:3.0, sx=(small?.94:.84)*w/(2*xm), cx=w/2, X=x=>cx+x*sx;
+ const Etop=2.2, Ebot=-V-1.2, top=h*(small?.22:.15), bottom=h*.93, Y=E=>top+(Etop-E)/(Etop-Ebot)*(bottom-top);
+ const half=plan.L/2, rim=Y(0), floor=Y(-V), A=small?22:30, lsize=small?10:12, lv=plan.levels;
+ Object.assign(TRAP,{mode:plan.mode,found:plan.found.length,L:plan.L,fits:false,colours:0});
+ // Ground: the walls and the rock under the floor. Being there takes more energy than the particle has.
+ ctx.beginPath();ctx.moveTo(0,rim);ctx.lineTo(X(-half),rim);ctx.lineTo(X(-half),floor);ctx.lineTo(X(half),floor);ctx.lineTo(X(half),rim);ctx.lineTo(w,rim);ctx.lineTo(w,h);ctx.lineTo(0,h);ctx.closePath();
+ ctx.fillStyle='rgba(150,112,78,.12)';ctx.fill();
+ trace(ctx,[[0,rim],[X(-half),rim],[X(-half),floor],[X(half),floor],[X(half),rim],[w,rim]]);ctx.strokeStyle='rgba(60,40,25,.7)';ctx.lineWidth=2.2;ctx.lineJoin='round';ctx.stroke();
+ if(st.labels){
+  for(const x of [(-xm-half)/2,(xm+half)/2])text(ctx,'WALL',X(x),floor+16,{align:'center',size:lsize,weight:600,spacing:'1.5px',color:'rgba(90,60,35,.8)'});
+  text(ctx,'TRAP',cx,floor+16,{align:'center',size:lsize,weight:600,spacing:'1.5px',color:'rgba(90,60,35,.8)'});
+ }
+ // One wave at energy E, drawn around its energy line at the same size inside the trap for every energy; the shading
+ // between wave and line shows how much wave is there, above or below. A tail that grows without end is drawn warm and
+ // cut where it leaves the picture. sym: the symmetric wave inside the trap only, before the walls are discussed.
+ const wave=(E,{alpha=1,inside=false,reach=1,sym=false}={})=>{
+  const s=P.wellShoot(E,V,plan.L), y0=Y(E), N=small?280:460, lim=[rim+3,h*.975], left=[], mid=[], right=[];let cut=null;
+  for(let i=0;i<=N;i++){
+   const x=-xm+2*xm*i/N;if(inside&&Math.abs(x)>half+1e-9)continue;if(x>half&&(x-half)>(xm-half)*reach)break;
+   const v=sym?Math.cos(s.k*x):s.psi(x)/s.top, y=y0-v*A, top=x>half?lim[0]:h*.02;
+   if(y<top||y>lim[1]){cut={x:X(x),y:clamp(y,top,lim[1]),up:v>0};break;}
+   const pt=[X(x),y];if(x<-half)left.push(pt);else if(x<=half)mid.push(pt);else right.push(pt);
+  }
+  if(!mid.length)return {fits:false,cut,s,y0,right:[],end:null};
+  if(left.length)left.push(mid[0]);if(right.length)right.unshift(mid.at(-1));
+  const fits=!cut&&Math.abs(s.psi(xm)/s.top)<.35;
+  ctx.globalAlpha=alpha;ctx.lineCap='round';ctx.lineJoin='round';
+  for(const [seg,col] of [[left,accent],[mid,accent],[right,fits||!reach?accent:warm]]){if(seg.length<2)continue;
+   ctx.beginPath();ctx.moveTo(seg[0][0],y0);seg.forEach(([x,y])=>ctx.lineTo(x,y));ctx.lineTo(seg.at(-1)[0],y0);ctx.closePath();ctx.fillStyle=rgba(col,col===warm?.14:.1);ctx.fill();
+   trace(ctx,seg);ctx.strokeStyle=rgba(col,.16);ctx.lineWidth=7;ctx.stroke();
+   trace(ctx,seg);ctx.strokeStyle=col;ctx.lineWidth=spec.line_width||2.4;ctx.stroke();}
+  if(cut){const d=cut.up?-1:1;ctx.beginPath();ctx.moveTo(cut.x,cut.y+d*2);ctx.lineTo(cut.x-6,cut.y-d*9);ctx.lineTo(cut.x+6,cut.y-d*9);ctx.closePath();ctx.fillStyle=warm;ctx.fill();}
+  ctx.globalAlpha=1;
+  return {fits,cut,s,y0,right,end:right.at(-1)||mid.at(-1)};
+ };
+ const junction=(r,{show=1,label=true}={})=>{if(show<=0)return;const s=r.s, e=1e-5, ph=s.psi(half-e), slope=(s.psi(half-e)-s.psi(half-3*e))/(2*e);
+  const px=X(half), py=r.y0-ph/s.top*A, dx=.42, go=x=>r.y0-(ph+slope*x)/s.top*A, fade=x=>r.y0-ph*Math.exp(-s.kappa*x)/s.top*A;
+  const match=Math.abs(slope+s.kappa*ph)/(Math.abs(slope)+s.kappa*Math.abs(ph)+1e-9)<.04;
+  ctx.globalAlpha=show;
+  trace(ctx,Array.from({length:12},(_,i)=>[X(half+dx*i/11),fade(dx*i/11)]));ctx.strokeStyle=accent;ctx.lineWidth=2;ctx.setLineDash([4,4]);ctx.stroke();ctx.setLineDash([]);
+  trace(ctx,[[px,py],[X(half+dx),go(dx)]]);ctx.strokeStyle=match?accent:warm;ctx.lineWidth=2;ctx.stroke();
+  ctx.beginPath();ctx.arc(px,py,9,0,TAU);ctx.strokeStyle=match?accent:warm;ctx.lineWidth=2;ctx.stroke();
+  if(st.labels&&label)pill(ctx,match?'smooth: it fits':(small?'sharp corner':'sharp corner: not allowed'),px+14,py+(small?20:24),{size:lsize,weight:600,color:match?accent:warm});
+  ctx.globalAlpha=1;return match;};
+ const line=E=>{trace(ctx,[[0,Y(E)],[w,Y(E)]]);ctx.strokeStyle='rgba(20,23,28,.28)';ctx.lineWidth=1;ctx.setLineDash([4,5]);ctx.stroke();ctx.setLineDash([]);
+  if(st.labels)pill(ctx,'energy',X(-xm)+8,Y(E)-14,{size:lsize,weight:600,color:'rgba(20,23,28,.72)'});};
+ // Allowed energies found so far: a solid rung across the trap, labelled.
+ const rungs=list=>{for(const i of list){trace(ctx,[[X(-half),Y(lv[i])],[X(half),Y(lv[i])]]);ctx.strokeStyle=rgba(accent,.45);ctx.lineWidth=1.6;ctx.stroke();
+   if(st.labels)pill(ctx,'allowed',X(half)-8,Y(lv[i])+(small?11:13),{align:'right',size:small?10:11,weight:600,color:rgba(accent,.95)});}};
+ const tailNote=(r,good,bad,extra)=>{if(!st.labels||!r.right.length)return null;
+  const far=r.cut?Math.abs(r.cut.y-r.y0):0, pt=r.fits?r.end:(r.right.find(([,y])=>Math.abs(y-r.y0)>=.5*far)||r.end);
+  const label=r.fits?good:bad;ctx.font=`600 ${lsize}px ${FONT}`;const room=ctx.measureText(extra&&!small?extra:label).width+18;
+  const right=pt[0]+14+room<w, x=right?pt[0]+14:pt[0]-14, y=r.fits?pt[1]-18:pt[1];
+  pill(ctx,label,x,y,{align:right?'left':'right',size:lsize,weight:600,color:r.fits?accent:warm});
+  if(extra)pill(ctx,extra,x,y+(small?17:21),{align:right?'left':'right',size:lsize,weight:600,color:warm});
+  return [x,y];};
+ if(plan.mode==='inside'){
+  line(plan.E);wave(plan.E,{inside:true});
+  if(st.labels)pill(ctx,'the particle’s wave',cx,Y(plan.E)-A-18,{align:'center',size:lsize,weight:600,color:accent});
+  return;
+ }
+ if(plan.mode==='walls'){
+  line(plan.E);
+  const r=wave(plan.E,{reach:plan.grow});
+  // The fade the right tail would need, drawn dashed.
+  if(plan.ghost>0){const s=r.s, y0=r.y0, pts=[];for(let i=0;i<=120;i++){const x=half+(xm-half)*i/120;pts.push([X(x),y0-s.psi(half)*Math.exp(-s.kappa*(x-half))/s.top*A]);}
+   ctx.globalAlpha=plan.ghost;trace(ctx,pts);ctx.strokeStyle=accent;ctx.lineWidth=2;ctx.setLineDash([5,5]);ctx.stroke();ctx.setLineDash([]);
+   if(st.labels)pill(ctx,'needed: fades',Math.min(w-8,X(half)+(small?48:110)),y0+(small?18:22),{align:small?'right':'center',size:lsize,weight:600,color:accent});ctx.globalAlpha=1;}
+  if(st.labels){
+   pill(ctx,'fades away',X((-xm-half)/2),Y(plan.E)+(small?20:22),{align:'center',size:lsize,weight:600,color:accent});
+   // What the picture's heights mean.
+   pill(ctx,small?'wall height: energy to be there':'wall height: the energy it takes to be in the wall',X(-xm)+8,rim-14,{size:lsize,weight:600,color:'rgba(90,60,35,.9)'});
+   if(!small)pill(ctx,'shaded: how much wave there is, above or below its line',cx,Y(plan.E)+A+30,{align:'center',size:lsize,weight:600,color:rgba(accent,.95)});
+   if(plan.grow>.6)tailNote(r,'fades away','grows without end',plan.warn?(small?'impossible':'impossible: the particle would be deep in the wall'):'');
+  }
+  return;
+ }
+ if(plan.mode==='corner'){
+  line(plan.E);const r=wave(plan.E,{reach:0});junction(r,{show:plan.corner});
+  if(st.labels&&plan.corner>.5)pill(ctx,'needed: fades',X(half)+(small?10:18),r.y0-(small?24:30),{size:lsize,weight:600,color:accent});
+  return;
+ }
+ if(plan.mode==='sweep'||plan.mode==='live'){
+  rungs(plan.found);line(plan.E);
+  const r=wave(plan.E);TRAP.fits=r.fits;
+  tailNote(r,'fades: it fits','grows: no fit');
+  return;
+ }
+ if(plan.mode==='all'){
+  lv.forEach((E,i)=>{if(plan.show[i]<=0)return;wave(E,{alpha:plan.show[i]});
+   if(st.labels){ctx.globalAlpha=plan.show[i];pill(ctx,`${i+1} loop${i?'s':''}`,X(half)+(small?6:14),Y(E)-(small?12:16),{size:lsize,weight:600,color:rgba(accent,.95)});ctx.globalAlpha=1;}});
+  return;
+ }
+ // An atom's light: each drop between allowed energies gives off one colour; a bigger drop gives bluer light.
+ lv.forEach(E=>wave(E,{alpha:.35}));rungs(plan.found);
+ const gaps=plan.drops.map(d=>lv[d.u]-lv[d.d]), lo=Math.min(...gaps), hi=Math.max(...gaps);
+ // A spectrum strip from violet to red; each colour the atom gives off lights up as a line.
+ const sw=small?150:260, sx0=small?w-sw-14:cx-sw/2, sy=h*(small?.07:.06), nm=x=>sx0+(x-390)/(700-390)*sw;
+ const strip=ctx.createLinearGradient(sx0,0,sx0+sw,0);[[0,'rgba(120,60,200,.22)'],[.3,'rgba(40,120,230,.22)'],[.5,'rgba(40,180,90,.22)'],[.7,'rgba(240,200,40,.22)'],[1,'rgba(220,50,40,.22)']].forEach(([o,c])=>strip.addColorStop(o,c));
+ ctx.fillStyle='#202028';ctx.beginPath();ctx.roundRect(sx0,sy,sw,14,4);ctx.fill();ctx.fillStyle=strip;ctx.beginPath();ctx.roundRect(sx0,sy,sw,14,4);ctx.fill();
+ if(st.labels){text(ctx,'light from the atom',sx0+sw/2,sy+26,{align:'center',size:small?10:11,weight:600});
+  text(ctx,'violet',sx0-6,sy+7,{align:'right',size:small?9:10,color:'rgba(20,23,28,.6)'});text(ctx,'red',sx0+sw+6,sy+7,{size:small?9:10,color:'rgba(20,23,28,.6)'});}
+ plan.drops.forEach((d,i)=>{if(d.p<=0)return;
+  const x=X(-half*.55+i*half*.55), yu=Y(lv[d.u]), yd=Y(lv[d.d]), y=yu+(yd-yu)*smooth(d.p), col=dropColour((gaps[i]-lo)/(hi-lo||1));
+  const done=d.p>=1, fade=done&&plan.drops[i+1]&&plan.drops[i+1].p>0?.45:1;
+  ctx.globalAlpha=fade;trace(ctx,[[x,yu],[x,y]]);ctx.strokeStyle='rgba(20,23,28,.55)';ctx.lineWidth=1.6;ctx.stroke();
+  if(done){ctx.beginPath();ctx.moveTo(x,yd);ctx.lineTo(x-5,yd-9);ctx.lineTo(x+5,yd-9);ctx.closePath();ctx.fillStyle='rgba(20,23,28,.7)';ctx.fill();}
+  else{ctx.beginPath();ctx.moveTo(x,y+2);ctx.lineTo(x-5,y-7);ctx.lineTo(x+5,y-7);ctx.closePath();ctx.fillStyle='rgba(20,23,28,.8)';ctx.fill();}
+  if(st.labels&&i===0&&d.p<1.2)pill(ctx,'an electron drops',x-10,(yu+yd)/2,{align:'right',size:lsize,weight:600,color:'rgba(20,23,28,.8)'});
+  if(done){TRAP.colours++;
+   const ym=(yu+yd)/2, x1=Math.min(w-10,X(half)+(small?70:200)), pts=[];
+   for(let j=0;j<=80;j++){const xx=x+8+(x1-x-8)*j/80;pts.push([xx,ym+Math.sin(j*.9)*4]);}
+   trace(ctx,pts);ctx.strokeStyle=col.css;ctx.lineWidth=2.4;ctx.stroke();
+   if(st.labels&&i===0)pill(ctx,'light',x1,ym-14,{align:'right',size:lsize,weight:600,color:'rgba(20,23,28,.8)'});
+   ctx.globalAlpha=1;ctx.save();ctx.shadowColor=col.css;ctx.shadowBlur=8;ctx.fillStyle=col.css;ctx.fillRect(nm(col.nm)-3,sy,6,14);ctx.restore();}
+  ctx.globalAlpha=1;
+ });
 }
 function drawFall(ctx,w,h,spec,st){
  const accent=ACCENT[spec.accent]||ACCENT.blue, F=Physics.fall(st.mass,st.distance), small=w<520, warm='#c2410c';
@@ -800,43 +998,146 @@ function dragPaths(w,h,spec,st,x,y,grab){
  return {mass:Math.min(1,xs/t/.9),distance:Math.min(2.5,Math.max(1,t/1.6))};
 }
 
-// River model of a black hole: space flows inward; light swims through it at light speed.
+// The river picture of a black hole. First a real river: it speeds up toward a waterfall, and a fish swims upstream at
+// its own fixed speed; where the current matches that speed the fish holds still, and past it the fish is swept over.
+// Then space around a black hole, pictured flowing inward the same way, with light as the swimmer. Both follow
+// Physics.riverSwim: outward speed 1 through the flowing medium, inflow sqrt(rs/r). Fixed plan per chapter.
+const RIVER={mode:'',re:1,rs:1};
+const RIVER_K=.25;
+function riverPlan(st){
+ const c=timeline?.chapters?.[st.stage], lines=c?.lines||[], c0=c?.start||0, at=i=>lines[i]?lines[i].start-c0:3+4*i, t=Math.max(0,st.since);
+ const ch0=timeline?.chapters?.[0], first=ch0?ch0.end-ch0.start:12;
+ if(st.since===undefined){const T=st.t||0;return {mode:'hole',rs:1,t:T,horizon:1,pulses:[{r0:1.8,from:T-3,ang:-.95},{r0:1,from:T-30,ang:0},{r0:.62,from:T-.8,ang:.75}]};}
+ if(st.live){const rs=Math.max(.05,st.mass), re=.6+(st.distance-1);return {mode:'hole',rs,t,pulses:[{r0:re,every:2.6,label:true}],live:true};}
+ // 1: one fish far from the falls gets away.
+ if(st.stage===0)return {mode:'river',t,fish:[{r0:2.4,tau:t*RIVER_K,arrows:true}],line:0};
+ // 2: it keeps going; a second fish holds still at the point of no return; a third, just past it, is swept over.
+ if(st.stage===1)return {mode:'river',t,line:smooth((t-at(0)-.2)/.8),fish:[{r0:2.4,tau:(first+t)*RIVER_K,dim:true},
+  {r0:1.2,tau:(t-at(0)-.2)*RIVER_K,show:smooth((t-at(0)-.2)/.6),arrows:true},{r0:.75,tau:(t-at(1)-.2)*RIVER_K,show:smooth((t-at(1)-.2)/.6),arrows:true,below:true}]};
+ // 3: space around a black hole flows inward; light, far out, swims outward through it and gets away.
+ const c2=timeline?.chapters?.[2], l2=c2?.lines||[], third=c2?c2.end-c2.start:15, from3=l2[1]?l2[1].start-c2.start-.4:6;
+ if(st.stage===2)return {mode:'hole',rs:1,t,pulses:[{r0:2.3,from:from3,ang:-.95}]};
+ // 4: at the horizon light holds still; just outside it escapes, slowly; inside it is carried in.
+ if(st.stage===3)return {mode:'hole',rs:1,t,horizon:smooth((t-.4)/.8),pulses:[{r0:2.3,from:from3-third,ang:-.95,quiet:true},{r0:1,from:at(0)+.4,ang:0},{r0:1.35,from:at(1)+.2,ang:-.5},{r0:.62,from:at(1)+.2,ang:.75}]};
+ // 5: inside, space flows in faster than light, yet light still moves through it at light speed.
+ return {mode:'hole',rs:1,t,horizon:1,limit:smooth((t-at(0)-.6)/.8),pulses:[{r0:.75,from:at(0)+.2,ang:.75,slow:.5},{r0:1,from:-30,ang:0,quiet:true}]};
+}
+function drawFish(ctx,x,y,size,flap,alpha=1){
+ // A small fish facing left, upstream: body, flapping tail and an eye.
+ ctx.save();ctx.globalAlpha=alpha;ctx.translate(x,y);const L=size, H=size*.44;
+ ctx.fillStyle='#e07a2e';ctx.save();ctx.translate(L*.42,0);ctx.rotate(Math.sin(flap)*.4);ctx.beginPath();ctx.moveTo(0,0);ctx.lineTo(L*.34,-H*.6);ctx.lineTo(L*.3,0);ctx.lineTo(L*.34,H*.6);ctx.closePath();ctx.fill();ctx.restore();
+ ctx.beginPath();ctx.ellipse(0,0,L*.5,H*.5,0,0,TAU);ctx.fill();
+ ctx.fillStyle='rgba(255,255,255,.95)';ctx.beginPath();ctx.arc(-L*.27,-H*.1,H*.16,0,TAU);ctx.fill();ctx.fillStyle='#14171c';ctx.beginPath();ctx.arc(-L*.3,-H*.1,H*.08,0,TAU);ctx.fill();
+ ctx.restore();
+}
+// Two arrows above a swimmer: its own speed outward (gold) and the inflow carrying it in (blue).
+function swimArrows(ctx,x,y,dir,own,flow,{small,labels,names}){
+ const head=(x0,y0,dx,col)=>{const s=Math.sign(dx)||1;ctx.beginPath();ctx.moveTo(x0+dx,y0);ctx.lineTo(x0+dx-s*7,y0-4.5);ctx.lineTo(x0+dx-s*7,y0+4.5);ctx.closePath();ctx.fillStyle=col;ctx.fill();};
+ const line=(x0,y0,dx,col)=>{trace(ctx,[[x0,y0],[x0+dx,y0]]);ctx.strokeStyle=col;ctx.lineWidth=2.4;ctx.stroke();head(x0,y0,dx,col);};
+ const gold='#d97706', blue='#2563eb';
+ line(x,y,dir*own,gold);line(x,y+11,-dir*Math.min(flow,own*2.6),blue);
+ if(labels){const size=small?10:11;
+  pill(ctx,names[0],x+dir*own+dir*6,y-1,{align:dir<0?'right':'left',size,weight:600,color:gold});
+  pill(ctx,names[1],x-dir*Math.min(flow,own*2.6)-dir*6,y+12,{align:dir<0?'left':'right',size,weight:600,color:blue});}
+}
+function arrowLegend(ctx,x,y,names,small,dirs=[1,-1]){
+ const size=small?10:12, gold='#d97706', blue='#2563eb', arrow=(x0,col,dir)=>{trace(ctx,[[x0,y],[x0+dir*18,y]]);ctx.strokeStyle=col;ctx.lineWidth=2.4;ctx.stroke();
+  ctx.beginPath();ctx.moveTo(x0+dir*22,y);ctx.lineTo(x0+dir*15,y-4.5);ctx.lineTo(x0+dir*15,y+4.5);ctx.closePath();ctx.fillStyle=col;ctx.fill();};
+ ctx.font=`600 ${size}px ${FONT}`;const w1=ctx.measureText(names[0]).width, w2=ctx.measureText(names[1]).width, gap=small?14:22, total=28+w1+gap+28+w2;
+ let x0=x-total/2;arrow(dirs[0]>0?x0:x0+22,gold,dirs[0]);text(ctx,names[0],x0+28,y,{size,weight:600,color:gold});x0+=28+w1+gap;
+ arrow(dirs[1]>0?x0:x0+22,blue,dirs[1]);text(ctx,names[1],x0+28,y,{size,weight:600,color:blue});
+}
 function drawRiver(ctx,w,h,spec,st){
- const accent=ACCENT[spec.accent]||ACCENT.gold, R=Physics.river(st.mass,st.distance), small=w<520;
- const cx=small?w/2:w*.33, cy=small?h*.36:h*.5, rmax=3, k=Math.min(small?w*.46:w*.3,small?h*.3:h*.44)/rmax, since=st.since??st.t;
- // The inner region and the horizon, where the inflow reaches light speed.
- if(R.rs>1e-4){const bg=ctx.createRadialGradient(cx,cy,0,cx,cy,rmax*k);bg.addColorStop(0,'rgba(20,23,28,.12)');bg.addColorStop(1,'rgba(20,23,28,0)');ctx.fillStyle=bg;ctx.beginPath();ctx.arc(cx,cy,rmax*k,0,TAU);ctx.fill();}
- if(R.rs>1e-4){ctx.beginPath();ctx.arc(cx,cy,R.rs*k,0,TAU);ctx.fillStyle='rgba(20,23,28,.85)';ctx.fill();ctx.setLineDash([5,4]);ctx.strokeStyle='rgba(217,119,6,.9)';ctx.lineWidth=2;ctx.stroke();ctx.setLineDash([]);}
- // Flowing space: specks carried inward at the local flow speed, faster closer in.
- for(let i=0;i<90;i++){const a=hash(i*7.13)*TAU, r0=rmax*(.35+.65*hash(i*3.71)), phase=hash(i*1.9)*20;
-  let r=r0;if(R.rs>1e-4){// Time to fall from rmax to r with dr/dt = -sqrt(rs/r): t = (2/3)(rmax^1.5 - r^1.5)/sqrt(rs).
-   const span=(2/3)*(Math.pow(rmax,1.5)-Math.pow(.05,1.5))/Math.sqrt(R.rs), tt=((since*.5+phase)%span);r=Math.pow(Math.max(0,Math.pow(rmax,1.5)-1.5*Math.sqrt(R.rs)*tt),2/3);}
-  if(r<.05)continue;const x=cx+Math.cos(a)*r*k,y=cy+Math.sin(a)*r*k, len=Math.min(14,4+8*R.flow(r));
-  trace(ctx,[[x,y],[x-Math.cos(a)*len,y-Math.sin(a)*len]]);ctx.strokeStyle=r<R.rs?'rgba(255,255,255,.35)':'rgba(37,99,235,.35)';ctx.lineWidth=1.4;ctx.lineCap='round';ctx.stroke();}
- // Flashes of light sent outward from one ring, one every two seconds.
- ctx.beginPath();ctx.arc(cx,cy,R.re*k,0,TAU);ctx.setLineDash([2,4]);ctx.strokeStyle='rgba(20,23,28,.3)';ctx.lineWidth=1;ctx.stroke();ctx.setLineDash([]);
- const emitter=[cx+R.re*k*Math.cos(-.6),cy+R.re*k*Math.sin(-.6)];
- for(let n=0;n<6;n++){const age=((since*.5)%2)+2*n;if(age>11)continue;const r=R.light(R.re,1,age*.4);if(r>rmax||r<.03)continue;
-  const p=[cx+r*k*Math.cos(-.6),cy+r*k*Math.sin(-.6)], glow=ctx.createRadialGradient(...p,0,...p,12);glow.addColorStop(0,'rgba(255,196,80,.95)');glow.addColorStop(1,'rgba(255,196,80,0)');ctx.fillStyle=glow;ctx.fillRect(p[0]-12,p[1]-12,24,24);}
- ctx.beginPath();ctx.arc(...emitter,5,0,TAU);ctx.fillStyle=accent;ctx.fill();ctx.strokeStyle='#fff';ctx.lineWidth=1.5;ctx.stroke();
- if(!st.labels)return;
- const size=small?10:11, out=1-R.flow(R.re);
- if(R.rs>1e-4)pill(ctx,'horizon: inflow = light speed',cx,cy+R.rs*k+16,{align:'center',size:10,weight:600,color:'rgba(180,83,9,.95)'});
- pill(ctx,'flash starts here',emitter[0]+10,emitter[1]-14,{size:10,weight:600,color:'rgba(20,23,28,.8)'});
- const px=small?w*.06:w*.64, py=small?h*.72:h*.22, lh=small?17:24;
- const lines=R.rs<=1e-4?['No black hole: space is still.','Light swims outward at light speed and escapes.']
-  :['Space flows inward, faster closer in.','Light always swims at light speed through it.',
-    out>.02?`Here the flow is ${Math.round(R.flow(R.re)*100)}% of light speed: the flash escapes slowly.`:out>-.02?'At the horizon the flow equals light speed: the flash stands still.':`Inside, the flow beats light (${Math.round(R.flow(R.re)*100)}%): the flash is swept in.`];
- text(ctx,lines[0],px,py,{size:small?12:16,weight:700,color:'#14171c'});
- lines.slice(1).forEach((l,i)=>text(ctx,l,px,py+lh*(i+1.2),{size:small?11:14,color:'rgba(20,23,28,.75)'}));
- // Flow speed against distance, with light speed marked.
- if(!small&&R.rs>1e-4){const gx=px,gy=py+lh*5.4,gw=w*.28,gh=h*.22;trace(ctx,[[gx,gy],[gx,gy+gh],[gx+gw,gy+gh]]);ctx.strokeStyle='rgba(20,23,28,.35)';ctx.lineWidth=1;ctx.stroke();
-  const X=r=>gx+r/rmax*gw, Y=v=>gy+gh-Math.min(v,1.6)/1.6*gh;
-  trace(ctx,Array.from({length:120},(_,i)=>{const r=.12+i/119*(rmax-.12);return [X(r),Y(R.flow(r))];}).filter((_,i)=>R.flow(.12+i/119*(rmax-.12))<=1.6));ctx.strokeStyle='rgba(37,99,235,.8)';ctx.lineWidth=2;ctx.stroke();
-  ctx.setLineDash([4,4]);trace(ctx,[[gx,Y(1)],[gx+gw,Y(1)]]);ctx.strokeStyle='rgba(217,119,6,.8)';ctx.lineWidth=1.2;ctx.stroke();ctx.setLineDash([]);
-  text(ctx,'light speed',gx+gw,Y(1)-9,{align:'right',size:10,color:'rgba(180,83,9,.95)'});text(ctx,'inflow speed',gx+gw*.55,gy+gh*.62,{size:10,color:'rgba(37,99,235,.9)'});text(ctx,'distance from centre →',gx+gw,gy+gh+14,{align:'right',size:10});
-  const ex=X(R.re);trace(ctx,[[ex,gy],[ex,gy+gh]]);ctx.strokeStyle=rgba(accent,.6);ctx.stroke();text(ctx,'flash',ex+4,gy+gh-10,{size:10,color:rgba(accent,.95)});
-  const hx=X(R.rs);ctx.setLineDash([2,3]);trace(ctx,[[hx,Y(1)],[hx,gy+gh]]);ctx.strokeStyle='rgba(20,23,28,.4)';ctx.stroke();ctx.setLineDash([]);text(ctx,'horizon',hx,gy+gh+14,{align:'center',size:10});}
+ const accent=ACCENT[spec.accent]||ACCENT.gold, small=w<520, P=Physics, plan=riverPlan(st), lsize=small?10:12, warm='#c2410c';
+ RIVER.mode=plan.mode;RIVER.live=!!plan.live;
+ if(plan.mode==='river'){
+  // Side view: the river runs left to right into a waterfall. r is the distance upstream from the edge.
+  const R=small?3.3:4.2, rs=1.2, xe=w*(small?.84:.84), sx=(xe-w*(small?.03:.05))/R, X=r=>xe-r*sx;
+  const yw=h*(small?.33:.34), yb=h*(small?.6:.62), tau=plan.t*RIVER_K, flow=r=>Math.sqrt(rs/Math.max(r,.05));
+  const bank=ctx.createLinearGradient(0,yb,0,h);bank.addColorStop(0,'#a07a55');bank.addColorStop(1,'#7a5a3d');ctx.fillStyle=bank;ctx.fillRect(0,yb,xe,h-yb);
+  ctx.fillStyle='#8a6a4a';ctx.fillRect(xe,yb,w-xe,h-yb);
+  const water=ctx.createLinearGradient(0,yw,0,yb);water.addColorStop(0,'#7fb3e6');water.addColorStop(1,'#3f7fc4');ctx.fillStyle=water;ctx.fillRect(0,yw,xe,yb-yw);
+  // The falls: the water sheet curves over the edge and drops.
+  const fall=u=>[xe+u*w*(small?.1:.09),yw+u*u*(h-yw)*1.05];
+  ctx.beginPath();ctx.moveTo(xe,yw);for(let i=1;i<=30;i++){const [x,y]=fall(i/30);ctx.lineTo(x,y);}
+  for(let i=30;i>=0;i--){const [x,y]=fall(i/30);ctx.lineTo(x-w*.02*(1-i/30)*0,y+(yb-yw)*(1-i/30));}ctx.closePath();
+  const sheet=ctx.createLinearGradient(xe,yw,xe,h);sheet.addColorStop(0,'#5d97d6');sheet.addColorStop(1,'rgba(220,235,250,.95)');ctx.fillStyle=sheet;ctx.fill();
+  for(let i=0;i<14;i++){const u=hash(i*3.3), [fx,fy]=fall(.55+.45*hash(i*7.1));ctx.beginPath();ctx.arc(fx+u*20-10,Math.min(h-4,fy),3+5*hash(i*1.7),0,TAU);ctx.fillStyle='rgba(255,255,255,.55)';ctx.fill();}
+  // The current: streaks carried along, faster near the edge.
+  const span=(2/3)*(Math.pow(R,1.5)-Math.pow(.05,1.5))/Math.sqrt(rs);
+  for(let i=0;i<46;i++){const lane=yw+(.15+.7*hash(i*5.7))*(yb-yw), ph=hash(i*2.3)*span, u=((tau+ph)%span+span)%span;
+   const r=Math.pow(Math.max(0,Math.pow(R,1.5)-1.5*Math.sqrt(rs)*u),2/3);if(r<.06)continue;
+   const len=Math.min(w*.06,6+10*flow(r));trace(ctx,[[X(r),lane],[X(r)-len,lane]]);ctx.strokeStyle='rgba(255,255,255,.75)';ctx.lineWidth=2;ctx.lineCap='round';ctx.stroke();}
+  // The point of no return: where the current equals the fish's own speed.
+  if(plan.line>0){ctx.globalAlpha=plan.line;trace(ctx,[[X(rs),yw-(small?34:44)],[X(rs),yb]]);ctx.strokeStyle=warm;ctx.lineWidth=1.6;ctx.setLineDash([5,5]);ctx.stroke();ctx.setLineDash([]);
+   if(st.labels)pill(ctx,small?'point of no return':'point of no return: current = the fish’s speed',X(rs),yw-(small?44:56),{align:'center',size:lsize,weight:600,color:warm});ctx.globalAlpha=1;}
+  if(st.labels){text(ctx,'WATERFALL',Math.min(w-8,xe+w*.05),h*.9,{align:small?'right':'center',size:lsize,weight:600,spacing:'1.5px',color:'rgba(255,255,255,.9)'});
+   text(ctx,'current: slow',X(R*.86),yw-12,{align:'center',size:lsize,weight:600,color:'rgba(37,99,235,.85)'});
+   text(ctx,'fast',X(.35),yw-12,{align:'center',size:lsize,weight:600,color:'rgba(37,99,235,.85)'});
+   text(ctx,'the river flows this way →',w*(small?.04:.06),yb+(small?18:22),{size:lsize,weight:600,color:'rgba(255,255,255,.9)'});}
+  // The fish: each swims upstream at the same speed through the water.
+  plan.fish.forEach((f,i)=>{const show=f.show??1;if(show<=0)return;
+   const m=P.riverSwim(f.r0,rs,Math.max(0,f.tau)), size=small?26:38, y=yw+(yb-yw)*[.3,.55,.8][i%3];
+   let x=X(m.r), yy=y+Math.sin(st.t*2.2+i)*2, alpha=show*(f.dim?.55:1)*smooth((X(m.r)-8)/70);
+   if(m.fell>=0){const u=Math.min(1,m.fell*RIVER_K*3.2), [fx,fy]=fall(.1+u*.9);x=fx;yy=fy;alpha*=1-smooth((u-.6)/.4);}
+   if(alpha<=.01)return;
+   drawFish(ctx,x,yy,size,st.t*9+i,alpha);
+   if(f.arrows&&m.fell<0&&show>.6){ctx.globalAlpha=show;const own=small?30:48;
+    swimArrows(ctx,x,f.below?yy+size*.62:yy-size*.75,-1,own,own*flow(m.r),{small,labels:false,names:[]});ctx.globalAlpha=1;}
+   if(st.labels&&show>.6&&!f.dim){const drift=1-flow(m.r), note=m.fell>=0?'swept over':Math.abs(drift)<.01?'holds still':drift>0?'gets away':'swept toward the edge';
+    pill(ctx,note,x+size*.8,yy,{size:lsize,weight:600,color:note==='gets away'?'#1f6f43':warm});}
+  });
+  if(st.labels)arrowLegend(ctx,w/2,h*(small?.08:.1),['the fish’s own swimming','the current'],small,[-1,1]);
+  return;
+ }
+ // Top view of a black hole: space pictured flowing inward along spokes, faster closer in; light pulses swim outward.
+ const rs=plan.rs, cx=w/2, cy=h*(small?.5:.53), rmax=3, k=Math.min(w*(small?.45:.4),h*(small?.41:.43))/rmax, tau=plan.t*RIVER_K;
+ RIVER.rs=rs;
+ const glow=ctx.createRadialGradient(cx,cy,0,cx,cy,rmax*k);glow.addColorStop(0,'rgba(20,23,28,.16)');glow.addColorStop(1,'rgba(20,23,28,0)');ctx.fillStyle=glow;ctx.beginPath();ctx.arc(cx,cy,rmax*k,0,TAU);ctx.fill();
+ ctx.beginPath();ctx.arc(cx,cy,rs*k,0,TAU);const inner=ctx.createRadialGradient(cx,cy,0,cx,cy,rs*k);inner.addColorStop(0,'#05060a');inner.addColorStop(1,'#1b2233');ctx.fillStyle=inner;ctx.fill();
+ const hz=plan.horizon??0;ctx.setLineDash([6,5]);ctx.strokeStyle=`rgba(217,119,6,${.6+.4*hz})`;ctx.lineWidth=2+1.5*hz;ctx.stroke();ctx.setLineDash([]);
+ // Flowing space: dots on spokes, each carried inward at the local inflow speed, with a trail as long as its speed.
+ const span=(2/3)*(Math.pow(rmax,1.5)-Math.pow(.06,1.5))/Math.sqrt(rs), spokes=small?12:16;
+ for(let i=0;i<spokes;i++){const ang=i/spokes*TAU+.13;
+  trace(ctx,[[cx+Math.cos(ang)*rmax*k,cy+Math.sin(ang)*rmax*k],[cx+Math.cos(ang)*.1*k,cy+Math.sin(ang)*.1*k]]);ctx.strokeStyle='rgba(37,99,235,.08)';ctx.lineWidth=1;ctx.stroke();
+  for(let j=0;j<5;j++){const u=((tau+(j/5+hash(i*1.3)*.2)*span)%span+span)%span, r=Math.pow(Math.max(0,Math.pow(rmax,1.5)-1.5*Math.sqrt(rs)*u),2/3);if(r<.08)continue;
+   const v=Math.sqrt(rs/r), len=Math.min(k*.5,k*.07*v), x=cx+Math.cos(ang)*r*k, y=cy+Math.sin(ang)*r*k, inside=r<rs;
+   trace(ctx,[[x,y],[x+Math.cos(ang)*len,y+Math.sin(ang)*len]]);ctx.strokeStyle=inside?'rgba(180,200,255,.55)':'rgba(37,99,235,.45)';ctx.lineWidth=1.6;ctx.lineCap='round';ctx.stroke();
+   ctx.beginPath();ctx.arc(x,y,2.2,0,TAU);ctx.fillStyle=inside?'rgba(200,215,255,.8)':'rgba(37,99,235,.75)';ctx.fill();}}
+ if(st.labels){pill(ctx,small?'horizon':'horizon: the point of no return',cx-rs*k-10,cy,{align:'right',size:lsize,weight:600,color:'rgba(180,83,9,.95)'});
+  pill(ctx,small?'dots: flowing space':'dots: space flowing in, faster closer in',cx,Math.min(h-10,cy+rmax*k+(small?6:10)),{align:'center',size:lsize,weight:600,color:'rgba(37,99,235,.95)'});
+  arrowLegend(ctx,w/2,h*(small?.1:.07),small?['light’s own speed','space flowing in']:['light’s own speed, like the fish’s','space flowing in, like the current'],small);}
+ // Light pulses, each sent outward along its own direction.
+ const states=[];
+ plan.pulses.forEach((q,i)=>{
+  const ang=plan.live?-.4:q.ang??0, start=q.from??0;
+  // After playback the light is sent again every few seconds; the newest pulse carries the arrows.
+  const draws=plan.live?Array.from({length:3},(_,n)=>plan.t%q.every+n*q.every):[plan.t-start];
+  draws.forEach((age,n)=>{if(age<0)return;
+   const m=P.riverSwim(q.r0/rs,1,age*RIVER_K*(q.slow||1)), r=m.r*rs;if(m.fell>=0)return;if(r>rmax*1.02)return;
+   const x=cx+Math.cos(ang)*r*k, y=cy+Math.sin(ang)*r*k, fade=Math.min(1,age/.4)*smooth((r-.06)/.12)*(n?.55:1);
+   const g=ctx.createRadialGradient(x,y,0,x,y,14);g.addColorStop(0,`rgba(255,196,80,${.95*fade})`);g.addColorStop(1,'rgba(255,196,80,0)');ctx.fillStyle=g;ctx.fillRect(x-14,y-14,28,28);
+   ctx.beginPath();ctx.arc(x,y,4,0,TAU);ctx.fillStyle=`rgba(255,250,235,${fade})`;ctx.fill();
+   if(n===0)states.push({x,y,r,ang,q,i});
+  });
+ });
+ RIVER.re=plan.pulses[0].r0;
+ for(const s0 of states){const {x,y,r,q,ang}=s0, own=small?24:34, v=Math.sqrt(rs/Math.max(r,.05)), ux=Math.cos(ang), uy=Math.sin(ang), px=-uy*7, py=ux*7;
+  // Along the light's own line: its own speed outward (gold) and the inflow carrying it in (blue).
+  const ray=(x0,y0,len,dir,col)=>{const x1=x0+dir*ux*len, y1=y0+dir*uy*len;trace(ctx,[[x0,y0],[x1,y1]]);ctx.strokeStyle=col;ctx.lineWidth=2.4;ctx.stroke();
+   ctx.beginPath();ctx.moveTo(x1+dir*ux*3,y1+dir*uy*3);ctx.lineTo(x1-dir*ux*5+px*.7,y1-dir*uy*5+py*.7);ctx.lineTo(x1-dir*ux*5-px*.7,y1-dir*uy*5-py*.7);ctx.closePath();ctx.fillStyle=col;ctx.fill();};
+  if(q.quiet)continue;
+  ray(x+px,y+py,own,1,'#d97706');ray(x-px,y-py,Math.min(own*2.6,own*v),-1,'#2563eb');
+  if(!st.labels)continue;
+  const note=r<rs*.985?'carried in':Math.abs(r-rs)<.015*rs?'stands still':'escapes', inflow=Math.round(v*100);
+  const lx=x+ux*(own+16)+(ux>=0?4:-4), ly=y+uy*(own+16), align=ux>=-.2?'left':'right';
+  pill(ctx,note,lx,ly,{align,size:lsize,weight:700,color:note==='escapes'?'#1f6f43':warm});
+  pill(ctx,small?`inflow ${inflow}%`:`space flows in at ${inflow}% of light speed`,lx,ly+(small?15:18),{align,size:small?9:11,weight:500,color:'rgba(20,23,28,.7)'});
+ }
+ // Inside the horizon: light still moves at light speed through space; it is the space that flows in faster.
+ if(plan.limit>0&&st.labels){ctx.globalAlpha=plan.limit;
+  pill(ctx,small?'light: still light speed through space':'light still moves at light speed through the space around it',cx,cy+rs*k+(small?26:34),{align:'center',size:lsize,weight:600,color:'#b45309'});
+  pill(ctx,small?'space: flows in faster':'the space itself flows in faster than light',cx,cy+rs*k+(small?44:56),{align:'center',size:lsize,weight:600,color:'#2563eb'});ctx.globalAlpha=1;}
 }
 
 // One toss, two views: from the ground (the ball arcs) and floating with the ball (the ground moves).
@@ -1194,14 +1495,20 @@ const ENGINES={
   fa:a=>a<.005?'none':(2*a).toFixed(1)+'× energy',fb:b=>(.6*b/(2*Math.PI)).toFixed(2)+' wavelengths',
   measure:['Bounces back',(a,b)=>(Physics.reflected(a,b)*100).toFixed(0)+'%'],scale:'A steady stream, shown at one instant',disclosure:'Exact steady-state solution in units where ħ = 1 and 2m = 1.',demoEnd:()=>2.5,
   try:'Remove the barrier: does anything bounce back? Raise it above the energy, then make it thicker.',aria:'A quantum wave meets a barrier: part bounces back, part leaks through.'},
- 'wave-packet':{draw:drawPacket,a:['Speed mix','how many wavelengths are blended'],b:['Average speed','sets the main wavelength',''],
-  fa:a=>a<.005?'one wave':(1.1*a).toFixed(2),fb:b=>(2+2*(b-1)).toFixed(1),
-  measure:['Spread of speeds',a=>(1.1*a).toFixed(2)],scale:'',disclosure:'Time is slowed down; units where ħ = 1 and 2m = 1.',demoEnd:()=>2.5,
-  try:'Set the mix to one wave: where is the particle? Blend more wavelengths and watch the packet narrow.',aria:'A wave packet made by blending wavelengths, with a bar chart of the momenta mixed in.'},
- 'quantum-well':{draw:drawWell,a:['Well depth','how strongly the particle is held'],b:['Well width','how much room it has',''],
-  fa:a=>a<.005?'no well':Math.round(a*100)+'%',fb:b=>(1+(b-1)).toFixed(2)+'×',
-  measure:['Trapped energy levels',(a,b)=>String(Physics.levelCount(a,b))],scale:'',disclosure:'Energy levels are to scale. Each level’s wave is drawn vibrating like a plucked string; its probability pattern does not change over time, and wave heights are not to scale.',demoEnd:()=>2.5,
-  try:'Remove the well: are there any levels? Deepen it, then widen it. When does a new level appear?',aria:'A particle trapped in a well can only have certain energies, drawn as levels with their wave shapes.'},
+ 'wave-packet':{draw:drawPacket,demo:false,tryAny:true,a:['Blend of speeds','how many wave lengths are mixed in'],b:['Unused','',''],
+  fa:a=>{const n=Physics.blendRange(blendSk(a)).length;return n===1?'one wave':n+' waves';},fb:b=>'',
+  // The modelled effect for the render checks: the blend's width (zero for one wave).
+  effect:a=>blendSk(a),
+  measure:[()=>BLEND.sound?'Pitches mixed in':'Spread of speeds',()=>BLEND.sound?String(BLEND.count):BLEND.sk===null?String(BLEND.count)+' waves':BLEND.sk<=.01?'none: one exact speed':(BLEND.sk/.25).toFixed(1)+'×'],scale:'',demoEnd:()=>1.4,
+  disclosure:'Exact sums of waves. The particle is free and in one dimension, drawn at one instant in units where ħ = 1; speed is shown as wave length, since a particle’s momentum is set by its wave length. Real beeps and clicks are messier mixtures, but the trade-off is the same: a burst short in time is a wide blend of pitches. The blend is a bell curve, the shape that makes the trade-off as small as it can be.',
+  try:'Slide “Blend of speeds” down to one wave: it spreads everywhere, with one exact speed. Widen the blend and the burst gets narrower.',aria:'Waves of slightly different lengths, each in its own row, are added together. Two make a pattern that swells and fades; many make one short burst. For a particle, a narrower burst needs a wider blend of speeds.'},
+ 'quantum-well':{draw:drawWell,demo:false,tryAny:true,a:['Energy','slide it to try other energies'],b:['Trap width','a wider trap holds more allowed energies',''],
+  fa:a=>{const lv=Physics.trapLevels(TRAP.L||2), n=lv.findIndex(e=>Math.abs(e-trapE(a))<.35);return n<0?'in between':`allowed energy ${n+1}`;},fb:b=>Physics.trapLevels(trapL(b)).length+' allowed',
+  // The modelled effect for the render checks: how far the chosen energy sits above the trap's floor.
+  effect:a=>trapE(a)+Physics.trapDepth,
+  measure:[()=>({live:'This energy',atom:'Colours given off',all:'Allowed energies',sweep:'Allowed energies found'})[TRAP.mode]||'',()=>TRAP.mode==='live'?(TRAP.fits?'allowed':'not allowed'):TRAP.mode==='atom'?String(TRAP.colours):TRAP.mode==='inside'||TRAP.mode==='walls'||TRAP.mode==='corner'?'':String(TRAP.found)],scale:'',demoEnd:()=>2,
+  disclosure:'Exact one-dimensional quantum model of a particle in a square pit, in units where ħ = 1 and 2m = 1; wave heights are not to scale. Each wave is drawn at one instant: an allowed wave keeps its shape over time, and a wave that grows without end is not a possible state at all. The energy control clicks onto an allowed energy when it comes close. A real atom traps its electrons with a pull of a different shape, and the colours are illustrative.',
+  try:'Slide “Energy” until the wave fades into both walls; it does so only at the marked energies. Then widen the trap: more energies fit, and they sit lower.',aria:'A particle’s wave in a pit. At most energies the wave grows without end in one wall, which is impossible; only at a few energies does it fade into both walls. Those are the allowed energies, and drops between them give off light of certain colours.'},
  'falling-time':{draw:drawFall,a:['Gravity','how strong gravity is'],b:['Time in the air','between leaving and meeting again',''],
   fa:a=>a<.005?'none':Math.round(a*100)+'%',fb:b=>(2+2*(b-1)).toFixed(1)+' units',
   measure:['Thrown clock gains',(a,b)=>(Physics.fallGain(a,b)*100).toFixed(1)+'%'],scale:'',disclosure:'Time effects are enormously exaggerated so they can be seen; the shape of the result is exact for weak gravity.',demoEnd:()=>2.5,
@@ -1226,12 +1533,11 @@ const ENGINES={
   measure:['Traveller’s clock counts less by',a=>(Physics.agingGap(a)*100).toFixed(1)+'%'],scale:'',demoEnd:()=>2.5,
   disclosure:'Exact special relativity in years and light-years; the turnaround is instant. The light clocks are slowed down for viewing and not to scale. Distances on the page are not spacetime lengths: tilted paths look longer than they hold.',
   try:'Drag the turnaround sideways: a faster trip leaves less time on the traveller’s clock. Drag it back to the home path: the twins agree again.',aria:'A spacetime diagram: the home twin’s straight path and the traveller’s bent path between the same goodbye and reunion, with one dot per year of each twin’s own time.'},
- 'river':{draw:drawRiver,demo:(p,spec)=>{const at=spec.mass+.4, inside=Math.max(1,.6*spec.mass+.4);
-   return {mass:spec.mass,distance:p<.31?spec.distance+(at-spec.distance)*smooth(p/.06):at+(inside-at)*smooth((p-.31)/.06)};},a:['Black hole mass','sets the size of the horizon'],b:['Flash position','where the light is sent from',''],
-  fa:a=>a<.005?'none':Math.round(a*100)+'%',fb:b=>(Physics.river(1,b).re).toFixed(2)+' horizon sizes',
-  measure:['Inflow where the flash starts',(a,b)=>Math.round(Physics.river(a,b).flow(Physics.river(a,b).re)*100)+'% of light'],scale:'Seen from above',demoEnd:()=>1,
-  disclosure:'Exact for a non-rotating black hole in the river (Painlevé–Gullstrand) picture; distances in horizon sizes, motion slowed down. The flowing specks show the inflow speed, not real particles.',
-  try:'Move the flash inside the horizon: can it get out? Shrink the black hole and try again.',aria:'Space flowing into a black hole like a river, with light flashes swimming outward against the current.'},
+ 'river':{draw:drawRiver,demo:false,tryAny:true,a:['Black hole mass','sets the size of the horizon'],b:['Light starts at','how far from the centre the light is sent',''],
+  fa:a=>a<.06?'tiny':Math.round(a*100)+'%',fb:b=>{const re=.6+(b-1);return re.toFixed(2)+' units out';},
+  measure:['Where the light starts, space flows in at',(a,b)=>RIVER.live?Math.round(Math.sqrt(Math.max(.05,RIVER.rs)/Math.max(.05,RIVER.re))*100)+'% of light speed':''],scale:'',demoEnd:()=>1,
+  disclosure:'A picture with exact numbers: for a non-rotating black hole, Einstein’s equations can be written as if space flowed inward at the speed a dropped object reaches (the river, or Painlevé–Gullstrand, picture), and light always moves at light speed through the space around it. Space is not a substance and nothing is really carried; the flowing dots only show the inflow speed. Distances are in horizon sizes and motion is slowed down. The fish and the waterfall are an analogy that follows the same rule; a real river’s current depends on its shape.',
+  try:'Move “Light starts at” inside the horizon: can the light get out? Then make the black hole smaller and try again.',aria:'A fish swims upstream in a river that speeds up toward a waterfall: far away it gets away, at one point it holds still, and past it it is swept over. Then space flows into a black hole the same way, and light, always moving at light speed through it, escapes from outside the horizon, stands still on it and is carried in from inside.'},
  'fall-views':{draw:drawViews,demo:false,measure:null,a:['Gravity','how strong gravity is'],b:['Time in the air','between the toss and the catch',''],
   fa:a=>a<.005?'none':Math.round(a*100)+'%',fb:b=>Physics.views(1,b).T.toFixed(1)+' units',scale:'',demoEnd:()=>1.6,
   disclosure:'Schematic units; air resistance is ignored. The view from the ball’s perspective is exact for a short toss. The first chapter, with no gravity, uses its own height scale so the whole path fits.',
