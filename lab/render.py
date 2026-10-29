@@ -69,11 +69,13 @@ def capture(scene, directory, research=None, provider='fixture'):
             shortest = min(l['end'] - l['start'] for l in lines)
             checks.append({'name': f'Subtitles read at most {fastest:.1f} characters per second (limit 15)', 'pass': fastest <= 15})
             checks.append({'name': f'Each subtitle stays up at least {shortest:.1f} s (minimum 2.5)', 'pass': shortest >= 2.5})
-            interaction = page.evaluate('''() => {
+            interaction = page.evaluate('''async () => {
                 const slider=document.getElementById('mass'); slider.value='0';
                 slider.dispatchEvent(new Event('input'));
                 const zero=CouncilScene.getState().mass===0 && parseFloat(document.getElementById('bend-value').textContent)===0;
                 slider.value='1'; slider.dispatchEvent(new Event('input'));
+                // Some models respond over time (a shaken rope builds its swing): let the page run for two seconds.
+                await new Promise(r=>setTimeout(r,2000));
                 const full=CouncilScene.getState().mass===1 && parseFloat(document.getElementById('bend-value').textContent)>0;
                 CouncilScene.seek(1,0);
                 const noMass=slider.disabled && slider.value==='0' && document.getElementById('mass-value').dataset.value==='0';

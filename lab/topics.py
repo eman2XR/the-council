@@ -60,14 +60,17 @@ removes them, probability amplitudes adding. Do not model measurement/which-path
 particles' wavelengths; electrons and photons both show this, but the sketch is generic and not to scale.
 No new-discovery claims.'''+COMMON
 
-ROPE_NOTES = '''STANDING WAVES ON A ROPE. A hand shakes the left end of a rope; the right end is tied to a wall. The rope's
-shape is a wave travelling right plus a reflected, inverted wave of strength a travelling left:
-y = sin(wt - k x) - a sin(wt + k x), with k L = n pi so n half-wavelengths fit. Field mass sets reflection a (UI "Reflection");
-field distance steps n through whole numbers 1..5 (UI "Pattern", shown as "n half-waves fit"). show_reference draws both
-travelling components dashed. With a = 1 there are still points (nodes) at the wall and n-1 points between; the readout is
-node stillness 2a/(1+a). Supported questions: superposition of opposite waves, why only certain patterns (notes) fit between
-fixed ends, why higher notes have more nodes. Height exaggerated; partial reflection is an idealized lossy wall; no tension,
-mass density, real frequencies or musical-instrument acoustics beyond analogy. No new-discovery claims.'''+COMMON
+ROPE_NOTES = '''STANDING WAVES ON A ROPE. A drawn hand shakes one end of a rope tied to a wall; the rope is simulated
+with the damped wave equation (length 1, wave speed 2, a little friction), so the slowest in-step shaking is one shake a
+second (all slowed down). Four chapters with fixed choreography and no slider demo: 1 one shake, a hump runs to the wall and
+comes back upside down (shown extra slowly); 2 steady shaking at 1 a second, in step, the swing builds to about 6 times
+the hand's; 3 shaking at 1.5 a second, out of step, the rope only jiggles; 4 shaking at 2 a second (two loops and a still
+point) then, from the chapter's second sentence, 3 a second (three loops). Labels: your hand, tied to a wall, shakes a
+second, in step: N loops, still point, out of step. Readout: the steady swing for the current shaking, as a multiple of the
+hand's. Sound: a tone at 220 Hz per shake a second, as loud as the rope swings. After playback the field distance sets the
+shaking rate 0.5 + 2*(distance - 1) (UI "How fast you shake"); field mass is how hard the hand shakes. Supported questions:
+why a string rings only at certain notes, why in-step shaking builds a big swing (like pushing a swing), why still
+points appear. No tension, mass density or real instrument acoustics beyond analogy. No new-discovery claims.'''+COMMON
 
 TUNNEL_NOTES = '''QUANTUM BARRIER (TUNNELLING). Exact steady-state solution of the one-dimensional Schrodinger equation
 (units hbar = 1, 2m = 1, particle energy E = 1, wavelength 2 pi) for a stream of particles meeting a rectangular barrier.

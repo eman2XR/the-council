@@ -140,8 +140,9 @@ ENGINE_SCENES = {
         ('Nobody leaves.', 'With the rocket on Earth, both clocks and both rows of birthdays keep pace.'),
         ('The traveller flies to a star and back.', 'The traveller’s clock turns more slowly. Fewer birthdays pile up.'),
         ('Change the speed and the trip.', 'Faster trips widen the gap. A longer trip adds years, but not a bigger percentage.')], 'blue', .8),
-    'STANDING WAVES ON A ROPE': _engine_scene('Why a rope only shakes in certain patterns', [
-        ('No reflection: the wave just travels.', 'Every point on the rope swings in turn. Nothing stays still.'),
-        ('Let the wall reflect the wave.', 'The returning wave overlaps the outgoing one. Some points now stay perfectly still.'),
-        ('Step through the patterns.', 'Only whole numbers of half-waves fit between the hand and the wall.')], 'gold'),
+    'STANDING WAVES ON A ROPE': _engine_scene('Why a rope only swings big at certain speeds', [
+        ('One shake.', 'A hump runs to the wall and comes back upside down.'),
+        ('Shake in step.', 'Each hump returns just as the hand shakes again, so the swing grows.'),
+        ('Shake out of step.', 'The humps come back at the wrong moment, so the rope only jiggles.'),
+        ('Twice and three times as fast.', 'In step again: two loops, then three.')], 'gold', 1, 2.25),
 }

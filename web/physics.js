@@ -46,13 +46,61 @@
     // Absolute brightness relative to two equal in-phase sources at a bright stripe (maximum 1).
     brightness(a, phase) { return (1 + a * a + 2 * a * Math.cos(phase)) / 4; },
     intensity(a, phase) { return (1 + a * a + 2 * a * Math.cos(phase)) / ((1 + a) * (1 + a) || 1); },
-    // A wave travelling right plus a reflection of strength a travelling left.
-    harmonic: b => 1 + Math.round((b - 1) / 1.5 * 4),
-    rope(x, t, a, n) { const k = n * Math.PI; return Math.sin(t - k * x) - a * Math.sin(t + k * x); },
-    // How many times a second the drawn rope swings in pattern n: proportional to n, so waves on the same rope travel
-    // at one speed whatever the pattern. The sound plays the same swing rate 880 times faster (220 Hz per loop).
-    ropeSwing: n => .25 * n,
-    stillness: a => 2 * a / (1 + a),
+    // A rope shaken at one end and tied to a wall: the damped wave equation, rope length 1, waves at speed 2, so the
+    // slowest in-step shaking is one shake a second (drawn slowed down). Friction gamma sets how big an in-step swing
+    // grows (about 6 times the hand) and how fast it builds (a few seconds).
+    ropeModel: {c: 2, gamma: .33, N: 100, A: .024},
+    ropeRate: b => .5 + (b - 1) * 2,
+    ropeStart() {
+      const N = this.ropeModel.N;
+      return {t: 0, y: new Float64Array(N + 1), old: new Float64Array(N + 1), nw: new Float64Array(N + 1)};
+    },
+    // Advance the rope to time t1. hand(t) is the hand's height; the wall end never moves.
+    ropeStep(s, t1, hand) {
+      const {c, gamma, N} = this.ropeModel, dx = 1 / N, dt = .4 * dx / c, r2 = (c * dt / dx) ** 2;
+      while (s.t + dt <= t1 + 1e-9) {
+        s.t += dt;
+        const {y, old, nw} = s;
+        for (let i = 1; i < N; i++) nw[i] = (2 * y[i] - (1 - gamma * dt) * old[i] + r2 * (y[i + 1] - 2 * y[i] + y[i - 1])) / (1 + gamma * dt);
+        nw[0] = hand(s.t); nw[N] = 0;
+        s.old = y; s.y = nw; s.nw = old;
+      }
+      return s;
+    },
+    // How far the rope swings, as a multiple of the hand's swing, from its total energy: steady through each swing,
+    // and exact for a standing wave of height Y, whose energy is Y^2 w^2 / 4.
+    ropeSize(s, rate) {
+      const {c, N, A} = this.ropeModel, dx = 1 / N, dt = .4 * dx / c;
+      let E = 0;
+      for (let i = 0; i < N; i++) { const v = (s.y[i] - s.old[i]) / dt, g = (s.y[i + 1] - s.y[i]) / dx; E += (v * v + c * c * g * g) * dx / 2; }
+      return 2 * Math.sqrt(E) / (2 * Math.PI * Math.max(rate, .25)) / A;
+    },
+    // The hand: one up-and-down shake, or steady shaking with rates [[from, shakes a second], ...], easing in and out.
+    ropeHand(plan) {
+      const {A} = this.ropeModel, ease = x => x <= 0 ? 0 : x >= 1 ? 1 : x * x * (3 - 2 * x);
+      // The single shake is bigger than steady shaking, so its hump is easy to follow.
+      if (plan.pulse) return t => t > 0 && t < .3 ? 2.5 * A * Math.sin(Math.PI * t / .3) ** 2 : 0;
+      const rates = plan.rates, start = rates[0][0];
+      return t => {
+        let phase = 0;
+        for (let k = 0; k < rates.length; k++) {
+          const [t0, r] = rates[k], t1 = k + 1 < rates.length ? rates[k + 1][0] : Infinity;
+          if (t <= t0) break;
+          phase += 2 * Math.PI * r * (Math.min(t, t1) - t0);
+        }
+        const on = ease((t - start) / .6) * (plan.stop != null ? 1 - ease((t - plan.stop) / .5) : 1);
+        return (plan.amp ?? 1) * A * on * Math.sin(phase);
+      };
+    },
+    // Exact steady swing for steady shaking, as a multiple of the hand's swing: y(x) = sin(k(1 - x)) / sin(k) with the
+    // complex wave number k^2 = (w^2 - 2 i gamma w) / c^2 of the damped rope.
+    ropeSteady(rate) {
+      const {c, gamma} = this.ropeModel, w = 2 * Math.PI * rate, re = w * w / (c * c), im = -2 * gamma * w / (c * c);
+      const mod = Math.hypot(re, im), kr = Math.sqrt((mod + re) / 2), ki = -Math.sqrt((mod - re) / 2);
+      const sinAbs = (a, b) => Math.hypot(Math.sin(a) * Math.cosh(b), Math.cos(a) * Math.sinh(b));
+      let m = 0; for (let i = 0; i <= 100; i++) { const u = 1 - i / 100; m = Math.max(m, sinAbs(kr * u, ki * u)); }
+      return m / sinAbs(kr, ki);
+    },
     // Quantum models in units where hbar = 1 and 2m = 1, so energy E = k^2.
     cx: {
       add:(a,b)=>[a[0]+b[0],a[1]+b[1]], sub:(a,b)=>[a[0]-b[0],a[1]-b[1]],
@@ -361,17 +409,29 @@
       }).map(([name,pass])=>({name,pass}));
     },
     ropeChecks() {
-      const near=(a,b)=>Math.abs(a-b)<1e-12, n=3, ts=[.3,1.1,2.9];
+      const A = this.ropeModel.A, N = this.ropeModel.N;
+      // The largest swing anywhere on the rope during the last full shake.
+      const swing = (rate, seconds) => {
+        const hand = this.ropeHand({rates: [[0, rate]]}), st = this.ropeStep(this.ropeStart(), seconds - 1 / rate, hand);
+        let m = 0; for (let k = 1; k <= 60; k++) { this.ropeStep(st, seconds - 1 / rate + k / (60 * rate), hand); for (const v of st.y) m = Math.max(m, Math.abs(v)); }
+        return m / A;
+      };
+      const pulse = this.ropeHand({pulse: true}), at = (t, i) => this.ropeStep(this.ropeStart(), t, pulse).y[i];
+      // Twice as fast: the middle hardly moves while a quarter of the way along swings fully.
+      const s2 = this.ropeStep(this.ropeStart(), 12, this.ropeHand({rates: [[0, 2]]}));
+      let mid = 0, quarter = 0;
+      for (let k = 0; k < 50; k++) { this.ropeStep(s2, 12 + k * .02, this.ropeHand({rates: [[0, 2]]})); mid = Math.max(mid, Math.abs(s2.y[N / 2])); quarter = Math.max(quarter, Math.abs(s2.y[N / 4])); }
       return Object.entries({
-        'Full reflection makes still points':ts.every(t=>[0,1/3,2/3,1].every(x=>Math.abs(this.rope(x,t,1,n))<1e-12)),
-        'No reflection leaves no still points':ts.some(t=>Math.abs(this.rope(1/6,t,0,n))>.5)&&ts.some(t=>Math.abs(this.rope(1/3,t,0,n))>.5),
-        'Slider steps through whole-number patterns 1 to 5':this.harmonic(1)===1&&this.harmonic(2.5)===5,
-        'More loops swing faster, at the same wave speed':[1,2,3,4,5].every(m=>Math.abs(2*Math.PI*this.ropeSwing(m)/(m*Math.PI)-.5)<1e-12)&&this.ropeSwing(5)>this.ropeSwing(2),
-        'Node stillness is zero without reflection':near(this.stillness(0),0),
-        'Node stillness is complete with full reflection':near(this.stillness(1),1),
-        'Antinodes reach the sum of both amplitudes':Math.abs(Math.max(...Array.from({length:400},(_,i)=>Math.abs(this.rope(1/6,i/20,1,n))))-2)<1e-3,
-      }).map(([name,pass])=>({name,pass}));
+        'One shake comes back upside down from the wall': at(.4, N / 2) > .5 * A && at(.9, N / 2) < -.3 * A,
+        'Shaking in step builds a swing many times the hand': swing(1, 12) > 4.5,
+        'Shaking out of step only jiggles': swing(1.5, 12) < 1.6,
+        'Two and three times as fast are in step too': swing(2, 12) > 4.5 && swing(3, 12) > 4.5 && swing(2.5, 12) < 1.6,
+        'Twice as fast leaves a still point in the middle': mid < .15 * quarter,
+        'The simulation matches the exact steady swing': [1, 1.5, 2, 3].every(r => Math.abs(swing(r, 16) / this.ropeSteady(r) - 1) < .05),
+        'The energy measure gives the swing in step': Math.abs(this.ropeSize(this.ropeStep(this.ropeStart(), 16, this.ropeHand({rates: [[0, 1]]})), 1) / this.ropeSteady(1) - 1) < .08,
+      }).map(([name, pass]) => ({name, pass}));
     },
+
     clockChecks() {
       const q=(m,r)=>this.clockRatio(m,r), near=(a,b)=>Math.abs(a-b)<1e-12;
       return Object.entries({
