@@ -1368,7 +1368,8 @@ function drawMoonTides(ctx,w,h,spec,st){
 const ATTN={mode:'',strength:1};
 function lookPlan(st){
  const c=timeline?.chapters?.[st.stage], lines=c?.lines||[], c0=c?.start||0, at=i=>lines[i]?lines[i].start-c0:3+4*i, t=Math.max(0,st.since??0);
- if(st.since===undefined)return {mode:'attend',typed:9,arcs:1,strength:1,guess:1,clue:1};
+ // Thumbnails, and the stage before playback starts, show the whole sentence with its lines.
+ if(st.since===undefined||(st.stage===0&&!st.playing&&!st.live&&(st.since??0)<.05))return {mode:'attend',typed:9,blank:1,arcs:1,strength:1,guess:1,clue:1};
  if(st.live)return {mode:'live',typed:9,arcs:1,strength:clamp(st.mass),guess:1,clue:1};
  // 1: the sentence types itself; the model guesses; with the second sentence it adds "French" and guesses again.
  if(st.stage===0){const typed=Math.min(9,Math.floor(t/.38)+1);return {mode:'type',typed,blank:smooth((t-3.6)/.4),guess:t<at(1)?smooth((t-3.9)/.6):1-smooth((t-at(1)-.6)/.5),fill:smooth((t-at(1)-.4)/.6),next:smooth((t-at(1)-1.1)/.5),strength:1};}

@@ -30,8 +30,7 @@ CouncilScene.on(type=>{
 
 // Heading, why it matters and the idea for one scene.
 function heading(scene){
- put('title',scene.title);put('subtitle',scene.subtitle);put('takeaway',scene.takeaway);
- $('why').replaceChildren(...(scene.why?[el('p',{textContent:scene.why})]:[]));
+ put('title',scene.title);put('why',scene.why||scene.subtitle||'');put('takeaway',scene.takeaway);
 }
 
 function show(data,{autoplay=false}={}){
@@ -39,7 +38,9 @@ function show(data,{autoplay=false}={}){
  document.body.dataset.draft=draft?'yes':'';
  if(scene){heading(scene);CouncilScene.load(scene);}
  put('hero-topic',topicOf(data));put('readbar-title',(scene?.title||'').replace(/\n/g,' '));
- put('hero-date',data.created?day(data.created,{weekday:'long',month:'long',day:'numeric'}):'');
+ // Published date, with the date of the last change when a guide was revised on a later day.
+ const long={year:'numeric',month:'long',day:'numeric'}, made=new Date(data.created), edited=new Date(data.updated);
+ put('hero-date',isNaN(made)?'':day(data.created,long)+(!isNaN(edited)&&edited.toDateString()!==made.toDateString()?` · Updated ${day(data.updated,long)}`:''));
  put('run-banner',fixture?'Hand-written example · scripted reviews':data.error?'Stopped · partial work kept as a draft':STATUS[data.status]||String(data.status||'').replaceAll('_',' '));
  $('run-banner').dataset.status=fixture?'example':data.status||'';
  if(data.provenance?.sources_retrieved===false){put('run-banner','Reviewed · sources not retrieved');$('run-banner').dataset.status='unverified';}
