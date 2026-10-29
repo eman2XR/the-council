@@ -188,19 +188,23 @@ while both coast; every kind of clock, and the crew's bodies, slow the same way,
 No twin-paradox resolution, acceleration, gravity or Doppler effects. Slowed down for viewing and not to scale.
 No new-discovery claims.'''+COMMON
 
-ATTENTION_NOTES = '''WHY ATTENTION LED TO CHATBOTS. Exact softmax attention (scaled dot products of hand-made four-number vectors, as in
-"Attention Is All You Need", 2017) for guessing the next word of "I grew up in France, so I speak fluent ___". Five
+ATTENTION_NOTES = '''HOW ATTENTION LED TO CHATBOTS. Exact softmax attention (scaled dot products of hand-made four-number vectors, as in
+"Attention Is All You Need", 2017) for guessing the next word of "I grew up in France, so I speak fluent ___". Six
 chapters with fixed choreography and no slider demo: 1 the sentence types itself and the model guesses "French" (bars for
 French, English, Spanish), then adds it and a new blank waits; 2 the clue "France" is marked five words back, then a
-one-at-a-time memory reads the words and the clue fades in it, leaving an unsure guess (French 39%, English 34%); 3 lines
-from the guess back to every earlier word, thicker for a bigger share (France 63%, speak 13%, fluent 9%), the clue's line
-glowing, and the guess becomes clear (French 70%); 4 every word looks back at the ones before it at once (a faint web),
-pulsing together; 5 the web stacked in layers (the Transformer), and the answer fills in. After playback field mass sets
-how much attention is used (UI "Attention"; 0 is the fading memory alone). Readout: the chance of "French". The guesses
-come from a toy rule. Supported questions: why the 2017 paper mattered for chatbots, what attention does, why it allowed
-training on vast text. Honesty points: hand-made numbers; real models learn them, split words into pieces and run many
-heads in dozens of layers; older recurrent models kept more than the fading memory suggests but could not be trained on
-all words at once; attention itself is older than 2017; the first GPT came in 2018. No claims that models understand.'''+COMMON
+one-at-a-time memory reads the words and the clue fades in it, leaving an unsure guess (French 39%, English 34%); 3 equal
+lines from the guess back to every earlier word, then "speak fluent" is marked and the guess asks "which language?", then
+the lines take their shares (France 63%, speak 13%, fluent 9%), the clue's line glowing, and the guess becomes clear
+(French 70%); 4 how it knows: three practice sentences (Spain/Spanish, Japan/Japanese, Brazil/Portuguese) appear and each
+language is linked back to its country; 5 every word looks back at the ones before it at once (a faint web), pulsing
+together, while it still writes one word at a time; 6 the web stacked in layers (named the Transformer in the paper,
+stacked far deeper later), and the answer fills in; the last chapter names ChatGPT. After playback field mass sets how much
+attention is used (UI "Attention"; 0 is the fading memory alone). Readout: the chance of "French". The guesses come from a
+toy rule. Supported questions: how the 2017 paper led to chatbots, what attention does, why it looks at the clue, where
+those matches come from, why it allowed training on vast text. Honesty points: hand-made numbers; real models learn them,
+split words into pieces and run many heads in dozens of layers; older recurrent models kept more than the fading memory
+suggests but could not be trained on all words at once; attention itself is older than 2017; the first GPT came in 2018.
+No claims that models understand.'''+COMMON
 
 # Models whose picture explains why, not only what, and that passed owner review and beginner tests.
 # Only these are planned; the others wait for a redesign. attention (2026-10-29) was added at the owner's request
@@ -208,7 +212,7 @@ all words at once; attention itself is older than 2017; the first GPT came in 20
 READY = {'light-bending', 'gravity-clocks', 'spacetime-paths', 'light-clock', 'interference',
          'diffraction'}
 # Not ready (2026-10-28): twin-trip shows what rather than why; spacetime, falling-time and tunneling are graph-style;
-# standing-waves, quantum-well, attention (five chapters each) and wave-packet (four chapters) are hand-made guides
+# standing-waves, quantum-well (five chapters), attention (six) and wave-packet (four chapters) are hand-made guides
 # with fixed choreography, which agent-written scenes would not match;
 # two-slit-particles failed a beginner test (faint ripples, slits read as one gap, unexplained screen marks, stripes
 # form before the narration says so).

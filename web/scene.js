@@ -1359,10 +1359,12 @@ function drawMoonTides(ctx,w,h,spec,st){
 }
 
 // Attention, told as the story behind chatbots. A chatbot guesses the next word; the clue it needs ("France") is five
-// words back; an old one-at-a-time memory lets it fade, while attention looks straight back and weighs every earlier
-// word. Built from attention alone, every word is worked on at once; stacked many times, that is the Transformer, the
-// T in GPT. Each chapter has a fixed plan; after playback the viewer turns attention down and up. Shares are the exact
-// softmax of hand-made scores (Physics.lookBack); the guesses come from a toy rule (Physics.lookGuess).
+// words back; an old one-at-a-time memory lets it fade, while attention looks straight back at every earlier word and
+// gives the biggest share to the one that answers what the guess needs ("which language?"). Practice sentences show
+// where that match comes from. Built from attention alone, every word is worked on at once; stacked many times, that
+// is the Transformer, the T in GPT. Each chapter has a fixed plan; after playback the viewer turns attention down and
+// up. Shares are the exact softmax of hand-made scores (Physics.lookBack); the guesses come from a toy rule
+// (Physics.lookGuess).
 const ATTN={mode:'',strength:1};
 function lookPlan(st){
  const c=timeline?.chapters?.[st.stage], lines=c?.lines||[], c0=c?.start||0, at=i=>lines[i]?lines[i].start-c0:3+4*i, t=Math.max(0,st.since??0);
@@ -1372,11 +1374,16 @@ function lookPlan(st){
  if(st.stage===0){const typed=Math.min(9,Math.floor(t/.38)+1);return {mode:'type',typed,blank:smooth((t-3.6)/.4),guess:t<at(1)?smooth((t-3.9)/.6):1-smooth((t-at(1)-.6)/.5),fill:smooth((t-at(1)-.4)/.6),next:smooth((t-at(1)-1.1)/.5),strength:1};}
  // 2: the clue is marked; with the second sentence a memory reads the words one at a time, and the clue fades in it.
  if(st.stage===1)return {mode:'memory',typed:9,blank:1,clue:smooth((t-.3)/.6),mem:clamp((t-at(1)-.1)/4.2),guess:smooth((t-at(1)-4.4)/.6),strength:0};
- // 3: lines from the guess back to every earlier word; with the second sentence the clue's line glows.
- if(st.stage===2)return {mode:'attend',typed:9,blank:1,arcs:smooth((t-.3)/1.4),strength:1,clue:smooth((t-at(1))/.8),guess:smooth((t-at(1)-.4)/.8)};
- // 4: every word looks back at once; with the second sentence all the lines pulse together.
- if(st.stage===3)return {mode:'parallel',typed:9,blank:1,arcs:1,strength:1,clue:1,guess:1,web:smooth((t-.3)/1.2),pulse:t>=at(1)?t-at(1):-1};
- // 5: the web stacked in layers; with the second sentence the answer fills in.
+ // 3: equal lines from the guess back to every earlier word; with the second sentence "speak fluent" is marked and
+ // the guess asks which language; with the third the lines take their real shares, the clue's glows, and the guess
+ // becomes clear.
+ if(st.stage===2){const s=smooth((t-at(2)-.2)/1.4);return {mode:'attend',typed:9,blank:1,arcs:smooth((t-.3)/1.2),strength:s,ask:smooth((t-at(1))/.7),clue:s,answer:smooth((t-at(2)-1.2)/.6),guess:1};}
+ // 4: how it knows: with the second sentence, sentences it practised on appear one by one; with the third, each
+ // one's language is linked back to its country.
+ if(st.stage===3)return {mode:'learn',typed:9,blank:1,arcs:1,strength:1,clue:1,guess:1-smooth(t/.6),examples:[0,1,2].map(i=>smooth((t-at(1)-.3-i*1.4)/.6)),links:smooth((t-at(2))/.8)};
+ // 5: every word looks back at once; with the second sentence all the lines pulse together.
+ if(st.stage===4)return {mode:'parallel',typed:9,blank:1,arcs:1,strength:1,clue:1,guess:1,web:smooth((t-.3)/1.2),pulse:t>=at(1)?t-at(1):-1};
+ // 6: the web stacked in layers; with the second sentence the answer fills in.
  return {mode:'stack',typed:9,blank:1,arcs:1,strength:1,clue:1,guess:1,web:1,layers:smooth((t-.3)/1.6),fill:smooth((t-at(1))/.8)};
 }
 function drawAttention(ctx,w,h,spec,st){
@@ -1385,17 +1392,27 @@ function drawAttention(ctx,w,h,spec,st){
  Object.assign(ATTN,{mode:plan.mode,strength:plan.strength??1});
  const guessRows=P.lookGuess(plan.mode==='memory'?0:plan.strength??1);
  const phone=w<520&&st.since!==undefined;
+ // Sentences it practised on: the country and the language picked out, linked when link > 0.
+ const example=([ws,ci,li],x,y,size,alpha,link)=>{if(alpha<=0)return;ctx.globalAlpha=alpha;
+  const pos=[];let xx=x;ctx.font=`500 ${size}px ${FONT}`;const space=ctx.measureText(' ').width;
+  ws.forEach((wd,i)=>{const key=i===ci||i===li;ctx.font=`${key?700:500} ${size}px ${FONT}`;const ww=ctx.measureText(wd).width;pos.push(xx+ww/2);
+   text(ctx,wd,xx,y,{size,weight:key?700:500,color:key?warm:'rgba(20,23,28,.6)',content:true});xx+=ww+space;});
+  if(link>0){const a=pos[li], b=pos[ci], top=y-size*.8;ctx.beginPath();ctx.moveTo(a,top);ctx.quadraticCurveTo((a+b)/2,top-size*.9-Math.abs(a-b)*.12,b,top);
+   ctx.strokeStyle=rgba(warm,.85*link);ctx.lineWidth=Math.max(1.5,size*.13);ctx.lineCap='round';ctx.stroke();}
+  ctx.globalAlpha=1;};
+ const PRACTICE=[[['We','moved','to','Spain,','so','we','speak','Spanish.'],3,7],[['She','grew','up','in','Japan','and','speaks','Japanese.'],4,7],[['My','family','is','from','Brazil,','so','I','speak','Portuguese.'],4,8]];
  // The guess: the three likeliest next words, as bars.
  const guessBars=(x,y,size,alpha)=>{if(alpha<=0)return;ctx.globalAlpha=alpha;
   guessRows.forEach(([wd,v],i)=>{const yy=y+i*size*1.7, bw=v*size*9;
    text(ctx,wd,x,yy,{size,weight:i===0?700:500,color:i===0?ink:'rgba(20,23,28,.6)'});
-   ctx.fillStyle=i===0?rgba(warm,.85):'rgba(20,23,28,.18)';ctx.beginPath();ctx.roundRect(x+size*4.6,yy-size*.35,Math.max(2,bw),size*.7,size*.35);ctx.fill();});
+   ctx.fillStyle=i===0?'rgba(20,23,28,.55)':'rgba(20,23,28,.18)';ctx.beginPath();ctx.roundRect(x+size*4.6,yy-size*.35,Math.max(2,bw),size*.7,size*.35);ctx.fill();});
   ctx.globalAlpha=1;};
  if(phone){
   // Phone: one row per word, bars for how much the guess looks back at each, and the guess at the bottom.
   const top=h*.17, rowH=Math.min(28,h*.56/(n+1)), xw=w*.34, bx=w*.4, bw=w*.46, fs=Math.min(15,rowH*.62);
   for(let j=0;j<n;j++){if(j>=plan.typed)continue;const y=top+j*rowH;
    if(plan.clue>0&&j===clue){ctx.globalAlpha=plan.clue;ctx.strokeStyle=warm;ctx.lineWidth=2;ctx.beginPath();ctx.roundRect(xw-fs*4.2,y-rowH*.42,fs*4.6,rowH*.84,6);ctx.stroke();ctx.globalAlpha=1;}
+   if((plan.ask??0)>0&&j>=n-2){ctx.globalAlpha=plan.ask;ctx.strokeStyle='rgba(20,23,28,.55)';ctx.lineWidth=2;ctx.beginPath();ctx.roundRect(xw-fs*4.2,y-rowH*.42,fs*4.6,rowH*.84,6);ctx.stroke();ctx.globalAlpha=1;}
    text(ctx,words[j],xw,y,{align:'right',size:fs,weight:600,color:ink,content:true});
    const k=plan.mode==='memory'?0:(plan.arcs??0)*shares[j]/top1;
    if(k>0){const pulse=plan.pulse>=0?.75+.25*Math.sin(plan.pulse*6):1;ctx.fillStyle=j===clue&&plan.clue>0?rgba(warm,.85*pulse):rgba(accent,(.3+.5*k)*pulse);ctx.beginPath();ctx.roundRect(bx,y-rowH*.18,Math.max(2,k*bw),rowH*.36,4);ctx.fill();}}
@@ -1406,6 +1423,9 @@ function drawAttention(ctx,w,h,spec,st){
    ctx.fillStyle='#fff';ctx.strokeStyle='rgba(20,23,28,.3)';ctx.lineWidth=1.2;ctx.beginPath();ctx.roundRect(mx-20,y-14,40,28,6);ctx.fill();ctx.stroke();
    for(let i=0;i<=j;i++){const keep=Math.pow(P.memoryFade,j-i+1);ctx.fillStyle=i===clue?rgba(warm,keep):rgba(accent,.7*keep);ctx.fillRect(mx-16+i*3.6,y-8,2.8,16);}
    if(st.labels)text(ctx,'memory',mx,y+24,{align:'center',size:10,weight:600});}
+  if(st.labels&&(plan.ask??0)>.05){ctx.globalAlpha=plan.ask;pill(ctx,'which language?',bx,by,{size:11,weight:700,color:ink});ctx.globalAlpha=1;}
+  if(st.labels&&(plan.answer??0)>.05){ctx.globalAlpha=plan.answer;pill(ctx,'French',bx+bw,top+(clue-.62)*rowH,{align:'right',size:11,weight:700,color:warm});ctx.globalAlpha=1;}
+  if(plan.mode==='learn')PRACTICE.forEach((ex,i)=>example(ex,w*.08,by+rowH*1.5+i*rowH*1.15,Math.min(12,w/32),plan.examples[i],plan.links));
   if(st.labels){if(plan.mode==='parallel'&&plan.pulse>=0)pill(ctx,'all at once',bx,top-rowH*.9+rowH,{size:11,weight:700,color:accent});
    if(plan.mode==='stack'&&plan.layers>.5)pill(ctx,'Transformer',bx,top-rowH*.9+rowH,{size:11,weight:700,color:accent});}
   guessBars(w*.1,by+rowH*1.2,11,plan.guess??0);
@@ -1429,7 +1449,7 @@ function drawAttention(ctx,w,h,spec,st){
   web(.12*plan.web*pulse,0);}
  // The guess looking back at each earlier word.
  if((plan.arcs??0)>0&&plan.mode!=='memory'){
-  for(let j=0;j<n;j++){const sh=shares[j], c=curve(blank,tiles[j]);
+  for(let j=0;j<n;j++){const sh=shares[j], c=curve({cx:blank.cx+blank.w*.3*(1-2*j/(n-1))},tiles[j]);
    const isClue=j===clue&&(plan.clue??0)>0;
    stroke(c,(1.5+26*sh)*(plan.arcs),isClue?rgba(warm,(.35+.6*Math.min(1,sh/.3))*plan.clue*pulse):rgba(accent,(.2+.55*Math.min(1,sh/.3))*plan.arcs*pulse));
    if(isClue&&plan.clue<1)stroke(c,(1.5+26*sh)*plan.arcs,rgba(accent,(.2+.55*Math.min(1,sh/.3))*(1-plan.clue)));}}
@@ -1441,6 +1461,7 @@ function drawAttention(ctx,w,h,spec,st){
   if(j===n){ctx.setLineDash([5,4]);ctx.strokeStyle='rgba(20,23,28,.45)';}
   ctx.beginPath();ctx.roundRect(t.x,top,t.w,tileH,9);ctx.fill();ctx.stroke();ctx.setLineDash([]);
   if(j===clue&&(plan.clue??0)>0){ctx.globalAlpha=plan.clue;ctx.strokeStyle=warm;ctx.lineWidth=2.5;ctx.beginPath();ctx.roundRect(t.x-3,top-3,t.w+6,tileH+6,11);ctx.stroke();ctx.globalAlpha=1;}
+  if(j<n&&j>=n-2&&(plan.ask??0)>0){ctx.globalAlpha=plan.ask;ctx.strokeStyle='rgba(20,23,28,.5)';ctx.lineWidth=2;ctx.beginPath();ctx.roundRect(t.x-3,top-3,t.w+6,tileH+6,11);ctx.stroke();ctx.globalAlpha=1;}
   if(j<n)text(ctx,words[j],t.cx,rowY,{align:'center',size,weight:600,color:ink,content:true});
   else{const filled=(plan.fill??0)>.5;text(ctx,filled?'French':'?',t.cx,rowY,{align:'center',size,weight:700,color:filled?warm:'rgba(20,23,28,.35)',content:true});ctx.globalAlpha=1;}
  });
@@ -1456,9 +1477,14 @@ function drawAttention(ctx,w,h,spec,st){
  if(st.labels){
   if(plan.mode==='type'&&plan.blank>.5&&(plan.fill??0)<.5)pill(ctx,'next word?',blank.cx,top-22,{align:'center',size:13,weight:600,color:'rgba(20,23,28,.7)'});
   if(plan.mode==='memory'&&plan.clue>.5)pill(ctx,'the clue',tiles[clue].cx,top-24,{align:'center',size:13,weight:700,color:warm});
+  if((plan.ask??0)>.05){const a=tiles[n-2].x, b=tiles[n-1].x+tiles[n-1].w, y=top+tileH+12;ctx.globalAlpha=plan.ask;
+   trace(ctx,[[a,y-6],[a,y],[b,y],[b,y-6]]);ctx.strokeStyle='rgba(20,23,28,.45)';ctx.lineWidth=1.6;ctx.lineCap='round';ctx.stroke();
+   pill(ctx,'which language?',(a+b)/2,y+20,{align:'center',size:15,weight:700,color:ink});ctx.globalAlpha=1;}
+  if((plan.answer??0)>.05){ctx.globalAlpha=plan.answer;pill(ctx,'French',tiles[clue].cx,top+tileH+28,{align:'center',size:15,weight:700,color:warm});ctx.globalAlpha=1;}
   if(plan.mode==='parallel'&&plan.pulse>=0)pill(ctx,'all at once',tiles[0].x,top-170,{size:13,weight:700,color:accent});
   if(plan.mode==='stack'&&plan.layers>.5)pill(ctx,'Transformer',tiles[0].x,top-200,{size:13,weight:700,color:accent});
  }
+ if(plan.mode==='learn')PRACTICE.forEach((ex,i)=>example(ex,tiles[0].x,top+tileH+78+i*58,19,plan.examples[i],plan.links));
  guessBars(blank.x,top+tileH+36,15,plan.guess??0);
  ctx.restore();
 }
@@ -1714,7 +1740,7 @@ const ENGINES={
   try:'',aria:'The Earth with its oceans and the Moon. The Moon pulls the near side most and the far side least, so the oceans bulge toward and away from the Moon, and a place on the coast passes two high tides a day.'},
  'attention':{draw:drawAttention,demo:false,tryAny:true,a:['Attention','off: one word at a time · on: look straight back'],b:['Unused','',''],
   fa:a=>a<.02?'off':Math.round(a*100)+'%',fb:b=>'',
-  measure:['Chance of “French”',a=>Math.round(Physics.lookGuess(ATTN.mode==='memory'?0:ATTN.strength)[0][1]*100)+'%'],
+  measure:['Chance of “French”',a=>ATTN.mode==='live'?Math.round(Physics.lookGuess(ATTN.strength)[0][1]*100)+'%':''],
   // The modelled effect for the render checks: how much likelier "French" gets with attention on.
   effect:a=>Physics.lookGuess(a)[0][1]-Physics.lookGuess(0)[0][1],scale:'',demoEnd:()=>1,
   disclosure:'The shares are exact attention, the softmax of scaled dot products from “Attention Is All You Need” (2017), but on one hand-made sentence with four numbers per word; real models learn theirs, split words into pieces and run many attention heads in each of dozens of layers. The guesses come from a toy rule, not a real model. The older one-at-a-time models (recurrent networks) kept more than this fading memory suggests, but long text was hard for them and they could not be trained on all words at once. Attention itself is older than 2017; the paper’s step was to build the whole model from it. The first GPT appeared in 2018.',

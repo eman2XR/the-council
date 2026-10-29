@@ -1,70 +1,68 @@
 {
   "id": "20261029T175059-82fa6e44",
   "status": "reviewed",
-  "question": "Why did \u201cAttention Is All You Need\u201d lead to ChatGPT?",
+  "question": "How did \u201cAttention Is All You Need\u201d lead to ChatGPT?",
   "topic": "attention",
   "created": "2026-10-29T17:50:59.782080+00:00",
   "research": {
-    "claim": "In the Transformer from \"Attention Is All You Need\" (Vaswani and others, 2017), attention is a calculation that rebuilds each word as a blend of information passed on by the words it is allowed to see. Every word has three lists of numbers: a query (what it looks for), a key (what it offers) and a value (what it passes on). To set the blend for one word, its query is multiplied with every word's key to give a score. Each score is divided by the square root of the list length, and the softmax step turns the scores into shares that are all positive and add up to 100%. The word's new version is the share-weighted mix of all the values. In the small hand-made sentence \"The animal didn't cross the street because it was too tired\", that puts about 70% of the share from \"it\" on \"animal\". When the last word becomes \"wide\", about 70% moves to \"street\".",
-    "explanation": "What the paper defines: attention \"maps a query and a set of key-value pairs to an output\", and all of them are vectors (lists of numbers). The output is a weighted sum of the values. Each weight depends on how well the query matches that value's key. The formula is Attention(Q, K, V) = softmax(QK\u1d40 / \u221ad_k) V. In self-attention the queries, keys and values all come from the same sentence. So every word gets a new version of itself that mixes in information from the words it matched best.\n\nStep by step for one asking word, \"it\":\n1. \"it\" has a query, in effect \"which word could be tired?\". Every word, including \"it\", has a key and a value.\n2. Score: multiply the query of \"it\" with each word's key, number by number, and add up the products (a dot product). A bigger score means a better match.\n3. Scale: divide every score by \u221a(list length). Here the lists have four numbers, so the divisor is 2. The paper's reason: if the numbers in queries and keys were random with average 0 and spread 1, dot products would grow with list length, and the softmax would give nearly everything to one word. Dividing keeps the scores in a usable range.\n4. Softmax: raise e to the power of each scaled score, then divide each result by their total. The shares are always positive and always add up to 100%. That is a property of the formula, not a fact about language. Because \"it\" also scores its own key, it gives itself a small share.\n5. Blend: multiply each word's value by its share and add them up. The result is the new \"it\", which now carries mostly what \"animal\" passes on.\n\nWhat the hand-made example shows:\n- Focus at 0: all 11 words get an equal share, about 9% each (100% \u00f7 11). The Focus control scales the scores before the softmax, and equal scores give equal shares.\n- Focus at 1 (the real formula): about 70% to \"animal\", about 10% to \"street\", about 4% to \"it\" itself and about 2% to each of the other eight words.\n- Focus dipped to about half: the shares spread out, with about 30% on \"animal\". Back at 1 they sharpen again. This shows that softmax turns differences between scores into differences between shares, and bigger score gaps give sharper shares.\n- Last word swapped to \"wide\": the question becomes \"which word could be wide?\", and about 70% moves to \"street\". The same word looks at different words in different sentences because its query depends on its surroundings, and in this example the query already depends on the last word.\n\nHonest status:\n- These numbers are made by hand to show the mechanism. They were not taken from a trained model.\n- Real models learn their queries, keys and values from huge amounts of text. They use hundreds of numbers per word, run several attention heads side by side and stack many layers.\n- In a real model, \"it\" picks up the meaning of the last word in earlier layers, where it first takes in the words around it.\n- As in the paper's encoder, every word here may look at words after it, so \"it\" looks ahead to \"tired\". Models that write text one word at a time, such as chatbots, block that: a word may look only at the words before it.\n- Attention on its own ignores word order, so the paper adds position information.\n- Focus is a teaching control, not a setting real models have. The real formula is Focus at 100%.\n- All of this is mathematics, not physics. The mechanism is from the 2017 paper; nothing new is claimed here.",
+    "claim": "Chatbots such as ChatGPT write by guessing the next word, and they are built on the Transformer from \u201cAttention Is All You Need\u201d (Vaswani and others, 2017). In attention, the word being guessed looks straight back at every earlier word and takes a share from each, set by how well that word matches what the guess needs. In the hand-made sentence \u201cI grew up in France, so I speak fluent ___\u201d, the guess needs a language and \u201cFrance\u201d matches best, with about 63% of the attention. With it, the toy chance of \u201cFrench\u201d rises from 39% with a fading one-at-a-time memory to 70%. Real models learn such matches by practising next-word guessing on huge amounts of text. Because the paper used attention alone, every word can be worked on at the same moment, which made that practice possible at a vast scale.",
+    "explanation": "What the paper defines: attention \u201cmaps a query and a set of key-value pairs to an output\u201d, and all of them are vectors (lists of numbers). The output is a weighted sum of the values, and each weight depends on how well the query matches that value\u2019s key. The formula is Attention(Q, K, V) = softmax(QK\u1d40 / \u221ad_k) V.\n\nStep by step for the blank in \u201cI grew up in France, so I speak fluent ___\u201d:\n1. The blank has a query, in effect \u201cwhich word tells me the language?\u201d. Every earlier word has a key (what it offers) and a value (what it passes on).\n2. Score: multiply the query with each word\u2019s key, number by number, and add up the products (a dot product). A bigger score means a better match. Here each key has four numbers: a country, a verb about language, a skill word and a small grammar word. The query is [6.4, 3.2, 2.4, 0], so it rewards a country most, then a verb about language, then a skill word.\n3. Scale: divide every score by \u221a(list length), here \u221a4 = 2. \u201cFrance\u201d scores 3.2, \u201cspeak\u201d 1.6, \u201cfluent\u201d 1.2 and every other word 0. The paper\u2019s reason for scaling: with random numbers of average 0 and spread 1, dot products grow with the list length, and the softmax would give nearly everything to one word.\n4. Softmax: raise e to the power of each scaled score, then divide each result by their total. The shares are always positive and add up to 100%: \u201cFrance\u201d about 63%, \u201cspeak\u201d about 13%, \u201cfluent\u201d about 9% and each of the other six words about 3%.\n5. Blend: multiply each word\u2019s value by its share and add them up. The blank\u2019s new version carries mostly what \u201cFrance\u201d passes on, and that points the guess to \u201cFrench\u201d.\n\nWhy \u201cFrance\u201d and not another word: the words just before the blank call for a language, and \u201cFrance\u201d is the only earlier word that says which one. In this example that is built into hand-made numbers. In a real model nobody writes it: queries and keys are learned while the model practises guessing the next word in huge amounts of text, adjusting its numbers a little after each guess. The language so often matches a country named earlier that making that match lowers the model\u2019s errors, so the learned numbers come to make it.\n\nWhy it led to chatbots:\n- Older models (recurrent networks) read one word at a time through a small memory, so early words faded, and training could not work on all the words of a sentence at once.\n- The paper built its model from attention alone. Every word\u2019s shares can be worked out at the same moment, which let computers train on far more text.\n- Writing still goes one word at a time, but during training an attention-only model guesses the next word at every position of a sentence at the same moment, which a one-at-a-time model cannot do.\n- The paper named this design the Transformer: layers of attention with other parts between them. Later models stacked such layers dozens of times and trained them on huge amounts of web text. The Transformer is the \u201cT\u201d in GPT (Generative Pre-trained Transformer), GPT models are trained to guess the next word, and ChatGPT is built on them.\n\nHonest status:\n- The numbers are made by hand to show the mechanism. They are not taken from a trained model.\n- The guess is a toy rule: the chance of \u201cFrench\u201d rises with the share that reaches \u201cFrance\u201d. A real model computes its guess with many more steps.\n- The fading memory is a cartoon of older models. Real recurrent networks kept more than this, but they read one word at a time.\n- Real models split text into word pieces, use hundreds of numbers per piece, run many attention heads side by side and stack many layers.\n- Attention is older than 2017 (Bahdanau, Cho and Bengio). The 2017 step was to drop one-at-a-time reading and keep attention alone.\n- The first GPT appeared in 2018 and ChatGPT in 2022. Those dates and the link from the Transformer to GPT are general background, not taken from the sources retrieved for this record.",
     "assumptions": [
-      "Queries, keys and values are lists of numbers of equal length. Here each has four numbers, so the scaling divisor is \u221a4 = 2.",
-      "The example's numbers were chosen by hand so that the query of \"it\" matches the key of \"animal\" when the last word is \"tired\" and the key of \"street\" when it is \"wide\". They are not learned.",
-      "One attention head and one layer are shown; real Transformers use many of each.",
-      "The paper's reason for dividing by \u221ad_k assumes the numbers in queries and keys behave like independent random values with average 0 and spread 1. It is a reason about scale, not a claim about trained weights.",
-      "Every word may look at every word, including later ones, as in the paper's encoder. Text-writing decoders are masked so a word sees only earlier words.",
-      "Word position is ignored in this tiny example. Real models add position information because attention alone is blind to order.",
-      "Focus multiplies the scores before the softmax. Focus = 1 is the paper's formula exactly; Focus = 0 makes all scores equal."
+      "Queries and keys are lists of four numbers, so the scaling divisor is \u221a4 = 2.",
+      "The numbers were chosen by hand: each key marks a country, a verb about language, a skill word or a small grammar word, and the query rewards a country most. They are not learned.",
+      "One attention head and one layer are shown, for one guess: the blank. Real Transformers use many heads and layers, and every word has its own query.",
+      "The guess may look only at earlier words, as in models that write text.",
+      "Word position is ignored. Real models add position information because attention alone is blind to order.",
+      "The chance of \u201cFrench\u201d comes from a toy rule that rises with the share reaching \u201cFrance\u201d. The fading memory keeps 62% of a word each time it reads another.",
+      "The paper\u2019s reason for dividing by \u221ad_k assumes the numbers in queries and keys behave like independent random values with average 0 and spread 1. It is a reason about scale, not a claim about trained weights."
     ],
-    "prediction": "In the hand-made example: with Focus at 0, each of the 11 words gets an equal share of about 9%. With Focus at 1 and the last word \"tired\", \"animal\" gets about 70%, \"street\" about 10%, \"it\" about 4% and each other word about 2%, and the shares always add up to 100%. Lowering Focus to about half spreads the shares out, to about 30% on \"animal\". Swapping the last word to \"wide\" moves the biggest share, about 70%, to \"street\". In general, if you shuffle the words of a sentence without position information, each word gets exactly the same shares from the asking word as before, just at its new place.",
-    "falsifier": "Any of these would show the description is wrong:\n- A softmax share that is negative, or a set of shares that does not add up to 100%.\n- Equal scores (Focus 0) giving unequal shares.\n- Swapping \"tired\" for \"wide\" leaving the biggest share on \"animal\", even though the query now matches the key of \"street\" best.\n- Without position information, reordering the words changing which word receives which share.\n- For the broader claim that attention lines explain a trained model's answer: the cited studies already find this unreliable. Weights often disagree with gradient-based importance, very different weights can give the same prediction, and the size of value vectors and mixing across layers also matter.",
+    "prediction": "In the hand-made sentence: with attention on, \u201cFrance\u201d gets about 63% of the guess\u2019s attention, \u201cspeak\u201d about 13%, \u201cfluent\u201d about 9% and each other word about 3%, and the shares add up to 100%. The toy chance of \u201cFrench\u201d is about 70% with attention and about 39% with the fading memory alone. Turning attention down spreads the shares toward an equal 11% each and lowers the chance of \u201cFrench\u201d. If the words were shuffled without position information, every word would keep its share at its new place.",
+    "falsifier": "Any of these would show the description is wrong:\n- A share that is negative, or shares that do not add up to 100%.\n- Equal scores (attention off) giving unequal shares.\n- With attention on, the biggest share landing on a word other than \u201cFrance\u201d, although its key is the only one that matches the country part of the query.\n- Without position information, reordering the words changing which word receives which share.\n- For the broader claim that attention lines explain a trained model\u2019s answer: the cited studies already find this unreliable. Weights often disagree with gradient-based importance, very different weights can give the same prediction, and the size of value vectors and mixing across layers also matter.",
     "limitations": [
       "The numbers are made by hand to show the mechanism. They are not measured from any trained model.",
+      "The guess is a toy rule, not a model\u2019s computation, and the fading memory exaggerates how much older models forgot.",
+      "That real models learn the country-to-language match from practice describes how such models are trained in general. No trained model was measured here.",
       "Only one head and one layer are shown. Real models run several heads side by side and stack many layers, and by later layers each position is already a mixture of words. So a line from \"it\" to a position is not simply a line to the original word (Abnar & Zuidema).",
       "A share is only one of two factors in a word's contribution; the size of the value vector matters too (Kobayashi et al.).",
       "Attention shares are a noisy guide to what drives a model's prediction (Jain & Wallace; Serrano & Smith). Whether they count as an explanation depends on how explanation is defined (Wiegreffe & Pinter).",
       "Attention alone, without skip connections and the per-word feed-forward layers, makes all words drift toward looking the same (Dong, Cordonnier & Loukas). Despite the title, attention is not the whole machine.",
-      "In this example the question \"it\" asks already depends on the last word. In a real model that context reaches \"it\" in earlier layers.",
-      "Focus is a teaching control, not a setting in real models.",
-      "The animal/street coreference sentence is not in the paper's text as retrieved. The paper's Figure 4 caption describes an \"its\" example, and only the caption was read, not the image. The Google Research blog post that uses this sentence was not fetched and is not cited.",
       "The paper itself is inconsistent about its English-French score (41.8 BLEU in the abstract and Table 2, 41.0 in Section 6.1). This record makes no performance claims that rely on that number.",
-      "No university textbook or course page could be retrieved, so no teaching source is cited."
+      "No university textbook or course page could be retrieved, so no teaching source is cited.",
+      "The link from the Transformer to GPT and ChatGPT, and their dates, are general background: no source about GPT or ChatGPT was retrieved for this record."
     ],
     "misconceptions": [
-      "\"Attention means the AI is paying attention like a person, with eyes moving across the words.\" It is a calculation, done for every word at the same moment, that produces shares adding up to 100%. Nothing reads, looks or understands.",
-      "\"It reads the sentence left to right, one word at a time.\" All the shares are computed in parallel. Masking in text-writing models only blocks later words; it does not create a reading order.",
-      "\"Attention picks the one right word.\" It gives every word a share and blends them. Even at full Focus, \"it\" gives about 30% to words other than \"animal\".",
-      "\"Wait, why does 'it' give attention to itself?\" Its own key is scored like every other key, so it gets a share too, about 4% here.",
-      "\"Why do the shares always add up to 100%? Is that something about language?\" No. Softmax divides each result by the total, so the shares always add up to 100% for any scores.",
-      "\"A thick line proves that word caused the answer.\" Studies find attention shares are an unreliable explanation. The value vector's size and mixing across layers also matter.",
-      "\"The AI knows animals get tired and streets are wide.\" Here the matches were set by hand. In real models, queries and keys are learned from text, and a match means closeness in a learned space of numbers, not understanding.",
-      "\"Wait, how can 'it' use 'tired' before reaching it?\" In the paper's encoder every word may look at later words. Chatbot-style models that write one word at a time cannot.",
-      "\"Word order is built into attention.\" Attention alone ignores order. The paper adds position information to every word.",
-      "\"Each head has one job, like 'the pronoun head'.\" Even the paper's own captions hedge on this, and many heads in later studies track positions or punctuation-like markers.",
-      "\"Attention is all there is, as the title says.\" Without skip connections and feed-forward layers, stacked attention makes every word look the same.",
-      "\"Real models have a Focus knob.\" Focus only shows how scores become shares. The real formula is always Focus at 100%.",
-      "\"These percentages come from a real AI.\" They are hand-made to show the mechanism."
+      "\u201cAttention means the AI pays attention like a person, with eyes moving across the words.\u201d It is a calculation that produces shares adding up to 100%, done for every word at the same moment. Nothing reads or understands.",
+      "\u201cSomeone programmed it to look at countries.\u201d In real models nobody writes such rules. The matches are learned while practising on text; here they were set by hand to imitate that.",
+      "\u201cAttention picks the one right word.\u201d It gives every word a share and blends them. Even here, about 37% goes to words other than \u201cFrance\u201d.",
+      "\u201cWait, why do \u201cspeak\u201d and \u201cfluent\u201d get some attention?\u201d Their keys partly match the query: they are about language, but they do not say which language.",
+      "\u201cWhy do the shares always add up to 100%? Is that something about language?\u201d No. Softmax divides each result by the total, so the shares add up to 100% for any scores.",
+      "\u201cA thick line proves that word caused the answer.\u201d Studies find attention shares are an unreliable explanation. The value vector\u2019s size and mixing across layers also matter.",
+      "\u201cOlder models simply forgot everything.\u201d They kept some of it. Their bigger limit was reading one word at a time, which made training on huge amounts of text too slow.",
+      "\u201cAttention was invented in 2017.\u201d It was used earlier alongside one-at-a-time models. The 2017 step was to use attention alone.",
+      "\u201cAttention is all there is, as the title says.\u201d Without skip connections and feed-forward layers, stacked attention makes every word look the same.",
+      "\u201cWord order is built into attention.\u201d Attention alone ignores order. The paper adds position information to every word.",
+      "\u201cThese percentages come from a real AI.\u201d They are hand-made to show the mechanism."
     ],
     "questions": [
       {
-        "q": "A sentence has 5 words and every score is equal (Focus at 0). What share does each word get from the asking word?",
-        "a": "20% each. Equal scores give equal shares, and the shares must add up to 100%."
+        "q": "In \u201cI moved to Italy, so I speak fluent ___\u201d, which earlier word should get the biggest share of attention, and why?",
+        "a": "\u201cItaly\u201d. The blank calls for a language, and the country is the word that says which one."
       },
       {
-        "q": "In \"The animal didn't cross the street because it was too wide\", which word gets the biggest share from \"it\", and why?",
-        "a": "\"street\", about 70%. The query of \"it\" now asks which word could be wide, and that matches the key of \"street\" best."
+        "q": "If every score were equal (attention off), what share would each of the 9 earlier words get?",
+        "a": "About 11% each. Equal scores give equal shares, and the shares add up to 100%."
       },
       {
-        "q": "A friend says: \"The thick line from 'it' to 'animal' proves the AI understood that the animal was tired.\" What is wrong with that?",
-        "a": "The line only shows a share from matching numbers, and here those numbers were made by hand. In real models, studies find attention shares are an unreliable guide to why a prediction was made: value sizes and earlier layers also matter. Nothing in the formula understands anything."
+        "q": "A friend says someone programmed chatbots to look at countries before naming a language. What is wrong with that?",
+        "a": "Nobody writes that rule. Real models learn their matches by practising next-word guessing on huge amounts of text; here the numbers were set by hand to imitate the result."
       },
       {
-        "q": "If you shuffled the words and the model had no position information, would \"animal\" still get the same share from \"it\"?",
-        "a": "Yes. Attention alone ignores order, so each word keeps its share at its new place. That is why real models add position information."
+        "q": "Why did building the model from attention alone help it learn from so much more text?",
+        "a": "With no one-at-a-time reading, every word can be worked on at the same moment, so training runs in parallel and goes much faster."
       },
       {
-        "q": "In a chatbot that writes one word at a time, could \"it\" give any share to \"tired\" in this sentence?",
-        "a": "No. Such models let a word look only at the words before it, and \"tired\" comes after \"it\"."
+        "q": "What does the \u201cT\u201d in GPT stand for?",
+        "a": "Transformer, the name the 2017 paper gave its attention-only design; later models stacked it many times."
       }
     ],
     "sources": [
@@ -126,8 +124,8 @@
     ]
   },
   "scene": {
-    "title": "Why \u201cAttention Is All You Need\u201d Led to ChatGPT",
-    "subtitle": "Chatbots write by guessing the next word. The 2017 paper built them from attention alone: every word looks straight back at every earlier word, all at once.",
+    "title": "How \u201cAttention Is All You Need\u201d Led to ChatGPT",
+    "subtitle": "Chatbots write by guessing the next word. The 2017 paper built a model from attention alone, in which every word looks straight back at earlier words, all at once.",
     "why": "Every chatbot you have used, from ChatGPT to Claude, is built on this idea: its Transformer is the \u201cT\u201d in GPT.",
     "beats": [
       {
@@ -136,19 +134,23 @@
       },
       {
         "title": "A clue far back",
-        "body": "Here the clue it needs, \u201cFrance\u201d, is five words back. Older models read one word at a time through a small memory, so early words faded by the end."
+        "body": "The clue it needs here is \u201cFrance\u201d, five words back. Older models read one word at a time into a small memory, so early words faded by the end."
       },
       {
         "title": "Look straight back",
-        "body": "Attention lets the guess look straight back at every earlier word and weigh which ones matter. It looks hardest at \u201cFrance\u201d, and the guess becomes clear."
+        "body": "Attention lets the guess look straight back at every earlier word, sharing its attention among them. The words \u201cspeak fluent\u201d call for a language, so the guess asks which word tells it the language. \u201cFrance\u201d answers best, so it gets the thickest line, the biggest share, and the guess becomes much clearer."
+      },
+      {
+        "title": "How it knows",
+        "body": "Nobody wrote a rule that countries go with languages. It practised on billions of sentences: guess the next word, check the real one, nudge itself toward it. Again and again the language matched a country named earlier, so it learned to look back at the country."
       },
       {
         "title": "All at once",
-        "body": "The 2017 paper\u2019s leap: build the model from attention alone, with no one-at-a-time reading. Then every word can be worked on at the same moment, so computers could learn from vast amounts of text."
+        "body": "The 2017 paper\u2019s leap: build the model from attention alone, without reading one word at a time. It still writes one word at a time, but in practice every word guesses its next word at the same moment. With no memory to wait for, practice ran far faster, so computers could learn from vast amounts of text."
       },
       {
         "title": "The T in GPT",
-        "body": "Stacked dozens of times and trained on much of the internet, this became the Transformer. It is the \u201cT\u201d in GPT, and the engine inside today\u2019s chatbots."
+        "body": "Named the Transformer, it was later stacked dozens of layers deep, each building on the layer below. Trained on huge amounts of web text, it is the \u201cT\u201d in GPT, the engine inside ChatGPT and other chatbots."
       }
     ],
     "mass": 1,
@@ -159,7 +161,7 @@
     "accent": "blue",
     "line_width": 3,
     "duration": 40,
-    "takeaway": "Attention lets each word look straight back at every other, all at once; stacked many times, it powers today\u2019s chatbots.",
+    "takeaway": "Attention lets every word look straight back at the words that matter, all at once; stacked many times, it powers ChatGPT.",
     "controls": "first",
     "kind": "attention",
     "opening": "Your phone guesses your next word. How did that idea turn into ChatGPT?"
@@ -246,7 +248,7 @@
   "provenance": {
     "sources_retrieved": true,
     "retrieved_by": "agent",
-    "intro_note": "The illustration, its five chapters and all wording were rebuilt by hand after the agents\u2019 review, at the owner\u2019s request, to show why the paper mattered for chatbots: next-word guessing, a fading memory, attention looking straight back, and the Transformer. The reviews below refer to the earlier version, which explained the formula on a toy sentence."
+    "intro_note": "The illustration, its six chapters and all wording, including the research summary below, were rebuilt by hand after the agents\u2019 review, at the owner\u2019s request, to show how the paper led to chatbots: next-word guessing, a fading memory, attention looking straight back and why it picks the clue, how such matches are learned, and the Transformer. The reviews below refer to the earlier version, which explained the formula on a different hand-made sentence."
   },
   "revisions": [
     {

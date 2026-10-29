@@ -119,7 +119,7 @@
    "items": [
     {
      "id": "5.1",
-     "question": "Why did “Attention Is All You Need” lead to ChatGPT?",
+     "question": "How did “Attention Is All You Need” lead to ChatGPT?",
      "model": "attention"
     }
    ]
