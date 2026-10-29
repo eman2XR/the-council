@@ -183,8 +183,11 @@ length (four numbers here): shares are positive and add up to 100%, and "it" als
 under its tile, no line). A line runs from every other word into "it", thicker for a bigger share, with dots in the word's
 colour flowing along it into "it"; the
 share is printed under the word. A bar at the bottom shows what "it" takes in: the words' colours side by side in
-proportion to their shares, labelled for example "mostly 'animal'"; the strip on the "it" tile shows the blended colour.
-A caption states the focus ("focus off: every word gets the same share", "focus 100%: the attention formula itself").
+proportion to their shares, labelled for example "mostly 'animal'". A large label by "it" names the word it takes in most
+("“it” → animal"). Every word's share is printed under it, rounded so the printed shares add up to 100%. The lines all
+have one colour; only their thickness shows the share. The question tag appears only once Focus is above zero. A caption
+states the focus ("focus off: every word gets the same share", "full focus: the shares exactly as the formula gives them").
+While the last word is being swapped, its tile is outlined.
 Field mass sets Focus (UI "Focus", 0..1), which scales the scores before the softmax: at 0 every word gets an equal share
 (9% each, a muddy blend of everything); at 1 it is the formula itself: about 70% goes to "animal", about 10% to "street",
 about 4% to "it" and about 2% to each other word. Field distance chooses the last word (UI "Last word"): below about 1.6

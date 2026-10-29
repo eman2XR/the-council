@@ -1079,26 +1079,38 @@ function drawMoonTides(ctx,w,h,spec,st){
 // Attention: the word "it" compares what it looks for with what every word offers, gives each word a share of its
 // attention (lines, thicker for bigger shares) and takes in a blend of their meanings, drawn as colours, in those
 // shares. The shares are exact for the hand-made example in Physics.attention.
+// The shares as drawn, for the readout; and shares as whole percentages that add up to exactly 100.
+const ATTN={A:null};
+function percents(weights){
+ const raw=weights.map(x=>x*100), out=raw.map(Math.floor);let left=100-out.reduce((s,v)=>s+v,0);
+ raw.map((v,j)=>[v-Math.floor(v),j]).sort((a,b)=>b[0]-a[0]).forEach(([,j])=>{if(left>0){out[j]++;left--;}});return out;
+}
 function drawAttention(ctx,w,h,spec,st){
  const accent=ACCENT[spec.accent]||ACCENT.blue, A=Physics.attention(st.mass,st.distance), small=w<520, n=A.words.length, ask=A.ask;
- const colour=(v,a=1)=>`rgba(${v.map(c=>Math.round(c*255)).join(',')},${a})`, pct=x=>Math.round(x*100)+'%', ink='rgba(20,23,28,.85)';
+ ATTN.A=A;const P100=percents(A.weights), focused=A.focus>.02, swapping=st.distance>1.45&&st.distance<2.2;
+ const colour=(v,a=1)=>`rgba(${v.map(c=>Math.round(c*255)).join(',')},${a})`, pct=j=>P100[j]+'%', ink='rgba(20,23,28,.85)';
  // The last word swaps smoothly between "tired" and "wide"; the question "it" asks swaps with it.
  const last=[['tired',1-A.mix],['wide',A.mix]], question=`“it” asks: which thing here could be ${A.mix<.5?'tired':'wide'}?`;
  const label=(j,x,y,opts)=>{if(j!==n-1)return text(ctx,A.words[j],x,y,opts);for(const [word,alpha] of last)if(alpha>.01){ctx.globalAlpha=alpha;text(ctx,word,x,y,opts);ctx.globalAlpha=1;}};
  const summary=A.even?`an equal bit of every word`:A.top.w>=.45?`mostly “${A.top.word}”`:`a bit of everything, most from “${A.top.word}”`;
- const focusLabel=A.focus<.005?'focus off: every word gets the same share':A.focus>.995?'focus 100%: the attention formula itself':`focus ${Math.round(A.focus*100)}%: the matches count less`;
+ const focusLabel=A.focus<.005?'focus off: every word gets the same share':A.focus>.995?'full focus: the shares exactly as the formula gives them':`focus ${Math.round(A.focus*100)}%: shares more even than the formula’s`;
+ // The answer: the word whose meaning "it" takes in most.
+ const answer=!focused||A.even?'“it” → a bit of every word':A.top.w>=.4?`“it” → ${A.top.word}`:`“it” → mostly ${A.top.word}, a little of the rest`;
  if(small){
   // Phone: one row per word, with a bar for the share of attention "it" gives it; the readout pill sits above.
   const top=Math.max(136,h*.28), rowH=Math.min(24,(h-top-80)/n), xw=w*.31, bx=w*.35, bw=w*.5;
-  if(st.labels){pill(ctx,question,w/2,top-44,{align:'center',size:12,weight:600,color:accent});text(ctx,focusLabel,w/2,top-23,{align:'center',size:10,color:'rgba(20,23,28,.55)'});}
+  if(st.labels){if(focused)pill(ctx,question,w/2,top-50,{align:'center',size:12,weight:600,color:accent});text(ctx,focusLabel,w/2,top-30,{align:'center',size:11,color:'rgba(20,23,28,.6)'});
+   text(ctx,'how much “it” looks at each word',bx,top-12,{size:11,weight:600,color:'rgba(20,23,28,.65)'});}
   A.words.forEach((_,j)=>{
    const y=top+j*rowH, share=A.weights[j], len=Math.max(2,share*bw);
    if(j===ask){ctx.fillStyle=accent;ctx.beginPath();ctx.roundRect(xw-40,y-rowH*.42,46,rowH*.84,rowH*.42);ctx.fill();}
    label(j,xw,y,{align:'right',size:14,weight:j===ask?700:500,color:j===ask?'#fff':ink});
    ctx.fillStyle=colour(A.values[j],.95);ctx.beginPath();ctx.roundRect(bx,y-6,len,12,4);ctx.fill();
-   if(share>=.045)text(ctx,pct(share),bx+len+6,y,{size:11,weight:j===A.top.j&&!A.even?700:500,color:'rgba(20,23,28,.7)'});
+   text(ctx,pct(j),bx+len+6,y,{size:11,weight:j===A.top.j&&!A.even?700:500,color:j===A.top.j&&!A.even?ink:'rgba(20,23,28,.6)'});
+   if(j===n-1&&swapping){ctx.strokeStyle='#c2410c';ctx.lineWidth=2;ctx.beginPath();ctx.roundRect(xw-52,y-rowH*.46,58,rowH*.92,6);ctx.stroke();}
   });
-  drawBlend(top+n*rowH+34,24,w-48,12);
+  if(st.labels)pill(ctx,answer,w/2,top+n*rowH+14,{align:'center',size:14,weight:700,color:A.even||!focused?ink:colour(A.values[A.top.j])});
+  drawBlend(top+n*rowH+52,24,w-48,12);
   return;
  }
  // Desktop: the sentence as a row of tiles, with a line from "it" to every word.
@@ -1113,8 +1125,9 @@ function drawAttention(ctx,w,h,spec,st){
  A.words.forEach((_,j)=>{
   // The share "it" gives itself is printed under its tile and shown in the blend; it has no line.
   if(j===ask)return;
-  const share=A.weights[j], lw=1.5+24*share, alpha=.3+.55*Math.min(1,share/.3);
-  const c=curve(j);ctx.beginPath();ctx.moveTo(...c[0]);ctx.quadraticCurveTo(...c[1],...c[2]);ctx.strokeStyle=colour(A.values[j],alpha);ctx.lineWidth=lw;ctx.stroke();
+  // Every line has the same colour; only its thickness shows the share.
+  const share=A.weights[j], lw=1.5+24*share, alpha=.22+.5*Math.min(1,share/.3);
+  const c=curve(j);ctx.beginPath();ctx.moveTo(...c[0]);ctx.quadraticCurveTo(...c[1],...c[2]);ctx.strokeStyle=`rgba(37,99,235,${alpha})`;ctx.lineWidth=lw;ctx.stroke();
   // Meaning flows along each line into "it": dots in the word's colour, bigger for bigger shares.
   if(share>.03)for(let k=0;k<2;k++){const u=((st.t*.4+k/2+j*.137)%1+1)%1, p=at(c,u);ctx.beginPath();ctx.arc(...p,1.8+5*Math.sqrt(share),0,TAU);ctx.fillStyle=colour(A.values[j],.95);ctx.fill();}
  });
@@ -1122,15 +1135,19 @@ function drawAttention(ctx,w,h,spec,st){
   const asking=j===ask;
   ctx.fillStyle=asking?accent:'#fff';ctx.strokeStyle=asking?accent:'rgba(20,23,28,.16)';ctx.lineWidth=1.2;
   ctx.beginPath();ctx.roundRect(t.x,top,t.w,tileH,9);ctx.fill();ctx.stroke();
-  // The tile's colour strip is the word's meaning; for "it", the blend it has taken in.
-  ctx.fillStyle=asking?colour(A.blend):colour(A.values[j]);ctx.beginPath();ctx.roundRect(t.x+6,top+tileH-7,t.w-12,4,2);ctx.fill();
+  // The tile's colour strip is the word's meaning.
+  if(!asking){ctx.fillStyle=colour(A.values[j]);ctx.beginPath();ctx.roundRect(t.x+6,top+tileH-7,t.w-12,4,2);ctx.fill();}
+  // The last word glows while it is being swapped.
+  if(j===n-1&&swapping){ctx.strokeStyle='#c2410c';ctx.lineWidth=2.5;ctx.beginPath();ctx.roundRect(t.x-3,top-3,t.w+6,tileH+6,11);ctx.stroke();}
   label(j,t.cx,rowY-2,{align:'center',size,weight:asking?700:600,color:asking?'#fff':ink});
-  const share=A.weights[j];if(share>=.045)text(ctx,pct(share),t.cx,top+tileH+16,{align:'center',size:13,weight:j===A.top.j&&!A.even?700:500,color:j===A.top.j&&!A.even?ink:'rgba(20,23,28,.6)'});
+  text(ctx,pct(j),t.cx,top+tileH+16,{align:'center',size:13,weight:j===A.top.j&&!A.even?700:500,color:j===A.top.j&&!A.even?ink:'rgba(20,23,28,.55)'});
  });
  if(st.labels){
-  text(ctx,'each line: how much “it” looks at that word',tiles[0].x,34,{size:12,weight:600,color:'rgba(20,23,28,.6)'});
-  text(ctx,focusLabel,tiles[0].x,54,{size:12,weight:500,color:'rgba(20,23,28,.55)'});
-  pill(ctx,question,from.cx,top+tileH+46,{align:'center',size:13,weight:600,color:accent});
+  text(ctx,'each line: how much “it” looks at that word (thicker = more)',tiles[0].x,34,{size:12,weight:600,color:'rgba(20,23,28,.65)'});
+  text(ctx,'dots: each word’s meaning flowing into “it”',tiles[0].x,54,{size:12,weight:500,color:'rgba(20,23,28,.6)'});
+  text(ctx,focusLabel,tiles[0].x,74,{size:12,weight:500,color:'rgba(20,23,28,.6)'});
+  if(focused)pill(ctx,question,from.cx,top+tileH+46,{align:'center',size:13,weight:600,color:accent});
+  pill(ctx,answer,from.cx,top+tileH+(focused?78:46),{align:'center',size:16,weight:700,color:A.even||!focused?ink:colour(A.values[A.top.j])});
  }
  drawBlend(h*.86,w/2-270,540,14);
  // What "it" takes in: the words' colours side by side in proportion to their shares.
@@ -1233,11 +1250,11 @@ const ENGINES={
   try:'',aria:'The Earth with its oceans and the Moon. The Moon pulls the near side most and the far side least, so the oceans bulge toward and away from the Moon, and a place on the coast passes two high tides a day.'},
  'attention':{draw:drawAttention,a:['Focus','how strongly the matches count'],b:['Last word','tired or wide',''],
   fa:a=>a<.005?'none':Math.round(a*100)+'%',fb:b=>Physics.attention(1,b).ending,
-  measure:['“it” looks most at',(a,b)=>{const A=Physics.attention(a,b);return A.even?`every word equally, ${Math.round(100/A.words.length)}% each`:`“${A.top.word}”, ${Math.round(A.top.w*100)}%`;}],
+  measure:['“it” looks most at',(a,b)=>{const A=ATTN.A||Physics.attention(a,b);return A.even?`no word: all get ${Math.round(100/A.words.length)}%`:`“${A.top.word}”, ${percents(A.weights)[A.top.j]}%`;}],
   // The modelled effect for the render checks: how far the top share rises above an equal share.
   effect:(a,b)=>{const A=Physics.attention(a,b);return A.top.w-1/A.words.length;},scale:'',demoEnd:()=>2.5,
-  disclosure:'The shares are computed exactly with the attention formula from “Attention Is All You Need” (2017): each word’s share is the softmax of the asking word’s query times that word’s key, divided by the square root of their length. The numbers are hand-made, four per word, not taken from a trained model. Real models learn them, use hundreds of numbers per word, many attention heads and many layers, and add position information, because attention alone ignores word order. As in the paper’s encoder, every word can look at the words after it too; models that write text one word at a time let a word look only at the words before it. Focus scales the scores to show how the shares form; at 100% it is the formula itself. Colours stand for what each word means.',
-  try:'Set Focus to zero: every word gets the same share. Turn it back up, then swap the last word to “wide”.',
+  disclosure:'The shares are computed exactly with the attention formula from “Attention Is All You Need” (2017): each word’s share is the softmax of the asking word’s query times that word’s key, divided by the square root of their length. The numbers are hand-made, four per word, not taken from a trained model. Real models learn them, use hundreds of numbers per word, many attention heads and many layers, and add position information, because attention alone ignores word order. As in the paper’s encoder, every word can look at the words after it too; models that write text one word at a time let a word look only at the words before it. Focus scales the scores to show how the shares form; at 100% it is the formula itself. Here “it” is handed its question, which already depends on the last word; a real model builds it from the words around “it” in earlier layers. Colours stand for what each word means; shares are rounded so they add up to 100%.',
+  try:'Set Focus to zero and every word gets the same share. Then switch the last word between “tired” and “wide”, and watch which word “it” takes in.',
   aria:'The sentence “The animal didn’t cross the street because it was too tired” as word tiles. Lines from the word “it” to every word show how much attention it gives each one; most goes to “animal”, and a bar shows the blend of meanings “it” takes in. With the last word swapped to “wide”, most goes to “street”.'}
 };
 const engineOf=spec=>ENGINES[spec?.kind]||ENGINES['light-bending'];
