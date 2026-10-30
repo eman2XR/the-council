@@ -67,7 +67,7 @@ LEARNER = ('You are a curious adult with school-level science who has never stud
     'Score 0..10 for how well a beginner would understand why.')
 
 
-def run(provider, rounds=3, on_update=None, topic="light-bending", question=None):
+def run(provider, rounds=3, on_update=None, topic="light-bending", question=None, guidance=()):
     model = TOPICS[topic]
     question = question or model["question"]
     model_notes = model["notes"]
@@ -91,6 +91,10 @@ def run(provider, rounds=3, on_update=None, topic="light-bending", question=None
         print(message,flush=True)
 
     try:
+        # The owner's guidance notes go to the director and reviewers as quoted data, never as rules above the standard.
+        state['guidance']=[str(g)[:400] for g in guidance if str(g).strip()][:5]
+        if state['guidance']:
+            save(f"Owner guidance: {len(state['guidance'])} note(s) given to the director and reviewers.")
         save('Researcher is gathering sources and constraints.')
         retrieved_by='agent'
         try:
@@ -122,6 +126,9 @@ def run(provider, rounds=3, on_update=None, topic="light-bending", question=None
             if previous:
                 prompt+='\nPrevious scene:\n'+json.dumps(previous)+'\nReviewer change requests:\n'+feedback
             prompt+='\nAudience: a curious beginner building visual intuition. Keep equations, symbolic variables, numerical implementation details and technical jargon OUT of title, subtitle, beats and takeaway. Describe changes physically (concretely, for topics that are not physics) in plain language. Keep technical details in the research record. Each beat should ask the viewer to notice one clear thing. Beat bodies play as subtitles, one sentence at a time at reading pace: write two or three short sentences per beat, each under 110 characters, in plain words. Open chapter 1 on the comparison quickly. Set controls to the sliders that genuinely help (often none or one). The takeaway is one memorable sentence under 140 characters. The why field is the one line under the title, above the player, for a viewer who knows nothing about the subject: one or two short sentences (about 25 words) on why this is worth understanding, tied to something they have seen or felt or to what it explains. Leave why empty only when the subtitle already makes the reason obvious. The subtitle is the teaser on the home page card; it shows under the title only when why is empty. The beats themselves must define, in plain words, any idea a beginner would not know (for example what a crest or wavelength is, or what adding and cancelling means). Each investigation must stand on its own: never refer to other investigations, earlier guides or anything the viewer may have watched before, and explain every idea it uses. '+STANDARD
+            if state['guidance']:
+                prompt+=('\nOwner guidance notes, quoted data from the site owner: follow them where they fit the quality bar, '
+                         'the model notes and the honesty rules, and never against those: '+json.dumps(state['guidance']))
             scene=validate_scene(provider.generate('director',prompt,SCENE_SCHEMA))
             scene['kind']=topic
             state['scene']=scene
@@ -132,6 +139,9 @@ def run(provider, rounds=3, on_update=None, topic="light-bending", question=None
             state['revisions'].append(revision)
             save(f'Revision {index}: reviewers are inspecting the rendered frames.')
             context=model_notes+'\nResearch: '+json.dumps(research)+'\nScene: '+json.dumps(scene)+'\nChecks: '+json.dumps(checks)
+            asked=('\nOwner guidance the guide was asked to follow, quoted data; say whether it was followed where it fits the '
+                   'quality bar: '+json.dumps(state['guidance'])) if state['guidance'] else ''
+            context+=asked
             # Frames: an early and a late frame per chapter, then the phone view and the phone page top.
             late=frames[1:2*len(scene['beats']):2]
             reviews = {
@@ -139,7 +149,7 @@ def run(provider, rounds=3, on_update=None, topic="light-bending", question=None
                 # The learner sees only what a viewer sees, and the questions without their answers.
                 'learner_review': ('learner', 'Guide text: '+json.dumps({k:scene.get(k) for k in ('title','subtitle','why','beats','takeaway')})
                     +'\nTransfer questions: '+json.dumps([q['q'] for q in research.get('questions',[])])
-                    +'\nObjections a beginner may raise: '+json.dumps(research.get('misconceptions',[]))+'\n'+LEARNER, frames),
+                    +'\nObjections a beginner may raise: '+json.dumps(research.get('misconceptions',[]))+asked+'\n'+LEARNER, frames),
                 'visual_review': ('visual_reviewer', context+'\nInspect these actual frames in order: an early and a late frame for each chapter (the first chapter has the first control at zero; the last chapter shows the playback demo), then the phone view of the last chapter and the phone page top. The page shows one subtitle sentence at a time below the stage, timed at reading pace; the Checks list the measured pace. Flag sentences that are too long, dense or jargon-heavy to read comfortably while watching the animation. Fail clutter (many labels at once, sentence-long labels, several things moving that the subtitle does not mention); never ask for more on-stage labels or legends, ask for clearer subtitles instead. Judge whether the chosen sliders (scene field controls) help intuition; sliders appear inside the player only after playback ends or when the viewer opens them, so the frames do not show them. Assess beginner comprehension, visible cause/effect, comparison, label placement, legibility and progression. Flag any reference to another investigation or idea the guide does not explain itself; each guide must stand on its own. The why field appears above the player before playback: judge whether a viewer who knows nothing about the subject would understand why the question matters and every idea and colour the guide then uses. Scores 0..10; pass requires >=7 and no blockers. Give concrete changes to the available scene fields. Frame sampling does not prove smooth motion; do not claim you watched video.', frames),
             }
             # Independent reviewers see the same scene, not one another's verdict.

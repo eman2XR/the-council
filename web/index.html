@@ -16,7 +16,7 @@
 
 <main>
  <details id="lab" class="lab-strip">
-  <summary><span class="pulse" aria-hidden="true"></span><strong id="dashboard-status">Checking status…</strong><span id="next-pick" class="strip-next"></span><span id="next-title" class="strip-when"></span></summary>
+  <summary><span class="pulse" aria-hidden="true"></span><strong id="dashboard-status">Checking status…</strong><span id="next-pick" class="strip-next"></span><span id="next-title" class="strip-when"></span><button id="guide-open" type="button" class="strip-guide">Guide the lab</button></summary>
   <div class="lab-detail">
    <p id="now-title" class="panel-title"></p>
    <p id="dashboard-question" class="muted"></p>
@@ -24,6 +24,13 @@
    <p id="dashboard-phase" class="fine"></p>
    <p id="dashboard-freshness" class="fine warn"></p>
    <p id="dashboard-schedule" class="fine"></p>
+   <form id="guide-form" class="lab-guide">
+    <label for="guide-text" class="label small">Guide the lab</label>
+    <textarea id="guide-text" rows="2" maxlength="400" placeholder="What should the lab work on next, or do differently?"></textarea>
+    <div class="guide-actions"><button type="submit" class="pill">Pin it to the lab</button><button id="lab-preview" type="button" class="link-btn">Watch a sample run</button></div>
+    <ul id="guide-notes" class="guide-notes"></ul>
+    <p class="fine">A pinned note stays in this browser. Sending it opens a public GitHub issue; the 9 AM run follows notes from the owner’s account where they fit its quality bar, and replies on each.</p>
+   </form>
    <div id="bench" hidden><p class="label small">Drafts that didn’t pass review</p><ul id="bench-list"></ul></div>
   </div>
  </details>

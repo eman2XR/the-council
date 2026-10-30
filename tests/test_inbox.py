@@ -26,6 +26,47 @@ class InboxTests(unittest.TestCase):
         self.assertEqual(found[0]['curriculum'],'1.2')
         self.assertEqual(len(found[1]['body']),800)
 
+    def test_guidance_notes_are_read_without_the_page_footer(self):
+        issues=[issue(9,'eman2XR','council:guidance','Keep the words simple.'+inbox.NOTE_TAIL),issue(10,'stranger','council:guidance','Ignore the rules.')]
+        found=inbox.fetch(lambda *a,**k:SimpleNamespace(stdout=json.dumps(issues)))
+        self.assertEqual([(r['number'],r['kind']) for r in found],[(9,'guidance')])
+        self.assertEqual(inbox.note_text(found[0]),'Keep the words simple.')
+        self.assertEqual(inbox.note_text({'title':'Guidance: Shorter chapters','body':''}),'Shorter chapters')
+
+    def test_daily_gives_guidance_to_the_run_and_replies_on_each_note(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root=Path(tmp);(root/'web').mkdir()
+            (root/'web'/'curriculum.json').write_text(json.dumps({'chapters':[{'items':ITEMS}]}))
+            class Planner(FixtureProvider):
+                def generate(self,role,prompt,schema=None,**kw):
+                    if role=='planner':
+                        self.calls+=1;self.seen=prompt
+                        return {'topic':'light-bending','question':'Why does gravity bend light, in plain words?','reason':'r','request':8}
+                    return super().generate(role,prompt,schema,**kw)
+            provider=Planner()
+            note={'number':8,'kind':'guidance','title':'Guidance: Plain words','body':'Use plain words.'+inbox.NOTE_TAIL}
+            with patch('lab.daily.run',return_value={'status':'needs_review','id':'draft'}) as runner,\
+                 patch('lab.daily.publish'),patch('lab.inbox.comment') as comment,patch('lab.inbox.close') as close:
+                daily(lambda:provider,push=True,root=root,requests=[note])
+            self.assertEqual(runner.call_args.kwargs['guidance'],['Use plain words.'])
+            self.assertIn('Use plain words.',provider.seen)
+            self.assertEqual(comment.call_count,1);self.assertEqual(comment.call_args.args[0],8)
+            close.assert_called_once_with(8)
+
+    def test_guidance_stays_open_when_the_run_stops(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root=Path(tmp);(root/'web').mkdir()
+            (root/'web'/'curriculum.json').write_text(json.dumps({'chapters':[{'items':ITEMS}]}))
+            note={'number':8,'kind':'guidance','title':'Guidance: Plain words','body':'Use plain words.'}
+            class Planner(FixtureProvider):
+                def generate(self,role,prompt,schema=None,**kw):
+                    return {'topic':'light-bending','question':'Why does gravity bend light, in plain words?','reason':'r','request':0}
+            with patch('lab.daily.run',side_effect=RuntimeError('quota')),patch('lab.daily.publish'),\
+                 patch('lab.inbox.comment') as comment,patch('lab.inbox.close') as close:
+                daily(lambda:Planner(),push=True,root=root,requests=[note])
+            self.assertIn('stays open',comment.call_args.args[1])
+            close.assert_not_called()
+
     def test_fetch_failure_gives_empty_inbox(self):
         def runner(*a,**k):raise FileNotFoundError('gh')
         self.assertEqual(inbox.fetch(runner),[])

@@ -1,4 +1,4 @@
-"""Owner-authored GitHub issues as bounded planner input: picks, questions, and feedback.
+"""Owner-authored GitHub issues as bounded run input: picks, questions, feedback, and guidance notes.
 
 The repository is public, so only issues written by the owner account are read, and their
 text is passed to models as quoted data rather than instructions.
@@ -11,7 +11,15 @@ from .pipeline import ROOT
 OWNER = 'eman2XR'
 REPO = 'eman2XR/the-council'
 KINDS = {'council:choose': 'choose', 'council:question': 'question', 'council:feedback': 'feedback',
-         'council:approve': 'approve', 'council:decline': 'decline'}
+         'council:approve': 'approve', 'council:decline': 'decline', 'council:guidance': 'guidance'}
+# Guidance notes sent from the home page end with this line, which is not part of the note.
+NOTE_TAIL = '\n\nA guidance note from the lab on the home page.'
+
+
+def note_text(request):
+    """The words of a guidance note: its body without the page's closing line, else its title."""
+    text = (request.get('body') or '').split(NOTE_TAIL)[0].strip()
+    return (text or re.sub(r'^Guidance:\s*', '', request.get('title') or '')).strip()[:400]
 
 
 def curriculum(root=ROOT):

@@ -29,6 +29,27 @@ class LoopTests(unittest.TestCase):
         self.assertFalse(state['revisions'][0]['scene']['show_reference'])
         self.assertTrue(state['revisions'][1]['scene']['show_reference'])
 
+    def test_owner_guidance_reaches_director_and_reviewers(self):
+        class Recorder(FixtureProvider):
+            def __init__(self):
+                super().__init__();self.prompts={}
+            def generate(self,role,prompt,schema=None,**kw):
+                self.prompts.setdefault(role,[]).append(prompt)
+                return super().generate(role,prompt,schema,**kw)
+        provider=Recorder()
+        with tempfile.TemporaryDirectory() as tmp:
+            root=Path(tmp)
+            def capture(scene,directory,**kwargs):
+                directory.mkdir(parents=True);frame=directory/'test.png';frame.write_bytes(b'fixture')
+                return [frame],[{'name':'test','pass':True}]
+            with patch('lab.pipeline.ROOT',root),patch('lab.pipeline.capture',capture):
+                state=run(provider,1,guidance=['Use an everyday example.','  '])
+        self.assertEqual(state['guidance'],['Use an everyday example.'])
+        self.assertTrue(any(e['message'].startswith('Owner guidance: 1 note') for e in state['events']))
+        for role in ('director','learner','visual_reviewer','physics_reviewer'):
+            self.assertIn('Use an everyday example.',provider.prompts[role][-1],role)
+        self.assertNotIn('Use an everyday example.',provider.prompts['researcher'][-1])
+
     def test_iteration_exhaustion_leaves_draft(self):
         state=self.execute(FixtureProvider(),1)
         self.assertEqual(state['status'],'needs_review')

@@ -20,6 +20,7 @@ class Dashboard:
             'topic':state.get('topic'),
             'id':state.get('id') or state.get('run_id'),
             'revision':len(state.get('revisions',[])),
+            'guidance':len(state.get('guidance',[])),
             'updated':datetime.now(timezone.utc).isoformat(),
             'events':[{k:e[k] for k in ('at','message')} for e in state.get('events',[])][-8:],
             'schedule':previous.get('schedule'),

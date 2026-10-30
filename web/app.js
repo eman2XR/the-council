@@ -180,7 +180,7 @@ async function loadPublished(){
 loadPublished();
 
 /* Lab status from the published snapshot. It is not a live heartbeat. */
-let schedule=null, labActive=false, labQuestion='', attempts=[], labStep=1;
+let schedule=null, labActive=false, labQuestion='', attempts=[], labStep=1, labStatus=null, labNext='';
 function stepOf(state){
  if(state.status==='planning')return 0;
  if(state.status==='reviewed')return 6;
@@ -221,7 +221,7 @@ async function refreshDashboard(){
   const outcome={reviewed:'Last investigation passed review',needs_review:'Last attempt stayed a draft',failed:'Last attempt stopped early',interrupted:'Last attempt was interrupted'};
   put('now-title',active?(state.status==='planning'?'Choosing today’s question':'Investigating now'):entries[0]?`Latest published: ${entries[0].title}`:outcome[state.status]||'Resting');
   put('dashboard-question',active&&state.question&&state.question!=='Choosing the next question'?state.question:'');
-  const step=stepOf(state);labStep=step;drawLabStill();
+  const step=stepOf(state);labStep=step;labStatus=state;drawLabStill();
   $('steps').hidden=!active;
   $('steps').replaceChildren(...STEPS.map((name,i)=>el('li',{className:i<step?'done':i===step?'active':'',textContent:name})));
   put('dashboard-phase',active?plain(state.events?.at(-1)?.message):state.updated?`Updated ${new Date(state.updated).toLocaleString(undefined,{month:'short',day:'numeric',hour:'numeric',minute:'2-digit'})}`:'');
@@ -230,22 +230,106 @@ async function refreshDashboard(){
   $('bench').hidden=!drafts.length;
   $('bench-list').replaceChildren(...drafts.map(a=>el('li',{textContent:a.question})));
   document.body.dataset.paused=schedule?.enabled?'no':'yes';
-  renderNext();renderPath();renderCards();
+  renderNext();renderPath();renderCards();if(labPreview)labPreview.phase='';
  }catch{
-  document.body.dataset.paused='yes';
+  document.body.dataset.paused='yes';labStatus=null;
   put('dashboard-status','No status yet');put('now-title','No status published yet');put('next-title','—');
  }
 }
-// The lab at work: scientists in a small lab working on the investigation, drawn above the status line on the home
-// page. It moves only while on screen and in a visible tab; with reduced motion it shows one still frame.
+// The lab at work: scientists in a small lab making the investigations, drawn above the status line on the home page.
+// It shows the published status: closed when the schedule is off, the current phase during a run, the outcome for a
+// few hours after a run, and resting otherwise. It moves only while on screen and in a visible tab; with reduced
+// motion it shows one still frame.
 const labCanvas=VIEW==='home'?el('canvas',{id:'lab-anim',className:'lab-anim'}):null;
-let labVisible=true;
+let labVisible=true, labPreview=null;
+const LAB_DONE_HOURS=8, LAB_TEXT={choose:'Choosing the question',research:'Gathering sources',record:'Writing up the research',design:'Designing the picture',
+ render:'Rendering the frames',review:'Three reviewers are checking it',revise:'Changes requested: drawing a new draft',publish:'Passed review: publishing',done:'Published'};
+function labPhase(state){
+ if(state.status==='planning')return 'choose';
+ const message=(state.events?.at(-1)?.message||'').toLowerCase();
+ if(message.includes('gates passed'))return 'publish';
+ if(message.includes('changes requested'))return 'revise';
+ if(message.includes('inspecting')||message.includes('review saved'))return 'review';
+ if(message.includes('rendering'))return 'render';
+ if(message.includes('director'))return 'design';
+ if(message.includes('scientist is preparing'))return 'record';
+ return 'research';
+}
+function labModel(now){
+ if(labPreview)return previewModel(now);
+ const s=labStatus, notes=noteList(), wall=entries.length;
+ if(!s||document.body.dataset.paused==='yes')return {mode:'closed',wall,notes};
+ const last=s.events?.at(-1), since=Math.max(0,(Date.now()-Date.parse(last?.at||s.updated))/1000);
+ if(['running','planning'].includes(s.status)){
+  const phase=labPhase(s), n=/Revision (\d+)/.exec(last?.message||'')?.[1];
+  const reviews=['learner_review','visual_review','physics_review'].map(r=>(s.events||[]).some(e=>e.message===`Revision ${n}: ${r} saved.`)?1:0);
+  let used=s.guidance||0;
+  return {mode:'working',phase,since,question:labQuestion,reviews,wall,rejected:Math.max(0,(s.revision||0)-(['review','publish'].includes(phase)?1:0)),
+   notes:notes.map(x=>x.url&&x.status==='waiting'&&used-->0?{...x,status:'taken'}:x)};
+ }
+ const outcome={reviewed:'published',needs_review:'draft',failed:'stopped',interrupted:'stopped'}[s.status];
+ if(outcome&&(Date.now()-Date.parse(s.updated))/3600000<LAB_DONE_HOURS)
+  return {mode:'done',outcome,question:entries.find(e=>e.id===s.id)?.question||s.question,wall,rejected:Math.max(0,(s.revision||0)-(outcome==='published'?1:0)),notes};
+ return {mode:'resting',question:labNext,wall,notes};
+}
+// A sample run, played in the browser only: every phase in about a minute, using the first pinned note.
+const PREVIEW=[['choose',6],['research',8],['record',5],['design',9],['render',5],['review',7],['revise',5],['render',4],['review',6],['publish',5],['done',7]];
+function previewModel(now){
+ const t=(now-labPreview.start)/1000;let from=0,i=0;
+ while(i<PREVIEW.length&&t>=from+PREVIEW[i][1]){from+=PREVIEW[i][1];i++;}
+ if(i>=PREVIEW.length){stopPreview();return labModel(now);}
+ const [phase,length]=PREVIEW[i], since=t-from, again=PREVIEW.slice(0,i).some(p=>p[0]==='revise');
+ if(labPreview.phase!==phase){labPreview.phase=phase;previewStrip(phase,i);}
+ const notes=noteList().map((n,j)=>j===0?{...n,status:phase==='done'?'applied':'taken'}:n);
+ if(phase==='done')return {mode:'done',outcome:'published',question:labPreview.question,rejected:1,wall:entries.length+1,notes};
+ return {mode:'working',phase,since,question:labPreview.question,wall:entries.length,notes,rejected:again?1:0,
+  reviews:phase==='review'?[.3,.55,.8].map(f=>since>length*f?1:0):[0,0,0]};
+}
+function previewStrip(phase,i){
+ const step=['choose','research','record','design','revise','render','review','publish','done'].indexOf(phase), at=[0,1,1,2,2,3,4,5,6][step];
+ put('dashboard-status','Sample run');$('lab').dataset.state='active';put('next-pick',LAB_TEXT[phase]);put('next-title','');
+ put('now-title','A sample run, simulated in your browser');put('dashboard-question',labPreview.question);
+ $('steps').hidden=false;$('steps').replaceChildren(...STEPS.map((name,j)=>el('li',{className:j<at?'done':j===at?'active':'',textContent:name})));
+ const note=noteList()[0];
+ put('dashboard-phase',!note?'':i<PREVIEW.length-1?'Your note is taped to the board for the director and reviewers.':'In a real run, the lab replies on your note with what it did.');
+ put('dashboard-freshness','');put('dashboard-schedule','Nothing here is sent or published. The real lab runs at 9 AM.');
+ $('lab-preview').textContent='Stop the sample run';
+}
+function stopPreview(){labPreview=null;$('lab-preview').textContent='Watch a sample run';refreshDashboard();}
+// Guidance notes: the owner's GitHub issues labelled council:guidance wait for the next run, which follows them where
+// they fit the quality bar, replies on each and closes it. Notes pinned on this page stay in this browser until sent.
+const NOTE_TAIL='\n\nA guidance note from the lab on the home page.';
+let guideIssues=[];
+const localNotes=()=>{try{return JSON.parse(localStorage.getItem('council-notes')||'[]');}catch{return [];}};
+const saveNotes=list=>{try{localStorage.setItem('council-notes',JSON.stringify(list.slice(-6)));}catch{}};
+function noteList(){
+ const sent=new Set(guideIssues.map(i=>norm(i.text)));
+ return [...guideIssues.map(i=>({text:i.text,url:i.url,status:i.state==='open'?'waiting':'applied'})),
+  ...localNotes().filter(n=>!sent.has(norm(n.text))).map(n=>({text:n.text,id:n.id,status:Date.now()-n.at<2200?'new':'waiting'}))];
+}
+function renderNotes(){
+ const list=$('guide-notes');if(!list)return;
+ list.replaceChildren(...noteList().map(n=>{
+  const item=el('li',{},el('span',{className:'note-text',textContent:n.text}));
+  if(n.url)item.append(el('a',{className:'state',href:n.url,target:'_blank',rel:'noopener noreferrer',textContent:n.status==='applied'?'Used · read the reply':'Waiting for the 9 AM run'}));
+  else{item.append(el('a',{className:'state pill pick',target:'_blank',rel:'noopener noreferrer',textContent:'Send to the 9 AM run',
+    href:issueURL('council:guidance',`Guidance: ${n.text}`.slice(0,120),n.text+NOTE_TAIL)}));
+   const drop=el('button',{type:'button',className:'note-drop',textContent:'×',title:'Remove this note'});drop.setAttribute('aria-label','Remove this note');
+   drop.onclick=()=>{saveNotes(localNotes().filter(x=>x.id!==n.id));renderNotes();};item.append(drop);}
+  return item;}));
+}
+async function loadNotes(){
+ try{const response=await fetch(`https://api.github.com/repos/${OWNER}/the-council/issues?state=all&creator=${OWNER}&labels=council:guidance&per_page=10`);
+  if(response.ok)guideIssues=(await response.json()).filter(i=>!i.pull_request&&(i.state==='open'||Date.now()-Date.parse(i.closed_at)<3*86400000))
+   .map(i=>({text:(i.body||i.title||'').split(NOTE_TAIL)[0].trim().slice(0,400),url:i.html_url,state:i.state}));}catch{}
+ renderNotes();
+}
 function paintLab(now){
  if(!labCanvas||!window.CouncilLab)return;
  const w=labCanvas.clientWidth, h=labCanvas.clientHeight, dpr=Math.min(2,devicePixelRatio||1);if(!w||!h)return;
  if(labCanvas.width!==Math.round(w*dpr)||labCanvas.height!==Math.round(h*dpr)){labCanvas.width=Math.round(w*dpr);labCanvas.height=Math.round(h*dpr);}
  const ctx=labCanvas.getContext('2d');ctx.setTransform(dpr,0,0,dpr,0,0);ctx.clearRect(0,0,w,h);
- CouncilLab.draw(ctx,w,h,{t:now/1000,active:labActive,step:labStep,paused:document.body.dataset.paused==='yes',still:reduceMotion});
+ CouncilLab.draw(ctx,w,h,{...labModel(now),t:now/1000,still:reduceMotion});
 }
 function drawLabStill(){if(reduceMotion)paintLab(0);}
 if(labCanvas){
@@ -254,6 +338,12 @@ if(labCanvas){
  const tick=now=>{if(labVisible&&!document.hidden)paintLab(now);requestAnimationFrame(tick);};
  if(reduceMotion)paintLab(0);else requestAnimationFrame(tick);
  addEventListener('resize',()=>paintLab(performance.now()));
+ $('guide-form').onsubmit=e=>{e.preventDefault();const text=$('guide-text').value.trim();if(!text)return;
+  saveNotes([...localNotes(),{id:Date.now(),text:text.slice(0,400),at:Date.now()}]);$('guide-text').value='';renderNotes();drawLabStill();};
+ $('guide-open').onclick=e=>{e.preventDefault();$('lab').open=true;$('guide-text').focus();};
+ $('lab-preview').onclick=()=>{if(labPreview){stopPreview();return;}
+  labPreview={start:performance.now(),phase:'',question:labNext||'Why does a moving clock tick slowly?'};$('lab').open=true;};
+ setTimeout(loadNotes);
 }
 refreshDashboard();setInterval(refreshDashboard,60000);setInterval(()=>{renderNext();renderPath();},30000);
 
@@ -303,7 +393,7 @@ function renderPath(){
  const all=curriculum.chapters.flatMap(c=>c.items), next=all.find(i=>i.model&&i.ready&&!used.has(i.model)&&!doneItem(i)&&!tried(i)&&!picks.has(i.id));
  if(schedule?.enabled){
   const pick=[...picks.keys()].map(id=>all.find(i=>i.id===id)).find(i=>i&&i.model&&!doneItem(i));
-  const upcoming=pick||next;
+  const upcoming=pick||next;labNext=upcoming?.question||'';
   put('next-pick',labActive?labQuestion:upcoming?`${pick?'Your pick':'Next'}: ${upcoming.question}`:'');
  }else put('next-pick',labActive?labQuestion:'');
 }
