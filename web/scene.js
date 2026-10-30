@@ -1358,6 +1358,147 @@ function drawMoonTides(ctx,w,h,spec,st){
  if(stage===2&&morph>.6){pill(ctx,'pulled ahead',ex+Re*1.3,ey+22,{size,weight:600,color:warm});pill(ctx,'left behind',ex-Re*1.3,ey+22,{align:'right',size,weight:600,color:warm});pill(ctx,'squeezed',ex+12,ey-Re*1.2,{size,weight:600,color:warm});}
 }
 
+// Why nothing can travel faster than light. A rocket fires the same push again and again. By everyday adding each
+// push adds half light speed, so the second would reach light speed and the third pass it. But light does not add:
+// as the coasting rocket passes a lamp on the ground, both lamps flash together and, seen from the ground, the two
+// flashes travel side by side at light speed. The crew time their own flash too and find it leaving them at full light
+// speed, after every push, so they never gain on light. Seen from the ground the rocket's speed therefore climbs 50%,
+// 80%, 93%... toward light speed without reaching it. Each chapter has a fixed plan; after playback the viewer sets the
+// number of pushes. Exact for equal pushes (Physics.limitSpeed); motion on screen is slowed for viewing.
+const LIMIT={mode:''};
+// Whole percentages until the speed is within a few percent of light, then just enough decimals never to show 100%.
+function limitPct(v){const d=Math.max(0,Math.floor(-Math.log10(Math.max(1e-9,1-v)))-1);return (v*100).toFixed(Math.min(4,d))+'%';}
+// Light's speed on screen, in strip widths per second, shared by chapters 1 to 3 so light and the rocket keep their
+// speeds: slow enough that chapter 2's flashes (fired a second before its second sentence) and chapter 3's flash (fired
+// early in its first sentence) are still in flight as each chapter ends.
+function limitLight(){
+ const timing=i=>{const c=timeline?.chapters?.[i], lines=c?.lines||[], c0=c?.start||0, at=k=>lines[k]?lines[k].start-c0:3+4*k;return {lines,at,end:c?.end!=null?c.end-c0:null};};
+ const two=timing(1), three=timing(2), flash=two.lines[1]?Math.max(1.2,two.at(1)-1):two.at(0)+1.2, crew=three.at(0)+.6;
+ const speed=Math.min(.8/Math.max(3,(two.end??flash+6)-flash-.2),.84/Math.max(3,(three.end??crew+8)-crew-.2));
+ return {flash,crew,speed};
+}
+function limitPlan(st){
+ const c=timeline?.chapters?.[st.stage], lines=c?.lines||[], c0=c?.start||0, at=i=>lines[i]?lines[i].start-c0:3+4*i, t=Math.max(0,st.since??0);
+ if(st.since===undefined)return {mode:'thumb',n:4,t:2};
+ if(st.live)return {mode:'live',n:Math.round(clamp(st.mass)*10),t:st.t||0};
+ // 1: the rocket fires one push and coasts at half light speed along the strip; with the second sentence the strip
+ // fades and everyday adding draws its line through light speed.
+ if(st.stage===0)return {mode:'add',n:clamp((t-.5)/.6),everyday:smooth((t-at(1)-.2)/1.6),strip:1-smooth((t-at(1)+.4)/.6),t};
+ // 2: seen from the ground, the rocket coasts past a lamp post; both lamps flash and the flashes travel side by side.
+ if(st.stage===1)return {mode:'lamp',n:1,flash:limitLight().flash,dim:smooth(t/.6),t};
+ // 3: seen from the rocket: the ground streams back at half light speed and the crew's flash leaves at light speed;
+ // with the second sentence another push makes the ground stream faster, and the flash still pulls away at light speed.
+ if(st.stage===2)return {mode:'crew',n:1,push:at(1)+.5,first:limitLight().crew,dim:1,t};
+ // 4: the same push again and again: 80% and 93% with the first sentence, then 98%, 99.2% and 99.7%, under the faint
+ // line of everyday adding.
+ let n=1;for(const p of [at(0)+.9,at(0)+2.5,at(1)+.5,at(1)+1.5,at(1)+2.5])n+=clamp((t-p)/.6);
+ return {mode:'climb',n,everyday:1,faint:.45,zoom:smooth((t-at(1)-3.1)/.6),t};
+}
+function drawLimit(ctx,w,h,spec,st){
+ const plan=limitPlan(st), small=w<520, light='#d97706', accent=ACCENT[spec.accent]||ACCENT.blue, ink='rgba(20,23,28,.8)', muted='rgba(20,23,28,.55)';
+ LIMIT.mode=plan.mode;
+ const n=plan.n, v=Physics.limitSpeed(n), T=plan.t, size=small?10:12;
+ const cw=w*(small?.76:.6), chart=small?{x0:w*.15,top:h*.5,base:h*.76}:{x0:w*.2,top:h*.42,base:h*.82};
+ chart.x1=chart.x0+cw;
+ const glow=(x,y,r,a=1)=>{const g=ctx.createRadialGradient(x,y,0,x,y,r*3);g.addColorStop(0,rgba(light,.5*a));g.addColorStop(1,rgba(light,0));ctx.fillStyle=g;ctx.fillRect(x-r*3,y-r*3,r*6,r*6);
+  ctx.beginPath();ctx.arc(x,y,r,0,TAU);ctx.fillStyle=rgba(light,a);ctx.fill();};
+ // The strip: a separate window above the chart, showing the rocket's path and the ground. Light crosses the part
+ // past the lamp post in chapter 2's flash time; the rocket coasts at half that speed.
+ const x0=chart.x0, x1=chart.x1, lane=x1-x0, lampX=x0+lane*.2, win={top:h*(small?.11:.05),base:h*(small?.42:.31)};
+ const ry=h*(small?.21:.12), gy=h*(small?.36:.25), head=gy-(small?16:20), r=small?13:19, lampY=ry-r*.4;
+ const c=limitLight().speed*lane;
+ const frame=(a,name)=>{ctx.save();ctx.globalAlpha=a;ctx.fillStyle='rgba(255,255,255,.55)';ctx.beginPath();ctx.roundRect(x0-14,win.top,lane+28,win.base-win.top,10);ctx.fill();
+  ctx.strokeStyle='rgba(20,23,28,.1)';ctx.lineWidth=1;ctx.stroke();
+  trace(ctx,[[x0,ry+r*.9],[x1,ry+r*.9]]);ctx.strokeStyle='rgba(20,23,28,.08)';ctx.stroke();
+  trace(ctx,[[x0,gy],[x1,gy]]);ctx.strokeStyle='rgba(20,23,28,.32)';ctx.lineWidth=1.4;ctx.stroke();
+  if(st.labels){text(ctx,'ground',x1,gy+(small?11:13),{align:'right',size:size-1,weight:600,color:muted});
+   if(name)text(ctx,name,x0,win.top+(small?11:14),{size:size-1,weight:700,color:muted,spacing:'.5px'});}
+  ctx.restore();};
+ const rocket=(x,a,burn,flash)=>{ctx.save();ctx.globalAlpha=a;drawRocket(ctx,x,ry,r,1,burn,T);
+  ctx.beginPath();ctx.arc(x,lampY,3.4,0,TAU);ctx.fillStyle='#fde68a';ctx.fill();ctx.strokeStyle='rgba(120,80,0,.6)';ctx.lineWidth=1;ctx.stroke();
+  if(flash>0)glow(x,lampY,4+4*flash,flash);ctx.restore();};
+ if(plan.mode==='add'&&plan.strip>0){
+  // One push: the flame fires while the chart's first step rises, then the rocket coasts at half light speed.
+  const u=.5*c, ramp=.6, go=Math.max(0,T-.5), moved=go<ramp?u*go*go/(2*ramp):u*(ramp/2+go-ramp), rx=x0+lane*.06+moved;
+  frame(plan.strip,'');if(rx<x1)rocket(rx,plan.strip*clamp((x1-rx)/30),T>.5&&T<.5+ramp,0);
+ }
+ if(plan.mode==='lamp'){
+  // As the rocket passes the lamp post, its own lamp and the post's lamp flash together; both flashes travel at light
+  // speed, side by side, and the rocket falls behind.
+  frame(plan.dim,'');
+  const since=T-plan.flash, burst=since>=0?clamp(1-since/.35):0;
+  ctx.save();ctx.globalAlpha=plan.dim;ctx.fillStyle='rgba(20,23,28,.5)';ctx.fillRect(lampX-1.2,head,2.4,gy-head);
+  ctx.beginPath();ctx.arc(lampX,head,3.6,0,TAU);ctx.fillStyle='#fde68a';ctx.fill();ctx.strokeStyle='rgba(120,80,0,.6)';ctx.lineWidth=1;ctx.stroke();ctx.restore();
+  if(burst>0)glow(lampX,head,4+4*burst,burst);
+  const rx=lampX+.5*c*since;
+  if(rx>x0-r&&rx<x1+r)rocket(rx,clamp((rx-x0+r)/30)*clamp((x1-rx)/30),false,burst);
+  const travel=(x1-lampX)/c;
+  if(since>.05&&since<travel+.4){const px=Math.min(x1,lampX+c*since), fade=clamp((travel+.4-since)/.4);
+   ctx.save();ctx.globalAlpha=fade;
+   // Faint trails back to the post show that both flashes left it together.
+   for(const y of [lampY,head]){const g=ctx.createLinearGradient(lampX,0,px,0);g.addColorStop(0,rgba(light,0));g.addColorStop(1,rgba(light,.45));
+    trace(ctx,[[lampX,y],[px,y]]);ctx.strokeStyle=g;ctx.lineWidth=2;ctx.stroke();}
+   glow(px,lampY,4);glow(px,head,4);
+   ctx.setLineDash([3,4]);trace(ctx,[[px,lampY+7],[px,head-7]]);ctx.strokeStyle=rgba(light,.6);ctx.lineWidth=1.2;ctx.stroke();ctx.setLineDash([]);
+   // The label rides beside the flashes, and switches to their left side where the stage ends.
+   ctx.font=`600 ${size}px ${FONT}`;const right=px+16+ctx.measureText('same speed').width<x1;
+   if(st.labels)pill(ctx,'same speed',right?px+10:px-10,(ry+r*.9+head)/2,{align:right?'left':'right',size,weight:600,color:light});ctx.restore();}
+ }
+ if(plan.mode==='crew'){
+  // Seen from the rocket: the crew stay put while the ground streams backward at the rocket's speed. Their lamp flashes
+  // once and the flash pulls away at light speed; after another push the ground streams faster, and the same flash
+  // still pulls away at exactly the same speed.
+  frame(1,'seen from the rocket');
+  const rx=x0+lane*.16, ramp=.6, g0=.5*c, g1=Physics.limitSpeed(2)*c, go=T-plan.push;
+  const back=g0*T+(go<=0?0:go<ramp?(g1-g0)*go*go/(2*ramp):(g1-g0)*(ramp/2+go-ramp)), gap=lane/7;
+  for(let k=0;k<7;k++){const px=x0+((k*gap-back)%lane+lane)%lane;ctx.fillStyle='rgba(20,23,28,.38)';ctx.fillRect(px-1,gy-9,2,9);}
+  const since=T-plan.first, burst=since>=0?clamp(1-since/.35):0;
+  if(since>.05){const px=Math.min(x1,rx+c*since), fade=clamp((x1+4-px)/40);
+   ctx.save();ctx.globalAlpha=fade;const g=ctx.createLinearGradient(rx,0,px,0);g.addColorStop(0,rgba(light,0));g.addColorStop(1,rgba(light,.45));
+   trace(ctx,[[rx,lampY],[px,lampY]]);ctx.strokeStyle=g;ctx.lineWidth=2;ctx.stroke();glow(px,lampY,4);
+   if(st.labels&&px>rx+50){ctx.font=`600 ${size}px ${FONT}`;const half=ctx.measureText('full light speed').width/2+6;
+    pill(ctx,'full light speed',clamp(px,x0+half,x1-half),lampY-(small?14:17),{align:'center',size,weight:600,color:light});}
+   ctx.restore();}
+  rocket(rx,1,go>0&&go<ramp,burst);
+ }
+ // The chart: the speed seen from the ground after each push, under the line at light speed. While a strip chapter
+ // runs it stays dim and unlabelled.
+ const yOf=s=>chart.base-s*(chart.base-chart.top), gap=(chart.x1-chart.x0)/11, xOf=k=>chart.x0+k*gap, quiet=(plan.dim||0)>0;
+ ctx.save();ctx.globalAlpha=1-.7*(plan.dim||0);
+ trace(ctx,[[chart.x0,chart.base],[chart.x1,chart.base]]);ctx.strokeStyle='rgba(20,23,28,.25)';ctx.lineWidth=1;ctx.stroke();
+ trace(ctx,[[chart.x0,chart.top],[chart.x1,chart.top]]);ctx.strokeStyle=rgba(light,.8);ctx.lineWidth=2;ctx.stroke();
+ // Everyday adding: each push adds another half of light speed, so two reach it and three pass it.
+ if(plan.everyday>0){const e=plan.everyday, pts=[[chart.x0,chart.base]];for(let k=1;k<=3;k++)pts.push([xOf(k),yOf(k*.5)]);
+  const end=Math.max(1,Math.floor(e*3.999)+1), cut=pts.slice(0,end+1);
+  ctx.save();ctx.globalAlpha*=Math.min(1,e*2)*(plan.faint||1);ctx.setLineDash([5,5]);trace(ctx,cut);ctx.strokeStyle='rgba(20,23,28,.45)';ctx.lineWidth=1.6;ctx.stroke();ctx.setLineDash([]);
+  for(const [x,y] of cut.slice(1)){ctx.beginPath();ctx.arc(x,y,3.4,0,TAU);ctx.fillStyle='rgba(255,255,255,.95)';ctx.fill();ctx.strokeStyle='rgba(20,23,28,.45)';ctx.lineWidth=1.4;ctx.stroke();}
+  if(st.labels&&e>.7&&!(plan.zoom>0))text(ctx,'everyday adding',xOf(3)+10,yOf(1.5),{size,weight:600,color:'rgba(20,23,28,.6)'});ctx.restore();}
+ const shown=Math.ceil(n-1e-9);let last=[chart.x0,chart.base];
+ for(let k=1;k<=shown;k++){const s=Physics.limitSpeed(Math.min(k,n)), x=xOf(k), y=yOf(s);
+  trace(ctx,[last,[x,last[1]],[x,y]]);ctx.strokeStyle=rgba(accent,.85);ctx.lineWidth=2.2;ctx.stroke();
+  ctx.beginPath();ctx.arc(x,y,small?3.4:4,0,TAU);ctx.fillStyle=accent;ctx.fill();last=[x,y];}
+ // Zoomed in on the last steps: from 96.5% to 100.5% of light speed, they stay clearly below the line.
+ if(plan.zoom>0&&shown>=6){const R=small?38:58, cx=xOf(small?7.4:8.2), cy=chart.top-(small?62:78), zx=k=>cx-R*.75+(k-4)*R*.62, zy=v=>cy-R*.45+(1.005-v)/.04*R*1.1;
+  ctx.save();ctx.globalAlpha*=plan.zoom;
+  trace(ctx,[[xOf(5),chart.top+4],[cx-R*.72,cy+R*.7]]);ctx.strokeStyle='rgba(20,23,28,.25)';ctx.lineWidth=1;ctx.setLineDash([2,3]);ctx.stroke();ctx.setLineDash([]);
+  ctx.beginPath();ctx.arc(cx,cy,R,0,TAU);ctx.fillStyle='rgba(255,255,255,.96)';ctx.fill();ctx.strokeStyle='rgba(20,23,28,.3)';ctx.lineWidth=1.2;ctx.stroke();
+  ctx.save();ctx.beginPath();ctx.arc(cx,cy,R-1,0,TAU);ctx.clip();
+  trace(ctx,[[cx-R,zy(1)],[cx+R,zy(1)]]);ctx.strokeStyle=rgba(light,.85);ctx.lineWidth=2;ctx.stroke();
+  let prev=[cx-R,zy(Physics.limitSpeed(3))];
+  for(let k=4;k<=6;k++){const x=zx(k), y=zy(Physics.limitSpeed(k));trace(ctx,[prev,[x,prev[1]],[x,y],[x+R*.62,y]]);ctx.strokeStyle=rgba(accent,.85);ctx.lineWidth=2.2;ctx.stroke();
+   ctx.beginPath();ctx.arc(x,y,small?3:3.6,0,TAU);ctx.fillStyle=accent;ctx.fill();prev=[x+R*.62,y];}
+  ctx.restore();
+  if(st.labels)text(ctx,'zoomed in',cx,cy-R-(small?10:12),{align:'center',size:size-1,weight:600,color:muted});
+  ctx.restore();}
+ if(st.labels&&!quiet){
+  ctx.save();ctx.translate(chart.x0-(small?12:18),(chart.top+chart.base)/2);ctx.rotate(-Math.PI/2);
+  text(ctx,'speed seen from the ground',0,0,{align:'center',size,weight:600,color:ink});ctx.restore();
+  pill(ctx,'light speed',chart.x1,chart.top-(small?12:15),{align:'right',size,weight:700,color:light});
+  text(ctx,'equal pushes',chart.x1,chart.base+(small?12:15),{align:'right',size:size-1,weight:600,color:muted});
+  if(shown>0)pill(ctx,limitPct(v),last[0]+10,last[1]+(small?14:16),{size:size+1,weight:700,color:accent});}
+ ctx.restore();
+}
+
 // Attention, told as the story behind chatbots. A chatbot guesses the next word; the clue it needs ("France") is five
 // words back; an old one-at-a-time memory lets it fade, while attention looks straight back at every earlier word and
 // gives the biggest share to the one that answers what the guess needs ("which language?"). Practice sentences show
@@ -1973,6 +2114,14 @@ const ENGINES={
   fa:a=>a.toFixed(2),fb:b=>b.toFixed(2),scale:'',demoEnd:()=>1.25,
   disclosure:'The arrows come from the exact Newtonian pull at the real Earth–Moon distance, with differences enlarged; the bulges are hugely exaggerated, and the Moon is drawn far too close and too big. Real tides are also shaped by coastlines and ocean depth.',
   try:'',aria:'The Earth with its oceans and the Moon. The Moon pulls the near side most and the far side least, so the oceans bulge toward and away from the Moon, and a place on the coast passes two high tides a day.'},
+ 'speed-limit':{draw:drawLimit,demo:false,tryAny:true,a:['Pushes','how many times the rocket fires the same push'],b:['Unused','',''],
+  fa:a=>{const n=Math.round(clamp(a)*10);return `${n} push${n===1?'':'es'}`;},fb:b=>'',
+  // The modelled effect for the render checks: the speed seen from the ground after the chosen number of pushes.
+  effect:a=>Physics.limitSpeed(Math.round(clamp(a)*10)),
+  measure:['Speed seen from the ground',a=>LIMIT.mode==='live'?limitPct(Physics.limitSpeed(Math.round(clamp(a)*10)))+' of light':''],scale:'',
+  disclosure:'Exact special relativity for equal pushes: each push leaves the rocket moving at half light speed relative to a marker it dropped just before, so the speed seen from the ground after n pushes is tanh(0.549 n) times light speed. Motion on screen is slowed for viewing.',
+  try:'Set “Pushes” to 10: the speed seen from the ground is 99.997% of light speed, never 100%.',
+  aria:'A rocket fires the same push again and again. Seen from the ground, light from the moving rocket travels at the same speed as light from a lamp on the ground, and the crew see their own light pull away at full light speed after every push. So, seen from the ground, the rocket’s speed climbs to 50%, 80%, 93% of light speed, ever closer but never reaching it.'},
  'attention':{draw:drawAttention,demo:false,tryAny:true,a:['Attention','off: one word at a time · on: look straight back'],b:['Unused','',''],
   fa:a=>a<.02?'off':Math.round(a*100)+'%',fb:b=>'',
   measure:['Chance of “French”',a=>ATTN.mode==='live'?Math.round(Physics.lookGuess(ATTN.strength)[0][1]*100)+'%':''],

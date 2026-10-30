@@ -380,6 +380,9 @@ body[data-draft=yes] .draft-note:not(:empty){display:block;max-width:760px;margi
 /* Home: every investigation in one grid under the featured one, then the questions open for tomorrow; request
    buttons only while the daily run is on. */
 .up-next{margin-top:56px}
+.drafts-shelf{margin-top:56px}
+.drafts-shelf .chapter-title{margin-bottom:8px}
+.drafts-note{margin:0 0 24px;font-size:14px;color:var(--muted);max-width:60ch}
 .up-next .items li{grid-template-columns:1fr auto}
 .up-later{margin:12px 4px 0;font-size:13px;color:var(--faint)}
 /* Phones: the grid becomes a list, a small picture beside each title. */

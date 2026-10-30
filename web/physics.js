@@ -211,6 +211,32 @@
         return edge*Math.exp(-l.kappa*(Math.abs(x)-h));};
       return {V,L,levels,psi};
     },
+    // The speed limit: a rocket fires the same push again and again, each leaving it at half light speed relative to a
+    // marker it dropped just before. Every push adds the same rapidity, atanh(1/2), so seen from the ground the speed
+    // after n pushes is tanh(n atanh(1/2)) and never reaches light speed, while everyday adding would give n/2. The
+    // kinetic energy of each kilogram, seen from the ground, per unit of its rest energy, is cosh(n atanh(1/2)) - 1.
+    // Units: c = 1.
+    limitPush: Math.atanh(.5),
+    limitSpeed(n) { return Math.tanh(n * this.limitPush); },
+    limitEveryday(n) { return n * .5; },
+    limitEnergy(n) { return Math.cosh(n * this.limitPush) - 1; },
+    combine(u, v) { return (u + v) / (1 + u * v); },
+    limitChecks() {
+      const near = (a, b, e = 1e-12) => Math.abs(a - b) < e, v = n => this.limitSpeed(n), E = n => this.limitEnergy(n);
+      return Object.entries({
+        'One push from rest reaches half light speed': near(v(1), .5),
+        'Two pushes reach 80% of light speed, not light speed': near(v(2), .8),
+        'Speeds combine as (u + v) / (1 + uv)': [1, 2, 3, 5, 8].every(n => near(this.combine(v(n), .5), v(n + 1))),
+        'No number of pushes reaches light speed': [1, 5, 10, 20].every(n => v(n) < 1),
+        'Each push adds less speed than the one before': [1, 2, 3, 4, 5, 6].every(n => v(n + 1) - v(n) < v(n) - v(n - 1)),
+        'Everyday adding would reach light speed after two pushes and pass it after three': near(this.limitEveryday(2), 1) && this.limitEveryday(3) > 1,
+        'Light from a moving lamp still travels at light speed': [0, .5, .8, .99].every(u => near(this.combine(u, 1), 1)),
+        'In the crew’s own view, light leaves at light speed after every push': [0, 1, 2, 3, 6, 10].every(n => near(this.combine(-v(n), 1), 1)),
+        'Each push adds more energy than the one before': [1, 2, 3, 4, 5].every(n => E(n + 1) - E(n) > E(n) - E(n - 1)),
+        'The energy grows without limit': E(20) > 1e4 && E(21) > E(20),
+        'At everyday speeds the two ways of adding agree': near(this.combine(1e-6, 1e-6), 2e-6, 1e-15),
+      }).map(([name, pass]) => ({name, pass}));
+    },
     // Attention for guessing the next word, on one hand-made sentence: "I grew up in France, so I speak fluent ___".
     // The guess (the query) is scored against every earlier word (its key) by a scaled dot product, and the scores
     // become shares by a softmax, as in "Attention Is All You Need" (2017). Key and query features: [a country,
@@ -413,7 +439,7 @@
     // Which checks belong to each visual model; light bending uses checks().
     checkSets() {
       return {'gravity-clocks':this.clockChecks,'spacetime':this.spacetimeChecks,'interference':this.waveChecks,
-        'two-slit-particles':this.waveChecks,'standing-waves':this.ropeChecks,'tunneling':this.tunnelChecks,'wave-packet':this.packetChecks,'quantum-well':this.wellChecks,'falling-time':this.fallChecks,'diffraction':this.gapChecks,'twin-trip':this.spacetimeChecks,'spacetime-paths':this.pathChecks,'light-clock':this.lightClockChecks,'river':this.riverChecks,'fall-views':this.viewsChecks,'tides':this.tidesChecks,'lift':this.liftChecks,'moon-tides':this.moonChecks,'attention':this.attentionChecks};
+        'two-slit-particles':this.waveChecks,'standing-waves':this.ropeChecks,'tunneling':this.tunnelChecks,'wave-packet':this.packetChecks,'quantum-well':this.wellChecks,'falling-time':this.fallChecks,'diffraction':this.gapChecks,'twin-trip':this.spacetimeChecks,'spacetime-paths':this.pathChecks,'light-clock':this.lightClockChecks,'river':this.riverChecks,'fall-views':this.viewsChecks,'tides':this.tidesChecks,'lift':this.liftChecks,'moon-tides':this.moonChecks,'attention':this.attentionChecks,'speed-limit':this.limitChecks};
     },
     checksFor(kind) { return this.checkSets()[kind]?.call(this) || this.checks(); },
     // Every model's checks, run in CI.

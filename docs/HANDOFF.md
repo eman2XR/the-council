@@ -82,7 +82,17 @@ At the owner's request the lab picture became a small world (`drawLab` in `web/s
 
 ### Home page: newest first, one grid (2026-10-29)
 
-At the owner's request the home page no longer splits investigations by curriculum chapter. The newest published investigation is featured (`web/featured.json` was removed; the Pages workflow only copies it if present), every other one follows in a single grid (reviewed guides newest first, then drafts, still without a draft label as the owner asked on 2026-10-27), phones show the grid as a list with a small picture beside each title, and "Up next" lists the questions that can be picked for tomorrow and counts the rest. The curriculum still orders the daily run and the "More investigations" list on guide pages. `lab/sitecheck.py` checks that the newest guide is featured and every other one appears once in `#gallery`.
+At the owner's request the home page no longer splits investigations by curriculum chapter. The newest published investigation is featured (`web/featured.json` was removed; the Pages workflow only copies it if present), every other reviewed one follows in a single grid, newest first; drafts sit on their own shelf below it, headed "Drafts" with a count and a one-line note that they are made by hand and not published (the owner asked for a drafts section on 2026-10-29, which replaces their 2026-10-27 wish for no draft label), phones show the grid as a list with a small picture beside each title, and "Up next" lists the questions that can be picked for tomorrow and counts the rest. The curriculum still orders the daily run and the "More investigations" list on guide pages. `lab/sitecheck.py` checks that the newest guide is featured and every other one appears once in `#gallery`.
+
+### Faster than light: a new engine for 2.4 (2026-10-29)
+
+The owner asked to see "Why can nothing travel faster than light?", so curriculum 2.4 has a new hand-built engine, `speed-limit`, marked ready. It is the only plannable item, so the next daily run investigates it. Four chapters with fixed choreography (the pipeline allows three or four):
+- one push to half light speed, then everyday adding's dashed line through light speed;
+- from the ground, the coasting rocket's lamp and a lamp post flash together, and the flashes travel side by side;
+- the crew's view: their flash pulls away at full light speed, and after another push the same flash still does, so they never gain on light (the reason);
+- equal pushes climb 50%, 80%, 93%, 98%, 99.2%, 99.7% under the faint everyday line, with a magnifier showing the last steps below the line.
+
+A skeptic subagent's first review found the earlier version showed *that* but not *why* (a siren's sound is no faster from a moving car either) and that its energy bars read as the cause and were wrong for a rocket burning fuel. Energy is now only an optional sentence, per kilogram. `SPEED_NOTES` cite CERN 1964 and Michelson and Morley, define the push relative to a dropped marker, and list the honesty points (nothing gets heavier, not a wall, both views right because moving clocks and rulers differ). Blind-viewer and skeptic subagents passed the final version; the renderer check passes 22 of 22; `limitChecks` include light leaving at light speed in the crew's frame.
 
 ### Article header (2026-10-29)
 

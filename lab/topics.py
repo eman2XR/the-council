@@ -209,10 +209,47 @@ suggests but could not be trained on all words at once; attention itself is olde
 No claims that models understand.'''+COMMON
 
 # Models whose picture explains why, not only what, and that passed owner review and beginner tests.
+SPEED_NOTES = '''SPEED LIMIT (WHY NOTHING CAN TRAVEL FASTER THAN LIGHT). Special relativity. The measured facts: light
+from a moving source is no faster (CERN 1964: gamma rays from particles moving at 99.975% of light speed still travelled
+at light speed), and a moving lab measures light at the same speed in every direction (Michelson and Morley 1887 on the
+moving Earth, and far more precise tests since). Four chapters with fixed choreography and no slider demo. 1: a chart
+whose top line is light speed and whose steps are equal pushes; in a window above it the rocket fires one push and
+coasts, while its speed seen from the ground rises to half light speed on the chart; with the second sentence the window
+fades and a dashed line shows everyday adding, half plus half reaching light speed and a third push passing it. 2: the
+chart dims and the window shows, from the ground, the rocket coasting at half light speed past a lamp post; as it
+passes, its own lamp and the post's lamp flash together, a second before the second sentence starts, and the two flashes
+travel side by side at light speed, leaving faint trails back to the post, while the rocket falls behind: the rocket's
+speed adds nothing to its light. Write the second sentence about the flashes travelling. 3: the window shows the view
+from the rocket (labelled): the rocket stays put, the ground streams back at half light speed, and the crew's lamp
+flashes once, early in the first sentence, and the flash pulls away at full light speed, with a faint trail back to the
+rocket; with the second sentence the rocket pushes again, the ground streams back faster, and the same flash still pulls
+away at exactly the same speed. This is the reason: even the flash already ahead still pulls away at full light speed
+after every push, so the crew never gain on light and can never catch it (point to that flash, not to new ones, whose
+lamp moves with the crew). Say that both views are right: from the ground the flash pulls ahead of the rocket at only
+half light speed, while the crew measure it pulling away at full light speed, because moving clocks and rulers differ
+(the light-clock guide). 4: the same push again and again, under the faint dashed line of everyday adding; with the
+first sentence the speed seen from the ground goes to 80% and then 93%, with the second to 98%, 99.2% and 99.7%, each
+step smaller, all under the light-speed line; after the last step a magnifier above the chart shows the top of it zoomed
+in, the last steps clearly below the line. Link it to chapter 3: if speeds simply added, the crew would gain on light.
+The rule that keeps light at light speed for everyone also combines the rocket's speeds, so half plus half gives 80%
+((0.5+0.5)/(1+0.5x0.5)), not 100%. Define the push as the crew feel it: each one leaves the rocket at half light speed
+relative to a marker it dropped just before, and the crew feel every push the same. After playback field mass sets the
+number of pushes, 0 to 10 (UI "Pushes"); field distance is unused, so set controls to "first". The readout is the speed
+seen from the ground. Exact for equal pushes: after n pushes the speed is tanh(0.549 n), 99.997% after ten. Supported
+questions: why nothing can go faster than light, why pushing harder or longer does not help, why light from a moving
+lamp is not faster, why this does not show up at everyday speeds. The picture shows no energy; a sentence may add that,
+seen from the ground, each push adds more kinetic energy per kilogram than the last, without limit (say per kilogram: a
+rocket that burns fuel loses mass; on board every push feels the same), but energy is a consequence, not the reason.
+Honesty points: nothing on board gets heavier, and the crew feel no limit or resistance; light speed is not a wall or
+ceiling; never claim the crew see the ground's gap; massless things such as light always move at light speed; why
+signals cannot outrun light rests on cause and effect and is not covered; distant galaxies can recede faster than light
+because space itself expands, which is not motion through space and is not covered here. Motion on screen is slowed for
+viewing.'''+COMMON
+
 # Only these are planned; the others wait for a redesign. attention (2026-10-29) was added at the owner's request
 # for the next run after subagent beginner tests; the owner has not reviewed its picture yet.
 READY = {'light-bending', 'gravity-clocks', 'spacetime-paths', 'light-clock', 'interference',
-         'diffraction'}
+         'diffraction', 'speed-limit'}
 # Not ready (2026-10-28): twin-trip shows what rather than why; spacetime, falling-time and tunneling are graph-style;
 # standing-waves, quantum-well (five chapters), attention (six) and wave-packet (four chapters) are hand-made guides
 # with fixed choreography, which agent-written scenes would not match;
@@ -234,5 +271,6 @@ TOPICS = {
     'falling-time': {'label':'Why things fall', 'question':'If gravity slows time, why do things fall?', 'notes':FALL_NOTES},
     'diffraction': {'label':'Spreading through a gap', 'question':'Why do waves spread out after passing a narrow gap?', 'notes':GAP_NOTES},
     'quantum-well': {'label':'Allowed energies in a well', 'question':'Why can a trapped particle only have certain energies?', 'notes':WELL_NOTES},
+    'speed-limit': {'label':'Speed limit', 'question':'Why can nothing travel faster than light?', 'notes':SPEED_NOTES},
     'attention': {'label':'Attention in language AI', 'question':'What does the “attention” in “Attention Is All You Need” do when an AI reads a sentence?', 'notes':ATTENTION_NOTES},
 }

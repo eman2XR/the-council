@@ -46,7 +46,8 @@
     {
      "id": "2.4",
      "question": "Why can nothing travel faster than light?",
-     "model": "twin-trip"
+     "model": "speed-limit",
+     "ready": true
     },
     {
      "id": "2.5",

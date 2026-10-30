@@ -1,7 +1,7 @@
 const $=id=>document.getElementById(id);
 const put=(id,text)=>{const el=$(id);if(el)el.textContent=text??'';};
 const el=(tag,props={},...children)=>{const node=Object.assign(document.createElement(tag),props);node.append(...children);return node;};
-const TOPICS={'gravity-clocks':'Gravity and time','light-bending':'Gravity and light','spacetime':'Space and time','twin-trip':'Space and time','interference':'Waves','standing-waves':'Waves','two-slit-particles':'Quanta','tunneling':'Quanta','wave-packet':'Quanta','quantum-well':'Quanta','falling-time':'Gravity and time','diffraction':'Waves','spacetime-paths':'Space and time','light-clock':'Space and time','river':'Black holes','fall-views':'Gravity and time','tides':'Curved spacetime','lift':'Gravity and time','moon-tides':'Gravity and time','attention':'How AI reads'};
+const TOPICS={'gravity-clocks':'Gravity and time','light-bending':'Gravity and light','spacetime':'Space and time','twin-trip':'Space and time','interference':'Waves','standing-waves':'Waves','two-slit-particles':'Quanta','tunneling':'Quanta','wave-packet':'Quanta','quantum-well':'Quanta','falling-time':'Gravity and time','diffraction':'Waves','spacetime-paths':'Space and time','light-clock':'Space and time','river':'Black holes','fall-views':'Gravity and time','tides':'Curved spacetime','lift':'Gravity and time','moon-tides':'Gravity and time','attention':'How AI reads','speed-limit':'Space and time'};
 // The accuracy reviewer checks physics for physics guides and the mathematics for the others.
 const REVIEWED={'attention':'accuracy'};
 const STATUS={planning:'Choosing a question',running:'Investigating now',reviewed:'Passed review',needs_review:'Draft, not published',failed:'Attempt stopped',interrupted:'Run interrupted',idle:'Resting'};
@@ -125,7 +125,7 @@ function renderCards(){
   const leadCard=lead?card(lead,records.get(lead.id)):example?card({id:'example',title:example.scene.title.replace(/\n/g,' ')},example):null;
   leadCard?.classList.add('featured-card');
   $('featured').replaceChildren(...(leadCard?[el('p',{className:'lab-latest',textContent:'Latest from the lab'}),leadCard]:[]));
-  put('past-title','Investigations');put('past-count',entries.length+drafts.length?`${entries.length+drafts.length} investigations`:'');
+  put('past-title','Investigations');put('past-count',entries.length?`${entries.length} investigation${entries.length>1?'s':''}`:'');
   $('gallery').replaceChildren(...gallery(lead));
  }else{
   // Related first: investigations from the same chapter, then the rest.
@@ -449,18 +449,21 @@ function requestFor(item){
  return el('span',{className:'state wait',textContent:'Later'});
 }
 // Drafts sit with the investigations: in the slot whose model they use, else in the chapter of their topic.
+const DRAFTS_NOTE='Made by hand, outside the daily run. The lab’s reviewers have not checked them, so they are not published.';
 function draftFor(item,used){const d=drafts.find(d=>!used.has(d.id)&&d.kind===item.model);if(d)used.add(d.id);return d;}
 const cardFor=e=>thumbCard(e,records.get((e.draft?'draft:':'')+e.id));
-// Every other investigation in one grid, reviewed ones newest first and then drafts, then the questions that can
-// be picked for tomorrow's run.
+// Every other reviewed investigation in one grid, newest first; then the drafts on a shelf of their own, newest
+// first; then the questions that can be picked for tomorrow's run.
 function gallery(lead){
  const newest=(a,b)=>new Date(b.created||0)-new Date(a.created||0);
- const grid=el('div',{className:'thumbs'},...[...entries.filter(e=>e!==lead).sort(newest),...[...drafts].sort(newest)].map(cardFor));
- if(!curriculum)return [grid];
+ const grid=el('div',{className:'thumbs'},...entries.filter(e=>e!==lead).sort(newest).map(cardFor));
+ const shelf=drafts.length?[el('section',{className:'drafts-shelf'},el('h3',{className:'chapter-title'},'Drafts',el('span',{textContent:`${drafts.length} to review`})),
+  el('p',{className:'drafts-note',textContent:DRAFTS_NOTE}),el('div',{className:'thumbs'},...[...drafts].sort(newest).map(cardFor)))]:[];
+ if(!curriculum)return [grid,...shelf];
  const used=new Set(), open=curriculum.chapters.flatMap(c=>c.items).filter(i=>!doneItem(i)&&!draftFor(i,used));
  const ready=open.filter(i=>i.ready&&!triedItem(i)), later=open.filter(i=>!i.ready).length;
- if(!ready.length&&!later)return [grid];
- return [grid,el('section',{className:'up-next'},el('h3',{className:'chapter-title',textContent:'Up next'}),
+ if(!ready.length&&!later)return [grid,...shelf];
+ return [grid,...shelf,el('section',{className:'up-next'},el('h3',{className:'chapter-title',textContent:'Up next'}),
   ...(ready.length?[el('ul',{className:'items pending'},...ready.map(i=>el('li',{},el('span',{className:'q',textContent:i.question}),requestFor(i))))]:[]),
   ...(later?[el('p',{className:'up-later',textContent:`${later} more question${later>1?'s are':' is'} planned, waiting for a picture that explains ${later>1?'them':'it'} well.`})]:[]))];
 }

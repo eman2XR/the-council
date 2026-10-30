@@ -101,6 +101,11 @@ def _engine_scene(title, beats, accent, mass=1, distance=1.25, duration=27):
 
 # Keyed by a phrase that appears only in the matching model notes.
 ENGINE_SCENES = {
+    'SPEED LIMIT': _engine_scene('Why nothing can travel faster than light', [
+        ('Push again and again', 'One push brings the rocket to half light speed. Everyday adding says a second push reaches light speed and a third goes faster.'),
+        ('Light does not add', 'As the rocket passes a lamp on the ground, both lamps flash together. Seen from the ground, the two flashes travel side by side at light speed.'),
+        ('The crew’s view', 'The crew time their flash too: it pulls away from them at full light speed. They push again, and the same flash still pulls away at that speed, so they never gain on it.'),
+        ('Each push adds less', 'The crew feel every push the same, yet from the ground a second push brings the rocket to 80%, a third to 93%. Every push adds less, creeping toward light speed but never reaching it.')], 'blue', mass=1, duration=40),
     'SPACETIME DIAGRAM': _engine_scene('Two twins, two paths through spacetime', [
         ('Nobody moves: the twins age together.', 'With zero speed the traveller never leaves. Both columns of ticks line up.'),
         ('Now the traveller flies out and back.', 'The traveller’s dots are spaced farther apart. Fewer of them fit before the twins meet again.'),
