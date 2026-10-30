@@ -450,8 +450,8 @@ function gallery(lead){
  const grid=el('div',{className:'thumbs'},...[...entries.filter(e=>e!==lead).sort(newest),...[...drafts].sort(newest)].map(cardFor));
  if(!curriculum)return [grid];
  const used=new Set(), open=curriculum.chapters.flatMap(c=>c.items).filter(i=>!doneItem(i)&&!draftFor(i,used));
- const ready=open.filter(i=>i.ready&&!triedItem(i)), later=open.length-ready.length;
- if(!open.length)return [grid];
+ const ready=open.filter(i=>i.ready&&!triedItem(i)), later=open.filter(i=>!i.ready).length;
+ if(!ready.length&&!later)return [grid];
  return [grid,el('section',{className:'up-next'},el('h3',{className:'chapter-title',textContent:'Up next'}),
   ...(ready.length?[el('ul',{className:'items pending'},...ready.map(i=>el('li',{},el('span',{className:'q',textContent:i.question}),requestFor(i))))]:[]),
   ...(later?[el('p',{className:'up-later',textContent:`${later} more question${later>1?'s are':' is'} planned, waiting for a picture that explains ${later>1?'them':'it'} well.`})]:[]))];
