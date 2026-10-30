@@ -1506,7 +1506,7 @@ const LAB_SPOTS={choose:[[340,132]],research:[[130,82]],record:[[628,80]],design
 let labPan=null;
 function drawLab(ctx,w,h,lab={}){
  const {t=0,still=false,mode='resting',phase='',since=0,question='',rejected=0,reviews=[0,0,0],wall=0,outcome='',notes=[]}=lab;
- const phone=w<520, VH=190, span=phone?560:1100, k=Math.min(w/span,h/VH), working=mode==='working', open=mode!=='closed';
+ const phone=w/h<4.3, VH=190, span=phone?560:1100, k=Math.min(w/span,h/VH), working=mode==='working', open=mode!=='closed';
  const aim=!phone?0:mode==='closed'||mode==='resting'?96:({research:0,record:300,render:540,review:540,publish:540}[phase]??96);
  labPan=still||labPan===null||!phone?aim:labPan+(aim-labPan)*.06;
  ctx.save();ctx.translate((w-span*k)/2,h-VH*k);ctx.scale(k,k);ctx.translate(-labPan,0);
@@ -1553,7 +1553,7 @@ function drawLab(ctx,w,h,lab={}){
  ctx.fillStyle='#eef3f1';ctx.fillRect(0,0,1100,166);ctx.fillStyle='#e6eeeb';ctx.fillRect(0,120,1100,46);line([[0,120],[1100,120]],'rgba(255,255,255,.9)',1.5);
  ctx.fillStyle='#e9dfcf';ctx.fillRect(0,166,1100,VH-166);line([[0,166],[1100,166]],'rgba(120,90,60,.28)',1.5);
  for(const lx of [400,860]){
-  if(open){const a=working?.34:.22, g=ctx.createLinearGradient(0,18,0,floor);g.addColorStop(0,`rgba(255,224,160,${a})`);g.addColorStop(1,'rgba(255,224,160,0)');
+  if(open){const a=working?.34:mode==='resting'?.15:.26, g=ctx.createLinearGradient(0,18,0,floor);g.addColorStop(0,`rgba(255,224,160,${a})`);g.addColorStop(1,'rgba(255,224,160,0)');
    ctx.fillStyle=g;ctx.beginPath();ctx.moveTo(lx-9,18);ctx.lineTo(lx+9,18);ctx.lineTo(lx+105,floor);ctx.lineTo(lx-105,floor);ctx.closePath();ctx.fill();}
   line([[lx,0],[lx,9]],'#4b5563',1.4);
   ctx.fillStyle='#374151';ctx.beginPath();ctx.moveTo(lx-5,9);ctx.lineTo(lx+5,9);ctx.lineTo(lx+11,18);ctx.lineTo(lx-11,18);ctx.closePath();ctx.fill();
@@ -1607,7 +1607,7 @@ function drawLab(ctx,w,h,lab={}){
   const total=lines.join('').length;let left=Math.floor(total*reveal);
   lines.forEach((ln,i)=>{const part=ln.slice(0,Math.max(0,left));left-=ln.length;if(part)ctx.fillText(part,bd.x+12,bd.y+17+i*14);});}
  else if(open&&mode==='resting')sketch(bd.x+70,bd.y+14,110,40,0,'rgba(255,255,255,.35)',1.6);
- const panels=!working?(mode==='done'?4:0):phase==='choose'||phase==='research'||phase==='record'?0:phase==='design'?Math.min(4,Math.floor(s/2.2)+1):4;
+ const panels=!working?(mode==='done'?(outcome==='stopped'?2:4):0):phase==='choose'||phase==='research'||phase==='record'?0:phase==='design'?Math.min(4,Math.floor(s/2.2)+1):4;
  const redo=at('revise')?clamp((s-1)/3):1;
  for(let i=0;i<panels;i++){const px=bd.x+14+i*60, py=bd.y+40, fade=at('design')&&i===panels-1?clamp((s-i*2.2)/1.4):i===3&&at('revise')?redo:1;
   ctx.globalAlpha=fade;ctx.strokeStyle='rgba(255,255,255,.7)';ctx.lineWidth=1.3;ctx.strokeRect(px,py,50,32);sketch(px,py,50,32,i,'rgba(255,255,255,.85)',1.4);ctx.globalAlpha=1;}
@@ -1618,9 +1618,9 @@ function drawLab(ctx,w,h,lab={}){
   box(x,y,16,14,'#fde68a',1.5);for(let j=0;j<3;j++)line([[x+3,y+5+j*3],[x+13-j*2,y+5+j*3]],'rgba(120,90,40,.45)',.8);box(x+5,y-1.5,6,3,'rgba(255,255,255,.6)',1);}
  // The director at the board: writes the question, then chalks the storyboard; idle and thinking between runs.
  const writing=busy&&(at('choose')&&reveal<1||at('design')||at('revise')&&redo<1);
- const along=at('design')?Math.min(3,s/2.2):3, panelX=bd.x+14+Math.floor(along)*60, sx=at('choose')?bd.x+40+reveal*150:at('design')||at('revise')?bd.x+58+along*60:mode==='resting'?bd.x+40:bd.x+bd.w-6;
- const hand=writing?(at('choose')?[sx-14,bd.y+40+Math.sin(T*9)*2]:[panelX+20+Math.sin(T*6)*12,bd.y+56+Math.cos(T*5)*7]):mode==='resting'?[sx-5,floor-62]:[sx-13,floor-46];
- if(open){person(sx,floor,{skin:'#f1c27d',hair:'#a0522d',style:1,shirt:'#fbbf24',face:-1,walk:(at('choose')&&reveal<1||at('design')&&along<3)&&busy?sx*.25:null,hands:[hand,[sx+12,floor-36]]});
+ const along=at('design')?Math.min(3,s/2.2):3, panelX=bd.x+14+Math.floor(along)*60, sx=at('choose')?bd.x+40+reveal*150:at('design')||at('revise')?bd.x+58+along*60:mode==='resting'||mode==='done'?bd.x+40:bd.x+bd.w-6;
+ const hand=writing?(at('choose')?[sx-14,bd.y+40+Math.sin(T*9)*2]:[panelX+20+Math.sin(T*6)*12,bd.y+56+Math.cos(T*5)*7]):mode==='resting'?[sx-5,floor-62]:[sx+13,floor-46];
+ if(open){person(sx,floor,{skin:'#f1c27d',hair:'#a0522d',style:1,shirt:'#fbbf24',face:mode==='done'?1:-1,walk:(at('choose')&&reveal<1||at('design')&&along<3)&&busy?sx*.25:null,hands:[hand,[sx+12,floor-36]]});
   if(writing)for(let i=0;i<3;i++){const q=(T*1.7+hash(i*2.3))%1;circ(hand[0]+(hash(i*5.1)-.5)*5,hand[1]+q*20,1.1,`rgba(255,255,255,${.75*(1-q)})`);}}
  // The bin: one crumpled sheet for every draft the reviewers sent back.
  ctx.fillStyle='#9ca3af';ctx.beginPath();ctx.moveTo(482,160);ctx.lineTo(502,160);ctx.lineTo(499,180);ctx.lineTo(485,180);ctx.closePath();ctx.fill();line([[481,160],[503,160]],'#6b7280',1.6);
@@ -1700,7 +1700,7 @@ function drawLab(ctx,w,h,lab={}){
    if(marks==='passed')tick(x,y,6,'#16a34a');else if(marks==='changes'){circ(x,y,6,'#e07a2e');ctx.beginPath();ctx.arc(x,y,2.8,Math.PI*.2,Math.PI*1.7);ctx.strokeStyle='#fff';ctx.lineWidth=1.5;ctx.stroke();
     line([[x+2.6,y-2.4],[x+.6,y-1.4],[x+2.9,y]],'#fff',1.3);}else tick(x,y,6,'#9ca3af');});}
  // Lighting: lower between runs, dark when the schedule is off.
- if(mode==='resting'){ctx.fillStyle='rgba(30,41,74,.07)';ctx.fillRect(labPan,0,span,VH);}
+ if(mode==='resting'){ctx.fillStyle='rgba(30,41,74,.1)';ctx.fillRect(labPan,0,span,VH);}
  if(mode==='closed'){ctx.fillStyle='rgba(15,23,42,.32)';ctx.fillRect(labPan,0,span,VH);}
  ctx.restore();
 }

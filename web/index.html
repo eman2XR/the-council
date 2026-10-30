@@ -24,10 +24,12 @@
    <p id="dashboard-phase" class="fine"></p>
    <p id="dashboard-freshness" class="fine warn"></p>
    <p id="dashboard-schedule" class="fine"></p>
+   <div class="lab-try"><p class="label small">Try the lab’s states</p><div id="lab-states" class="lab-states"></div>
+    <p class="fine">Simulated in your browser; nothing is sent.</p></div>
    <form id="guide-form" class="lab-guide">
     <label for="guide-text" class="label small">Guide the lab</label>
     <textarea id="guide-text" rows="2" maxlength="400" placeholder="What should the lab work on next, or do differently?"></textarea>
-    <div class="guide-actions"><button type="submit" class="pill">Pin it to the lab</button><button id="lab-preview" type="button" class="link-btn">Watch a sample run</button></div>
+    <div class="guide-actions"><button type="submit" class="pill">Pin it to the lab</button></div>
     <ul id="guide-notes" class="guide-notes"></ul>
     <p class="fine">A pinned note stays in this browser. Sending it opens a public GitHub issue; the 9 AM run follows notes from the owner’s account where they fit its quality bar, and replies on each.</p>
    </form>

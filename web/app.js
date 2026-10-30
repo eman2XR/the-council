@@ -204,6 +204,7 @@ function renderNext(){
  if(schedule?.enabled){
   const {label,wait}=nextRun(schedule), hours=Math.floor(wait/3600), minutes=Math.floor(wait%3600/60);
   put('next-title',labActive?'':`${label} · in ${hours?hours+' h ':''}${minutes} min`);
+  if(labPreview)labPreview.shown='';
   put('dashboard-schedule','One new investigation each morning. Only investigations that pass physics and visual review are published.');
  }else{
   put('next-title',schedule?.state==='paused'?'Improving how investigations are made':schedule?.state==='blocked'?'Schedule paused':'No schedule confirmed');
@@ -215,7 +216,8 @@ async function refreshDashboard(){
   const response=await fetch('dashboard.json',{cache:'no-store'});if(!response.ok)throw Error('No status');
   const state=await response.json();schedule=state.schedule;attempts=state.attempts||[];
   const active=['running','planning'].includes(state.status), age=Date.now()-new Date(state.updated).getTime();
-  put('dashboard-status',active?'Investigating now':schedule?.enabled?'Lab resting':schedule?.state==='paused'?'New investigations paused':'Lab paused');
+  const just=!active&&age<LAB_DONE_MINUTES*60000&&{reviewed:'Just published',needs_review:'Finished as a draft',failed:'Stopped early',interrupted:'Stopped early'}[state.status];
+  put('dashboard-status',active?'Investigating now':just&&schedule?.enabled?just:schedule?.enabled?'Lab resting':schedule?.state==='paused'?'New investigations paused':'Lab paused');
   $('lab').dataset.state=active?'active':schedule?.enabled?'idle':'paused';
   labActive=active;labQuestion=state.question&&state.question!=='Choosing the next question'?state.question:'';
   const outcome={reviewed:'Last investigation passed review',needs_review:'Last attempt stayed a draft',failed:'Last attempt stopped early',interrupted:'Last attempt was interrupted'};
@@ -230,7 +232,7 @@ async function refreshDashboard(){
   $('bench').hidden=!drafts.length;
   $('bench-list').replaceChildren(...drafts.map(a=>el('li',{textContent:a.question})));
   document.body.dataset.paused=schedule?.enabled?'no':'yes';
-  renderNext();renderPath();renderCards();if(labPreview)labPreview.phase='';
+  renderNext();renderPath();renderCards();if(labPreview)labPreview.shown='';
  }catch{
   document.body.dataset.paused='yes';labStatus=null;
   put('dashboard-status','No status yet');put('now-title','No status published yet');put('next-title','—');
@@ -242,7 +244,8 @@ async function refreshDashboard(){
 // motion it shows one still frame.
 const labCanvas=VIEW==='home'?el('canvas',{id:'lab-anim',className:'lab-anim'}):null;
 let labVisible=true, labPreview=null;
-const LAB_DONE_HOURS=8, LAB_TEXT={choose:'Choosing the question',research:'Gathering sources',record:'Writing up the research',design:'Designing the picture',
+const LAB_DONE_MINUTES=45, LAB_TEXT={closed:'The schedule is off, so the lab is closed',resting:'Resting between runs',
+ published:'Just published',draft:'Finished as a draft: it did not pass review',stopped:'The run stopped early',choose:'Choosing the question',research:'Gathering sources',record:'Writing up the research',design:'Designing the picture',
  render:'Rendering the frames',review:'Three reviewers are checking it',revise:'Changes requested: drawing a new draft',publish:'Passed review: publishing',done:'Published'};
 function labPhase(state){
  if(state.status==='planning')return 'choose';
@@ -256,7 +259,7 @@ function labPhase(state){
  return 'research';
 }
 function labModel(now){
- if(labPreview)return previewModel(now);
+ if(labPreview)return simModel(now);
  const s=labStatus, notes=noteList(), wall=entries.length;
  if(!s||document.body.dataset.paused==='yes')return {mode:'closed',wall,notes};
  const last=s.events?.at(-1), since=Math.max(0,(Date.now()-Date.parse(last?.at||s.updated))/1000);
@@ -268,34 +271,52 @@ function labModel(now){
    notes:notes.map(x=>x.url&&x.status==='waiting'&&used-->0?{...x,status:'taken'}:x)};
  }
  const outcome={reviewed:'published',needs_review:'draft',failed:'stopped',interrupted:'stopped'}[s.status];
- if(outcome&&(Date.now()-Date.parse(s.updated))/3600000<LAB_DONE_HOURS)
+ if(outcome&&Date.now()-Date.parse(s.updated)<LAB_DONE_MINUTES*60000)
   return {mode:'done',outcome,question:entries.find(e=>e.id===s.id)?.question||s.question,wall,rejected:Math.max(0,(s.revision||0)-(outcome==='published'?1:0)),notes};
  return {mode:'resting',question:labNext,wall,notes};
 }
-// A sample run, played in the browser only: every phase in about a minute, using the first pinned note.
+// Trying the lab, simulated in the browser only: a sample run plays every phase in about a minute using the first
+// pinned note, or one chosen state holds until Live. Nothing is sent or published.
 const PREVIEW=[['choose',6],['research',8],['record',5],['design',9],['render',5],['review',7],['revise',5],['render',4],['review',6],['publish',5],['done',7]];
-function previewModel(now){
- const t=(now-labPreview.start)/1000;let from=0,i=0;
- while(i<PREVIEW.length&&t>=from+PREVIEW[i][1]){from+=PREVIEW[i][1];i++;}
- if(i>=PREVIEW.length){stopPreview();return labModel(now);}
- const [phase,length]=PREVIEW[i], since=t-from, again=PREVIEW.slice(0,i).some(p=>p[0]==='revise');
- if(labPreview.phase!==phase){labPreview.phase=phase;previewStrip(phase,i);}
- const notes=noteList().map((n,j)=>j===0?{...n,status:phase==='done'?'applied':'taken'}:n);
- if(phase==='done')return {mode:'done',outcome:'published',question:labPreview.question,rejected:1,wall:entries.length+1,notes};
- return {mode:'working',phase,since,question:labPreview.question,wall:entries.length,notes,rejected:again?1:0,
-  reviews:phase==='review'?[.3,.55,.8].map(f=>since>length*f?1:0):[0,0,0]};
+const PHASE_LEN={choose:8,research:10,record:7,design:10,render:6,review:8,revise:6,publish:5};
+const LAB_STATES=[['Live',null],['Sample run','run'],['Closed',{mode:'closed'}],['Resting',{mode:'resting'}],['Question',{mode:'working',phase:'choose'}],
+ ['Research',{mode:'working',phase:'research'}],['Write-up',{mode:'working',phase:'record'}],['Design',{mode:'working',phase:'design'}],
+ ['Render',{mode:'working',phase:'render'}],['Review',{mode:'working',phase:'review'}],['Revise',{mode:'working',phase:'revise'}],
+ ['Publish',{mode:'working',phase:'publish'}],['Published',{mode:'done',outcome:'published'}],['Draft',{mode:'done',outcome:'draft'}],['Stopped',{mode:'done',outcome:'stopped'}]];
+function simModel(now){
+ const sim=labPreview, t=(now-sim.start)/1000;let model, i=-1;
+ if(sim.state==='run'){let from=0;i=0;
+  while(i<PREVIEW.length&&t>=from+PREVIEW[i][1]){from+=PREVIEW[i][1];i++;}
+  if(i>=PREVIEW.length){stopPreview();return labModel(now);}
+  const [phase,length]=PREVIEW[i], again=PREVIEW.slice(0,i).some(p=>p[0]==='revise');
+  model=phase==='done'?{mode:'done',outcome:'published',rejected:1}:{mode:'working',phase,since:t-from,length,rejected:again?1:0};}
+ else{const length=PHASE_LEN[sim.state.phase]||10;
+  model={...sim.state,since:t%length,length,rejected:sim.state.phase==='revise'||sim.state.outcome==='published'?1:sim.state.outcome==='draft'?3:0};}
+ const key=model.mode==='working'?model.phase:model.outcome||model.mode;
+ if(sim.shown!==key){sim.shown=key;simStrip(model,key);}
+ const notes=noteList().map((n,j)=>j>0?n:model.mode==='working'?{...n,status:'taken'}:model.outcome==='published'?{...n,status:'applied'}:n);
+ return {...model,question:model.mode==='closed'?'':sim.question,notes,wall:entries.length+(model.outcome==='published'?1:0),
+  reviews:model.phase==='review'?[.3,.55,.8].map(f=>model.since>model.length*f?1:0):[0,0,0]};
 }
-function previewStrip(phase,i){
- const step=['choose','research','record','design','revise','render','review','publish','done'].indexOf(phase), at=[0,1,1,2,2,3,4,5,6][step];
- put('dashboard-status','Sample run');$('lab').dataset.state='active';put('next-pick',LAB_TEXT[phase]);put('next-title','');
- put('now-title','A sample run, simulated in your browser');put('dashboard-question',labPreview.question);
- $('steps').hidden=false;$('steps').replaceChildren(...STEPS.map((name,j)=>el('li',{className:j<at?'done':j===at?'active':'',textContent:name})));
+function simStrip(model,key){
+ const run=labPreview.state==='run', at=model.mode==='working'?{choose:0,research:1,record:1,design:2,revise:2,render:3,review:4,publish:5}[model.phase]:model.mode==='done'?6:-1;
+ put('dashboard-status',run?'Sample run':'Trying a state');$('lab').dataset.state=model.mode==='working'?'active':model.mode==='closed'?'paused':'idle';
+ put('next-pick',LAB_TEXT[key]);put('next-title','');
+ put('now-title',run?'A sample run, simulated in your browser':`${labPreview.label}, simulated in your browser`);
+ put('dashboard-question',model.mode==='closed'?'':labPreview.question);
+ $('steps').hidden=at<0;$('steps').replaceChildren(...STEPS.map((name,j)=>el('li',{className:j<at?'done':j===at?'active':'',textContent:name})));
  const note=noteList()[0];
- put('dashboard-phase',!note?'':i<PREVIEW.length-1?'Your note is taped to the board for the director and reviewers.':'In a real run, the lab replies on your note with what it did.');
+ put('dashboard-phase',!note?'':model.mode==='working'?'Your note is taped to the board for the director and reviewers.':model.outcome==='published'?'In a real run, the lab replies on your note with what it did.':'');
  put('dashboard-freshness','');put('dashboard-schedule','Nothing here is sent or published. The real lab runs at 9 AM.');
- $('lab-preview').textContent='Stop the sample run';
+ markStates();
 }
-function stopPreview(){labPreview=null;$('lab-preview').textContent='Watch a sample run';refreshDashboard();}
+function stopPreview(){labPreview=null;markStates();refreshDashboard();}
+function markStates(){const current=labPreview?.label||'Live';$('lab-states')?.querySelectorAll('button').forEach(b=>b.setAttribute('aria-pressed',String(b.textContent===current)));}
+function tryState(label){
+ const state=LAB_STATES.find(([l])=>l===label)?.[1];
+ if(!state){stopPreview();return;}
+ labPreview={state,label,start:performance.now(),shown:'',question:labNext||'Why does a moving clock tick slowly?'};markStates();
+}
 // Guidance notes: the owner's GitHub issues labelled council:guidance wait for the next run, which follows them where
 // they fit the quality bar, replies on each and closes it. Notes pinned on this page stay in this browser until sent.
 const NOTE_TAIL='\n\nA guidance note from the lab on the home page.';
@@ -341,8 +362,11 @@ if(labCanvas){
  $('guide-form').onsubmit=e=>{e.preventDefault();const text=$('guide-text').value.trim();if(!text)return;
   saveNotes([...localNotes(),{id:Date.now(),text:text.slice(0,400),at:Date.now()}]);$('guide-text').value='';renderNotes();drawLabStill();};
  $('guide-open').onclick=e=>{e.preventDefault();$('lab').open=true;$('guide-text').focus();};
- $('lab-preview').onclick=()=>{if(labPreview){stopPreview();return;}
-  labPreview={start:performance.now(),phase:'',question:labNext||'Why does a moving clock tick slowly?'};$('lab').open=true;};
+ $('lab-states').replaceChildren(...LAB_STATES.map(([label])=>{const b=el('button',{type:'button',className:'chip',textContent:label});b.onclick=()=>tryState(label);return b;}));
+ markStates();
+ // ?lab=review (or any state's name) opens the page in that state.
+ setTimeout(()=>{const asked=norm(new URLSearchParams(location.search).get('lab')), wanted=asked&&LAB_STATES.find(([l])=>norm(l)===asked);
+  if(wanted){$('lab').open=true;tryState(wanted[0]);}});
  setTimeout(loadNotes);
 }
 refreshDashboard();setInterval(refreshDashboard,60000);setInterval(()=>{renderNext();renderPath();},30000);
@@ -398,6 +422,7 @@ function renderPath(){
   const upcoming=pick||next;labNext=upcoming?.question||'';
   put('next-pick',labActive?labQuestion:upcoming?`${pick?'Your pick':'Next'}: ${upcoming.question}`:'');
  }else put('next-pick',labActive?labQuestion:'');
+ if(labPreview)labPreview.shown='';
 }
 async function loadPath(){
  try{curriculum=await (await fetch('curriculum.json')).json();}catch{return;}
