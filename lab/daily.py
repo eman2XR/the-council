@@ -115,10 +115,13 @@ def export_run(run_dir, root=ROOT):
     return export_accepted(state,root)
 
 
+PUBLICATION=('web/published/','web/dashboard.json','web/proposals.json')
+
+
 def publish(root=ROOT):
     """Commit only the generated public archive, never other local edits."""
-    def git(*args):
-        return subprocess.run(['git',*args],cwd=root,text=True,capture_output=True,check=True,timeout=120).stdout.strip()
+    def git(*args,check=True):
+        return subprocess.run(['git',*args],cwd=root,text=True,capture_output=True,check=check,timeout=120).stdout.strip()
     paths=[p for p in ('web/published','web/dashboard.json','web/proposals.json') if (root/p).exists()]
     if not paths:
         return
@@ -134,8 +137,20 @@ def publish(root=ROOT):
         message=(f'Publish reviewed investigation {", ".join(guides)}' if guides else
                  'Update Council proposals' if 'web/proposals.json' in changed else 'Update Council investigation dashboard')
         git('commit','-m',message,'--',*paths)
-    # A failed push is retried next cycle even when there is nothing new to commit.
-    git('push','origin','main')
+    # A failed push is retried next cycle even when there is nothing new to commit. When GitHub moved on during the
+    # run, the run's own publication commits are replayed on top of it once and pushed again.
+    try:
+        git('push','origin','main')
+    except subprocess.CalledProcessError:
+        git('fetch','origin','main')
+        if any(not p.startswith(PUBLICATION) for p in git('diff','--name-only','origin/main...HEAD').splitlines()):
+            raise RuntimeError('Unpushed commits outside the publication; leave publication pending.') from None
+        try:
+            git('rebase','origin/main')
+        except subprocess.CalledProcessError:
+            git('rebase','--abort',check=False)
+            raise RuntimeError('The publication conflicts with newer commits on GitHub; leave publication pending.') from None
+        git('push','origin','main')
 
 
 def report(number, state, requests, day):

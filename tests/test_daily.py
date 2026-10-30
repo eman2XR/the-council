@@ -1,5 +1,7 @@
 import copy
+import importlib.util
 import json
+import subprocess
 import tempfile
 import unittest
 from pathlib import Path
@@ -140,3 +142,79 @@ class PauseTests(unittest.TestCase):
                 self.assertEqual(daily(FixtureProvider,root=root),[])
             runner.assert_not_called()
             self.assertFalse((root/'.council-state'/'history.json').exists())
+
+
+def checkouts(tmp):
+    """A bare stand-in for GitHub, a checkout that pushes in between ("me") and the worker's checkout."""
+    tmp=Path(tmp);hooks=tmp/'hooks';hooks.mkdir()
+    def git(cwd,*args):
+        return subprocess.run(['git','-c',f'core.hooksPath={hooks}',*args],cwd=cwd,text=True,capture_output=True,check=True).stdout.strip()
+    def local(path):
+        for key,value in (('user.name','Test'),('user.email','test@example.com'),('commit.gpgsign','false'),('core.hooksPath',str(hooks))):
+            git(path,'config',key,value)
+        return path
+    origin=tmp/'origin.git';git(tmp,'init','-q','--bare','-b','main',str(origin))
+    me=tmp/'me';git(tmp,'init','-q','-b','main',str(me));local(me)
+    (me/'README.md').write_text('one\n');git(me,'add','.');git(me,'commit','-qm','start')
+    git(me,'remote','add','origin',str(origin));git(me,'push','-q','origin','main')
+    worker=tmp/'worker';git(tmp,'clone','-q',str(origin),str(worker));local(worker)
+    def push_from_me(path,text,message):
+        (me/path).parent.mkdir(parents=True,exist_ok=True);(me/path).write_text(text)
+        git(me,'add','.');git(me,'commit','-qm',message);git(me,'push','-q','origin','main')
+    return git,origin,worker,push_from_me
+
+
+def entry_point():
+    spec=importlib.util.spec_from_file_location('run_daily',Path(__file__).resolve().parents[1]/'scripts'/'run_daily.py')
+    module=importlib.util.module_from_spec(spec);spec.loader.exec_module(module)
+    return module
+
+
+class WorkerSyncTests(unittest.TestCase):
+    def test_publish_replays_its_commit_when_github_moved_during_the_run(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            git,origin,worker,push_from_me=checkouts(tmp)
+            push_from_me('README.md','two\n','pushed during the run')
+            (worker/'web'/'published'/'run-1').mkdir(parents=True);(worker/'web'/'published'/'run-1'/'record.json').write_text('{}')
+            publish(worker)
+            log=git(origin,'log','--format=%s','main').splitlines()
+            self.assertEqual(log[:2],['Publish reviewed investigation run-1','pushed during the run'])
+            self.assertEqual(git(worker,'rev-parse','HEAD'),git(origin,'rev-parse','main'))
+
+    def test_publish_conflict_is_left_pending_and_clean(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            git,origin,worker,push_from_me=checkouts(tmp)
+            push_from_me('web/published/run-1/record.json','{"theirs":1}','same file on GitHub')
+            (worker/'web'/'published'/'run-1').mkdir(parents=True);(worker/'web'/'published'/'run-1'/'record.json').write_text('{"ours":1}')
+            with self.assertRaises(RuntimeError):publish(worker)
+            self.assertEqual(git(worker,'status','--porcelain','--untracked-files=no'),'')
+            self.assertEqual(git(origin,'log','-1','--format=%s','main'),'same file on GitHub')
+
+    def test_entry_point_fast_forwards_before_the_run(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            git,origin,worker,push_from_me=checkouts(tmp)
+            push_from_me('lab/new.py','x=1\n','new code')
+            self.assertEqual(entry_point().update(worker),'updated')
+            self.assertEqual(git(worker,'rev-parse','HEAD'),git(origin,'rev-parse','main'))
+            self.assertEqual(entry_point().update(worker),'up to date')
+
+    def test_entry_point_never_touches_local_edits(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            git,origin,worker,push_from_me=checkouts(tmp)
+            push_from_me('lab/new.py','x=1\n','new code')
+            (worker/'README.md').write_text('edited by hand\n')
+            self.assertEqual(entry_point().update(worker),'local edits present, not updated')
+            self.assertEqual((worker/'README.md').read_text(),'edited by hand\n')
+            self.assertNotEqual(git(worker,'rev-parse','HEAD'),git(origin,'rev-parse','main'))
+
+    def test_entry_point_replays_only_an_unpushed_publication(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            git,origin,worker,push_from_me=checkouts(tmp)
+            (worker/'web').mkdir();(worker/'web'/'dashboard.json').write_text('{}')
+            git(worker,'add','.');git(worker,'commit','-qm','Update Council investigation dashboard')
+            push_from_me('lab/new.py','x=1\n','new code')
+            self.assertEqual(entry_point().update(worker),'updated, unpushed publication replayed on top')
+            self.assertEqual(git(worker,'log','-2','--format=%s'),'Update Council investigation dashboard\nnew code')
+            (worker/'notes.txt').write_text('x');git(worker,'add','.');git(worker,'commit','-qm','something else')
+            push_from_me('lab/newer.py','y=1\n','newer code')
+            self.assertEqual(entry_point().update(worker),'unpushed commits outside the publication, not updated')
