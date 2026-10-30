@@ -28,8 +28,16 @@ CouncilScene.on(type=>{
 });
 
 // Heading, why it matters and the idea for one scene.
+// Text with the scene's links, if any, turned into safe links on their first mention.
+function linked(text,links=[]){
+ const parts=[text];
+ for(const {text:words,url} of links||[]){const href=safeURL(url);if(!href||!words)continue;
+  const i=parts.findIndex(p=>typeof p==='string'&&p.includes(words));if(i<0)continue;const at=parts[i].indexOf(words);
+  parts.splice(i,1,parts[i].slice(0,at),el('a',{href,target:'_blank',rel:'noopener noreferrer',textContent:words}),parts[i].slice(at+words.length));}
+ return parts.filter(p=>p!=='');
+}
 function heading(scene){
- put('title',scene.title);put('why',scene.why||scene.subtitle||'');put('takeaway',scene.takeaway);
+ put('title',scene.title);$('why').replaceChildren(...linked(scene.why||scene.subtitle||'',scene.links));put('takeaway',scene.takeaway);
 }
 
 function show(data,{autoplay=false}={}){
