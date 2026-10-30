@@ -79,7 +79,9 @@ def capture(scene, directory, research=None, provider='fixture'):
             if research:
                 page.evaluate('(record)=>show(record)', {'id':'capture', 'scene':scene, 'research':research,
                     'provider':provider, 'status':'running', 'checks':[], 'revisions':[]})
-            page.evaluate('(s)=>{CouncilScene.load(s);document.getElementById("title").textContent=s.title;document.getElementById("subtitle").textContent=s.subtitle;document.getElementById("takeaway").textContent=s.takeaway;}', scene)
+            # The page heading as the site shows it: title, then the why line (the subtitle when there is none).
+            page.evaluate('(s)=>{CouncilScene.load(s);const put=(id,v)=>{const e=document.getElementById(id);if(e)e.textContent=v||"";};'
+                          'put("title",s.title);put("why",s.why||s.subtitle);put("takeaway",s.takeaway);}', scene)
             checks = page.evaluate('CouncilScene.checks()')
             # Subtitles are timed from their text; verify the result stays comfortably readable.
             lines = [line for chapter in page.evaluate('CouncilScene.timeline()')['chapters'] for line in chapter['lines']]
@@ -126,6 +128,9 @@ def capture(scene, directory, research=None, provider='fixture'):
                 path = directory/f'frame-{i+1}.png'
                 page.locator('.workspace').screenshot(path=str(path))
                 frames.append(path)
+                if i % 2:
+                    # The late moment of each chapter, the canvas alone, for the reviewer who sees no words.
+                    page.locator('#universe').screenshot(path=str(directory/f'canvas-{beat+1}.png'))
             checks.extend(label_checks(stage_labels))
             last = samples[-1]
             page.set_viewport_size({'width':390,'height':844})

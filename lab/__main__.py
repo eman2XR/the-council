@@ -51,7 +51,7 @@ def main():
         return
     if args.command=='daily':
         from .daily import daily
-        daily(provider,args.count,args.rounds,args.publish)
+        daily(provider,args.count,args.rounds,args.publish,blueprints=args.publish)
         if args.publish:
             # The scheduled worker also reviews the project once a day; proposals wait for owner approval.
             from .improve import daily_review

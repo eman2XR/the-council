@@ -29,7 +29,7 @@ class LoopTests(unittest.TestCase):
         self.assertFalse(state['revisions'][0]['scene']['show_reference'])
         self.assertTrue(state['revisions'][1]['scene']['show_reference'])
 
-    def test_owner_guidance_reaches_director_and_reviewers(self):
+    def test_owner_guidance_reaches_designer_writer_and_reviewers(self):
         class Recorder(FixtureProvider):
             def __init__(self):
                 super().__init__();self.prompts={}
@@ -46,9 +46,39 @@ class LoopTests(unittest.TestCase):
                 state=run(provider,1,guidance=['Use an everyday example.','  '])
         self.assertEqual(state['guidance'],['Use an everyday example.'])
         self.assertTrue(any(e['message'].startswith('Owner guidance: 1 note') for e in state['events']))
-        for role in ('director','learner','visual_reviewer','physics_reviewer'):
+        for role in ('designer','writer','learner','visual_reviewer','physics_reviewer'):
             self.assertIn('Use an everyday example.',provider.prompts[role][-1],role)
-        self.assertNotIn('Use an everyday example.',provider.prompts['researcher'][-1])
+        for role in ('researcher','blind_viewer'):
+            self.assertNotIn('Use an everyday example.',provider.prompts[role][-1],role)
+
+    def test_design_brief_guides_the_writer_and_the_blind_viewer_sees_only_pictures(self):
+        class Recorder(FixtureProvider):
+            def __init__(self,blind_pass=True):
+                super().__init__();self.prompts={};self.images={};self.blind_pass=blind_pass
+            def generate(self,role,prompt,schema=None,images=(),**kw):
+                self.prompts.setdefault(role,[]).append(prompt);self.images.setdefault(role,[]).append([Path(i).name for i in images])
+                if role=='blind_viewer' and not self.blind_pass:
+                    return {'pass':False,'score':4,'summary':'Cannot see what changes.','changes':['Show the change.'],'blocking_issues':[]}
+                return super().generate(role,prompt,schema,images=images,**kw)
+        def capture(scene,directory,**kwargs):
+            directory.mkdir(parents=True);frames=[]
+            for n in range(1,3):
+                frame=directory/f'frame-{n}.png';frame.write_bytes(b'f');frames.append(frame)
+            (directory/'canvas-1.png').write_bytes(b'c')
+            return frames,[{'name':'test','pass':True}]
+        for blind_pass,status in ((True,'fixture_complete'),(False,'needs_review')):
+            provider=Recorder(blind_pass)
+            with tempfile.TemporaryDirectory() as tmp:
+                with patch('lab.pipeline.ROOT',Path(tmp)),patch('lab.pipeline.capture',capture):
+                    state=run(provider,2)
+            self.assertEqual(state['status'],status)
+            self.assertEqual(state['design']['idea'],'Fixture idea: compare the paths.')
+            for role in ('writer','visual_reviewer'):
+                self.assertIn('Fixture idea: compare the paths.',provider.prompts[role][-1],role)
+            for role in ('learner','blind_viewer'):
+                self.assertNotIn('Fixture idea',provider.prompts[role][-1],role)
+            self.assertEqual(provider.images['blind_viewer'][-1],['canvas-1.png'])
+            self.assertTrue(any('Designer is planning' in e['message'] for e in state['events']))
 
     def test_iteration_exhaustion_leaves_draft(self):
         state=self.execute(FixtureProvider(),1)

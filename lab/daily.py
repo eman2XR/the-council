@@ -6,10 +6,10 @@ import re
 import shutil
 import subprocess
 from contextlib import contextmanager
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
-from .contracts import obj, validate
-from .pipeline import ROOT, run, write_json, approved
+from .contracts import obj, validate, validate_design, DESIGN_SCHEMA
+from .pipeline import ROOT, run, write_json, approved, DESIGNER
 from .topics import TOPICS, READY
 from .dashboard import Dashboard
 from . import inbox
@@ -152,14 +152,48 @@ def guided(number, state, question, day):
     outcome={'reviewed':f'It passed review and is published at {SITE}?guide={state["id"]}.',
              'needs_review':'It did not pass review, so it stays a draft and was not published.'}
     if state['status'] in outcome:
-        inbox.comment(number,f'The Intuition Lab run on {day} read this note while investigating “{question}”. The director and '
+        inbox.comment(number,f'The Intuition Lab run on {day} read this note while investigating “{question}”. The designer, writer and '
                              f'reviewers followed it where it fit the quality bar. '+outcome[state['status']])
         inbox.close(number)
     else:
         inbox.comment(number,f'The Intuition Lab run on {day} stopped before it could use this note, so it stays open for the next run.')
 
 
-def daily(factory, count=1, rounds=3, push=False, root=ROOT, requests=None):
+def blueprint(factory, items, root, day):
+    """The designer sketches the picture a waiting question needs, as a proposal the owner approves before anyone
+    builds it: at most one a day, never twice for the same question, one model call. Returns the proposal or None."""
+    path=root/'web'/'proposals.json'
+    document=json.loads(path.read_text()) if path.exists() else {'proposals':[]}
+    stamp=day.replace('-','')
+    if any(p.get('kind')=='blueprint' and p['id'].startswith(f'P-{stamp}-') for p in document['proposals']):
+        return None
+    drawn={p.get('curriculum') for p in document['proposals'] if p.get('kind')=='blueprint'}
+    waiting=[i for i in items if i.get('model') not in READY and i.get('id') not in drawn]
+    if not waiting:
+        return None
+    item=waiting[0]
+    try:
+        design=validate_design(factory().generate('designer',item['question']+'\nNo visual engine exists for this question '
+            'yet. '+DESIGNER+' Describe the picture a new engine would need: set fits_engine to false and say in missing '
+            'what to build, as simply as the idea allows.',DESIGN_SCHEMA))
+    except Exception as error:
+        print(f'Blueprint skipped ({type(error).__name__}); nothing else is affected.',flush=True)
+        return None
+    chapters=' '.join(f"Chapter {n}: {c['show']}" for n,c in enumerate(design['chapters'],1))
+    proposal={'id':f'P-{stamp}-9','kind':'blueprint','curriculum':item.get('id'),'status':'open',
+              'created':datetime.now(timezone.utc).isoformat(),'title':f"A picture for “{item['question']}”"[:90],
+              'area':'engines','problem':'No visual engine can show this question yet, so the daily run cannot investigate it.',
+              'proposal':f"{design['idea']} {chapters} To build: {design['missing']}"[:600],
+              'benefit':f"The daily run could then investigate “{item['question']}”."[:300],'effort':'medium',
+              'risk':'Needs hand-built drawing code, model checks and a beginner test before it is marked ready.','evidence':[]}
+    document['proposals']=[proposal]+document['proposals'][:15]
+    document['updated']=datetime.now(timezone.utc).isoformat()
+    write_json(path,document)
+    print(f"Designer sketched a picture for {item.get('id')}; it waits in the proposals for the owner.",flush=True)
+    return proposal
+
+
+def daily(factory, count=1, rounds=3, push=False, root=ROOT, requests=None, blueprints=False):
     if count not in (1,2):
         raise ValueError('Daily limit must be one or two investigations.')
     day=datetime.now().astimezone().date().isoformat()
@@ -195,8 +229,11 @@ def daily(factory, count=1, rounds=3, push=False, root=ROOT, requests=None):
             ready=plannable(items,guides,explored)
             request,item=inbox.choice(requests,[i for i in items if i.get('model') in READY],TOPICS,lambda q: explored(q,model_of(q)))
             if not item and not ready:
-                # Nothing meets the quality bar right now; no slot is used and nothing is started.
+                # Nothing meets the quality bar right now; no slot is used and nothing is started. When publishing, the
+                # designer instead sketches the picture the next waiting question needs, once a day, for the owner.
                 print('No curriculum item is ready to investigate (every ready model is in use); nothing started.',flush=True)
+                if blueprints:
+                    blueprint(factory,[i for i in items if not explored(i['question'])],root,day)
                 break
             attempt={'day':day,'status':'planning','started':datetime.now().astimezone().isoformat()}
             ledger.append(attempt)

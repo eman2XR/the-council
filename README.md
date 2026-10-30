@@ -79,14 +79,18 @@ The fixture intentionally fails the first visual review (missing comparison and 
 
 ## What the loop does
 
-1. Researcher searches for sources and saves source notes.
-2. Scientist turns the evidence into a scoped claim, assumptions, prediction, falsifier and limitations.
-3. Director creates a validated scene specification: narrative, visual density, reference paths, labels, stroke weight, parameters and pacing.
-4. Renderer captures four ordered desktop frames and a mobile page from the actual interactive renderer.
-5. Three reviewers run in parallel: physics checks claims and visual implications; visual review checks layout, legibility and progression; a beginner reviewer answers the research's transfer questions from the frames and subtitles alone, checks that every subtitle matches its frame, and copy-edits the text. Each completed review is saved immediately.
-6. Director receives both reviews and the previous scene, then revises. All versions remain inspectable.
+0. The coordinator (the Python program that runs everything) takes the next ready question; when the owner has sent questions, feedback or guidance notes, a planner chooses among the ready questions instead.
+1. Researcher searches for sources and saves source notes. If it fails, a source finder lists candidate pages and the coordinator fetches them.
+2. Scientist turns the evidence into a scoped claim, assumptions, prediction, falsifier, limitations, misconceptions and transfer questions.
+3. Designer writes the design brief before any narration: the one idea, the everyday starting point, the belief it confronts, how the picture shows the reason, what each chapter shows and when it changes, at most one short label per chapter, and what to try afterwards.
+4. Writer creates a validated scene specification that follows the brief: title, chapters, narration, parameters and pacing for the topic's hand-built visual engine.
+5. The coordinator captures frames from the actual interactive renderer (an early and a late frame per chapter, the late ones also as the canvas alone, and the phone views) and runs the checks.
+6. Four reviewers run in parallel and never see one another's verdicts: accuracy checks the physics or mathematics; visual review checks layout, legibility and progression against the brief; a beginner reviewer answers the research's transfer questions from the frames and subtitles alone and copy-edits the text; a blind viewer sees only the canvas pictures, with no words, and flags anything cluttered, misleading or invisible. Each completed review is saved immediately.
+7. Writer receives the reviews and the previous scene, then revises. All versions remain inspectable.
 
-All three reviewers must pass with scores ≥7, no blocking issues, and passing numerical/layout checks. Failure or budget exhaustion retains a draft. Passing model review is **not** proof of scientific correctness or novelty.
+All four reviewers must pass with scores ≥7, no blocking issues, and passing numerical/layout checks. Failure or budget exhaustion retains a draft. Passing model review is **not** proof of scientific correctness or novelty.
+
+When nothing can be investigated (every ready engine already has a guide), the scheduled run asks the designer to sketch the picture the next waiting question needs, once a day, as a proposal for the owner. Engines themselves are built by hand.
 
 Runs are saved in `web/runs/<id>/record.json` with scenes, frames, source notes, review findings, timestamps and provider-reported usage. Only runs that pass every gate can be exported to `web/published/`.
 

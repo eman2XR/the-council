@@ -54,7 +54,12 @@ class FixtureProvider:
             return 'OFFLINE FIXTURE: hand-authored source notes, no live search performed.'
         if role == 'scientist':
             return deepcopy(CLOCK_RESEARCH if 'CLOCK MODEL' in prompt else RESEARCH)
-        if role == 'director':
+        if role == 'designer':
+            return {'idea': 'Fixture idea: compare the paths.', 'start': 'Fixture start.', 'belief': 'Fixture belief.',
+                    'reason': 'Fixture reason: the reference path shows the difference.', 'try': 'Fixture try.',
+                    'chapters': [{'show': f'Fixture chapter {n}.', 'changes': 'Fixture change.', 'label': ''} for n in (1, 2, 3)],
+                    'fits_engine': True, 'missing': ''}
+        if role in ('writer', 'director'):
             match = next((s for key, s in ENGINE_SCENES.items() if key in prompt), None)
             scene = deepcopy(match or (CLOCK_SCENE if 'CLOCK MODEL' in prompt else SCENE))
             if 'Previous scene' not in prompt:

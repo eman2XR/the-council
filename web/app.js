@@ -187,7 +187,7 @@ function stepOf(state){
  if(state.status==='reviewed')return 6;
  const message=(state.events?.at(-1)?.message||'').toLowerCase();
  if(message.includes('gates passed'))return 5;
- if(message.includes('changes requested')||message.includes('director'))return 2;
+ if(message.includes('changes requested')||message.includes('director')||message.includes('designer')||message.includes('writer'))return 2;
  if(message.includes('review')||message.includes('inspecting'))return 4;
  if(message.includes('rendering'))return 3;
  return 1;
@@ -255,7 +255,7 @@ function labPhase(state){
  if(message.includes('changes requested'))return 'revise';
  if(message.includes('inspecting')||message.includes('review saved'))return 'review';
  if(message.includes('rendering'))return 'render';
- if(message.includes('director'))return 'design';
+ if(message.includes('director')||message.includes('designer is planning')||message.includes('writer is writing'))return 'design';
  if(message.includes('scientist is preparing'))return 'record';
  return 'research';
 }

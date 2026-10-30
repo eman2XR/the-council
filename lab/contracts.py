@@ -26,6 +26,12 @@ RESEARCH_SCHEMA = obj({
     'questions': {'type': 'array', 'items': obj({'q': STR, 'a': STR})},
     'sources': {'type': 'array', 'items': obj({'title': STR, 'url': STR, 'supports': STR})},
 })
+# The designer's brief: how the guide will make its one idea intuitive, decided before any narration is written.
+DESIGN_SCHEMA = obj({
+    'idea': STR, 'start': STR, 'belief': STR, 'reason': STR,
+    'chapters': {'type': 'array', 'items': obj({'show': STR, 'changes': STR, 'label': STR})},
+    'try': STR, 'fits_engine': BOOL, 'missing': STR,
+})
 REVIEW_SCHEMA = obj({
     'pass': BOOL, 'score': NUM, 'summary': STR, 'changes': STRINGS,
     'blocking_issues': STRINGS,
@@ -95,3 +101,17 @@ light has no rest mass and is locally measured at c. More mass or a closer pass 
 bending. Do not imply light bends because it slows locally, or a dent pulls it downward.
 The animation cannot independently verify general relativity. Numeric checks verify
 only the implemented approximation. Keep claims appropriately scoped.'''
+
+
+def validate_design(design):
+    """A design brief within the bounds the writer and reviewers rely on."""
+    validate(design, DESIGN_SCHEMA)
+    if not 3 <= len(design['chapters']) <= 6:
+        raise ValueError('A design brief needs three to six chapters')
+    limits = {'idea': 240, 'start': 240, 'belief': 240, 'reason': 360, 'try': 240, 'missing': 400}
+    if any(len(design[k]) > n for k, n in limits.items()) or not design['idea'].strip():
+        raise ValueError('Design brief exceeds its bounds')
+    for chapter in design['chapters']:
+        if len(chapter['show']) > 300 or len(chapter['changes']) > 300 or len(chapter['label'].split()) > 5:
+            raise ValueError('Design brief chapter exceeds its bounds')
+    return design

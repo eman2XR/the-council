@@ -91,7 +91,8 @@ def review(provider, root=ROOT, requests=(), today=None):
             continue
         item['evidence'] = [url for url in item['evidence'] if url.startswith('https://') and url in notes][:4]
         fresh.append({'id': f'P-{day}-{n}', 'status': 'open', 'created': datetime.now(timezone.utc).isoformat(), **item})
-    kept = [p for p in document['proposals'] if not p['id'].startswith(f'P-{day}-')]
+    # Blueprints come from the designer, not this review, so a review never replaces them.
+    kept = [p for p in document['proposals'] if p.get('kind') == 'blueprint' or not p['id'].startswith(f'P-{day}-')]
     document = {'updated': datetime.now(timezone.utc).isoformat(), 'goal': GOAL,
                 'proposals': (fresh + kept)[:16]}
     write_json(path, document)

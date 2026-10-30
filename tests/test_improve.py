@@ -33,4 +33,45 @@ class ImproveTests(unittest.TestCase):
             self.assertIsNone(daily_review(broken,root,requests=[]))
             self.assertEqual(json.loads((root/'.council-state'/'improve.json').read_text())['status'],'failed')
 
+    def test_review_keeps_the_designers_blueprints(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root=Path(tmp);(root/'web').mkdir()
+            sketch={'id':'P-20261027-9','kind':'blueprint','title':'A picture','area':'engines','status':'open'}
+            (root/'web'/'proposals.json').write_text(json.dumps({'proposals':[sketch]}))
+            doc=review(FixtureProvider(),root,[],date(2026,10,27))
+            self.assertIn('P-20261027-9',[p['id'] for p in doc['proposals']])
+
+
+class BlueprintTests(unittest.TestCase):
+    def test_designer_sketches_one_waiting_question_a_day_as_a_proposal(self):
+        from lab.daily import blueprint
+        items=[{'id':'2.2','question':'Can two events be simultaneous for one person but not another?','model':None},
+               {'id':'1.2','question':'Why does gravity bend light?','model':'light-bending'},
+               {'id':'4.1','question':'Why do particles fired one at a time still make stripes?','model':'two-slit-particles'}]
+        with tempfile.TemporaryDirectory() as tmp:
+            root=Path(tmp);(root/'web').mkdir()
+            calls=[]
+            def factory():
+                calls.append(1);return FixtureProvider()
+            first=blueprint(factory,items,root,'2026-10-30')
+            self.assertEqual((first['id'],first['kind'],first['curriculum'],first['area']),('P-20261030-9','blueprint','2.2','engines'))
+            self.assertIsNone(blueprint(factory,items,root,'2026-10-30'))
+            second=blueprint(factory,items,root,'2026-10-31')
+            self.assertEqual(second['curriculum'],'4.1')
+            self.assertEqual(len(calls),2)
+            saved=json.loads((root/'web'/'proposals.json').read_text())['proposals']
+            self.assertEqual([p['curriculum'] for p in saved],['4.1','2.2'])
+
+    def test_nothing_ready_sketches_a_blueprint_only_when_asked(self):
+        from lab.daily import daily
+        items=[{'id':'2.2','question':'Can two events be simultaneous for one person but not another?','model':None}]
+        for asked in (False,True):
+            with tempfile.TemporaryDirectory() as tmp:
+                root=Path(tmp);(root/'web').mkdir()
+                (root/'web'/'curriculum.json').write_text(json.dumps({'chapters':[{'items':items}]}))
+                provider=FixtureProvider();provider.calls=0
+                daily(lambda:provider,root=root,requests=[],blueprints=asked)
+                self.assertEqual(provider.calls,1 if asked else 0)
+                self.assertEqual((root/'web'/'proposals.json').exists(),asked)
+
 if __name__=='__main__':unittest.main()

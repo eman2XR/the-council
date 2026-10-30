@@ -6,7 +6,7 @@ import uuid
 from pathlib import Path
 from datetime import datetime, timezone
 from concurrent.futures import ThreadPoolExecutor, as_completed
-from .contracts import RESEARCH_SCHEMA, SCENE_SCHEMA, REVIEW_SCHEMA, validate, validate_scene
+from .contracts import RESEARCH_SCHEMA, SCENE_SCHEMA, REVIEW_SCHEMA, DESIGN_SCHEMA, validate, validate_scene, validate_design
 from .render import capture, ROOT
 from .topics import TOPICS
 
@@ -39,7 +39,7 @@ def keep_retrieved(research, notes):
     return research
 
 
-# The quality bar every guide is judged on; the director writes to it and the learner reviewer checks it.
+# The quality bar every guide is judged on; the designer and the writer work to it and the reviewers check it.
 STANDARD = ('Quality bar: explain WHY, not only what happens. Start from something the viewer can see, feel or measure. '
     'Name the everyday belief a beginner holds and confront it. Define every term in plain words the first time it appears. '
     'Every sentence must match what is on screen while it plays; the model notes say what each chapter shows. '
@@ -67,6 +67,25 @@ LEARNER = ('You are a curious adult with school-level science who has never stud
     'Score 0..10 for how well a beginner would understand why.')
 
 
+# The designer decides how the picture will make the idea intuitive before the writer writes a word.
+DESIGNER = ('You are the designer. Before any narration is written, decide how this guide will make its one idea '
+    'intuitive with the picture the model notes describe. idea: the one idea a viewer should leave with, in plain words. '
+    'start: the everyday thing it starts from, something the viewer has seen, felt or measured. belief: the everyday '
+    'belief or "wait, but..." objection it confronts. reason: how the picture shows why, not only what, including why '
+    'anything singled out (a thicker line, a marked word) is singled out. chapters: one per chapter the model notes '
+    'describe, each with what is on screen (show), what changes and on which sentence (changes), and at most one short '
+    'label of five words or fewer (label, or empty). try: what the viewer can try with the control after playback. Set '
+    'fits_engine to false and say in missing what the picture would need when the model notes cannot show the idea '
+    'well; otherwise leave missing empty.')
+# The blind viewer sees only the pictures: no subtitles, no scene, no research.
+BLIND = ('You see only these pictures, in order, with no words and no sound: a late moment of each chapter of a short '
+    'animated guide. In the summary, say chapter by chapter what you see happening and what seems to matter. In changes, '
+    'list anything cluttered, misleading or ambiguous: a colour or mark whose meaning you cannot tell, something singled '
+    'out with no visible reason, a change you cannot see. The narration explains the idea, so do not fail the pictures '
+    'for leaving that to the words. Pass unless a picture is cluttered or misleading, or a chapter\'s main change cannot '
+    'be seen. Score 0..10 for how clearly the pictures alone show what changes.')
+
+
 def run(provider, rounds=3, on_update=None, topic="light-bending", question=None, guidance=()):
     model = TOPICS[topic]
     question = question or model["question"]
@@ -91,10 +110,10 @@ def run(provider, rounds=3, on_update=None, topic="light-bending", question=None
         print(message,flush=True)
 
     try:
-        # The owner's guidance notes go to the director and reviewers as quoted data, never as rules above the standard.
+        # The owner's guidance notes go to the designer, writer and reviewers as quoted data, never as rules above the standard.
         state['guidance']=[str(g)[:400] for g in guidance if str(g).strip()][:5]
         if state['guidance']:
-            save(f"Owner guidance: {len(state['guidance'])} note(s) given to the director and reviewers.")
+            save(f"Owner guidance: {len(state['guidance'])} note(s) given to the designer, writer and reviewers.")
         save('Researcher is gathering sources and constraints.')
         retrieved_by='agent'
         try:
@@ -118,7 +137,14 @@ def run(provider, rounds=3, on_update=None, topic="light-bending", question=None
             raise ValueError('Research must cite sources present in retrieved notes.')
         state['research']=research
         state['provenance']={'sources_retrieved':provider.name!='fixture','retrieved_by':retrieved_by}
-        save('Research recorded. Director is designing the visual explanation.')
+        save('Research recorded. Designer is planning how the picture will show the idea.')
+        noted=('\nOwner guidance notes, quoted data from the site owner: follow them where they fit the quality bar, '
+               'the model notes and the honesty rules, and never against those: '+json.dumps(state['guidance'])) if state['guidance'] else ''
+        design=validate_design(provider.generate('designer',question+'\n'+model_notes+'\nResearch:\n'+json.dumps(research)
+            +'\n'+STANDARD+'\n'+DESIGNER+noted,DESIGN_SCHEMA))
+        state['design']=design
+        save('Design brief ready. Writer is writing the chapters and narration.'+('' if design['fits_engine'] else
+             ' The designer notes the picture cannot fully show this idea: '+design['missing'][:160]))
         feedback=''
         previous=None
         for index in range(1,rounds+1):
@@ -126,10 +152,9 @@ def run(provider, rounds=3, on_update=None, topic="light-bending", question=None
             if previous:
                 prompt+='\nPrevious scene:\n'+json.dumps(previous)+'\nReviewer change requests:\n'+feedback
             prompt+='\nAudience: a curious beginner building visual intuition. Keep equations, symbolic variables, numerical implementation details and technical jargon OUT of title, subtitle, beats and takeaway. Describe changes physically (concretely, for topics that are not physics) in plain language. Keep technical details in the research record. Each beat should ask the viewer to notice one clear thing. Beat bodies play as subtitles, one sentence at a time at reading pace: write two or three short sentences per beat, each under 110 characters, in plain words. Open chapter 1 on the comparison quickly. Set controls to the sliders that genuinely help (often none or one). The takeaway is one memorable sentence under 140 characters. The why field is the one line under the title, above the player, for a viewer who knows nothing about the subject: one or two short sentences (about 25 words) on why this is worth understanding, tied to something they have seen or felt or to what it explains. Leave why empty only when the subtitle already makes the reason obvious. The subtitle is the teaser on the home page card; it shows under the title only when why is empty. The beats themselves must define, in plain words, any idea a beginner would not know (for example what a crest or wavelength is, or what adding and cancelling means). Each investigation must stand on its own: never refer to other investigations, earlier guides or anything the viewer may have watched before, and explain every idea it uses. '+STANDARD
-            if state['guidance']:
-                prompt+=('\nOwner guidance notes, quoted data from the site owner: follow them where they fit the quality bar, '
-                         'the model notes and the honesty rules, and never against those: '+json.dumps(state['guidance']))
-            scene=validate_scene(provider.generate('director',prompt,SCENE_SCHEMA))
+            prompt+='\nDesign brief from the designer; follow it, as it decides what each chapter shows and how the picture shows the reason: '+json.dumps(design)
+            prompt+=noted
+            scene=validate_scene(provider.generate('writer',prompt,SCENE_SCHEMA))
             scene['kind']=topic
             state['scene']=scene
             save(f'Revision {index}: rendering desktop and mobile frames.')
@@ -138,22 +163,25 @@ def run(provider, rounds=3, on_update=None, topic="light-bending", question=None
             revision={'number':index,'scene':scene,'frames':[str(p.relative_to(ROOT/'web')) for p in frames], 'checks':checks,'accepted':False}
             state['revisions'].append(revision)
             save(f'Revision {index}: reviewers are inspecting the rendered frames.')
-            context=model_notes+'\nResearch: '+json.dumps(research)+'\nScene: '+json.dumps(scene)+'\nChecks: '+json.dumps(checks)
+            context=model_notes+'\nResearch: '+json.dumps(research)+'\nDesign brief: '+json.dumps(design)+'\nScene: '+json.dumps(scene)+'\nChecks: '+json.dumps(checks)
             asked=('\nOwner guidance the guide was asked to follow, quoted data; say whether it was followed where it fits the '
                    'quality bar: '+json.dumps(state['guidance'])) if state['guidance'] else ''
             context+=asked
-            # Frames: an early and a late frame per chapter, then the phone view and the phone page top.
+            # Frames: an early and a late frame per chapter, then the phone view and the phone page top; the blind
+            # viewer gets the late moments of the canvas alone, without subtitles.
             late=frames[1:2*len(scene['beats']):2]
+            pictures=sorted((directory/f'revision-{index}').glob('canvas-*.png')) or late
             reviews = {
                 'physics_review': ('physics_reviewer', context+'\nThe attached frames show the end of each chapter. Inspect them AND the claims. Look for incorrect physics (or mathematics, for topics that are not physics), misleading metaphors, omitted assumptions and claims beyond the sources. Score 0..10. Pass only if scientifically appropriate as a teaching approximation; otherwise provide actionable changes. Review is not scientific proof.', late),
                 # The learner sees only what a viewer sees, and the questions without their answers.
                 'learner_review': ('learner', 'Guide text: '+json.dumps({k:scene.get(k) for k in ('title','subtitle','why','beats','takeaway')})
                     +'\nTransfer questions: '+json.dumps([q['q'] for q in research.get('questions',[])])
                     +'\nObjections a beginner may raise: '+json.dumps(research.get('misconceptions',[]))+asked+'\n'+LEARNER, frames),
+                'blind_review': ('blind_viewer', BLIND, pictures),
                 'visual_review': ('visual_reviewer', context+'\nInspect these actual frames in order: an early and a late frame for each chapter (the first chapter has the first control at zero; the last chapter shows the playback demo), then the phone view of the last chapter and the phone page top. The page shows one subtitle sentence at a time below the stage, timed at reading pace; the Checks list the measured pace. Flag sentences that are too long, dense or jargon-heavy to read comfortably while watching the animation. Fail clutter (many labels at once, sentence-long labels, several things moving that the subtitle does not mention); never ask for more on-stage labels or legends, ask for clearer subtitles instead. Judge whether the chosen sliders (scene field controls) help intuition; sliders appear inside the player only after playback ends or when the viewer opens them, so the frames do not show them. Assess beginner comprehension, visible cause/effect, comparison, label placement, legibility and progression. Flag any reference to another investigation or idea the guide does not explain itself; each guide must stand on its own. The why field appears above the player before playback: judge whether a viewer who knows nothing about the subject would understand why the question matters and every idea and colour the guide then uses. Scores 0..10; pass requires >=7 and no blockers. Give concrete changes to the available scene fields. Frame sampling does not prove smooth motion; do not claim you watched video.', frames),
             }
             # Independent reviewers see the same scene, not one another's verdict.
-            with ThreadPoolExecutor(max_workers=3) as workers:
+            with ThreadPoolExecutor(max_workers=4) as workers:
                 futures = {workers.submit(provider.generate, role, task, REVIEW_SCHEMA, images=images): key
                            for key, (role, task, images) in reviews.items()}
                 try:
@@ -168,8 +196,8 @@ def run(provider, rounds=3, on_update=None, topic="light-bending", question=None
                     for future in futures:
                         future.cancel()
                     raise
-            physics, visual, wording = revision['physics_review'], revision['visual_review'], revision['learner_review']
-            revision['accepted']=all(c['pass'] for c in checks) and approved(physics) and approved(visual) and approved(wording)
+            physics, visual, wording, blind = (revision[k] for k in ('physics_review','visual_review','learner_review','blind_review'))
+            revision['accepted']=all(c['pass'] for c in checks) and all(approved(r) for r in (physics,visual,wording,blind))
             write_json(directory/f'revision-{index}'/'scene.json',scene)
             save(f'Revision {index}: '+('review gates passed.' if revision['accepted'] else 'changes requested; feedback saved.'))
             if revision['accepted']:
@@ -177,7 +205,7 @@ def run(provider, rounds=3, on_update=None, topic="light-bending", question=None
                 save('Offline fixture complete.' if provider.name=='fixture' else 'Investigation reviewed. Artifact is ready for human inspection; no new-discovery claim.')
                 break
             previous=scene
-            feedback=json.dumps({'physics':physics,'visual':visual,'learner':wording,'checks':checks})
+            feedback=json.dumps({'physics':physics,'visual':visual,'learner':wording,'blind':blind,'checks':checks})
         else:
             state['status']='needs_review'
             save('Revision limit reached. Artifact retained as a draft, not promoted.')
