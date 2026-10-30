@@ -1,44 +1,12 @@
 {
-  "status": "reviewed",
-  "question": "What does the \u201cattention\u201d in \u201cAttention Is All You Need\u201d do when an AI reads a sentence?",
-  "topic": "attention",
-  "id": "20261029T175059-82fa6e44",
-  "revision": 2,
-  "updated": "2026-10-29T18:00:22.800090+00:00",
-  "events": [
-    {
-      "at": "2026-10-29T17:58:09.176120+00:00",
-      "message": "Revision 1: changes requested; feedback saved."
-    },
-    {
-      "at": "2026-10-29T17:59:06.215619+00:00",
-      "message": "Revision 2: rendering desktop and mobile frames."
-    },
-    {
-      "at": "2026-10-29T17:59:16.964205+00:00",
-      "message": "Revision 2: reviewers are inspecting the rendered frames."
-    },
-    {
-      "at": "2026-10-29T18:00:11.702338+00:00",
-      "message": "Revision 2: visual_review saved."
-    },
-    {
-      "at": "2026-10-29T18:00:13.395154+00:00",
-      "message": "Revision 2: physics_review saved."
-    },
-    {
-      "at": "2026-10-29T18:00:22.769612+00:00",
-      "message": "Revision 2: learner_review saved."
-    },
-    {
-      "at": "2026-10-29T18:00:22.775749+00:00",
-      "message": "Revision 2: review gates passed."
-    },
-    {
-      "at": "2026-10-29T18:00:22.778970+00:00",
-      "message": "Investigation reviewed. Artifact is ready for human inspection; no new-discovery claim."
-    }
-  ],
+  "status": "planning",
+  "question": "Choosing the next question",
+  "topic": null,
+  "id": null,
+  "revision": 0,
+  "guidance": 0,
+  "updated": "2026-10-30T16:00:08.639353+00:00",
+  "events": [],
   "schedule": {
     "enabled": true,
     "hour": 9,
@@ -80,6 +48,10 @@
       "topic": "attention",
       "status": "reviewed",
       "run_id": "20261029T175059-82fa6e44"
+    },
+    {
+      "day": "2026-10-30",
+      "status": "planning"
     }
   ]
 }
