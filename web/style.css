@@ -56,8 +56,6 @@ body[data-view=article] .lab-intro{display:none}
 body[data-view=article] .lab-wrap{display:none}
 .lab-tip{position:absolute;transform:translate(-50%,-100%);background:#fff;border:1px solid var(--line);border-radius:8px;padding:6px 10px;font-size:12px;line-height:1.4;color:var(--muted);box-shadow:0 8px 20px -12px rgba(0,0,0,.4);pointer-events:none;white-space:nowrap;z-index:5}
 .lab-tip strong{color:var(--ink)}.lab-tip .tip-kind{color:#7c3aed}
-.lab-who{order:2;flex-basis:100%;text-align:center;font-size:12px;color:var(--faint)}
-.lab-strip summary::after{order:1}
 .lab-latest{margin:0 0 12px;font-size:12px;font-weight:600;letter-spacing:.24em;text-transform:uppercase;color:var(--brown)}
 .featured .card-media{transition:box-shadow .6s}
 .featured.fresh .card-media{box-shadow:0 0 0 3px rgba(234,88,12,.5),0 0 26px rgba(234,88,12,.35)}

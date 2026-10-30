@@ -233,8 +233,6 @@ async function refreshDashboard(){
   $('bench').hidden=!drafts.length;
   $('bench-list').replaceChildren(...drafts.map(a=>el('li',{textContent:a.question})));
   document.body.dataset.paused=schedule?.enabled?'no':'yes';
-  const runsOn={claude:'Claude',codex:'OpenAI models through Codex',openai:'OpenAI models'}[schedule?.provider];
-  put('lab-who',`The agents can run on different AI models${runsOn?`; right now they use ${runsOn}`:''}.`);
   renderNext();renderPath();renderCards();if(labPreview)labPreview.shown='';
  }catch{
   document.body.dataset.paused='yes';labStatus=null;
