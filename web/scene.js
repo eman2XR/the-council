@@ -1490,7 +1490,7 @@ function drawAttention(ctx,w,h,spec,st){
  ctx.restore();
 }
 
-// The Council's lab: a small living world on the home page where five AI agents, drawn as scientists in lab coats
+// Intuition Lab: a small living world on the home page where five AI agents, drawn as scientists in lab coats
 // with an AI sparkle on the coat, make the investigations. It follows the real run (labModel in app.js). Between runs
 // they rest: the researcher naps on the couch under the window, the director has tea in the armchair, the scientist
 // and the renderer play chess, the accuracy reviewer reads the paper by the door, and the window shows the sky

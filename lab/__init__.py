@@ -1,1 +1,1 @@
-"""The Council: visual research and review."""
+"""Intuition Lab: visual research and review."""

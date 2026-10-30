@@ -142,7 +142,7 @@ def report(number, state, requests, day):
     """Tell the owner what happened to their request; picks and questions close once attempted."""
     outcome={'reviewed':f'It passed review and is published at {SITE}?guide={state["id"]} (the site can take a few minutes to update).',
              'needs_review':'It did not pass review, so it stays a private draft and was not published.'}
-    inbox.comment(number,f'The Council investigated this on {day}. '+outcome.get(state['status'],'The attempt stopped early; partial work is kept locally.'))
+    inbox.comment(number,f'Intuition Lab investigated this on {day}. '+outcome.get(state['status'],'The attempt stopped early; partial work is kept locally.'))
     if any(r['number']==number and r['kind'] in ('choose','question') for r in requests):
         inbox.close(number)
 
@@ -152,11 +152,11 @@ def guided(number, state, question, day):
     outcome={'reviewed':f'It passed review and is published at {SITE}?guide={state["id"]}.',
              'needs_review':'It did not pass review, so it stays a draft and was not published.'}
     if state['status'] in outcome:
-        inbox.comment(number,f'The Council run on {day} read this note while investigating “{question}”. The director and '
+        inbox.comment(number,f'The Intuition Lab run on {day} read this note while investigating “{question}”. The director and '
                              f'reviewers followed it where it fit the quality bar. '+outcome[state['status']])
         inbox.close(number)
     else:
-        inbox.comment(number,f'The Council run on {day} stopped before it could use this note, so it stays open for the next run.')
+        inbox.comment(number,f'The Intuition Lab run on {day} stopped before it could use this note, so it stays open for the next run.')
 
 
 def daily(factory, count=1, rounds=3, push=False, root=ROOT, requests=None):

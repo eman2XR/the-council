@@ -12,7 +12,7 @@ from .contracts import obj, STR
 from .topics import TOPICS
 
 def main():
-    parser=argparse.ArgumentParser(description='The Council visual research lab')
+    parser=argparse.ArgumentParser(description='Intuition Lab: visual research and review')
     parser.add_argument('command',choices=['run','check','daily','schedule','export'])
     parser.add_argument('--run-dir',help='For export: folder of an accepted run, e.g. from a batch snapshot.')
     parser.add_argument('--provider',choices=['codex','claude','openai','fixture'],default=os.environ.get('COUNCIL_PROVIDER','codex'))

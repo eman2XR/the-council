@@ -49,6 +49,7 @@ main{max-width:1240px;margin:auto;padding:0 32px}
 /* The lab: a small world of AI agents above the status line; pointing at an agent shows a card with their role. */
 .lab-intro{max-width:760px;margin:26px auto 2px;padding:0 20px;text-align:center;font:400 clamp(18px,1.7vw,21px)/1.45 var(--serif);color:var(--ink);text-wrap:balance}
 .lab-intro .spark{color:#7c3aed;vertical-align:-1px;margin-right:8px}
+.lab-intro-who{display:block;margin-top:2px;font-size:.88em;color:var(--muted)}
 body[data-view=article] .lab-intro{display:none}
 .lab-wrap{position:relative;max-width:1100px;margin:10px auto -4px}
 .lab-anim{display:block;width:100%;height:auto;aspect-ratio:1100/280}
@@ -253,7 +254,7 @@ input[type=range]:disabled{opacity:.4;cursor:default}
 .state.wait{color:var(--faint)}
 .horizon{margin-top:14px}
 
-/* How the Council checked this */
+/* How the lab checked this */
 .behind{margin:56px auto 0;max-width:1100px;border-top:1px solid var(--ink)}
 .behind>summary{list-style:none;display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px;padding:22px 0;cursor:pointer;font:700 20px var(--serif)}
 .behind>summary::-webkit-details-marker{display:none}

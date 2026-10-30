@@ -1,4 +1,4 @@
-"""Daily project review: the Council suggests improvements to itself; the owner approves or declines.
+"""Daily project review: the lab suggests improvements to itself; the owner approves or declines.
 
 Bounded to one review per local day (one research call and one structured call). Models return
 proposals as data; the coordinator assigns IDs, merges owner decisions, and writes web/proposals.json.
@@ -13,7 +13,7 @@ from .pipeline import ROOT, write_json
 from .topics import TOPICS
 from . import inbox
 
-GOAL = ('The Council is an autonomous visual physics research lab with humans in the loop. Its goal is to build '
+GOAL = ('Intuition Lab is an autonomous visual physics research lab with humans in the loop. Its goal is to build '
         'intuitive understanding of physics through honest, interactive, beautiful visuals, publishing one reviewed '
         'investigation a day, and over time to work toward clearly scoped investigations of open problems in physics. '
         'Agents propose, research, render, review and revise; the owner steers through picks, questions, feedback '
@@ -22,7 +22,7 @@ GOAL = ('The Council is an autonomous visual physics research lab with humans in
 SITE = ('Static GitHub Pages site. Top: lab status strip. Hero: today\'s investigation with a canvas stage, poster play '
         'button, reading-paced subtitles, chapter progress bar and two sliders, plus ask/feedback links that open '
         'GitHub issues. Then past investigations as cards with live previews, the path (four chapters of '
-        'investigations tied to visual engines), and a collapsed "How the Council checked this" section. Visual '
+        'investigations tied to visual engines), and a collapsed "How the lab checked this" section. Visual '
         'engines are hand-written canvas renderers; models only return scene data within fixed fields. Every draft '
         'is rendered in a headless browser and must pass a physics review and a visual review.')
 

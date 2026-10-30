@@ -43,7 +43,7 @@ function show(data,{autoplay=false}={}){
  put('run-banner',fixture?'Hand-written example · scripted reviews':data.error?'Stopped · partial work kept as a draft':STATUS[data.status]||String(data.status||'').replaceAll('_',' '));
  $('run-banner').dataset.status=fixture?'example':data.status||'';
  if(data.provenance?.sources_retrieved===false){put('run-banner','Reviewed · sources not retrieved');$('run-banner').dataset.status='unverified';}
- if(draft){put('run-banner','Not reviewed by the Council');$('run-banner').dataset.status='draft';}
+ if(draft){put('run-banner','Not reviewed by the lab');$('run-banner').dataset.status='draft';}
  put('draft-note',draft&&scene?CouncilDraw.disclosure(scene):'');
  renderBehind(data);renderCards();updateTalk();renderPath();
  if(autoplay)CouncilScene.play();
@@ -94,7 +94,7 @@ function card(entry,record){
  if(current&&(current.id===id||(isExample&&current.provider==='fixture'))){badge.textContent='Now showing';badge.dataset.kind='now';}
  else if(!isExample&&!watched.has(id)&&Date.now()-new Date(entry.created).getTime()<36*3600*1000){badge.textContent='New';badge.dataset.kind='new';}
  else if(watched.has(id)){badge.textContent='Watched';badge.dataset.kind='seen';}
- const meta=el('p',{className:'card-meta'},el('em',{textContent:'By'}),' The Council',el('span',{className:'sep'}),isExample?'Hand-written example':day(entry.created,{month:'long',day:'numeric'}),badge);
+ const meta=el('p',{className:'card-meta'},el('em',{textContent:'By'}),' Intuition Lab',el('span',{className:'sep'}),isExample?'Hand-written example':day(entry.created,{month:'long',day:'numeric'}),badge);
  const excerpt=el('p',{className:'card-excerpt',textContent:record?.scene?.subtitle||entry.question||''});
  link.append(media,el('div',{className:'card-body'},el('span',{className:'card-cat',textContent:isExample?'Example':topicOf(record||entry)}),el('h3',{textContent:(entry.title||entry.question||'').replace(/\n/g,' ')}),meta,excerpt));
  if(record?.scene){canvas.scene=record.scene;thumbs.add(canvas);visible.observe(canvas);}
@@ -209,7 +209,7 @@ function renderNext(){
   put('dashboard-schedule','One new investigation each morning. Only investigations that pass physics and visual review are published.');
  }else{
   put('next-title',schedule?.state==='paused'?'Improving how investigations are made':schedule?.state==='blocked'?'Schedule paused':'No schedule confirmed');
-  put('dashboard-schedule',schedule?.state==='paused'?'The Council is improving how investigations are made. Published ones stay available.':schedule?.state==='blocked'?'The background worker needs setup before daily runs resume.':'Investigations are started by hand for now.');
+  put('dashboard-schedule',schedule?.state==='paused'?'The lab is improving how investigations are made. Published ones stay available.':schedule?.state==='blocked'?'The background worker needs setup before daily runs resume.':'Investigations are started by hand for now.');
  }
 }
 async function refreshDashboard(){

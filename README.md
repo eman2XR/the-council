@@ -1,4 +1,4 @@
-# The Council
+# Intuition Lab
 
 **[Open the live website →](https://eman2xr.github.io/the-council/)**
 
@@ -26,7 +26,7 @@ Open **http://127.0.0.1:8765** to browse the site locally. The site is static: i
 
 ## Choose Codex or Claude Code
 
-The default runner is **Codex**. Both CLIs use their existing authentication and model configuration; The Council does not extract credentials or require a separate OpenAI API key for these runners. Their normal subscription, organization, or API billing and usage limits still apply.
+The default runner is **Codex**. Both CLIs use their existing authentication and model configuration; Intuition Lab does not extract credentials or require a separate OpenAI API key for these runners. Their normal subscription, organization, or API billing and usage limits still apply.
 
 Install and sign into your chosen CLI first. Managed Claude Code wrappers keep their existing authentication. Run an image-and-JSON compatibility check (one live model request):
 

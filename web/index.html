@@ -4,18 +4,18 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="color-scheme" content="light">
-<title>The Council — a visual physics lab</title>
+<title>Intuition Lab — short visual guides to why things work</title>
 <link rel="stylesheet" href="style.css?v=dev">
 </head>
 <body>
 <header class="top" id="top">
- <a class="brand" href="./"><svg class="mark" viewBox="0 0 40 40" aria-hidden="true"><circle cx="20" cy="20" r="16" fill="none" stroke="currentColor" stroke-width="2.2"/><path class="wave" d="M5 20c4-9 8-9 11 0s7 9 11 0 6-6 8-3" fill="none" stroke-width="2.6" stroke-linecap="round"/></svg><span class="wordmark">The Council</span></a>
+ <a class="brand" href="./"><svg class="mark" viewBox="0 0 40 40" aria-hidden="true"><circle cx="20" cy="20" r="16" fill="none" stroke="currentColor" stroke-width="2.2"/><path class="wave" d="M5 20c4-9 8-9 11 0s7 9 11 0 6-6 8-3" fill="none" stroke-width="2.6" stroke-linecap="round"/></svg><span class="wordmark">Intuition Lab</span></a>
  <button id="proposals-open" class="text-btn" type="button" hidden>Proposals<span id="proposals-count" class="count"></span></button>
 </header>
 <div id="readbar" class="readbar" aria-hidden="true"><a href="#top"><svg class="mark" viewBox="0 0 40 40" aria-hidden="true"><circle cx="20" cy="20" r="16" fill="none" stroke="currentColor" stroke-width="2.2"/><path class="wave" d="M5 20c4-9 8-9 11 0s7 9 11 0 6-6 8-3" fill="none" stroke-width="2.6" stroke-linecap="round"/></svg></a><span id="readbar-title"></span><i id="read-progress"></i></div>
 
 <main>
- <p class="lab-intro"><svg class="spark" viewBox="0 0 20 20" width="15" height="15" aria-hidden="true"><path d="M10 1Q10 10 19 10Q10 10 10 19Q10 10 1 10Q10 10 10 1Z" fill="currentColor"/></svg>Meet the team of AI agents that researches, designs and reviews every investigation.</p>
+ <p class="lab-intro"><svg class="spark" viewBox="0 0 20 20" width="15" height="15" aria-hidden="true"><path d="M10 1Q10 10 19 10Q10 10 10 19Q10 10 1 10Q10 10 10 1Z" fill="currentColor"/></svg>Short visual guides that explain why things work the way they do.<span class="lab-intro-who">A team of AI agents researches, builds and reviews each one.</span></p>
  <details id="lab" class="lab-strip">
   <summary><span class="pulse" aria-hidden="true"></span><strong id="dashboard-status">Checking status…</strong><span id="next-pick" class="strip-next"></span><span id="next-title" class="strip-when"></span><button id="guide-open" type="button" class="strip-guide">Leave a note</button><button id="lab-run" type="button" class="strip-guide">Watch a run</button></summary>
   <div class="lab-detail">
@@ -87,12 +87,12 @@
   <p id="draft-note" class="draft-note"></p>
 
   <div class="story"><p class="label">The idea</p><p id="takeaway"></p></div>
-  <p class="byline"><span>By The Council</span><span id="run-banner" class="tag" role="status"></span><span class="talk"><span class="sep" aria-hidden="true"></span><a id="ask" target="_blank" rel="noopener noreferrer" title="Opens a public GitHub issue; the next morning's run reads it">Ask a question</a><span class="sep" aria-hidden="true"></span><a id="feedback" target="_blank" rel="noopener noreferrer" title="Opens a public GitHub issue; the next morning's run reads it">Give feedback</a></span></p>
+  <p class="byline"><span>By Intuition Lab</span><span id="run-banner" class="tag" role="status"></span><span class="talk"><span class="sep" aria-hidden="true"></span><a id="ask" target="_blank" rel="noopener noreferrer" title="Opens a public GitHub issue; the next morning's run reads it">Ask a question</a><span class="sep" aria-hidden="true"></span><a id="feedback" target="_blank" rel="noopener noreferrer" title="Opens a public GitHub issue; the next morning's run reads it">Give feedback</a></span></p>
  </article>
 
 
  <details id="investigation" class="behind">
-  <summary><span>How the Council checked this</span><span id="review-summary" class="chips"></span></summary>
+  <summary><span>How the lab checked this</span><span id="review-summary" class="chips"></span></summary>
   <div class="behind-body">
    <div class="research-grid">
     <article><h3>The claim</h3><p id="claim"></p><h3>What would prove it wrong</h3><p id="falsifier"></p></article>
@@ -113,10 +113,10 @@
 </main>
 
 <dialog id="proposals" class="sheet" aria-labelledby="proposals-title">
- <div class="sheet-head"><div><h2 id="proposals-title">Proposals</h2><p class="muted">Ideas from the Council's daily project review. Approve the ones you want built. Nothing changes until you do.</p></div><button id="proposals-close" class="round quiet" type="button" aria-label="Close">×</button></div>
+ <div class="sheet-head"><div><h2 id="proposals-title">Proposals</h2><p class="muted">Ideas from the lab's daily project review. Approve the ones you want built. Nothing changes until you do.</p></div><button id="proposals-close" class="round quiet" type="button" aria-label="Close">×</button></div>
  <div id="proposals-list" class="proposals"></div>
 </dialog>
-<footer><span class="wordmark small">The Council</span><nav class="foot-links"><a href="./">Investigations</a></nav><span>Curiosity first. Evidence always.</span></footer>
+<footer><span class="wordmark small">Intuition Lab</span><nav class="foot-links"><a href="./">Investigations</a></nav><span>Curiosity first. Evidence always.</span></footer>
 <script src="physics.js?v=dev"></script><script src="scene.js?v=dev"></script><script src="app.js?v=dev"></script>
 </body>
 </html>
