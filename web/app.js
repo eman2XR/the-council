@@ -114,8 +114,9 @@ function renderCards(){
  if(VIEW==='home'){
   // The newest published investigation leads; every other one follows in a single grid.
   const lead=[...entries].sort((a,b)=>new Date(b.created||0)-new Date(a.created||0))[0];
-  $('featured').replaceChildren(...(lead?[card(lead,records.get(lead.id))]:example?[card({id:'example',title:example.scene.title.replace(/\n/g,' ')},example)]:[]));
-  $('featured').firstChild?.classList.add('featured-card');
+  const leadCard=lead?card(lead,records.get(lead.id)):example?card({id:'example',title:example.scene.title.replace(/\n/g,' ')},example):null;
+  leadCard?.classList.add('featured-card');
+  $('featured').replaceChildren(...(leadCard?[el('p',{className:'lab-latest',textContent:'Latest from the lab'}),leadCard]:[]));
   put('past-title','Investigations');put('past-count',entries.length+drafts.length?`${entries.length+drafts.length} investigations`:'');
   $('gallery').replaceChildren(...gallery(lead));
  }else{
@@ -232,6 +233,8 @@ async function refreshDashboard(){
   $('bench').hidden=!drafts.length;
   $('bench-list').replaceChildren(...drafts.map(a=>el('li',{textContent:a.question})));
   document.body.dataset.paused=schedule?.enabled?'no':'yes';
+  const runsOn={claude:'Claude',codex:'Codex'}[schedule?.provider];
+  put('lab-who',`A team of AI agents${runsOn?`, running on ${runsOn},`:''} researches, designs and reviews each investigation here.`);
   renderNext();renderPath();renderCards();if(labPreview)labPreview.shown='';
  }catch{
   document.body.dataset.paused='yes';labStatus=null;
@@ -304,6 +307,7 @@ function simStrip(model,key){
  put('next-pick',LAB_TEXT[key]);put('next-title','');
  put('now-title',run?'A sample run, simulated in your browser':`${labPreview.label}, simulated in your browser`);
  put('dashboard-question',model.mode==='closed'?'':labPreview.question);
+ if(run&&key==='published'){$('featured').classList.add('fresh');setTimeout(()=>$('featured').classList.remove('fresh'),4000);}
  $('steps').hidden=at<0;$('steps').replaceChildren(...STEPS.map((name,j)=>el('li',{className:j<at?'done':j===at?'active':'',textContent:name})));
  const note=noteList()[0];
  put('dashboard-phase',!note?'':model.mode==='working'?'Your note is taped to the board for the director and reviewers.':model.outcome==='published'?'In a real run, the lab replies on your note with what it did.':'');
@@ -311,7 +315,7 @@ function simStrip(model,key){
  markStates();
 }
 function stopPreview(){labPreview=null;markStates();refreshDashboard();}
-function markStates(){const current=labPreview?.label||'Live';$('lab-states')?.querySelectorAll('button').forEach(b=>b.setAttribute('aria-pressed',String(b.textContent===current)));}
+function markStates(){const current=labPreview?.label||'Live';const run=$('lab-run');if(run)run.textContent=labPreview?.state==='run'?'Stop the run':'Watch a run';$('lab-states')?.querySelectorAll('button').forEach(b=>b.setAttribute('aria-pressed',String(b.textContent===current)));}
 function tryState(label){
  const state=LAB_STATES.find(([l])=>l===label)?.[1];
  if(!state){stopPreview();return;}
@@ -326,7 +330,7 @@ const saveNotes=list=>{try{localStorage.setItem('council-notes',JSON.stringify(l
 function noteList(){
  const sent=new Set(guideIssues.map(i=>norm(i.text)));
  return [...guideIssues.map(i=>({text:i.text,url:i.url,status:i.state==='open'?'waiting':'applied'})),
-  ...localNotes().filter(n=>!sent.has(norm(n.text))).map(n=>({text:n.text,id:n.id,status:Date.now()-n.at<2200?'new':'waiting'}))];
+  ...localNotes().filter(n=>!sent.has(norm(n.text))).map(n=>({text:n.text,id:n.id,status:Date.now()-n.at<3600?'new':'waiting'}))];
 }
 function renderNotes(){
  const list=$('guide-notes');if(!list)return;
@@ -345,23 +349,59 @@ async function loadNotes(){
    .map(i=>({text:(i.body||i.title||'').split(NOTE_TAIL)[0].trim().slice(0,400),url:i.html_url,state:i.state}));}catch{}
  renderNotes();
 }
+// The agents, as the lab picture names them when pointed at: their role and what they are doing now.
+const AGENTS=[{name:'Researcher',work:{research:'Gathering sources',review:'Reading it as a beginner would'},rest:'Napping on the couch'},
+ {name:'Director',work:{choose:'Writing up the question',design:'Drawing the storyboard',revise:'Redrawing after the review'},rest:'Having tea'},
+ {name:'Scientist',work:{record:'Writing up the research'},rest:'Playing chess'},
+ {name:'Visual reviewer',work:{render:'Rendering the frames in a browser',review:'Checking the frames'},rest:'Playing chess'},
+ {name:'Accuracy reviewer',work:{review:'Checking the physics or mathematics',publish:'Hanging the new guide'},rest:'Reading the paper'}];
+function agentCard(who,model){
+ if(who===5)return ['The lab cat','not an AI agent',model.mode==='working'?'Watching':'Asleep'];
+ const a=AGENTS[who];
+ return [a.name,'AI agent',model.mode==='working'?a.work[model.phase]||'Waiting for their turn':model.mode==='done'?'Done for this run':a.rest];
+}
+// What the picture reacts to: a visitor arriving or coming back after a while, a click on an agent, a note sent in.
+const labEvents={arrive:null,note:null,poke:null};
+let labAway=0, labLast={mode:'resting'};
+const labTip=el('div',{className:'lab-tip',hidden:true});
+function noticeVisitor(){labEvents.arrive=performance.now()/1000+.35;}
+function comeBack(){if(labAway&&performance.now()-labAway>20000)noticeVisitor();labAway=0;}
+function showTip(hit,hold){
+ const view=CouncilLab.view?.();if(!view)return;const [name,kind,doing]=agentCard(hit.who,labLast);
+ labTip.replaceChildren(el('strong',{textContent:name}),el('span',{className:'tip-kind',textContent:` · ${kind}`}),el('br'),el('span',{textContent:doing}));
+ labTip.style.left=`${((hit.x0+hit.x1)/2-view.pan)*view.k+view.ox}px`;labTip.style.top=`${hit.y0*view.k+view.oy-6}px`;labTip.hidden=false;
+ clearTimeout(showTip.timer);if(hold)showTip.timer=setTimeout(()=>{labTip.hidden=true;},2600);
+}
 function paintLab(now){
  if(!labCanvas||!window.CouncilLab)return;
  const w=labCanvas.clientWidth, h=labCanvas.clientHeight, dpr=Math.min(2,devicePixelRatio||1);if(!w||!h)return;
  if(labCanvas.width!==Math.round(w*dpr)||labCanvas.height!==Math.round(h*dpr)){labCanvas.width=Math.round(w*dpr);labCanvas.height=Math.round(h*dpr);}
  const ctx=labCanvas.getContext('2d');ctx.setTransform(dpr,0,0,dpr,0,0);ctx.clearRect(0,0,w,h);
- CouncilLab.draw(ctx,w,h,{...labModel(now),t:now/1000,still:reduceMotion});
+ labLast=labModel(now);CouncilLab.draw(ctx,w,h,{...labLast,t:now/1000,still:reduceMotion,events:labEvents});
 }
 function drawLabStill(){if(reduceMotion)paintLab(0);}
 if(labCanvas){
- labCanvas.setAttribute('aria-hidden','true');$('lab').before(labCanvas);
- new IntersectionObserver(([entry])=>{labVisible=entry.isIntersecting;}).observe(labCanvas);
- const tick=now=>{if(labVisible&&!document.hidden)paintLab(now);requestAnimationFrame(tick);};
+ labCanvas.setAttribute('aria-hidden','true');$('lab').before(el('div',{className:'lab-wrap'},labCanvas,labTip));
+ new IntersectionObserver(([entry])=>{labVisible=entry.isIntersecting;if(labVisible)comeBack();else labAway=performance.now();}).observe(labCanvas);
+ addEventListener('visibilitychange',()=>{if(document.hidden)labAway=performance.now();else comeBack();});
+ const tick=now=>{if(labVisible&&!document.hidden){if(labEvents.arrive===null)noticeVisitor();paintLab(now);}requestAnimationFrame(tick);};
+ // Pointing at an agent names them; clicking makes them react; the wall's frames open their guides; the notes board
+ // and the door open the note box; the blackboard opens the run's details.
+ const at=e=>{const r=labCanvas.getBoundingClientRect();return CouncilLab.hit?.(e.clientX-r.left,e.clientY-r.top);};
+ labCanvas.addEventListener('pointermove',e=>{const hit=at(e);labCanvas.style.cursor=hit?'pointer':'';if(hit?.kind==='person'&&e.pointerType==='mouse')showTip(hit,false);else if(e.pointerType==='mouse')labTip.hidden=true;});
+ labCanvas.addEventListener('pointerleave',()=>{labTip.hidden=true;});
+ labCanvas.addEventListener('click',e=>{const hit=at(e);if(!hit)return;
+  if(hit.kind==='person'){labEvents.poke={who:hit.who,at:performance.now()/1000};showTip(hit,true);}
+  else if(hit.kind==='frame'){const guide=[...entries].sort((x,y)=>new Date(x.created)-new Date(y.created))[hit.index];if(guide)location.href='?guide='+encodeURIComponent(guide.id);}
+  else if(hit.kind==='notes'){$('lab').open=true;$('guide-text').focus();}
+  else if(hit.kind==='board')$('lab').open=true;});
  if(reduceMotion)paintLab(0);else requestAnimationFrame(tick);
  addEventListener('resize',()=>paintLab(performance.now()));
  $('guide-form').onsubmit=e=>{e.preventDefault();const text=$('guide-text').value.trim();if(!text)return;
-  saveNotes([...localNotes(),{id:Date.now(),text:text.slice(0,400),at:Date.now()}]);$('guide-text').value='';renderNotes();drawLabStill();};
+  saveNotes([...localNotes(),{id:Date.now(),text:text.slice(0,400),at:Date.now()}]);$('guide-text').value='';renderNotes();
+  labEvents.note=performance.now()/1000;drawLabStill();labCanvas.scrollIntoView({behavior:reduceMotion?'auto':'smooth',block:'nearest'});};
  $('guide-open').onclick=e=>{e.preventDefault();$('lab').open=true;$('guide-text').focus();};
+ $('lab-run').onclick=e=>{e.preventDefault();tryState(labPreview?.state==='run'?'Live':'Sample run');};
  $('lab-states').replaceChildren(...LAB_STATES.map(([label])=>{const b=el('button',{type:'button',className:'chip',textContent:label});b.onclick=()=>tryState(label);return b;}));
  markStates();
  // ?lab=review (or any state's name) opens the page in that state.

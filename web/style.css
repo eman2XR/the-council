@@ -46,9 +46,18 @@ main{max-width:1240px;margin:auto;padding:0 32px}
 
 /* Lab status line */
 /* The lab at work: scientists in a small physics lab working on the next investigation, above the status line. */
-.lab-anim{display:block;width:100%;max-width:1100px;height:auto;aspect-ratio:1100/190;margin:10px auto -4px}
-@media(max-width:600px){.lab-anim{aspect-ratio:560/190;margin-top:4px}}
-body[data-view=article] #lab-anim{display:none}
+/* The lab: a small world of AI agents above the status line; pointing at an agent shows a card with their role. */
+.lab-wrap{position:relative;max-width:1100px;margin:10px auto -4px}
+.lab-anim{display:block;width:100%;height:auto;aspect-ratio:1100/280}
+@media(max-width:600px){.lab-wrap{margin-top:4px}.lab-anim{aspect-ratio:560/280}}
+body[data-view=article] .lab-wrap{display:none}
+.lab-tip{position:absolute;transform:translate(-50%,-100%);background:#fff;border:1px solid var(--line);border-radius:8px;padding:6px 10px;font-size:12px;line-height:1.4;color:var(--muted);box-shadow:0 8px 20px -12px rgba(0,0,0,.4);pointer-events:none;white-space:nowrap;z-index:5}
+.lab-tip strong{color:var(--ink)}.lab-tip .tip-kind{color:#7c3aed}
+.lab-who{order:2;flex-basis:100%;font-size:12px;color:var(--faint)}
+.lab-strip summary::after{order:1}
+.lab-latest{margin:0 0 12px;font-size:12px;font-weight:600;letter-spacing:.24em;text-transform:uppercase;color:var(--brown)}
+.featured .card-media{transition:box-shadow .6s}
+.featured.fresh .card-media{box-shadow:0 0 0 3px rgba(234,88,12,.5),0 0 26px rgba(234,88,12,.35)}
 .lab-strip{margin:18px auto 0;max-width:860px;font-size:13px;border-radius:10px}
 .lab-strip summary{list-style:none;display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:4px 12px;padding:8px 14px;cursor:pointer;color:var(--muted)}
 .lab-strip summary::-webkit-details-marker{display:none}
