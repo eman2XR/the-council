@@ -1,0 +1,58 @@
+{
+ "id": "shared-birthdays",
+ "provider": "draft",
+ "status": "draft",
+ "created": "2026-10-30T00:20:00-07:00",
+ "question": "Why do 23 people give even odds of a shared birthday?",
+ "topic": "birthdays",
+ "scene": {
+  "ray_count": 1,
+  "show_reference": true,
+  "show_labels": true,
+  "line_width": 2.5,
+  "duration": 30,
+  "controls": "first",
+  "mass": 0.3728813559322034,
+  "distance": 0,
+  "kind": "birthdays",
+  "accent": "blue",
+  "title": "Why do 23 people give even odds of a shared birthday?",
+  "subtitle": "In a room of just 23 people, at least two share a birthday about half the time. Many people guess you would need far more.",
+  "why": "Counting pairs explains why coincidences turn up so often in groups, and why two different files can share a digital fingerprint sooner than you would guess.",
+  "opening": "How many people must be in a room before two of them probably share a birthday? Many people guess about half of 365.",
+  "beats": [
+   {
+    "title": "Your own birthday",
+    "body": "In a room of 23 people, the chance that someone shares your birthday is only about 6%. You are in just 22 pairs, one with each other person."
+   },
+   {
+    "title": "Every pair counts",
+    "body": "But a match can be between any two people, not just you. 23 people make 253 pairs, each a 1 in 365 chance, and that many chances give about even odds."
+   },
+   {
+    "title": "One at a time",
+    "body": "Let people arrive one by one. Each newcomer has more birthdays to hit: the 2nd a 1 in 365 chance, the 23rd a 22 in 365 chance. For no match at all, every one of them must miss, and those misses multiply to just under one half."
+   },
+   {
+    "title": "Pairs grow fast",
+    "body": "Pairs grow much faster than people: 50 people make 1,225 of them. With 50 in the room, a shared birthday is 97% likely."
+   }
+  ],
+  "takeaway": "A shared birthday can be between any two people, and pairs grow much faster than people: 23 people make 253 pairs, each a 1 in 365 chance, which together give even odds.",
+  "questions": [
+   {
+    "q": "How many other people would you need before someone probably shares your own birthday?",
+    "a": "About 253: that many 1 in 365 chances give about even odds, and 23 people make exactly 253 pairs. Even 180 others would give you only a 39% chance."
+   },
+   {
+    "q": "Do 253 pairs mean a 253 in 365 chance, about 69%?",
+    "a": "No. 253 divided by 365 is how many matching pairs to expect on average, about 0.7. Some rooms have two or three matches, and about half have none, so the chance of at least one is 51%."
+   },
+   {
+    "q": "Real birthdays bunch up in some months. Does that make a match more or less likely?",
+    "a": "Slightly more likely: when some dates are more common, two people land on the same one a little more often. 23 people still give just over even odds."
+   }
+  ]
+ },
+ "note": "Owner review draft: made by hand in a coding session, with subagent reviews; no live research or lab review. Not published as an investigation."
+}

@@ -436,10 +436,94 @@
         'A wider trap holds more allowed energies, lower down': this.trapLevels(3).length > E.length && this.trapLevels(3)[0] < E[0] && this.trapLevels(1).length < E.length,
       }).map(([name, pass]) => ({name, pass}));
     },
+    // A test for a rare disease. Of n people a share p is sick; the test catches a sick person with probability sens
+    // and wrongly flags a healthy one with probability 1 - spec. Expected numbers of people.
+    rateTest(p, n = 1000, sens = .99, spec = .99) {
+      const sick = n * p, healthy = n - sick, caught = sick * sens, alarms = healthy * (1 - spec);
+      return {sick, healthy, caught, alarms, share: caught + alarms > 0 ? caught / (caught + alarms) : 0};
+    },
+    // The slider runs from nobody (0) through 1 in 10,000 to 1 in 10 (1), evenly in powers of ten.
+    ratePrevalence(a) { return a <= 0 ? 0 : Math.pow(10, -4 + 3 * Math.min(1, a)); },
+    rateChecks() {
+      const near = (x, y, e = 1e-9) => Math.abs(x - y) < e, r = p => this.rateTest(p);
+      const rare = r(.001), retest = this.rateTest(rare.share);
+      return Object.entries({
+        'With 1 in 1,000 sick, about 1 person tests positive rightly and about 10 wrongly': near(rare.caught, .99) && near(rare.alarms, 9.99),
+        'So only about 1 positive in 11 is sick (9%)': Math.abs(rare.share - 1 / 11) < .002,
+        'With 1 in 100 sick, a positive is right exactly half the time': near(r(.01).share, .5),
+        'With 1 in 10 sick, a positive is right about 92% of the time': Math.abs(r(.1).share - .9167) < 1e-3,
+        'The rarer the disease, the less a positive means': [.1, .01, .001, .0001].every((p, i, a) => i === 0 || r(p).share < r(a[i - 1]).share),
+        'A second, independent positive raises the chance to about 91%': Math.abs(retest.share - .9075) < 1e-3,
+        'The slider spans nobody, 1 in 10,000, 1 in 1,000 and 1 in 10': this.ratePrevalence(0) === 0 && near(this.ratePrevalence(1e-12), 1e-4, 1e-9) && near(this.ratePrevalence(1 / 3), .001) && near(this.ratePrevalence(1), .1),
+        'With nobody sick, no positive is right': r(0).share === 0,
+      }).map(([name, pass]) => ({name, pass}));
+    },
+    // Shared birthdays, with 365 equally likely birthdays. The chance that at least two of n people share one: each
+    // newcomer must miss every birthday already in the room. And the chance that one of n - 1 others shares yours.
+    birthdayShared(n) { let none = 1; for (let k = 0; k < n; k++) none *= (365 - k) / 365; return n > 365 ? 1 : 1 - none; },
+    birthdayMine(n) { return n <= 1 ? 0 : 1 - Math.pow(364 / 365, n - 1); },
+    birthdayChecks() {
+      const near = (x, y, e) => Math.abs(x - y) < e, P = n => this.birthdayShared(n);
+      return Object.entries({
+        'Someone among 22 others shares your birthday about 6% of the time': near(this.birthdayMine(23), .0586, 5e-4),
+        '23 people make 253 pairs': 23 * 22 / 2 === 253,
+        'With 23 people a shared birthday is just more likely than not (50.7%)': near(P(23), .5073, 5e-4),
+        'With 22 people it is still less likely than not, so 23 is the smallest such group': P(22) < .5 && P(23) > .5,
+        'With 30 people it is about 71%, and with 50 about 97%': near(P(30), .7063, 5e-4) && near(P(50), .9704, 5e-4),
+        '50 people make 1,225 pairs': 50 * 49 / 2 === 1225,
+        'The chance only grows as people arrive': Array.from({length: 60}, (_, n) => n + 1).every(n => P(n + 1) > P(n)),
+        'One person alone shares a birthday with nobody': P(1) === 0,
+        'Treating the 253 pairs as separate one-in-365 bets gives almost the same answer': near(1 - Math.pow(364 / 365, 253), P(23), .01),
+      }).map(([name, pass]) => ({name, pass}));
+    },
+    // Sky colour: air molecules, far smaller than light's waves, scatter light as the inverse fourth power of its
+    // wavelength (Rayleigh). Sea-level optical depth 0.0088 lambda^-4.05 (lambda in micrometres); the air crossed by
+    // light from a Sun at elevation e degrees, in units of the air overhead, after Kasten and Young (1989).
+    skyScatter(nm) { return Math.pow(700 / nm, 4); },
+    skyDepth(nm) { return .0088 * Math.pow(nm / 1000, -4.05); },
+    skyAirMass(e) { return 1 / (Math.sin(e * Math.PI / 180) + .50572 * Math.pow(e + 6.07995, -1.6364)); },
+    skyThrough(nm, e) { return Math.exp(-this.skyDepth(nm) * this.skyAirMass(e)); },
+    skyChecks() {
+      const near = (a, b, e) => Math.abs(a - b) < e;
+      return Object.entries({
+        'Blue light (450 nm) is scattered about six times as much as red (700 nm)': near(this.skyScatter(450), 5.86, .01),
+        'Blue light is a wave about one and a half times as quick as red': near(700 / 450, 1.56, .01),
+        'With the Sun overhead, sunlight crosses one air mass': near(this.skyAirMass(90), 1, .002),
+        'With the Sun on the horizon it crosses about 38 times as much air': near(this.skyAirMass(0), 38, 1),
+        'Overhead, about four fifths of the blue gets through': near(this.skyThrough(450, 90), .8, .02),
+        'At the horizon almost none of the blue gets through, but about a quarter of the red does': this.skyThrough(450, 0) < .001 && near(this.skyThrough(700, 0), .24, .03),
+        'The lower the Sun, the less of its blue gets through': [90, 45, 20, 10, 5, 0].every((e, i, a) => i === 0 || this.skyThrough(450, e) < this.skyThrough(450, a[i - 1])),
+        'Blue is always dimmed more than red': [90, 30, 5, 0].every(e => this.skyThrough(450, e) < this.skyThrough(700, e)),
+      }).map(([name, pass]) => ({name, pass}));
+    },
+    // Seasons. Earth's axis is tilted by 23.44 degrees; on a day when the Sun stands over latitude decl, the noon Sun's
+    // height at latitude lat is 90 - |lat - decl| degrees, and the day's sunlight on level ground (top of the air,
+    // relative) follows from the Sun's height through the day. The distance to the Sun runs from 147.1 million km in
+    // early January to 152.1 million km in early July.
+    seasonTilt: 23.44, seasonNear: 147.1, seasonFar: 152.1,
+    seasonNoon(lat, decl) { return 90 - Math.abs(lat - decl); },
+    seasonDay(lat, decl) {
+      const r = Math.PI / 180, p = lat * r, d = decl * r, c = Math.max(-1, Math.min(1, -Math.tan(p) * Math.tan(d))), h0 = Math.acos(c);
+      return (h0 * Math.sin(p) * Math.sin(d) + Math.cos(p) * Math.cos(d) * Math.sin(h0)) / Math.PI;
+    },
+    seasonRatio(lat, tilt = this.seasonTilt) { return this.seasonDay(lat, tilt) / this.seasonDay(lat, -tilt); },
+    seasonChecks() {
+      const near = (a, b, e) => Math.abs(a - b) < e, T = this.seasonTilt, r = Math.PI / 180;
+      return Object.entries({
+        'Earth is closest to the Sun in January and farthest in July, about 3% apart': this.seasonNear < this.seasonFar && near(this.seasonFar / this.seasonNear, 1.034, .001),
+        'The changing distance alters the sunlight by only about 7%': near((this.seasonFar / this.seasonNear) ** 2, 1.069, .002),
+        'At 40 degrees north the noon Sun is about 73 degrees high in June and 27 in December': near(this.seasonNoon(40, T), 73.4, .1) && near(this.seasonNoon(40, -T), 26.6, .1),
+        'The same beam covers about twice as much ground at December noon': near(Math.sin(this.seasonNoon(40, T) * r) / Math.sin(this.seasonNoon(40, -T) * r), 2.14, .01),
+        'At 40 degrees north a June day gets about three times the sunlight of a December day': near(this.seasonRatio(40), 3.3, .05),
+        'With no tilt, June and December get the same sunlight': near(this.seasonRatio(40, 0), 1, 1e-12),
+        'The seasons are opposite in the south': this.seasonRatio(-40) < 1 && near(this.seasonRatio(-40), 1 / this.seasonRatio(40), 1e-9),
+        'A bigger tilt makes the seasons stronger': this.seasonRatio(40, 35) > this.seasonRatio(40, 23.44),
+      }).map(([name, pass]) => ({name, pass}));
+    },
     // Which checks belong to each visual model; light bending uses checks().
     checkSets() {
       return {'gravity-clocks':this.clockChecks,'spacetime':this.spacetimeChecks,'interference':this.waveChecks,
-        'two-slit-particles':this.waveChecks,'standing-waves':this.ropeChecks,'tunneling':this.tunnelChecks,'wave-packet':this.packetChecks,'quantum-well':this.wellChecks,'falling-time':this.fallChecks,'diffraction':this.gapChecks,'twin-trip':this.spacetimeChecks,'spacetime-paths':this.pathChecks,'light-clock':this.lightClockChecks,'river':this.riverChecks,'fall-views':this.viewsChecks,'tides':this.tidesChecks,'lift':this.liftChecks,'moon-tides':this.moonChecks,'attention':this.attentionChecks,'speed-limit':this.limitChecks};
+        'two-slit-particles':this.waveChecks,'standing-waves':this.ropeChecks,'tunneling':this.tunnelChecks,'wave-packet':this.packetChecks,'quantum-well':this.wellChecks,'falling-time':this.fallChecks,'diffraction':this.gapChecks,'twin-trip':this.spacetimeChecks,'spacetime-paths':this.pathChecks,'light-clock':this.lightClockChecks,'river':this.riverChecks,'fall-views':this.viewsChecks,'tides':this.tidesChecks,'lift':this.liftChecks,'moon-tides':this.moonChecks,'attention':this.attentionChecks,'speed-limit':this.limitChecks,'base-rate':this.rateChecks,'birthdays':this.birthdayChecks,'sky-colour':this.skyChecks,'seasons':this.seasonChecks};
     },
     checksFor(kind) { return this.checkSets()[kind]?.call(this) || this.checks(); },
     // Every model's checks, run in CI.

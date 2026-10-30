@@ -1499,6 +1499,378 @@ function drawLimit(ctx,w,h,spec,st){
  ctx.restore();
 }
 
+// Why a positive test for a rare disease is usually a false alarm. A thousand people take a test that is right 99
+// times in 100 for a disease that 1 person in 1,000 has. The test catches the sick person but also wrongly flags about
+// 10 of the 999 healthy ones, so of the 11 who test positive only 1 is sick; with 1 in 100 sick, right positives match
+// the false alarms. Dots are the expected numbers rounded to whole people (Physics.rateTest); after playback the viewer
+// sets how common the disease is.
+const RATE={mode:''};
+// Seats in the grid, shuffled once: the sick take seats from the front of the list, false alarms from the back.
+const RATE_SEATS=(()=>{const s=[...Array(1000).keys()];let x=11;for(let i=999;i>0;i--){x=(x*1103515245+12345)%2147483648;const j=x%(i+1);[s[i],s[j]]=[s[j],s[i]];}return s;})();
+function ratePlan(st){
+ const c=timeline?.chapters?.[st.stage], lines=c?.lines||[], c0=c?.start||0, at=i=>lines[i]?lines[i].start-c0:3+4*i, t=Math.max(0,st.since??0);
+ if(st.since===undefined)return {mode:'thumb',sick:1,caught:1,red:1,ring:1,alarms:10,gather:1,t:0};
+ if(st.live){const p=Physics.ratePrevalence(st.mass), r=Physics.rateTest(p);
+  return {mode:'live',p,share:r.share,sick:Math.round(r.sick),caught:Math.round(r.caught),red:1,ring:1,alarms:Math.round(r.alarms),gather:1,t:st.t||0};}
+ // 1: a thousand people; with the first sentence one of them turns red.
+ if(st.stage===0)return {mode:'meet',sick:1,caught:1,red:smooth((t-at(0)-1)/.6),ring:0,alarms:0,gather:0,t};
+ // 2: the test catches the sick person, then with the second sentence wrongly flags ten healthy people, one by one.
+ if(st.stage===1)return {mode:'test',sick:1,caught:1,red:1,ring:smooth((t-at(0)-.8)/.5),alarms:clamp((t-at(1)-.8)/3)*10,gather:0,t};
+ // 3: everyone who tested positive gathers on the right, and the count of the sick among them follows.
+ if(st.stage===2)return {mode:'gather',sick:1,caught:1,red:1,ring:1,alarms:10,gather:clamp((t-at(0)-.6)/2.4),count:smooth((t-at(0)-3.2)/.5),t};
+ // 4: the healthy group is far bigger than the sick one; with the second sentence nine more people are sick, as if 1
+ // in 100 had the disease: all are caught and join the positives, as many as the false alarms.
+ const more=clamp((t-at(1)-1)/3)*9;
+ return {mode:'common',sick:1+more,caught:1+more,red:1,ring:1,alarms:10,gather:1,count:1,healthy:smooth((t-at(0)-.4)/.6)*(1-smooth((t-at(1)-.2)/.5)),t};
+}
+function drawRate(ctx,w,h,spec,st){
+ const plan=ratePlan(st), small=w<520, accent=ACCENT[spec.accent]||ACCENT.blue, red='#dc2626', ink='rgba(20,23,28,.8)', muted='rgba(20,23,28,.55)', size=small?10:12;
+ RATE.mode=plan.mode;
+ // The thousand seats: 40 across and 25 down, on the left of wide stages and at the top of phones.
+ const s=small?Math.min(w*.86/40,h*.42/25):Math.min(w*.4/40,h*.56/25), gx=small?(w-40*s)/2:w*.07, gy=small?h*.1:h*.5-12.5*s;
+ const seat=i=>[gx+(i%40+.5)*s,gy+(Math.floor(i/40)+.5)*s], dot=s*.3;
+ const sick=Math.ceil(plan.sick-1e-9), caughtN=Math.ceil(plan.caught-1e-9), alarmN=Math.ceil(plan.alarms-1e-9);
+ const sickSeats=RATE_SEATS.slice(0,sick), alarmSeats=Array.from({length:alarmN},(_,k)=>RATE_SEATS[999-k]);
+ // Everyone who tested positive, sick first; each flies to its place in the group on the right, one after another.
+ const positives=[...sickSeats.slice(0,caughtN).map((i,k)=>({i,sick:true,grow:k===0?1:clamp(plan.sick-k)})),...alarmSeats.map((i,k)=>({i,sick:false,grow:clamp(plan.alarms-k)}))];
+ // The group on the right: the sick who tested positive on the top rows, the false alarms below, both from the left
+ // edge, so their lengths compare like bars.
+ const count=positives.length, per=small?12:14, room=small?h*.34:h*.66, nA=positives.filter(p=>p.sick).length, nB=count-nA;
+ const la=Math.ceil(nA/per), lb=Math.ceil(nB/per), span=Math.max(0,la+lb-1+(la&&lb?.4:0));
+ const gap=Math.min(small?24:28,room/(span+1),(small?w*.86:w*.4)/per), block={x:small?w/2:w*.76,y:small?h*.73:h*.5}, rr=Math.min(small?5:7,gap*.26), left=block.x-(per-1)/2*gap;
+ const slot=k=>{const inA=k<nA, j=inA?k:k-nA, row=inA?Math.floor(j/per):la+(la?.4:0)+Math.floor(j/per);return [left+(j%per)*gap,block.y+(row-span/2)*gap];};
+ const fly=k=>plan.mode==='common'&&k>0&&k<caughtN?clamp((positives[k].grow-.45)/.55):clamp(plan.gather*(count+3)/3-k/3);
+ const flown=new Map(positives.map((p,k)=>[p.i,{p,k,f:fly(k)}]));
+ // The grid: healthy people grey, the sick red; a ring marks a positive test.
+ const healthyA=.2+.25*(plan.healthy||0);
+ for(let i=0;i<1000;i++){const [x,y]=seat(i), f=flown.get(i)?.f||0;
+  if(f>=1){ctx.beginPath();ctx.arc(x,y,dot*1.1,0,TAU);ctx.strokeStyle=rgba(accent,.4);ctx.lineWidth=1;ctx.stroke();continue;}
+  const sk=sickSeats.indexOf(i);
+  if(sk<0||f>0){if(f>0)continue;ctx.beginPath();ctx.arc(x,y,dot,0,TAU);ctx.fillStyle=`rgba(20,23,28,${healthyA})`;ctx.fill();continue;}
+  const a=sk===0?plan.red:clamp((plan.sick-sk)/.45);
+  ctx.beginPath();ctx.arc(x,y,dot*(1+.4*a),0,TAU);ctx.fillStyle=a<1?`rgba(20,23,28,${healthyA*(1-a)})`:red;ctx.fill();
+  if(a>0&&a<1){ctx.beginPath();ctx.arc(x,y,dot*(1+.4*a),0,TAU);ctx.fillStyle=rgba(red,a);ctx.fill();}}
+ const ringAt=(x,y,r,a)=>{if(a<=0)return;ctx.beginPath();ctx.arc(x,y,r,0,TAU);ctx.strokeStyle=rgba(accent,a);ctx.lineWidth=small?1.3:1.7;ctx.stroke();};
+ positives.forEach((p,k)=>{const f=flown.get(p.i).f, [sx,sy]=seat(p.i), [tx,ty]=slot(k), e=smooth(f), x=sx+(tx-sx)*e, y=sy+(ty-sy)*e;
+  const ring=p.sick?(k===0?plan.ring:clamp((p.grow-.25)/.2)):1, pop=p.sick?1:1+.8*(1-clamp((p.grow)/.25));
+  if(!p.sick&&p.grow<=0)return;
+  const r=dot+(rr-dot)*e;
+  if(f>0){ctx.beginPath();ctx.arc(x,y,r*(p.sick?1.35:1),0,TAU);ctx.fillStyle=p.sick?red:'rgba(20,23,28,.42)';ctx.fill();}
+  ringAt(x,y,(f>0?r*1.65:dot*2.1)*pop,ring*(p.sick?1:clamp(p.grow/.25)));});
+ // Missed by the test: the few sick people without a ring stay in the grid.
+ if(st.labels){
+  // In the live view the heading gives the average number of sick people, which need not be whole.
+  const avg=plan.mode==='live'?1000*plan.p:0, many=avg>=9.95||Math.abs(avg-Math.round(avg))<.05?Math.round(avg).toLocaleString('en-US'):avg.toFixed(1);
+  const title=(plan.healthy||0)>.5?'999 healthy · 1 sick':`1,000 people · ${plan.mode==='common'&&plan.sick>1.01?10:plan.mode==='live'?many:1} sick`;
+  text(ctx,title,gx,gy-(small?10:14),{size,weight:700,color:ink});
+  if(plan.mode==='meet'&&plan.red>.5){const [x,y]=seat(RATE_SEATS[0]);pill(ctx,'sick',x+(small?9:12),y,{size,weight:700,color:red});}
+  if(plan.mode==='test'&&plan.alarms>9.5)text(ctx,'1 found · 10 false alarms',gx,gy+25*s+(small?12:18),{size,weight:600,color:accent});
+  const top=block.y-span/2*gap-rr*1.65-(small?10:13), bottom=block.y+span/2*gap+rr*1.65+(small?13:16);
+  if(plan.gather>.3)text(ctx,'tested positive',left-rr,top,{size,weight:700,color:accent});
+  if((plan.count||0)>.5||plan.mode==='live'||plan.mode==='thumb'){let right=positives.filter((p,k)=>p.sick&&fly(k)>=1).length, all=positives.filter((p,k)=>fly(k)>=1).length;
+   // The live view gives the exact long-run share in the guide's own terms; the chapters count the dots.
+   const share=plan.mode==='live'?plan.share:0, words=share<=0?'none are sick':share<.5?`1 in ${Math.round(1/share)} is sick`:`${Math.round(share*10)} in 10 are sick`;
+   if(all)pill(ctx,plan.mode==='live'?words:`${right} of ${all} ${right===1?'is':'are'} sick`,left-rr,bottom,{size:size+1,weight:700,color:right||share>0?red:muted});}}
+}
+
+// Why 23 people are enough for a shared birthday to be likely. Someone shares your own birthday only about 6% of the
+// time, from 22 chances; but a match can be between any two people, and 23 people make 253 pairs. As people arrive
+// one at a time, each newcomer must miss every birthday already in the room, so the chance of a shared birthday
+// passes one half with the 23rd person and reaches 97% with 50. Exact for 365 equally likely birthdays
+// (Physics.birthdayShared); after playback the viewer sets how many people are in the room.
+const BDAY={mode:''};
+function bdayPlan(st){
+ const c=timeline?.chapters?.[st.stage], lines=c?.lines||[], c0=c?.start||0, at=i=>lines[i]?lines[i].start-c0:3+4*i, t=Math.max(0,st.since??0);
+ const last=lines.length?at(lines.length-1):3;
+ if(st.since===undefined)return {mode:'thumb',n:23,arrived:23,pairs:253,you:0,t:0};
+ if(st.live){const n=Math.max(1,Math.round(1+59*clamp(st.mass)));return {mode:'live',n,arrived:n,pairs:n*(n-1)/2,you:0,t:st.t||0};}
+ // 1: 23 people; with the first sentence the 22 chances that someone shares your birthday, one line each.
+ if(st.stage===0)return {mode:'you',n:23,arrived:23,pairs:0,you:clamp((t-at(0)-1.2)/2)*22,t};
+ // 2: every pair is a chance: all 253 lines, then the count with the second sentence.
+ if(st.stage===1)return {mode:'pairs',n:23,arrived:23,pairs:22+clamp((t-at(0)-1)/3.5)*231,you:22,count:smooth((t-at(1)-.2)/.5),t};
+ // 3: people arrive one at a time through both sentences, each with lines to everyone already there, while the
+ // chance of a shared birthday grows.
+ if(st.stage===2){const a=1+clamp((t-at(0)-1)/Math.max(3,last+1.5-at(0)-1))*22;return {mode:'arrive',n:23,arrived:a,pairs:null,you:0,bar:1,t};}
+ // 4: 27 more arrive, to 50 people and 1,225 pairs.
+ const n=23+clamp((t-at(0)-.8)/3.2)*27;return {mode:'more',n,arrived:n,pairs:null,you:0,bar:1,t};
+}
+function drawBirthdays(ctx,w,h,spec,st){
+ const plan=bdayPlan(st), small=w<520, accent=ACCENT[spec.accent]||ACCENT.blue, gold=ACCENT.gold, ink='rgba(20,23,28,.8)', muted='rgba(20,23,28,.55)', size=small?10:12;
+ BDAY.mode=plan.mode;
+ // The room: people evenly around a circle; when more arrive the circle makes room for them.
+ const R=small?Math.min(w*.4,h*.27):h*.37, cx=small?w/2:w*.33, cy=small?h*.33:h*.5, N=Math.max(1,plan.n), whole=Math.ceil(N-1e-9);
+ // While the room fills, everyone slides from the spacing for the people already there to the spacing that includes
+ // the newcomer, who fades in at their own place, so no two people ever overlap.
+ const base=Math.floor(N+1e-9), part=N-base, pos=k=>{const ang=n=>-Math.PI/2+TAU*k/n, a=part>1e-9&&k<base?ang(base)+(ang(base+1)-ang(base))*part:ang(part>1e-9?base+1:base);
+  return [cx+R*Math.cos(a),cy+R*Math.sin(a)];};
+ const arrived=plan.arrived, newest=Math.ceil(arrived-1e-9)-1, fresh=arrived-newest;
+ const lineA=whole>30?.045:whole>23?.08:.13;
+ // Lines between pairs. While people arrive, a newcomer's lines to everyone already there light up, then settle.
+ ctx.lineWidth=whole>30?(small?.5:.7):small?.8:1;
+ if(plan.mode==='you'||plan.mode==='pairs'){const total=plan.mode==='you'?Math.ceil(plan.you-1e-9):Math.ceil(plan.pairs-1e-9);let k=0;
+  for(let i=0;i<23&&k<total;i++)for(let j=i+1;j<23&&k<total;j++,k++){const [x1,y1]=pos(i),[x2,y2]=pos(j), a=plan.mode==='you'?.4:i===0?.22:lineA*1.4;
+   trace(ctx,[[x1,y1],[x2,y2]]);ctx.strokeStyle=rgba(accent,a*clamp((plan.mode==='you'?plan.you:plan.pairs)-k));ctx.stroke();}}
+ else{const upto=Math.min(whole,Math.ceil(arrived-1e-9));
+  for(let i=0;i<upto;i++)for(let j=i+1;j<upto;j++){const [x1,y1]=pos(i),[x2,y2]=pos(j), lit=plan.mode==='arrive'&&j===newest?.5*(1-smooth(fresh*1.2))+lineA:lineA;
+   const grow=j===newest&&plan.mode!=='live'&&plan.mode!=='thumb'?clamp(fresh*2.5):1;trace(ctx,[[x1,y1],[x1+(x2-x1)*grow,y1+(y2-y1)*grow]]);ctx.strokeStyle=rgba(accent,lit);ctx.stroke();}}
+ // People: dark dots; not yet arrived, faint; you, in blue.
+ for(let k=0;k<whole;k++){const [x,y]=pos(k), here=plan.mode==='arrive'?clamp(arrived-k):plan.mode==='more'?clamp(arrived-k):1;
+  ctx.beginPath();ctx.arc(x,y,(small?3.6:5)*(k===0&&plan.mode==='you'?1.35:1),0,TAU);
+  ctx.fillStyle=k===0&&here>=1?accent:here>=1?'rgba(20,23,28,.72)':`rgba(20,23,28,${.16+.56*here})`;ctx.fill();}
+ const people=Math.min(whole,Math.ceil(arrived-1e-9)), pairs=people*(people-1)/2;
+ if(st.labels){
+  if(plan.mode==='you'||plan.mode==='pairs'){const [x,y]=pos(0);text(ctx,'you',x,y-(small?12:15),{align:'center',size,weight:700,color:accent});}
+  const centre=plan.mode==='you'?(plan.you>21.5?'22 pairs with you':''):plan.mode==='pairs'?(plan.count>.5?'253 pairs':''):`${pairs.toLocaleString('en-US')} pair${pairs===1?'':'s'}`;
+  if(centre)pill(ctx,centre,cx,cy,{align:'center',size:size+1,weight:700,color:plan.mode==='you'?accent:ink});}
+ // Two chances side by side: that someone shares your own birthday, and that any two people match. Each bar has a
+ // mark at one half.
+ const mine=plan.mode==='you'?1-Math.pow(364/365,Math.min(22,plan.you)):Physics.birthdayMine(people), shared=Physics.birthdayShared(people);
+ const both=plan.mode!=='you'&&plan.mode!=='pairs';
+ const bx=small?w*.1:w*.62, bw=small?w*.7:w*.29, bh=small?11:15, rows=[[mine,'shares your birthday',small?h*.7:h*.4,accent,true],[shared,'any two match',small?h*.85:h*.6,gold,both]];
+ for(const [v,name,by,color,show] of rows){if(!show)continue;
+  ctx.fillStyle='rgba(20,23,28,.08)';ctx.beginPath();ctx.roundRect(bx,by-bh/2,bw,bh,bh/2);ctx.fill();
+  if(v>0){ctx.fillStyle=rgba(color,.85);ctx.beginPath();ctx.roundRect(bx,by-bh/2,Math.max(bh,bw*v),bh,bh/2);ctx.fill();}
+  trace(ctx,[[bx+bw/2,by-bh/2-4],[bx+bw/2,by+bh/2+4]]);ctx.strokeStyle='rgba(20,23,28,.5)';ctx.lineWidth=1.3;ctx.stroke();
+  if(st.labels){text(ctx,name,bx,by-bh/2-(small?10:13),{size,weight:700,color:ink});
+   text(ctx,v<.995?Math.round(v*100)+'%':(v*100).toFixed(1)+'%',bx+bw+(small?8:12),by,{size:size+1,weight:700,color});}}
+ if(st.labels)text(ctx,'half',bx+bw/2,rows[both?1:0][2]+bh/2+(small?11:14),{align:'center',size:size-1,weight:600,color:muted});
+}
+
+// Why the sky is blue and sunsets are red. With no air, as on the Moon, the daytime sky is black. Light is a wave that
+// shakes the electrons in each air molecule, and shaken electrons send light out in every direction; blue, a quicker
+// wave than red, shakes them faster and is scattered about six times as much. So blue reaches you from all over the
+// sky, while at sunset the light crosses so much air that most of its blue is scattered away before it arrives.
+// Rayleigh scattering by clean air at sea level (Physics.skyThrough); after playback the viewer sets the Sun's height.
+const SKY={mode:''};
+// Fixed scattered positions, so the air, the sparks and the lines to the eye are the same at every frame.
+const SKY_DOTS=(()=>{let x=5;const r=()=>{x=(x*1103515245+12345)%2147483648;return x/2147483648;};return Array.from({length:150},()=>[r(),r(),r()]);})();
+function skyPlan(st){
+ const c=timeline?.chapters?.[st.stage], lines=c?.lines||[], c0=c?.start||0, at=i=>lines[i]?lines[i].start-c0:3+4*i, t=Math.max(0,st.since??0);
+ if(st.since===undefined)return {mode:'thumb',air:1,t:2};
+ if(st.live)return {mode:'live',sun:clamp(st.mass)*90,t:st.t||0};
+ // 1: no air, as on the Moon: a black sky. With the second sentence the air arrives and the sky turns blue.
+ if(st.stage===0)return {mode:'air',air:smooth((t-at(1)-.3)/1.5),t};
+ // 2: one molecule, magnified, in red light and in blue light; the blue one sends out far more, labelled with the
+ // second sentence.
+ if(st.stage===1)return {mode:'shake',more:smooth((t-at(1)-.6)/.5),t};
+ // 3: sunlight crosses the sky and the air sends blue off in all directions; with the second sentence, lines show
+ // blue reaching your eyes from all over the sky.
+ if(st.stage===2)return {mode:'scatter',air:1,eye:clamp((t-at(1)-.4)/2.4),t};
+ // 4: the noon ray crosses little air; the sunset ray, drawn with the first sentence, crosses far more, and with the
+ // second sentence its colour shows the blue being scattered away along the path.
+ return {mode:'sunset',noon:smooth((t-at(0)-.4)/.8),dusk:clamp((t-at(0)-1.6)/1.6),tint:smooth((t-at(1)-.3)/1.4),t};
+}
+// The colour of light that has crossed m air masses of clean air, as 0-255 RGB.
+function skyLight(m){
+ const T=nm=>Math.exp(-Physics.skyDepth(nm)*m), r=T(700);
+ return [255,Math.round(255*Math.pow(T(550)/r,.45)),Math.round(255*Math.pow(T(450)/r,.45))];
+}
+function drawSky(ctx,w,h,spec,st){
+ const plan=skyPlan(st), small=w<520, ink='rgba(20,23,28,.8)', muted='rgba(20,23,28,.55)', size=small?10:12, T=plan.t;
+ const blue=ACCENT.blue, red='#dc2626';
+ SKY.mode=plan.mode;
+ if(plan.mode==='shake'){
+  // One molecule, magnified, twice: a red wave and a blue wave pass at the same speed; the blue one is shorter and
+  // quicker, so it shakes the electrons faster, and the rings of light they send out are about six times as bright.
+  const x0=w*.08, x1=w*.92, mx=w*(small?.5:.42), speed=small?60:90, lanes=[[red,'red light',small?h*.28:h*.3,small?70:120,1],[blue,'blue light',small?h*.66:h*.66,(small?70:120)*450/700,Physics.skyScatter(450)]];
+  for(const [color,name,y,len,bright] of lanes){
+   const k=TAU/len, field=x=>Math.sin(k*(x-x0-speed*T));
+   // Rings: one per wave, growing at the wave's speed and fading out before they reach the other lane. Sunlight
+   // shakes the electrons every way across its path, so they send light out in every direction: forward and back
+   // most, sideways half as much.
+   const period=len/speed, reach=h*.17;
+   for(let j=0;j<6;j++){const age=(T%period)+j*period, r=age*speed;if(r<6||r>reach)continue;const a0=Math.min(.95,.12*bright)*(1-(r/reach)**2);
+    for(let q=0;q<48;q++){const th=q/48*TAU, way=(1+Math.cos(th)**2)/2;
+     ctx.beginPath();ctx.arc(mx,y,r,th,th+TAU/48+.005);ctx.strokeStyle=rgba(color,a0*way);ctx.lineWidth=small?1.6:2.4;ctx.stroke();}}
+   const pts=[];for(let x=x0;x<=x1;x+=3)pts.push([x,y-(small?14:20)*field(x)]);
+   trace(ctx,pts);ctx.strokeStyle=rgba(color,.8);ctx.lineWidth=2;ctx.stroke();
+   // The molecule: a nucleus and its electron cloud, pushed up and down by the wave's field.
+   const shift=(small?5:7)*field(mx);
+   ctx.beginPath();ctx.arc(mx,y-shift,small?10:14,0,TAU);ctx.fillStyle='rgba(20,23,28,.12)';ctx.fill();ctx.strokeStyle='rgba(20,23,28,.3)';ctx.lineWidth=1;ctx.stroke();
+   ctx.beginPath();ctx.arc(mx,y,small?2.6:3.4,0,TAU);ctx.fillStyle='rgba(20,23,28,.75)';ctx.fill();
+   if(st.labels)text(ctx,name,x0,y-h*.13,{size,weight:700,color});}
+  if(st.labels){text(ctx,'one molecule, magnified',w/2,h*.07,{align:'center',size,weight:700,color:muted});
+   if(plan.more>.5)pill(ctx,'scatters about 6× more',mx+(small?30:70),lanes[1][2]-h*.12,{size:size+1,weight:700,color:blue});}
+  return;
+ }
+ if(plan.mode==='sunset'||plan.mode==='live'){
+  // A slice of the Earth with its air, drawn many times thicker than it is. Light from the Sun crosses the air to
+  // you: from overhead it crosses little; from the horizon, far more, losing its blue on the way.
+  const Re=small?h*.75:h*1.6, H=small?h*.09:h*.13, ox=small?w*.62:w/2, oy=small?h*.62:h*.74, ecx=ox, ecy=oy+Re, gapOut=small?36:110;
+  const path=e=>{const a=e*Math.PI/180, d=[-Math.cos(a),-Math.sin(a)], b=Re*Math.sin(a), L=Math.sqrt((Re+H)**2-Re*Re*Math.cos(a)**2)-b;return {d,L};};
+  ctx.beginPath();ctx.arc(ecx,ecy,Re+H,0,TAU);ctx.fillStyle='rgba(106,168,232,.22)';ctx.fill();
+  ctx.beginPath();ctx.arc(ecx,ecy,Re,0,TAU);ctx.fillStyle='#b9cf9f';ctx.fill();
+  drawPerson(ctx,ox,oy,small?5:7,'#14171c');
+  const ray=(e,show,tint,label)=>{if(show<=0)return;const {d,L}=path(e), m=Physics.skyAirMass(e), sx=ox+d[0]*(L+gapOut), sy=oy+d[1]*(L+gapOut), ex=ox+d[0]*L, ey=oy+d[1]*L;
+   // From the Sun to the edge of the air the light is unchanged; inside the air its colour follows the air crossed.
+   const steps=24, upto=show;
+   ctx.lineWidth=small?3:4;ctx.lineCap='round';
+   const inside=clamp(upto*2-1), tip=[ex-d[0]*L*inside,ey-d[1]*L*inside];
+   trace(ctx,[[sx,sy],[sx+(ex-sx)*Math.min(1,upto*2),sy+(ey-sy)*Math.min(1,upto*2)],...(inside>0?[tip]:[])]);ctx.strokeStyle='rgba(20,23,28,.16)';ctx.lineWidth=(small?3:4)+3;ctx.stroke();
+   trace(ctx,[[sx,sy],[sx+(ex-sx)*Math.min(1,upto*2),sy+(ey-sy)*Math.min(1,upto*2)]]);ctx.strokeStyle='rgba(255,252,240,.98)';ctx.lineWidth=small?3:4;ctx.stroke();
+   for(let i=0;i<steps*inside;i++){const f0=i/steps, f1=Math.min(inside,(i+1)/steps), [r,g,b]=skyLight(m*(tint?f1:0));
+    trace(ctx,[[ex-d[0]*L*f0,ey-d[1]*L*f0],[ex-d[0]*L*f1,ey-d[1]*L*f1]]);ctx.strokeStyle=`rgb(${r},${g},${b})`;ctx.stroke();}
+   // The Sun itself, in space, gives out white light; only the light that crosses the air changes colour.
+   const R=small?11:16, glow=ctx.createRadialGradient(sx,sy,0,sx,sy,R*2.6);
+   glow.addColorStop(0,'rgba(255,244,214,.6)');glow.addColorStop(1,'rgba(255,244,214,0)');ctx.fillStyle=glow;ctx.fillRect(sx-R*3,sy-R*3,R*6,R*6);
+   ctx.beginPath();ctx.arc(sx,sy,R,0,TAU);ctx.fillStyle='#fffaf0';ctx.fill();ctx.strokeStyle='rgba(20,23,28,.25)';ctx.lineWidth=1;ctx.stroke();
+   // Blue leaving the ray along its way through the air, as small rings: plenty where the light enters the air, none
+   // by the time its blue has run out.
+   if(tint>0)for(const [u,v,z] of SKY_DOTS.slice(0,48)){const f=u*inside, left=Math.exp(-Physics.skyDepth(450)*m*f), px=ex-d[0]*L*f, py=ey-d[1]*L*f, age=((T*.6+v+z)%1);
+    ctx.beginPath();ctx.arc(px,py,Math.max(.5,age*(small?8:12)),0,TAU);ctx.strokeStyle=rgba(blue,.75*(1-age)*tint*left*clamp(m/8));ctx.lineWidth=1.1;ctx.stroke();}
+   if(st.labels&&label&&inside>=1)pill(ctx,label,sx,sy+(small?20:28),{align:'center',size,weight:700,color:ink});};
+  if(plan.mode==='live')ray(Math.max(0,plan.sun),1,1,'');
+  else{ray(90,plan.noon,plan.tint,'noon');ray(0,plan.dusk*1.0001,plan.tint,'sunset');}
+  drawPerson(ctx,ox,oy,small?5:7,'#14171c');
+  if(st.labels){text(ctx,'you',ox+(small?10:14),oy-(small?6:9),{size,weight:700,color:ink});
+   text(ctx,'air, drawn thicker',small?w-6:ox+120,small?oy-H*.1:oy-H*.5,{align:small?'right':'left',size:size-1,weight:600,color:muted});}
+  return;
+ }
+ // The sky: a window onto the daytime sky above the ground, with the Sun at the upper left and you on the ground.
+ const air=plan.air??1, wx=w*.05, wy=h*.05, ww=w*.9, wh=h*.8, ground=wy+wh*.82;
+ const mix=(a,b,f)=>a.map((v,i)=>Math.round(v+(b[i]-v)*f)), top=mix([11,15,25],[86,150,222],air), low=mix([24,28,40],[176,212,244],air);
+ ctx.save();ctx.beginPath();ctx.roundRect(wx,wy,ww,wh,14);ctx.clip();
+ const sky=ctx.createLinearGradient(0,wy,0,ground);sky.addColorStop(0,`rgb(${top})`);sky.addColorStop(1,`rgb(${low})`);ctx.fillStyle=sky;ctx.fillRect(wx,wy,ww,wh);
+ ctx.fillStyle=`rgb(${mix([142,142,142],[167,196,138],air)})`;ctx.fillRect(wx,ground,ww,wh);
+ const sx=wx+ww*(small?.16:.1), sy=wy+wh*.2, R=small?14:20, sg=ctx.createRadialGradient(sx,sy,0,sx,sy,R*3);
+ // The glow around the Sun is light scattered by air, so there is none without air.
+ sg.addColorStop(0,`rgba(255,250,230,${.9*air})`);sg.addColorStop(1,'rgba(255,250,230,0)');ctx.fillStyle=sg;ctx.fillRect(sx-R*3,sy-R*3,R*6,R*6);
+ ctx.beginPath();ctx.arc(sx,sy,R,0,TAU);ctx.fillStyle='#fffaf0';ctx.fill();
+ const px=wx+ww*(small?.66:.62), eyeY=ground-(small?14:20);
+ if(plan.mode==='scatter'||plan.mode==='thumb'){
+  // Sunlight fills the whole sky, drawn as parallel rays from the Sun's direction; everywhere the air sends a little
+  // blue off in every direction, drawn as small rings.
+  const ang=Math.atan2(eyeY-sy,px-sx), dir=[Math.cos(ang),Math.sin(ang)], nrm=[-dir[1],dir[0]], span=Math.hypot(ww,wh);
+  ctx.save();ctx.beginPath();ctx.rect(wx,wy,ww,ground-wy);ctx.clip();
+  for(let k=0;k<9;k++){const o=(k/8-.15)*span*.7, x0=sx+nrm[0]*o, y0=sy+nrm[1]*o;
+   trace(ctx,[[x0-dir[0]*span,y0-dir[1]*span],[x0+dir[0]*span,y0+dir[1]*span]]);ctx.strokeStyle='rgba(255,250,230,.55)';ctx.lineWidth=small?1.6:2.4;ctx.stroke();}
+  const spot=(u,v)=>[wx+ww*(.04+.92*u),wy+(ground-wy)*(.06+.86*v)];
+  for(const [u,v,z] of SKY_DOTS.slice(0,70)){const [x,y]=spot(u,v), age=(T*.45+z)%1, r=age*(small?9:14);
+   ctx.beginPath();ctx.arc(x,y,Math.max(.5,r),0,TAU);ctx.strokeStyle=`rgba(37,99,235,${.6*(1-age)})`;ctx.lineWidth=1.2;ctx.stroke();}
+  ctx.restore();
+  // Lines from all over the sky to your eye: blue arrives from every direction.
+  if(plan.eye>0)SKY_DOTS.slice(0,40).filter(([u,v])=>v<.7).slice(0,9).forEach(([u,v],i)=>{const show=clamp(plan.eye*9-i);if(show<=0)return;
+   const [qx,qy]=spot(u,v), ex=qx+(px-qx)*show, ey=qy+(eyeY-qy)*show;
+   ctx.setLineDash([4,5]);trace(ctx,[[qx,qy],[ex,ey]]);ctx.strokeStyle='rgba(37,99,235,.75)';ctx.lineWidth=1.5;ctx.stroke();ctx.setLineDash([]);});
+  if(st.labels){pill(ctx,'sunlight',sx+R+(small?36:60),sy-(small?14:18),{size,weight:700,color:ink});
+   if(plan.eye>.95)pill(ctx,'blue from everywhere',px+(small?12:18),ground+(small?16:24),{size,weight:700,color:blue});}
+ }
+ ctx.restore();
+ drawPerson(ctx,px,ground,small?5:7,air>.5?'#14171c':'#e5e7eb');
+ if(st.labels){text(ctx,'you',px+(small?10:14),ground-(small?16:22),{size,weight:700,color:air>.5?'#14171c':'#f8fafc'});
+  if(plan.mode==='air')text(ctx,air<.5?'no air, like the Moon':'with air',wx+14,wy+(small?14:18),{size,weight:700,color:air<.5?'rgba(248,250,252,.85)':'rgba(20,23,28,.7)'});}
+}
+
+// Why we have seasons. Many people think summer comes when Earth is closest to the Sun, but the orbit is almost a
+// circle and Earth is closest in early January, in the northern winter. Earth's axis is tilted and points the same way
+// all year, so in June the north leans toward the Sun: there the noon Sun is high, its light lands on a smaller patch
+// of ground, and more of each day is lit; half a year later the south leans in and the seasons swap. Exact for the
+// tilt, the distances and the noon Sun at 40 degrees north (Physics.seasonNoon, seasonRatio); after playback the
+// viewer sets the tilt.
+const SEASON={mode:''};
+function seasonPlan(st){
+ const c=timeline?.chapters?.[st.stage], lines=c?.lines||[], c0=c?.start||0, at=i=>lines[i]?lines[i].start-c0:3+4*i, t=Math.max(0,st.since??0);
+ if(st.since===undefined)return {mode:'thumb',lean:1,t:0};
+ if(st.live)return {mode:'live',tilt:clamp(st.mass)*40,area:1,t:st.t||0};
+ // 1: the orbit many people picture, then with the second sentence the real one: almost a circle, closest in January.
+ if(st.stage===0)return {mode:'orbit',real:smooth((t-at(1)-.3)/1.2),t};
+ // 2: the orbit tips from the view from above into the view from the side, with Earth in June and December, its
+ // tilted axis pointing the same way; with the second sentence, how much of the circle at 40 degrees north is lit.
+ if(st.stage===1)return {mode:'tilt',tip:smooth(t/1.4),lean:smooth((t-at(1)-.3)/.8),t};
+ // 3: the same beam of sunlight at June noon and at December noon, 40 degrees north; with the second sentence, the
+ // December patch is about twice as wide.
+ if(st.stage===2)return {mode:'beam',tilt:Physics.seasonTilt,area:smooth((t-at(1)-.4)/.6),t};
+ // 4: June and December again, with summer and winter named in each half: June's at once, December's as the first
+ // sentence turns to the south leaning in.
+ return {mode:'swap',lean:1,june:smooth((t-.2)/.5),dec:smooth((t-at(0)-2.5)/.6),t};
+}
+function drawSeasons(ctx,w,h,spec,st){
+ const plan=seasonPlan(st), small=w<520, ink='rgba(20,23,28,.8)', muted='rgba(20,23,28,.55)', size=small?10:12, T=plan.t, sunC='#f6b73c';
+ SEASON.mode=plan.mode;
+ const sun=(x,y,r)=>{const g=ctx.createRadialGradient(x,y,0,x,y,r*2.6);g.addColorStop(0,'rgba(246,183,60,.55)');g.addColorStop(1,'rgba(246,183,60,0)');ctx.fillStyle=g;ctx.fillRect(x-r*3,y-r*3,r*6,r*6);
+  ctx.beginPath();ctx.arc(x,y,r,0,TAU);ctx.fillStyle=sunC;ctx.fill();};
+ const globe=(x,y,r)=>{ctx.beginPath();ctx.arc(x,y,r,0,TAU);ctx.fillStyle='#4a8fd4';ctx.fill();};
+ if(plan.mode==='orbit'){
+  // Seen from above. The pictured orbit is a long oval with the Sun near one end; the real orbit is so nearly a circle
+  // that the Sun sits only 2.5 million km from its centre.
+  const cx=w*.5, cy=h*.47, a=Math.min(w*(small?.4:.3),h*.34), real=plan.real;
+  const orbit=(e,alpha,dash)=>{const b=a*Math.sqrt(1-e*e), f=a*e;ctx.save();ctx.globalAlpha=alpha;if(dash)ctx.setLineDash([5,6]);
+   ctx.beginPath();ctx.ellipse(cx-f,cy,a,b,0,0,TAU);ctx.strokeStyle='rgba(20,23,28,.4)';ctx.lineWidth=1.4;ctx.stroke();ctx.restore();return f;};
+  const fake=.62, ef=fake+(Physics.seasonFar/Physics.seasonNear-1)/(Physics.seasonFar/Physics.seasonNear+1)*0;
+  const e=(1-real)*fake+real*((Physics.seasonFar-Physics.seasonNear)/(Physics.seasonFar+Physics.seasonNear));
+  orbit(fake,1-real,true);orbit(e,real,false);
+  const f=a*e, near=[cx-f+a,cy], far=[cx-f-a,cy];
+  sun(cx,cy,small?12:16);
+  for(const [x,y] of [near,far])globe(x,y,small?6:8);
+  if(st.labels){
+   if(real<.5){pill(ctx,'closer: summer?',near[0],near[1]+(small?18:22),{align:'center',size,weight:700,color:ink});
+    pill(ctx,'farther: winter?',far[0],far[1]+(small?18:22),{align:'center',size,weight:700,color:ink});}
+   else{pill(ctx,'January · 147 million km',near[0],near[1]+(small?18:22),{align:small?'right':'center',size,weight:700,color:ink});
+    pill(ctx,'July · 152 million km',far[0],far[1]+(small?34:22),{align:small?'left':'center',size,weight:700,color:ink});}}
+  return;
+ }
+ if(plan.mode==='beam'||plan.mode==='live'){
+  // The same beam of sunlight, five rays wide, at noon in June and in December at 40 degrees north: the lower the Sun,
+  // the wider the patch of ground it lands on.
+  const tilt=plan.tilt, panels=[['June noon',Physics.seasonNoon(40,tilt)],['December noon',Physics.seasonNoon(40,-tilt)]], Wb=small?40:64;
+  panels.forEach(([name,elev],i)=>{
+   // d: the direction the light travels, down from the Sun toward the ground.
+   const px=small?w*.5:w*(i?.72:.28), gy=small?h*(i?.9:.45):h*.74, a=elev*Math.PI/180, d=[Math.cos(a),Math.sin(a)];
+   const patch=Wb/Math.sin(a), half=small?w*.42:w*.2, len=Math.min(small?h*.26:h*.5,(half-14)/Math.max(.2,Math.cos(a))), across=[-Math.sin(a),Math.cos(a)];
+   trace(ctx,[[px-half,gy],[px+half,gy]]);ctx.strokeStyle='rgba(20,23,28,.45)';ctx.lineWidth=1.5;ctx.stroke();
+   ctx.fillStyle='rgba(246,183,60,.45)';ctx.fillRect(px-patch/2,gy-4,patch,8);
+   const S=[px-d[0]*len,gy-d[1]*len];
+   for(let k=0;k<5;k++){const off=(k/4-.5)*Wb, start=[S[0]+across[0]*off,S[1]+across[1]*off], reach=(gy-start[1])/d[1];
+    trace(ctx,[start,[start[0]+d[0]*reach,gy]]);ctx.strokeStyle='rgba(222,150,20,.8)';ctx.lineWidth=1.6;ctx.stroke();}
+   sun(S[0]-d[0]*(small?10:14),S[1]-d[1]*(small?10:14),small?8:11);
+   if(st.labels){text(ctx,name,px,gy+(small?14:20),{align:'center',size,weight:700,color:ink});
+    if(i===1&&(plan.area||0)>.5&&plan.mode!=='live')pill(ctx,'twice the ground',px,gy+(small?30:40),{align:'center',size,weight:700,color:'#b26b00'});}});
+  if(st.labels&&plan.mode!=='live')text(ctx,'same light, 40° north',w/2,small?h*.06:h*.08,{align:'center',size,weight:700,color:muted});
+  return;
+ }
+ // June and December, seen from the side. The axis tilts 23.4 degrees the same way at both, so the north leans toward
+ // the Sun in June and away in December. Light falls on the half facing the Sun; the line across each Earth is the
+ // circle at 40 degrees north, seen edge on, yellow where it is in daylight.
+ // At the start of chapter 2 the circle seen from above tips over at the same width, then the whole view grows
+ // evenly to this side view, so it is plainly the same orbit and never looks stretched.
+ const tip=plan.tip??1, tilt=clamp(tip/.5), grow=clamp((tip-.5)/.5), top=Math.min(w*(small?.4:.3),h*.34), RX=small?w*.36:w*.33, RY=h*.08;
+ const zoom=1+(RX/top-1)*grow, cx=w*.5, cy=(small?h*.47+(h*.42-h*.47)*tip:h*.47+(h*.46-h*.47)*tip);
+ const rx=top*zoom, ry=(top+(top*RY/RX-top)*tilt)*zoom, R=(small?6:8)+((small?Math.min(w*.13,h*.08):h*.12)-(small?6:8))*grow, tl=Physics.seasonTilt*Math.PI/180;
+ ctx.beginPath();ctx.ellipse(cx,cy,rx,ry,0,0,TAU);ctx.strokeStyle=`rgba(20,23,28,${.4-.22*tip})`;ctx.lineWidth=1.2;ctx.stroke();
+ sun(cx,cy,small?14:20);
+ const axis=[Math.sin(tl),-Math.cos(tl)], across=[Math.cos(tl),Math.sin(tl)];
+ const earths=[[cx-rx,'June',1],[cx+rx,'December',-1]];
+ for(const [ex,name,toward] of earths){
+  globe(ex,cy,R);
+  ctx.save();ctx.globalAlpha=clamp((tip-.5)/.5);
+  // Night: the half facing away from the Sun.
+  ctx.save();ctx.beginPath();ctx.arc(ex,cy,R,0,TAU);ctx.clip();ctx.fillStyle='rgba(12,18,32,.55)';ctx.fillRect(toward>0?ex-R:ex,cy-R,R,2*R);ctx.restore();
+  ctx.beginPath();ctx.arc(ex,cy,R,0,TAU);ctx.strokeStyle='rgba(20,23,28,.35)';ctx.lineWidth=1;ctx.stroke();
+  trace(ctx,[[ex-axis[0]*R*1.35,cy-axis[1]*R*1.35],[ex+axis[0]*R*1.35,cy+axis[1]*R*1.35]]);ctx.strokeStyle='rgba(20,23,28,.75)';ctx.lineWidth=1.6;ctx.stroke();
+  ctx.restore();
+  // The circle at 40 degrees north, edge on: yellow on the daylight side of the line between day and night.
+  if((plan.lean||0)>0){const lat=40*Math.PI/180, c0=[ex+axis[0]*R*Math.sin(lat),cy+axis[1]*R*Math.sin(lat)], half=R*Math.cos(lat);
+   const p1=[c0[0]-across[0]*half,c0[1]-across[1]*half], p2=[c0[0]+across[0]*half,c0[1]+across[1]*half];
+   const cut=(ex-p1[0])/(p2[0]-p1[0]), m=[p1[0]+(p2[0]-p1[0])*cut,p1[1]+(p2[1]-p1[1])*cut], day=toward>0?[m,p2]:[p1,m], dark=toward>0?[p1,m]:[m,p2];
+   ctx.save();ctx.globalAlpha=plan.lean;ctx.lineCap='round';
+   trace(ctx,dark);ctx.strokeStyle='rgba(200,205,215,.9)';ctx.lineWidth=3;ctx.stroke();
+   trace(ctx,day);ctx.strokeStyle='#fcd34d';ctx.lineWidth=3.5;ctx.stroke();
+   // Noon at 40 degrees north: the end of the circle facing the Sun, where chapter 3's ground stands, marked by a
+   // short post standing out from the surface.
+   const noon=toward>0?p2:p1, out=[(noon[0]-ex)/R,(noon[1]-cy)/R];
+   trace(ctx,[noon,[noon[0]+out[0]*(small?7:10),noon[1]+out[1]*(small?7:10)]]);ctx.strokeStyle='rgba(20,23,28,.8)';ctx.lineWidth=2;ctx.stroke();
+   if(st.labels&&plan.mode==='tilt')text(ctx,'noon',noon[0]+out[0]*(small?12:16),noon[1]+out[1]*(small?12:16)-(small?6:8),{align:toward>0?'left':'right',size:size-1,weight:700,color:ink});
+   ctx.restore();}
+  if(st.labels&&tip>.8){text(ctx,name,ex,cy+R+(small?16:24),{align:'center',size,weight:700,color:ink});
+   if(plan.mode==='tilt'&&toward>0)text(ctx,'north',ex+axis[0]*R*1.35+(small?8:10),cy+axis[1]*R*1.35-(small?4:6),{size:size-1,weight:700,color:muted});}}
+ if(st.labels&&plan.mode==='tilt'&&tip>.8){if(plan.lean<.5)text(ctx,'orbit seen from the side',cx,cy+ry+(small?14:18),{align:'center',size:size-1,weight:600,color:muted});
+  if(plan.lean>.5)text(ctx,'circle at 40° north',earths[0][0]+R+(small?6:10),cy-R*.62,{size:size-1,weight:700,color:'#b26b00'});}
+ if(st.labels&&(plan.mode==='swap'||plan.mode==='thumb')){const show=[[plan.june??1,earths[0][0],'summer','winter'],[plan.dec??1,earths[1][0],'winter','summer']];
+  for(const [a,ex,north,south] of show){if(a<=.5)continue;
+   pill(ctx,`north: ${north}`,ex,cy-R*1.35-(small?12:16),{align:'center',size,weight:700,color:north==='summer'?'#b26b00':'#2563eb'});
+   pill(ctx,`south: ${south}`,ex,cy+R+(small?32:44),{align:'center',size,weight:700,color:south==='summer'?'#b26b00':'#2563eb'});}}
+}
+
 // Attention, told as the story behind chatbots. A chatbot guesses the next word; the clue it needs ("France") is five
 // words back; an old one-at-a-time memory lets it fade, while attention looks straight back at every earlier word and
 // gives the biggest share to the one that answers what the guess needs ("which language?"). Practice sentences show
@@ -2122,6 +2494,38 @@ const ENGINES={
   disclosure:'Exact special relativity for equal pushes: each push leaves the rocket moving at half light speed relative to a marker it dropped just before, so the speed seen from the ground after n pushes is tanh(0.549 n) times light speed. Motion on screen is slowed for viewing.',
   try:'Set “Pushes” to 10: the speed seen from the ground is 99.997% of light speed, never 100%.',
   aria:'A rocket fires the same push again and again. Seen from the ground, light from the moving rocket travels at the same speed as light from a lamp on the ground, and the crew see their own light pull away at full light speed after every push. So, seen from the ground, the rocket’s speed climbs to 50%, 80%, 93% of light speed, ever closer but never reaching it.'},
+ 'base-rate':{draw:drawRate,demo:false,tryAny:true,a:['How common','how many people have the disease'],b:['Unused','',''],
+  fa:a=>{const p=Physics.ratePrevalence(a);return p<=0?'nobody':`1 in ${Math.round(1/p).toLocaleString('en-US')}`;},fb:b=>'',
+  // The modelled effect for the render checks: the share of positive results that are right.
+  effect:a=>Physics.rateTest(Physics.ratePrevalence(a)).share,
+  measure:['Positives who are sick',a=>RATE.mode==='live'?(v=>v<.1?(v*100).toFixed(1)+'%':Math.round(v*100)+'%')(Physics.rateTest(Physics.ratePrevalence(a)).share):''],scale:'',demoEnd:()=>1,
+  disclosure:'Assumes the people tested are picked at random, without symptoms, and that the test finds 99 in 100 sick people and clears 99 in 100 healthy ones; people tested because of symptoms start with higher odds. Dots are the average numbers in a group of 1,000, rounded to whole people; real tests differ.',
+  try:'Move “How common” past 1 in 100: once the disease is more common than the test’s false alarms, most positive results are right.',
+  aria:'A grid of 1,000 people, one of them sick. The test flags the sick person and about 10 healthy people, so of the 11 positive results only 1 is right. If the disease were as common as the test’s false alarms, 1 in 100, the right results would match the false alarms.'},
+ 'birthdays':{draw:drawBirthdays,demo:false,tryAny:true,a:['People','how many people are in the room'],b:['Unused','',''],
+  fa:a=>{const n=Math.max(1,Math.round(1+59*clamp(a)));return `${n} ${n===1?'person':'people'}`;},fb:b=>'',
+  // The modelled effect for the render checks: the chance of a shared birthday for the chosen number of people.
+  effect:a=>Physics.birthdayShared(Math.max(1,Math.round(1+59*clamp(a)))),
+  measure:['Chance two share a birthday',a=>BDAY.mode==='live'?(v=>v<.995?Math.round(v*100)+'%':(v*100).toFixed(1)+'%')(Physics.birthdayShared(Math.max(1,Math.round(1+59*clamp(a))))):''],scale:'',demoEnd:()=>1,
+  disclosure:'Exact for 365 equally likely birthdays, ignoring 29 February and twins. Real birthdays are slightly uneven, which makes a match a little more likely.',
+  try:'Set “People” to 40: there are 780 pairs, and a shared birthday is 89% likely.',
+  aria:'People sit around a circle with a line between every pair. With 23 people there are 253 pairs, and the chance that two share a birthday passes one half; with 50 people it is 97%.'},
+ 'sky-colour':{draw:drawSky,demo:false,tryAny:true,a:['Sun height','how high the Sun is above the horizon'],b:['Unused','',''],
+  fa:a=>a<.006?'on the horizon':`${Math.round(clamp(a)*90)}° up`,fb:b=>'',
+  // The modelled effect for the render checks: the share of the Sun's blue light that reaches you directly.
+  effect:a=>a<=0?0:Physics.skyThrough(450,clamp(a)*90),
+  measure:['Sunlight’s blue that gets through',a=>SKY.mode==='live'?(v=>v<.01?(v*100).toFixed(2)+'%':Math.round(v*100)+'%')(a<=0?0:Physics.skyThrough(450,clamp(a)*90)):''],scale:'',demoEnd:()=>1,
+  disclosure:'Scattering by the molecules of clean air at sea level, which grows as the inverse fourth power of the wavelength; blue is taken as 450 nm and red as 700 nm. Sunlight shakes the electrons every way across its path, so they send light out in all directions, most strongly forward and back. The air is drawn many times thicker than it is: sunset light really crosses about 38 times as much air as light from overhead. Dust and haze add to real sunsets.',
+  try:'Lower the Sun to the horizon: almost none of its blue gets through, and the light that reaches you turns red.',
+  aria:'On the Moon, with no air, the daytime sky is black. On Earth, air molecules shaken by sunlight send light in every direction, blue about six times as much as red, so blue reaches you from all over the sky. At sunset the light crosses far more air and loses most of its blue, so it looks red and orange.'},
+ 'seasons':{draw:drawSeasons,demo:false,tryAny:true,a:['Tilt','how far Earth’s axis leans'],b:['Unused','',''],
+  fa:a=>`${Math.round(clamp(a)*40)}°`,fb:b=>'',
+  // The modelled effect for the render checks: how much more sunlight a June day gets than a December day, 40° north.
+  effect:a=>Physics.seasonRatio(40,clamp(a)*40)-1,
+  measure:['June’s sunlight, against December’s',a=>SEASON.mode==='live'?(v=>v<1.05?'the same':v.toFixed(1)+'×')(Physics.seasonRatio(40,clamp(a)*40)):''],scale:'',demoEnd:()=>1,
+  disclosure:'Exact for a tilt of 23.4° and for 40° north. The day’s sunlight is counted at the top of the air, on level ground, and leaves out the changing distance, which trims June’s lead at 40° north from 3.3 to 3.1 times. The edge-on line shows which part of the circle is lit; real daylight there is about 15 hours in June and 9 in December. The orbit’s shape is to scale; Earth and the Sun are not.',
+  try:'Set the tilt to 0°: June and December get the same sunlight, apart from the small change in distance.',
+  aria:'Earth’s orbit is almost a circle, and Earth is closest to the Sun in January. Its axis tilts the same way all year, so in June the north leans toward the Sun: the noon Sun is high, its light lands on a smaller patch of ground and the days are long. In December the south leans in, and the seasons swap.'},
  'attention':{draw:drawAttention,demo:false,tryAny:true,a:['Attention','off: one word at a time · on: look straight back'],b:['Unused','',''],
   fa:a=>a<.02?'off':Math.round(a*100)+'%',fb:b=>'',
   measure:['Chance of “French”',a=>ATTN.mode==='live'?Math.round(Physics.lookGuess(ATTN.strength)[0][1]*100)+'%':''],

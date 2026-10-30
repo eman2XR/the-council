@@ -1,0 +1,58 @@
+{
+ "id": "sky-colour",
+ "provider": "draft",
+ "status": "draft",
+ "created": "2026-10-30T01:10:00-07:00",
+ "question": "Why is the sky blue, but the sunset red?",
+ "topic": "sky-colour",
+ "scene": {
+  "ray_count": 1,
+  "show_reference": true,
+  "show_labels": true,
+  "line_width": 2.5,
+  "duration": 30,
+  "controls": "first",
+  "mass": 1,
+  "distance": 0,
+  "kind": "sky-colour",
+  "accent": "blue",
+  "title": "Why is the sky blue, but the sunset red?",
+  "subtitle": "Sunlight looks white, yet the sky glows blue and sunsets glow red. Both colours come from the way air sends light off in new directions.",
+  "why": "The blue sky shows something you cannot see directly: light is a wave, and the shorter the wave, the more the air sends it off course.",
+  "opening": "Sunlight looks white, yet the sky glows blue and sunsets glow red. Where do those colours come from?",
+  "beats": [
+   {
+    "title": "No air, no blue",
+    "body": "On the Moon, with no air, the daytime sky is black. On Earth the same sunlight crosses air, and the sky glows blue."
+   },
+   {
+    "title": "Shaking electrons",
+    "body": "Light is a wave that shakes the electrons in each air molecule, and they scatter it in every direction. Blue’s shorter wave shakes them about as far as red, but more often, and scatters about six times as much."
+   },
+   {
+    "title": "Blue from everywhere",
+    "body": "So all along its way, sunlight loses some of its blue to the air. That blue reaches your eyes from all over the sky."
+   },
+   {
+    "title": "Red sunsets",
+    "body": "At sunset the light crosses about 38 times as much air to reach you. Red is scattered far less: almost no blue arrives but a quarter of the red does, so it looks red."
+   }
+  ],
+  "takeaway": "Air is not tinted blue: it scatters blue about six times as much as red, so blue reaches you from the whole sky, and sunset light arrives red and orange.",
+  "questions": [
+   {
+    "q": "Violet is scattered even more than blue. Why isn’t the sky violet?",
+    "a": "Sunlight has less violet than blue, and our eyes are less sensitive to it. The mix of scattered colours that reaches us looks sky blue."
+   },
+   {
+    "q": "Why are clouds white, not blue?",
+    "a": "Unlike air molecules, cloud droplets are far bigger than light’s waves, so they scatter every colour about equally, and an equal mix looks white."
+   },
+   {
+    "q": "Is air blue, like tinted glass?",
+    "a": "No. Blue glass turns the light passing through it blue by soaking up the red. Air does the opposite: light that crosses a lot of air turns orange, as at sunset. The blue sky is light sent sideways."
+   }
+  ]
+ },
+ "note": "Owner review draft: made by hand in a coding session, with subagent reviews; no live research or lab review. Not published as an investigation."
+}

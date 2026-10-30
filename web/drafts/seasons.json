@@ -1,0 +1,58 @@
+{
+ "id": "seasons",
+ "provider": "draft",
+ "status": "draft",
+ "created": "2026-10-30T02:00:00-07:00",
+ "question": "Why do we have seasons?",
+ "topic": "seasons",
+ "scene": {
+  "ray_count": 1,
+  "show_reference": true,
+  "show_labels": true,
+  "line_width": 2.5,
+  "duration": 30,
+  "controls": "first",
+  "mass": 0.5860000000000001,
+  "distance": 0,
+  "kind": "seasons",
+  "accent": "blue",
+  "title": "Why do we have seasons?",
+  "subtitle": "Summer does not come from being closer to the Sun. It comes from Earth’s tilt, which lifts the noon Sun high in summer and keeps it low in winter.",
+  "why": "Seasons shape farming, weather and daylight for billions of people, and what causes them also brings the Arctic its midnight sun in summer and its polar night in winter.",
+  "opening": "Is summer warmer because Earth is closer to the Sun? If so, why is it summer in Australia at Christmas?",
+  "beats": [
+   {
+    "title": "Not the distance",
+    "body": "Many people picture a long oval orbit, with summer when Earth is closest to the Sun. The real orbit is almost a circle, and Earth is closest in early January: northern winter, southern summer."
+   },
+   {
+    "title": "A tilted axis",
+    "body": "Earth spins about an axis tilted by 23 degrees, and the axis keeps pointing the same way all year. So in June the north leans in, and at 40 degrees north more of the circle is sunlit: 15 hours, not 9."
+   },
+   {
+    "title": "Steep or slanting",
+    "body": "At June noon there the Sun stands 73 degrees high, and its light lands on a small patch of ground. At December noon, 27 degrees up, the same light covers twice the ground, so each patch gets half as much."
+   },
+   {
+    "title": "Summer and winter",
+    "body": "Half a year later, on the other side of the Sun, the axis still points the same way, so the south leans in. The tilt changes a day’s sunlight about threefold there; the distance, by 7%."
+   }
+  ],
+  "takeaway": "Earth’s tilted axis points the same way all year, so each half in turn leans toward the Sun and gets a high Sun and long days: that is its summer. The distance to the Sun changes sunlight by only 7%.",
+  "questions": [
+   {
+    "q": "If Earth had no tilt, would there be seasons?",
+    "a": "Almost none. The noon Sun would stand at the same height every day, and every day would last 12 hours. Only the 7% change in sunlight from the changing distance would remain."
+   },
+   {
+    "q": "Doesn’t leaning toward the Sun bring the north closer to it?",
+    "a": "Only by about 2,500 km out of 150 million, far too little to matter. What changes is how high the Sun climbs and how long it stays up."
+   },
+   {
+    "q": "Why is the hottest weather often weeks after the longest day?",
+    "a": "Land and especially oceans take time to warm up. They keep gaining heat while the days are long, so the warmest weeks come after the longest day."
+   }
+  ]
+ },
+ "note": "Owner review draft: made by hand in a coding session, with subagent reviews; no live research or lab review. Not published as an investigation."
+}
