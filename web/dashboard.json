@@ -1,11 +1,11 @@
 {
-  "status": "running",
+  "status": "failed",
   "question": "Why can nothing travel faster than light?",
   "topic": "speed-limit",
   "id": "20261030T160013-e1909d57",
   "revision": 0,
   "guidance": 0,
-  "updated": "2026-10-30T16:10:13.948644+00:00",
+  "updated": "2026-10-30T16:15:19.733640+00:00",
   "events": [
     {
       "at": "2026-10-30T16:00:13.613209+00:00",
@@ -14,6 +14,10 @@
     {
       "at": "2026-10-30T16:10:13.941606+00:00",
       "message": "The researcher did not finish (claude worker exceeded its 600s time limit; its process group was stopped.); the coordinator is retrieving candidate sources."
+    },
+    {
+      "at": "2026-10-30T16:15:19.727597+00:00",
+      "message": "Investigation stopped; partial work retained."
     }
   ],
   "schedule": {
@@ -62,7 +66,7 @@
       "day": "2026-10-30",
       "question": "Why can nothing travel faster than light?",
       "topic": "speed-limit",
-      "status": "running",
+      "status": "failed",
       "run_id": "20261030T160013-e1909d57"
     }
   ]
