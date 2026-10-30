@@ -197,8 +197,10 @@ lines from the guess back to every earlier word, then "speak fluent" is marked a
 the lines take their shares (France 63%, speak 13%, fluent 9%), the clue's line glowing, and the guess becomes clear
 (French 70%); 4 how it knows: three practice sentences (Spain/Spanish, Japan/Japanese, Brazil/Portuguese) appear and each
 language is linked back to its country; 5 every word looks back at the ones before it at once (a faint web), pulsing
-together, while it still writes one word at a time; 6 the web stacked in layers (named the Transformer in the paper,
-stacked far deeper later), and the answer fills in; the last chapter names ChatGPT. After playback field mass sets how much
+together (attention already helped one-at-a-time models; the leap was attention alone), while it still writes
+one word at a time; 6 the web stacked in layers (named the Transformer in the paper,
+stacked far deeper later), and the answer fills in; the last chapter names ChatGPT and says it also
+needed far bigger models and training on people's feedback. After playback field mass sets how much
 attention is used (UI "Attention"; 0 is the fading memory alone). Readout: the chance of "French". The guesses come from a
 toy rule. Supported questions: how the 2017 paper led to chatbots, what attention does, why it looks at the clue, where
 those matches come from, why it allowed training on vast text. Honesty points: hand-made numbers; real models learn them,
