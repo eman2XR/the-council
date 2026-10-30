@@ -378,18 +378,20 @@ function gallery(lead){
  const grid=el('div',{className:'thumbs'},...[...entries.filter(e=>e!==lead).sort(newest),...[...drafts].sort(newest)].map(cardFor));
  if(!curriculum)return [grid];
  const used=new Set(), open=curriculum.chapters.flatMap(c=>c.items).filter(i=>!doneItem(i)&&!draftFor(i,used));
- const ready=open.filter(i=>i.ready), later=open.length-ready.length;
+ const ready=open.filter(i=>i.ready&&!triedItem(i)), later=open.length-ready.length;
  if(!open.length)return [grid];
  return [grid,el('section',{className:'up-next'},el('h3',{className:'chapter-title',textContent:'Up next'}),
   ...(ready.length?[el('ul',{className:'items pending'},...ready.map(i=>el('li',{},el('span',{className:'q',textContent:i.question}),requestFor(i))))]:[]),
   ...(later?[el('p',{className:'up-later',textContent:`${later} more question${later>1?'s are':' is'} planned, waiting for a picture that explains ${later>1?'them':'it'} well.`})]:[]))];
 }
+// Like the daily run, a question tried before with the same model, or answered by a draft, is not offered again.
+function triedItem(i){return attempts.some(a=>norm(a.question)===norm(i.question)&&a.topic===i.model)||drafts.some(d=>norm(d.question||d.title)===norm(i.question));}
 function renderPath(){
  if(!curriculum)return;
  // Like the daily run: ready items whose model has no guide or draft yet, skipping questions a guide or draft answers
  // or that were tried with the same model.
  const used=new Set([...entries.map(e=>e.topic),...drafts.map(d=>d.kind)]);
- const tried=i=>attempts.some(a=>norm(a.question)===norm(i.question)&&a.topic===i.model)||drafts.some(d=>norm(d.question||d.title)===norm(i.question));
+ const tried=triedItem;
  const all=curriculum.chapters.flatMap(c=>c.items), next=all.find(i=>i.model&&i.ready&&!used.has(i.model)&&!doneItem(i)&&!tried(i)&&!picks.has(i.id));
  if(schedule?.enabled){
   const pick=[...picks.keys()].map(id=>all.find(i=>i.id===id)).find(i=>i&&i.model&&!doneItem(i));
