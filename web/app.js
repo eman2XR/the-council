@@ -5,7 +5,7 @@ const TOPICS={'gravity-clocks':'Gravity and time','light-bending':'Gravity and l
 // The accuracy reviewer checks physics for physics guides and the mathematics for the others.
 const REVIEWED={'attention':'accuracy'};
 const STATUS={planning:'Choosing a question',running:'Investigating now',reviewed:'Passed review',needs_review:'Draft, not published',failed:'Attempt stopped',interrupted:'Run interrupted',idle:'Resting'};
-const STEPS=['Question','Research','Design','Render','Review','Publish'];
+const STEPS=['Question','Research','Design','Write','Render','Review','Publish'];
 const reduceMotion=matchMedia('(prefers-reduced-motion: reduce)').matches;
 let current=null, entries=[], example=null;
 const requestedGuide=new URLSearchParams(location.search).get('guide');
@@ -184,12 +184,13 @@ loadPublished();
 let schedule=null, labActive=false, labQuestion='', attempts=[], labStep=1, labStatus=null, labNext='';
 function stepOf(state){
  if(state.status==='planning')return 0;
- if(state.status==='reviewed')return 6;
+ if(state.status==='reviewed')return 7;
  const message=(state.events?.at(-1)?.message||'').toLowerCase();
- if(message.includes('gates passed'))return 5;
- if(message.includes('changes requested')||message.includes('director')||message.includes('designer')||message.includes('writer'))return 2;
- if(message.includes('review')||message.includes('inspecting'))return 4;
- if(message.includes('rendering'))return 3;
+ if(message.includes('gates passed'))return 6;
+ if(message.includes('changes requested')||message.includes('writer is writing')||message.includes('director'))return 3;
+ if(message.includes('designer is planning'))return 2;
+ if(message.includes('review')||message.includes('inspecting'))return 5;
+ if(message.includes('rendering'))return 4;
  return 1;
 }
 function plain(message){return (message||'').replace('physics_review','physics review').replace('visual_review','visual review').replace('learner_review','beginner review').replace(/^Revision (\d+)/,'Draft $1');}
@@ -246,8 +247,8 @@ async function refreshDashboard(){
 const labCanvas=VIEW==='home'?el('canvas',{id:'lab-anim',className:'lab-anim'}):null;
 let labVisible=true, labPreview=null;
 const LAB_DONE_MINUTES=45, LAB_TEXT={closed:'The schedule is off, so the lab is closed',resting:'Resting between runs',
- published:'Just published',draft:'Finished as a draft: it did not pass review',stopped:'The run stopped early',choose:'Choosing the question',research:'Gathering sources',record:'Writing up the research',design:'Designing the picture',
- render:'Rendering the frames',review:'Three reviewers are checking it',revise:'Changes requested: drawing a new draft',publish:'Passed review: publishing',done:'Published'};
+ published:'Just published',draft:'Finished as a draft: it did not pass review',stopped:'The run stopped early',choose:'Choosing the question',research:'Gathering sources',record:'Writing up the research',design:'Planning how the picture shows the idea',
+ render:'The coordinator is rendering the frames',review:'Four reviewers are checking it',revise:'Changes requested: rewriting',write:'Writing the chapters and narration',publish:'Passed review: publishing',done:'Published'};
 function labPhase(state){
  if(state.status==='planning')return 'choose';
  const message=(state.events?.at(-1)?.message||'').toLowerCase();
@@ -255,7 +256,8 @@ function labPhase(state){
  if(message.includes('changes requested'))return 'revise';
  if(message.includes('inspecting')||message.includes('review saved'))return 'review';
  if(message.includes('rendering'))return 'render';
- if(message.includes('director')||message.includes('designer is planning')||message.includes('writer is writing'))return 'design';
+ if(message.includes('writer is writing')||message.includes('director'))return 'write';
+ if(message.includes('designer is planning'))return 'design';
  if(message.includes('scientist is preparing'))return 'record';
  return 'research';
 }
@@ -266,7 +268,7 @@ function labModel(now){
  const last=s.events?.at(-1), since=Math.max(0,(Date.now()-Date.parse(last?.at||s.updated))/1000);
  if(['running','planning'].includes(s.status)){
   const phase=labPhase(s), n=/Revision (\d+)/.exec(last?.message||'')?.[1];
-  const reviews=['learner_review','visual_review','physics_review'].map(r=>(s.events||[]).some(e=>e.message===`Revision ${n}: ${r} saved.`)?1:0);
+  const reviews=['learner_review','visual_review','physics_review','blind_review'].map(r=>(s.events||[]).some(e=>e.message===`Revision ${n}: ${r} saved.`)?1:0);
   let used=s.guidance||0;
   return {mode:'working',phase,since,question:labQuestion,reviews,wall,rejected:Math.max(0,(s.revision||0)-(['review','publish'].includes(phase)?1:0)),
    notes:notes.map(x=>x.url&&x.status==='waiting'&&used-->0?{...x,status:'taken'}:x)};
@@ -278,10 +280,10 @@ function labModel(now){
 }
 // Trying the lab, simulated in the browser only: a sample run plays every phase in about a minute using the first
 // pinned note, or one chosen state holds until Live. Nothing is sent or published.
-const PREVIEW=[['choose',6],['research',8],['record',5],['design',9],['render',5],['review',7],['revise',5],['render',4],['review',6],['publish',5],['done',7]];
-const PHASE_LEN={choose:8,research:10,record:7,design:10,render:6,review:8,revise:6,publish:5};
+const PREVIEW=[['choose',6],['research',8],['record',5],['design',7],['write',8],['render',5],['review',7],['revise',5],['render',4],['review',6],['publish',5],['done',7]];
+const PHASE_LEN={choose:8,research:10,record:7,design:9,write:10,render:6,review:8,revise:6,publish:5};
 const LAB_STATES=[['Live',null],['Sample run','run'],['Closed',{mode:'closed'}],['Resting',{mode:'resting'}],['Question',{mode:'working',phase:'choose'}],
- ['Research',{mode:'working',phase:'research'}],['Write-up',{mode:'working',phase:'record'}],['Design',{mode:'working',phase:'design'}],
+ ['Research',{mode:'working',phase:'research'}],['Write-up',{mode:'working',phase:'record'}],['Design',{mode:'working',phase:'design'}],['Write',{mode:'working',phase:'write'}],
  ['Render',{mode:'working',phase:'render'}],['Review',{mode:'working',phase:'review'}],['Revise',{mode:'working',phase:'revise'}],
  ['Publish',{mode:'working',phase:'publish'}],['Published',{mode:'done',outcome:'published'}],['Draft',{mode:'done',outcome:'draft'}],['Stopped',{mode:'done',outcome:'stopped'}]];
 function simModel(now){
@@ -297,10 +299,10 @@ function simModel(now){
  if(sim.shown!==key){sim.shown=key;simStrip(model,key);}
  const notes=noteList().map((n,j)=>j>0?n:model.mode==='working'?{...n,status:'taken'}:model.outcome==='published'?{...n,status:'applied'}:n);
  return {...model,question:model.mode==='closed'?'':sim.question,notes,wall:entries.length+(model.outcome==='published'?1:0),
-  reviews:model.phase==='review'?[.3,.55,.8].map(f=>model.since>model.length*f?1:0):[0,0,0]};
+  reviews:model.phase==='review'?[.3,.5,.7,.85].map(f=>model.since>model.length*f?1:0):[0,0,0,0]};
 }
 function simStrip(model,key){
- const run=labPreview.state==='run', at=model.mode==='working'?{choose:0,research:1,record:1,design:2,revise:2,render:3,review:4,publish:5}[model.phase]:model.mode==='done'?6:-1;
+ const run=labPreview.state==='run', at=model.mode==='working'?{choose:0,research:1,record:1,design:2,write:3,revise:3,render:4,review:5,publish:6}[model.phase]:model.mode==='done'?7:-1;
  put('dashboard-status',run?'Sample run':'Trying a state');$('lab').dataset.state=model.mode==='working'?'active':model.mode==='closed'?'paused':'idle';
  put('next-pick',LAB_TEXT[key]);put('next-title','');
  put('now-title',run?'A sample run, simulated in your browser':`${labPreview.label}, simulated in your browser`);
@@ -308,7 +310,7 @@ function simStrip(model,key){
  if(run&&key==='published'){$('featured').classList.add('fresh');setTimeout(()=>$('featured').classList.remove('fresh'),4000);}
  $('steps').hidden=at<0;$('steps').replaceChildren(...STEPS.map((name,j)=>el('li',{className:j<at?'done':j===at?'active':'',textContent:name})));
  const note=noteList()[0];
- put('dashboard-phase',!note?'':model.mode==='working'?'Your note is taped to the board for the director and reviewers.':model.outcome==='published'?'In a real run, the lab replies on your note with what it did.':'');
+ put('dashboard-phase',!note?'':model.mode==='working'?'Your note is taped to the board for the designer, writer and reviewers.':model.outcome==='published'?'In a real run, the lab replies on your note with what it did.':'');
  put('dashboard-freshness','');put('dashboard-schedule','Nothing here is sent or published. The real lab runs at 9 AM.');
  markStates();
 }
@@ -348,15 +350,22 @@ async function loadNotes(){
  renderNotes();
 }
 // The agents, as the lab picture names them when pointed at: their role and what they are doing now.
-const AGENTS=[{name:'Researcher',work:{research:'Gathering sources',review:'Reading it as a beginner would'},rest:'Napping on the couch'},
- {name:'Director',work:{choose:'Writing up the question',design:'Drawing the storyboard',revise:'Redrawing after the review'},rest:'Having tea'},
+const AGENTS=[{name:'Researcher',work:{research:'Gathering sources'},rest:'Napping on the couch'},
+ {name:'Writer',work:{choose:'Reading the question',write:'Writing the chapters and narration',revise:'Rewriting after the review'},rest:'Having tea'},
  {name:'Scientist',work:{record:'Writing up the research'},rest:'Playing chess'},
- {name:'Visual reviewer',work:{render:'Rendering the frames in a browser',review:'Checking the frames'},rest:'Playing chess'},
- {name:'Accuracy reviewer',work:{review:'Checking the physics or mathematics',publish:'Hanging the new guide'},rest:'Reading the paper'}];
+ {name:'Visual reviewer',work:{review:'Checking the frames against the design'},rest:'Playing chess'},
+ {name:'Accuracy reviewer',work:{review:'Checking the physics or mathematics'},rest:'Reading the paper'},
+ null,
+ {name:'Designer',work:{design:'Planning how the picture shows the idea'},rest:'Doodling'},
+ {name:'Beginner reviewer',work:{review:'Reading it as a beginner would'},rest:'Reading a comic'},
+ {name:'Blind viewer',work:{review:'Watching the pictures with no words'},rest:'Watering the plants'}];
 function agentCard(who,model){
- if(who===5)return ['The lab cat','not an AI agent',model.mode==='working'?'Watching':'Asleep'];
+ const working=model.mode==='working';
+ if(who==='machine')return ['The coordinator','not an AI agent',working?{choose:'Picking the next question; a planner agent chooses when you send notes',
+  render:'Rendering the frames in a browser',publish:'Publishing the guide'}[model.phase]||'Passing the work to the next agent':'Runs the lab: moves the work, renders, publishes'];
+ if(who===5)return ['The lab cat','not an AI agent',working?'Watching':'Asleep'];
  const a=AGENTS[who];
- return [a.name,'AI agent',model.mode==='working'?a.work[model.phase]||'Waiting for their turn':model.mode==='done'?'Done for this run':a.rest];
+ return [a.name,'AI agent',working?a.work[model.phase]||'Waiting for their turn':model.mode==='done'?'Done for this run':a.rest];
 }
 // What the picture reacts to: a visitor arriving or coming back after a while, a click on an agent, a note sent in.
 const labEvents={arrive:null,note:null,poke:null};
@@ -386,10 +395,11 @@ if(labCanvas){
  // Pointing at an agent names them; clicking makes them react; the wall's frames open their guides; the notes board
  // and the door open the note box; the blackboard opens the run's details.
  const at=e=>{const r=labCanvas.getBoundingClientRect();return CouncilLab.hit?.(e.clientX-r.left,e.clientY-r.top);};
- labCanvas.addEventListener('pointermove',e=>{const hit=at(e);labCanvas.style.cursor=hit?'pointer':'';if(hit?.kind==='person'&&e.pointerType==='mouse')showTip(hit,false);else if(e.pointerType==='mouse')labTip.hidden=true;});
+ labCanvas.addEventListener('pointermove',e=>{const hit=at(e);labCanvas.style.cursor=hit&&hit.kind!=='machine'?'pointer':'';if((hit?.kind==='person'||hit?.kind==='machine')&&e.pointerType==='mouse')showTip(hit.kind==='machine'?{...hit,who:'machine'}:hit,false);else if(e.pointerType==='mouse')labTip.hidden=true;});
  labCanvas.addEventListener('pointerleave',()=>{labTip.hidden=true;});
  labCanvas.addEventListener('click',e=>{const hit=at(e);if(!hit)return;
   if(hit.kind==='person'){labEvents.poke={who:hit.who,at:performance.now()/1000};showTip(hit,true);}
+  else if(hit.kind==='machine')showTip({...hit,who:'machine'},true);
   else if(hit.kind==='frame'){const guide=[...entries].sort((x,y)=>new Date(x.created)-new Date(y.created))[hit.index];if(guide)location.href='?guide='+encodeURIComponent(guide.id);}
   else if(hit.kind==='notes'){$('lab').open=true;$('guide-text').focus();}
   else if(hit.kind==='board')$('lab').open=true;});

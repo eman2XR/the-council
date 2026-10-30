@@ -52,8 +52,8 @@ main{max-width:1240px;margin:auto;padding:0 32px}
 .lab-intro-who{display:block;margin-top:2px;font-size:.88em;color:var(--muted)}
 body[data-view=article] .lab-intro{display:none}
 .lab-wrap{position:relative;max-width:1100px;margin:10px auto -4px}
-.lab-anim{display:block;width:100%;height:auto;aspect-ratio:1100/280}
-@media(max-width:600px){.lab-wrap{margin-top:4px}.lab-anim{aspect-ratio:560/280}}
+.lab-anim{display:block;width:100%;height:auto;aspect-ratio:1300/320}
+@media(max-width:600px){.lab-wrap{margin-top:4px}.lab-anim{aspect-ratio:560/320}}
 body[data-view=article] .lab-wrap{display:none}
 .lab-tip{position:absolute;transform:translate(-50%,-100%);background:#fff;border:1px solid var(--line);border-radius:8px;padding:6px 10px;font-size:12px;line-height:1.4;color:var(--muted);box-shadow:0 8px 20px -12px rgba(0,0,0,.4);pointer-events:none;white-space:nowrap;z-index:5}
 .lab-tip strong{color:var(--ink)}.lab-tip .tip-kind{color:#7c3aed}
