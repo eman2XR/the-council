@@ -27,18 +27,18 @@
    },
    {
     "title": "Every pair counts",
-    "body": "But a match can be between any two people, not just you. 23 people make 253 pairs, each a 1 in 365 chance, and that many chances give about even odds."
+    "body": "But a match can be between any two people, not just you. 23 people make 253 pairs, and each pair has a 1 in 365 chance of matching."
    },
    {
     "title": "One at a time",
-    "body": "Let people arrive one by one. Each newcomer has more birthdays to hit: the 2nd a 1 in 365 chance, the 23rd a 22 in 365 chance. For no match at all, every one of them must miss, and those misses multiply to just under one half."
+    "body": "Let people arrive one by one. Each newcomer must avoid every birthday already taken: the 2nd has a 1 in 365 chance of a match, the 23rd 22 in 365. The chance that nobody matches shrinks with every arrival, and after the 23rd it is just under one half."
    },
    {
     "title": "Pairs grow fast",
     "body": "Pairs grow much faster than people: 50 people make 1,225 of them. With 50 in the room, a shared birthday is 97% likely."
    }
   ],
-  "takeaway": "A shared birthday can be between any two people, and pairs grow much faster than people: 23 people make 253 pairs, each a 1 in 365 chance, which together give even odds.",
+  "takeaway": "You are not checking one birthday, you are checking every pair of people. 23 people make 253 pairs, enough for about even odds that two share a birthday.",
   "questions": [
    {
     "q": "How many other people would you need before someone probably shares your own birthday?",
